@@ -1,1 +1,7 @@
+autopep8==2.0.2
 numpy==1.21.6
+
+# Note: Also need BLAS and gfortran to install scipy
+# sudo apt-get install libopenblas-dev
+# sudo apt install gfortran
+scipy==1.7.3
