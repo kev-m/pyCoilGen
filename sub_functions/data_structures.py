@@ -198,3 +198,15 @@ class CoilPart:
     face_normal_mat: np.ndarray
     basis_elements: List[BasisElement]
     current_density_mat: np.ndarray
+
+# Generated for calculate_gradient
+@dataclass
+class LayoutGradient:
+    dBxdxyz: np.ndarray
+    dBydxyz: np.ndarray
+    dBzdxyz: np.ndarray
+    gradient_in_target_direction: np.ndarray = None
+    mean_gradient_in_target_direction: float = None
+    std_gradient_in_target_direction: float = None
+
+  
