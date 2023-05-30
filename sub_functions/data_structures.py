@@ -65,15 +65,6 @@ class ParameterizedMesh:
     uv: np.ndarray
 
 @dataclass
-class PotentialSortedCutPoints:
-    """
-    Unknown
-    TODO: find usage.
-    """
-    cut_points: np.ndarray
-    cut_direction: Tuple[float, float, float]
-
-@dataclass
 class GradientData:
     """
     Unknown
@@ -85,7 +76,7 @@ class GradientData:
 @dataclass
 class LocalOpeningGab:
     """
-    Unknown
+    Unknown, check against LoopCalculationInput
     TODO: find usage.
     """
     point_1: int
@@ -107,6 +98,14 @@ class CalcLocalOpeningGabResult:
     local_opening_gab: float
 
 @dataclass
+class CalcLocalOpeningGabOutput:
+    """
+    Unknown, possible duplicate of above.
+    TODO: find usage.
+    """
+    local_opening_gab: float
+
+@dataclass
 class LoopCalculationInput:
     """
     Represents the input data for loop calculation.
@@ -117,19 +116,10 @@ class LoopCalculationInput:
     opening_gab: float
 
 @dataclass
-class LocalOpeningGabCalculationInput:
-    """
-    Represents the input data for local opening gab calculation.
-    """
-    loop: Loop
-    point_1: int
-    point_2: int
-    opening_gab: float
-
-@dataclass
 class CalcLocalOpeningGab2Input:
     """
-    Unknown, might be duplicate.
+    Unknown, might be duplicate of LoopCalculationInput.
+    Possibly use PotentialSortedCutPoints instead and decompose.
     TODO: find usage.
     """
     loop: Loop
@@ -138,29 +128,13 @@ class CalcLocalOpeningGab2Input:
     opening_gab: float
 
 @dataclass
-class CalcLocalOpeningGabOutput:
+class PotentialSortedCutPoints:
     """
-    Unknown
+    Unknown. Poosibly use this instead of CalcLocalOpeningGab2Input
     TODO: find usage.
     """
-    local_opening_gab: float
-
-@dataclass
-class CalcGradientAlongVectorOutput:
-    """
-    Unknown
-    TODO: find usage.
-    """
-    mean_gradient_strength: float
-    gradient_out: np.ndarray
-
-@dataclass
-class Calc3DRotationMatrixOutput:
-    """
-    Unknown
-    TODO: find usage.
-    """
-    rot_mat_out: np.ndarray
+    cut_points: np.ndarray
+    cut_direction: Tuple[float, float, float]
 
 @dataclass
 class CalcGradientAlongVectorInput:
