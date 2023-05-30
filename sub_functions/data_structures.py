@@ -32,8 +32,13 @@ class RawPart:
     """
     unsorted_points: List[UnsortedPoint]
     unarranged_loops: List[UnarrangedLoop]
+
 @dataclass
 class ContourLine:
+    """
+    Unknown
+    TODO: find usage.
+    """
     uv: np.ndarray
     potential: float
     current_orientation: int
@@ -46,6 +51,7 @@ class CoilMesh:
     vertices: np.ndarray
     uv: np.ndarray
     faces: np.ndarray
+    # boundary ??
 
 @dataclass
 class CoilParts:
@@ -154,3 +160,41 @@ class Calc3DRotationMatrixInput:
     """
     rot_vec: np.ndarray
     rot_angle: float
+
+# Generated for calc_potential_levels
+@dataclass
+class CoilPart:
+    stream_function: List[float]
+    contour_step: float
+    potential_level_list: List[float]
+
+@dataclass
+class CombinedMesh:
+    stream_function: List[float]
+
+@dataclass
+class InputParameters:
+    levels: int
+    pot_offset_factor: float
+    level_set_method: str
+
+# Generated for calculate_basis_functions
+@dataclass
+class BasisElement:
+    stream_function_potential: float
+    triangles: List[int]
+    one_ring: np.ndarray
+    area: np.ndarray
+    face_normal: np.ndarray
+    triangle_points_ABC: np.ndarray
+    current: np.ndarray
+
+@dataclass
+class CoilPart:
+    is_real_triangle_mat: np.ndarray
+    triangle_corner_coord_mat: np.ndarray
+    current_mat: np.ndarray
+    area_mat: np.ndarray
+    face_normal_mat: np.ndarray
+    basis_elements: List[BasisElement]
+    current_density_mat: np.ndarray
