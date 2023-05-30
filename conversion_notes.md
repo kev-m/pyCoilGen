@@ -24,9 +24,55 @@ class Coil_parts:
     potential_level_list: np.ndarray
 ```
  
- ## Notes per Sub_Function
- ### calc_gradient_along_vector(field, field_coords, target_endcoding_function)
- The target_endcoding_function needs to be converted, too. The Python implementation uses `eval` 
- whereas the original MatLab uses `my_fun=str2func("@(x,y,z)"+target_endcoding_function);`.
+## Function Calls
+```python
+def calc_gradient_along_vector(field: np.ndarray, field_coords: np.ndarray, target_encoding_function: str) -> CalcGradientAlongVectorResult:
+    """
+    Calculates the mean gradient in a given direction and angle.
 
- TODO: Check caller implementations and convert appropriately.
+    Args:
+        field: The field data.
+        field_coords: The field coordinates.
+        target_encoding_function: The target encoding function as a string.
+
+    Returns:
+        The result of the mean gradient calculation.
+    """
+    # Implementation goes here
+
+def calc_3d_rotation_matrix(rot_vec: np.ndarray, rot_angle: float) -> CalcRotationMatrixResult:
+    """
+    Calculates the 3D rotation matrix around a rotation axis given by a vector and an angle.
+
+    Args:
+        rot_vec: The rotation vector.
+        rot_angle: The rotation angle.
+
+    Returns:
+        The result of the rotation matrix calculation.
+    """
+    # Implementation goes here
+
+def calc_local_opening_gab(loop: Any, point_1: int, point_2: int, opening_gab: float) -> CalcLocalOpeningGabResult:
+    """
+    Calculates the local opening gab.
+
+    Args:
+        loop: The loop data.
+        point_1: The first point index.
+        point_2: The second point index.
+        opening_gab: The opening gab value.
+
+    Returns:
+        The result of the local opening gab calculation.
+    """
+    # Implementation goes here
+
+```
+
+## Notes per Sub_Function
+### calc_gradient_along_vector(field, field_coords, target_endcoding_function)
+The target_endcoding_function needs to be converted, too. The Python implementation uses `eval` 
+whereas the original MatLab uses `my_fun=str2func("@(x,y,z)"+target_endcoding_function);`.
+
+TODO: Check caller implementations and convert appropriately.
