@@ -6,6 +6,8 @@ from build_planar_mesh import build_planar_mesh
 #from build_circular_mesh import build_circular_mesh
 from build_biplanar_mesh import build_biplanar_mesh
 
+from data_structures import CoilMesh
+
 def read_mesh(input):
     """
     Read the input mesh and return the coil, target, and shielded meshes.
@@ -116,8 +118,8 @@ def create_unique_noded_mesh(non_unique_mesh):
         faces[tri_ind, 1] = unique_assignments[faces[tri_ind, 1] - 1, 1]
         faces[tri_ind, 2] = unique_assignments[faces[tri_ind, 2] - 1, 1]
 
-    unique_noded_mesh = {'faces': faces, 'vertices': unique_verts}
-
+    #unique_noded_mesh = {'faces': faces, 'vertices': unique_verts}
+    unique_noded_mesh = CoilMesh(unique_verts, None, faces)
     return unique_noded_mesh
 
 

@@ -1,5 +1,5 @@
 import numpy as np
-
+from data_structures import CoilMesh
 
 def build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions, num_longitudinal_divisions,
                         rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle):
@@ -100,7 +100,8 @@ def build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions
 
     faces = np.hstack((faces_1.T, faces_2.T)).T
 
-    return vertices, faces
+    mesh = CoilMesh(vertices, None, faces)
+    return mesh
 
 
 def get_rotation_matrix(rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle):

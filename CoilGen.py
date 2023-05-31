@@ -40,7 +40,7 @@ from calculate_gradient import calculate_gradient
 from load_preoptimized_data import load_preoptimized_data
 """
 
-def CoilGen(log):
+def CoilGen(log, arg_list=None):
     # Create optimized coil finished coil layout
     # Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
     # 5.10.2021
@@ -52,7 +52,7 @@ def CoilGen(log):
     # NS (2021). Curve intersections (https://www.mathworks.com/matlabcentral/fileexchange/22441-curve-intersections), MATLAB Central File Exchange.
 
     # Parse the input variables
-    input_parser, input_args = parse_input(arg_list=None)
+    input_parser, input_args = parse_input(arg_list)
 
     # Print the input variables
     log.debug('Parse inputs: %s', input_args)
@@ -176,4 +176,5 @@ if __name__ == "__main__":
     #logging.basicConfig(level=logging.DEBUG)
     logging.basicConfig(level=logging.INFO)
 
-    CoilGen(log)
+    arg_list=["--coil_mesh_file", "create cylinder mesh"]
+    CoilGen(log, arg_list=arg_list)
