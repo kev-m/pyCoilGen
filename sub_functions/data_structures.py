@@ -2,6 +2,20 @@ from dataclasses import dataclass
 from typing import List, Tuple
 import numpy as np
 
+# Generic class with named attributes
+class DataStructure:
+    """
+    Used to create a data structure with named attributes.
+
+    Args:
+        kwargs (values): name=value pairs of attributes, e.g. a=1, b=2, etc.
+
+    Returns:
+        DataStructure (object): an object with attributes, xxx.a, xxx.b, etc.
+    """
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
 @dataclass
 class UnsortedPoint:
     """
@@ -52,6 +66,7 @@ class CoilMesh:
     uv: np.ndarray
     faces: np.ndarray
     # boundary ??
+    # normals ??
 
 @dataclass
 class CoilParts:
