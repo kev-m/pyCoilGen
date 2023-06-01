@@ -1,5 +1,11 @@
 import numpy as np
+# Logging
+import logging
 
+# Local imports
+from data_structures import DataStructure
+
+log = logging.getLogger(__name__)
 
 def build_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions,
                       rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle,
@@ -30,7 +36,11 @@ def build_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_lo
     longitudinal_step = planar_height / num_longitudinal_divisions
 
     # Generate the vertices of the planar mesh
-    vertices = []
+    # vertices = []
+    vertices = np.empty(((num_lateral_divisions + 1) *
+                        (num_longitudinal_divisions + 1), 3))
+
+    index = 0
     for i in range(num_lateral_divisions + 1):
         for j in range(num_longitudinal_divisions + 1):
             x = i * lateral_step - planar_width / 2
@@ -42,10 +52,18 @@ def build_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_lo
                                                  rotation_vector_z, rotation_angle,
                                                  center_position_x, center_position_y, center_position_z)
 
-            vertices.append([x, y, z])
+            # vertices.append([x, y, z])
+            vertices[index] = np.array([x, y, z])
+            index += 1
+
 
     # Generate the faces of the planar mesh
-    faces = []
+    #faces = []
+    faces = np.empty(((num_lateral_divisions) *
+                        (num_longitudinal_divisions) * 2, 3), dtype=int)
+    # 4,5 
+    # 40
+    index = 0
     for i in range(num_lateral_divisions):
         for j in range(num_longitudinal_divisions):
             # Calculate the indices of the vertices for each face
@@ -55,10 +73,15 @@ def build_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_lo
             v4 = v1 + 1
 
             # Create the two triangles for each face
-            faces.append([v1, v2, v3])
-            faces.append([v1, v3, v4])
+            #faces.append([v1, v2, v3])
+            faces[index] = np.array([v1, v2, v3])
+            index += 1
+            #faces.append([v1, v3, v4])
+            faces[index] = np.array([v1, v3, v4])
+            index += 1
 
-    return np.array(vertices), np.array(faces)
+    # return np.array(vertices), np.array(faces)
+    return DataStructure(vertices=vertices, faces=faces)
 
 
 def apply_rotation_translation(x, y, z, rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle,
@@ -132,6 +155,7 @@ def calculate_rotation_matrix(rotation_vector_x, rotation_vector_y, rotation_vec
 
     return rotation_matrix
 
+
 if __name__ == "__main__":
     planar_height = 2.0
     planar_width = 3.0
@@ -145,11 +169,11 @@ if __name__ == "__main__":
     center_position_x = 0.0
     center_position_y = 0.0
     center_position_z = 0.0
-    vertices, faces = build_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions,
-                      rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle,
-                      center_position_x, center_position_y, center_position_z)
-    print(vertices)
-    print(faces)
+    mesh = build_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions,
+                             rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle,
+                             center_position_x, center_position_y, center_position_z)
+    print(mesh.vertices)
+    print(mesh.faces)
 
 """
 [[-1.5  -1.    0.  ]
