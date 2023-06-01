@@ -1,4 +1,4 @@
-# System import
+# System imports
 import numpy as np
 import os
 # Logging
