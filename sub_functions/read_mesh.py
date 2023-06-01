@@ -1,12 +1,19 @@
+# System import
 import numpy as np
+import os
+# Logging
+import logging
 
+# Local imports
 from build_cylinder_mesh import build_cylinder_mesh
 #from build_double_cone_mesh import build_double_cone_mesh
 from build_planar_mesh import build_planar_mesh
 #from build_circular_mesh import build_circular_mesh
 from build_biplanar_mesh import build_biplanar_mesh
 
-from data_structures import CoilMesh
+from data_structures import CoilMesh, DataStructure
+
+log = logging.getLogger(__name__)
 
 def read_mesh(input):
     """
@@ -25,8 +32,10 @@ def read_mesh(input):
     
     # Read the input mesh
     if input.sf_source_file == 'none':
+        log.debug("Loading mesh: %s", input.coil_mesh_file)
 
         if input.coil_mesh_file.endswith('.stl'):
+            log.debug("Loading STL")
             # Load the stl file; read the coil mesh surface
             coil_mesh = stlread_local(input.geometry_source_path + '/' + input.coil_mesh_file)
             coil_mesh = create_unique_noded_mesh(coil_mesh)
@@ -142,8 +151,8 @@ def stlread_local(file):
         M = np.fromfile(fid, dtype=np.uint8)
 
     f, v, n = stlbinary(M)
-    output = {'faces': f, 'vertices': v, 'normals': n}
-
+    #output = {'faces': f, 'vertices': v, 'normals': n}
+    output = DataStructure(faces=f, vertices=v, normals=n)
     return output
 
 
@@ -174,7 +183,7 @@ def stlbinary(M):
         return F, V, N
 
     T = M[84:]
-    F = np.empty((numFaces, 3))
+    F = np.empty((numFaces, 3), dtype='int') # Integer indices
     V = np.empty((3 * numFaces, 3))
     N = np.empty((numFaces, 3))
 
