@@ -6,9 +6,12 @@ The user must specify a target field (e.g., bz(x,y,z)=y for a constant gradient 
 A full description is given in the following publication: https://onlinelibrary.wiley.com/doi/10.1002/mrm.29294
 
 ## CoilGen-Python
-This Python project is a translation of the original (MatLab project)[https://github.com/Philipp-MR/CoilGen] developed by Philipp Amrein.
+This Python project is a translation of the original [MatLab project](https://github.com/Philipp-MR/CoilGen) developed by Philipp Amrein.
 
 **NOTE:** This conversion is still in progress. It is untested and unfinished. DO NOT USE IT YET!
+
+### Acknowledgements
+This conversion from MatLab to Python is being done using [ChatGPT May 24 Version](https://chat.openai.com) and manual fine-tuning.
 
 !-- LICENSE -->
 ## License
