@@ -10,9 +10,9 @@ sys.path.append(str(sub_functions_path))
 # Import the required modules from sub_functions directory
 from parse_input import parse_input
 from read_mesh import read_mesh
+from split_disconnected_mesh import split_disconnected_mesh
 
 """
-from split_disconnected_mesh import split_disconnected_mesh
 from refine_mesh import refine_mesh
 from parameterize_mesh import parameterize_mesh
 from define_target_field import define_target_field
@@ -173,8 +173,12 @@ def CoilGen(log, arg_list=None):
 if __name__ == "__main__":
     # Set up logging
     log = logging.getLogger(__name__)
-    #logging.basicConfig(level=logging.DEBUG)
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
+    #logging.basicConfig(level=logging.INFO)
 
-    arg_list=["--coil_mesh_file", "create cylinder mesh"]
+    #arg_list=['--coil_mesh_file', 'create cylinder mesh']
+    arg_list=['--coil_mesh_file', 'create planary mesh']
+    #arg_list=['--coil_mesh_file', 'create bi-planary mesh']
+    #arg_list=['--coil_mesh_file', 'closed_cylinder_length_300mm_radius_150mm.stl']
+    #arg_list=['--coil_mesh_file', 'dental_gradient_ccs_single_low.stl']
     CoilGen(log, arg_list=arg_list)
