@@ -1,5 +1,13 @@
 import numpy as np
-from data_structures import CoilMesh
+
+# Logging
+import logging
+
+# Local imports
+from data_structures import DataStructure
+
+log = logging.getLogger(__name__)
+
 
 def build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions, num_longitudinal_divisions,
                         rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle):
@@ -82,25 +90,30 @@ def build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions
     vertices = np.dot(vertices, rotation_matrix.T)
 
     # Create the faces
-    tri_1_vert_inds_1 = np.arange(1, (num_circular_divisions)*(num_longitudinal_divisions)+1)
+    tri_1_vert_inds_1 = np.arange(
+        1, (num_circular_divisions)*(num_longitudinal_divisions)+1)
     tri_1_vert_inds_2 = tri_1_vert_inds_1 + 1
 
     # Take care of index overflow at the end of the rings
-    overflow_indices = np.where(np.mod(tri_1_vert_inds_2 - 1, num_circular_divisions) == 0)
+    overflow_indices = np.where(
+        np.mod(tri_1_vert_inds_2 - 1, num_circular_divisions) == 0)
     tri_1_vert_inds_2[overflow_indices] -= num_circular_divisions
 
     tri_1_vert_inds_3 = tri_1_vert_inds_2 + num_circular_divisions
 
     tri_2_vert_inds_1 = tri_1_vert_inds_1
     tri_2_vert_inds_2 = tri_1_vert_inds_3
-    tri_2_vert_inds_3 = np.arange(1, (num_circular_divisions)*(num_longitudinal_divisions)+1) + num_circular_divisions
+    tri_2_vert_inds_3 = np.arange(
+        1, (num_circular_divisions)*(num_longitudinal_divisions)+1) + num_circular_divisions
 
-    faces_1 = np.vstack((tri_1_vert_inds_2, tri_1_vert_inds_1, tri_1_vert_inds_3))
-    faces_2 = np.vstack((tri_2_vert_inds_2, tri_2_vert_inds_1, tri_2_vert_inds_3))
+    faces_1 = np.vstack(
+        (tri_1_vert_inds_2, tri_1_vert_inds_1, tri_1_vert_inds_3))
+    faces_2 = np.vstack(
+        (tri_2_vert_inds_2, tri_2_vert_inds_1, tri_2_vert_inds_3))
 
     faces = np.hstack((faces_1.T, faces_2.T)).T
 
-    mesh = CoilMesh(vertices, None, faces)
+    mesh = DataStructure(vertices=vertices, faces=faces)
     return mesh
 
 
@@ -164,10 +177,10 @@ if __name__ == "__main__":
     rotation_vector_z = 0.0
     rotation_angle = np.pi / 4
     mesh = build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions,
-                                          num_longitudinal_divisions, rotation_vector_x, rotation_vector_y,
-                                          rotation_vector_z, rotation_angle)
-    print(mesh.vertices)
-    print(mesh.faces)
+                               num_longitudinal_divisions, rotation_vector_x, rotation_vector_y,
+                               rotation_vector_z, rotation_angle)
+    print("vertices = ", mesh.vertices, mesh.vertices.shape)
+    print("faces = ", mesh.faces, np.min(mesh.faces), np.max(mesh.faces))
 
 """
  [[ 1.00000000e+00  0.00000000e+00  0.00000000e+00]
