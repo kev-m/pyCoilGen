@@ -3,7 +3,11 @@ import numpy as np
 # Logging
 import logging
 
+# Local imports
+from data_structures import DataStructure
+
 log = logging.getLogger(__name__)
+
 
 def split_disconnected_mesh(coil_mesh_in):
     """
@@ -19,17 +23,20 @@ def split_disconnected_mesh(coil_mesh_in):
 
     coil_mesh_in.faces = coil_mesh_in.faces.T  # Transpose the faces array
 
-    vert_group = np.zeros(coil_mesh_in.faces.shape[0], dtype=np.uint32)  # Initialize vertex group array
+    # Initialize vertex group array
+    vert_group = np.zeros(coil_mesh_in.faces.shape[0], dtype=np.uint32)
     current_group = 0  # Initialize current group counter
 
     while np.any(vert_group == 0):
         current_group += 1
-        next_face = np.where(vert_group == 0)[0][0]  # Find the next ungrouped face
+        # Find the next ungrouped face
+        next_face = np.where(vert_group == 0)[0][0]
         verts_to_sort = coil_mesh_in.faces[next_face, :]
 
         while verts_to_sort.size > 0:
             availFaceInds = np.where(vert_group == 0)[0]
-            availFaceSub, _ = np.where(np.isin(coil_mesh_in.faces[availFaceInds, :], verts_to_sort))
+            availFaceSub, _ = np.where(
+                np.isin(coil_mesh_in.faces[availFaceInds, :], verts_to_sort))
             vert_group[availFaceInds[availFaceSub]] = current_group
             verts_to_sort = coil_mesh_in.faces[availFaceInds[availFaceSub], :]
 
@@ -40,12 +47,19 @@ def split_disconnected_mesh(coil_mesh_in):
     for current_group in range(1, num_vert_groups + 1):
         faces_of_group = coil_mesh_in.faces[vert_group == current_group, :]
 
-        log.debug("Shape: %s, %s", faces_of_group.shape, coil_mesh_in.vertices.shape)
+        log.debug("Shape: %s, %s", faces_of_group.shape,
+                  coil_mesh_in.vertices.shape)
 
-        unqVertIds, _, newVertIndices = np.unique(faces_of_group, return_index=True, return_inverse=True)
-        coil_parts[current_group - 1] = {'coil_mesh': {}}
-        coil_parts[current_group - 1]['coil_mesh']['faces'] = np.reshape(newVertIndices, faces_of_group.shape).T
-        coil_parts[current_group - 1]['coil_mesh']['vertices'] = coil_mesh_in.vertices[:, unqVertIds]
-        coil_parts[current_group - 1]['coil_mesh']['unique_vert_inds'] = unqVertIds
+        unqVertIds, _, newVertIndices = np.unique(
+            faces_of_group, return_index=True, return_inverse=True)
+        # coil_parts[current_group - 1] = {'coil_mesh': {}}
+        # coil_parts[current_group - 1]['coil_mesh']['faces'] = np.reshape(newVertIndices, faces_of_group.shape).T
+        # coil_parts[current_group - 1]['coil_mesh']['vertices'] = coil_mesh_in.vertices[:, unqVertIds]
+        # coil_parts[current_group - 1]['coil_mesh']['unique_vert_inds'] = unqVertIds
+        faces = np.reshape(newVertIndices, faces_of_group.shape).T
+        vertices = coil_mesh_in.vertices[:, unqVertIds]
+        coil_part = DataStructure(
+            faces=faces, vertices=vertices, unique_vert_inds=unqVertIds)
+        coil_parts[current_group - 1] = DataStructure(coil_mesh=coil_part)
 
     return coil_parts
