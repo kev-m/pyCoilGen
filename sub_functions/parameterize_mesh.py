@@ -1,7 +1,11 @@
 import numpy as np
 from scipy.spatial import Delaunay
 
+from mesh_parameterization_iterative import mesh_parameterization_iterative
+
+
 from matlab_internal import faceNormal, triangulation, freeBoundary
+
 
 def parameterize_mesh(coil_parts, input):
     """

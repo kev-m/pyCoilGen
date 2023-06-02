@@ -1,10 +1,65 @@
 import numpy as np
+from scipy.spatial import Delaunay
 
 # Logging
 import logging
 
 log = logging.getLogger(__name__)
 
+class triangulation:
+    """
+    Create an in-memory representation of a 2-D or 3-D triangulation data.
+
+    Parameters:
+    - vertices (ndarray): The vertices of the triangulation as a 2-D array.
+                          Each row contains the coordinates of a vertex.
+    - faces (ndarray): The faces of the triangulation as a 2-D array.
+                       Each row contains the indices of the vertices forming a face.
+
+    Returns:
+    - triangulation (ndarray): The triangulation data represented as a 3-D array.
+                               Each row contains the coordinates of the three vertices of a triangle.
+
+    Examples:
+    >>> vertices = np.array([[0, 0], [1, 0], [0, 1], [1, 1]])
+    >>> faces = np.array([[0, 1, 2], [1, 3, 2]])
+    >>> triangulation = triangulation(vertices, faces)
+    """
+    def __init__(self, vertices, faces):
+        self._vertices = vertices
+        self._faces = faces
+        self._tri = Delaunay(vertices)
+
+    def freeBoundary(self):
+        return self._tri.convex_hull
+    
+    def normals(self):
+        boundary_tri = self._tri
+        normals = np.cross(
+            boundary_tri.points[boundary_tri.simplices][:, 1] - boundary_tri.points[boundary_tri.simplices][:, 0],
+            boundary_tri.points[boundary_tri.simplices][:, 2] - boundary_tri.points[boundary_tri.simplices][:, 0]
+        )
+        normals /= np.linalg.norm(normals, axis=0, keepdims=True)        
+        return normals
+    
+def freeBoundary(triangulation):
+    """
+    Find the free boundary facets of the triangles or tetrahedra in a triangulation.
+
+    Parameters:
+    - triangulation (ndarray): The triangulation data represented as a 2-D or 3-D array.
+                               Each row contains the indices of the vertices forming a triangle or tetrahedron.
+
+    Returns:
+    - boundaryFacets (ndarray): The free boundary facets of the triangulation.
+                               A facet is on the free boundary if it is referenced by only one triangle or tetrahedron.
+
+    Examples:
+    >>> triangulation = np.array([[0, 1, 2], [1, 3, 2], [2, 3, 4]])
+    >>> boundaryFacets = freeBoundary(triangulation)
+    """
+
+    return triangulation.freeBoundary()
 
 def faceNormal(triangulation):
     """
@@ -26,25 +81,6 @@ def faceNormal(triangulation):
     >>> faceNormals = faceNormal(triangulation)
     """
 
-    log.debug("faceNormal: %s", triangulation.dtype)
-
-    """
-    # Calculate the vectors for each triangle edge
-    # v1 = triangulation[:, 1, :] - triangulation[:, 0, :]
-    # v2 = triangulation[:, 2, :] - triangulation[:, 0, :]
-    v1 = triangulation[:, 1] - triangulation[:, 0]
-    v2 = triangulation[:, 2] - triangulation[:, 0]
-
-    # Calculate the cross product of the vectors
-    crossProduct = np.cross(v1, v2)
-
-    # Calculate the norm of each cross product vector
-    norms = np.linalg.norm(crossProduct, axis=0)
-
-    # Calculate the face normals by dividing the cross product vectors by their norms
-    faceNormals = crossProduct / norms[:, np.newaxis]
-
-    return faceNormals
     """
     # Compute the centers and face normals of each triangular facet in the boundary triangulation
     normals = np.cross(
@@ -53,87 +89,14 @@ def faceNormal(triangulation):
     )
     log.debug("normals: %s, type: %s", normals, normals.dtype)
     #normals /= np.linalg.norm(normals, axis=0, keepdims=True)
-
-    return normals
-
-
-def triangulation(vertices, faces):
     """
-    Create an in-memory representation of a 2-D or 3-D triangulation data.
 
-    Parameters:
-    - vertices (ndarray): The vertices of the triangulation as a 2-D array.
-                          Each row contains the coordinates of a vertex.
-    - faces (ndarray): The faces of the triangulation as a 2-D array.
-                       Each row contains the indices of the vertices forming a face.
+    return triangulation.normals()
 
-    Returns:
-    - triangulation (ndarray): The triangulation data represented as a 3-D array.
-                               Each row contains the coordinates of the three vertices of a triangle.
-
-    Examples:
-    >>> vertices = np.array([[0, 0], [1, 0], [0, 1], [1, 1]])
-    >>> faces = np.array([[0, 1, 2], [1, 3, 2]])
-    >>> triangulation = triangulation(vertices, faces)
-    """
-    # Create an empty array to store the triangulation data
-    triangulation = np.empty((faces.shape[0], 3, vertices.shape[1]), dtype=int)
-
-    # Fill the triangulation array with the coordinates of the triangle vertices
-    for i, face in enumerate(faces):
-        log.debug("i: %d, face: %s", i, face)
-        triangulation[i] = vertices[face]
-
-    return triangulation
-
-
-def freeBoundary(triangulation):
-    """
-    Find the free boundary facets of the triangles or tetrahedra in a triangulation.
-
-    Parameters:
-    - triangulation (ndarray): The triangulation data represented as a 2-D or 3-D array.
-                               Each row contains the indices of the vertices forming a triangle or tetrahedron.
-
-    Returns:
-    - boundaryFacets (ndarray): The free boundary facets of the triangulation.
-                               A facet is on the free boundary if it is referenced by only one triangle or tetrahedron.
-
-    Examples:
-    >>> triangulation = np.array([[0, 1, 2], [1, 3, 2], [2, 3, 4]])
-    >>> boundaryFacets = freeBoundary(triangulation)
-    """
-    # Convert the triangulation to a set of unique edges
-    edges = set()
-
-    for face in triangulation:
-        # Generate all possible edges from the face
-        face_edges = [(face[i], face[(i + 1) % len(face)])
-                      for i in range(len(face))]
-
-        # Add each edge to the set
-        edges.update(face_edges)
-
-    # Count the occurrences of each edge
-    edge_counts = dict()
-
-    for edge in edges:
-        edge_counts[edge] = edge_counts.get(edge, 0) + 1
-
-    # Find the boundary facets with only one occurrence of each edge
-    boundaryFacets = [face for face in triangulation if all(edge_counts[edge] == 1 for edge in [
-                                                            (face[i], face[(i + 1) % len(face)]) for i in range(len(face))])]
-
-    return boundaryFacets
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-
-    # faceNormal
-    triangulations = np.array([[0, 1, 2], [1, 3, 2], [2, 3, 4]])
-    faceNormals = faceNormal(triangulations)
-    print("faceNormals", faceNormals)
 
     # triangulation
     vertices = np.array([[2.5, 8.0],
@@ -151,7 +114,10 @@ if __name__ == "__main__":
     triangulations = triangulation(vertices, faces)
     print("triangulation:", triangulations)
 
+    # faceNormal
+    faceNormals = faceNormal(triangulations)
+    print("faceNormals", faceNormals)
+
     # freeBoundary
-    triangulation = np.array([[0, 1, 2], [1, 3, 2], [2, 3, 4]])
-    boundaryFacets = freeBoundary(triangulation)
+    boundaryFacets = freeBoundary(triangulations)
     print("freeBoundary:", boundaryFacets)
