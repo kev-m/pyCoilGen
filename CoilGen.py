@@ -1,19 +1,25 @@
-import logging
-
+# System imports
 import sys
 from pathlib import Path
 
+# Logging
+import logging
+
+# Local imports
 # Add the sub_functions directory to the Python module search path
 sub_functions_path = Path(__file__).resolve().parent / 'sub_functions'
 sys.path.append(str(sub_functions_path))
 
-# Import the required modules from sub_functions directory
-from parse_input import parse_input
 from read_mesh import read_mesh
+from parse_input import parse_input
 from split_disconnected_mesh import split_disconnected_mesh
+from refine_mesh import refine_mesh
+
+
+
+# Import the required modules from sub_functions directory
 
 """
-from refine_mesh import refine_mesh
 from parameterize_mesh import parameterize_mesh
 from define_target_field import define_target_field
 from temp_evaluation import temp_evaluation
@@ -76,7 +82,8 @@ def CoilGen(log, arg_list=None):
 
         # Define the target field
         print('Define the target field:')
-        target_field, is_supressed_point = define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args)
+        target_field, is_supressed_point = define_target_field(
+            coil_parts, target_mesh, secondary_target_mesh, input_args)
 
         # Evaluate the temp data; check whether precalculated values can be used from previous iterations
         print('Evaluate the temp data:')
@@ -92,11 +99,13 @@ def CoilGen(log, arg_list=None):
 
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
-        coil_parts = calculate_sensitivity_matrix(coil_parts, target_field, input_args)
+        coil_parts = calculate_sensitivity_matrix(
+            coil_parts, target_field, input_args)
 
         # Calculate the gradient sensitivity matrix Gn
         print('Calculate the gradient sensitivity matrix:')
-        coil_parts = calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args)
+        coil_parts = calculate_gradient_sensitivity_matrix(
+            coil_parts, target_field, input_args)
 
         # Calculate the resistance matrix Rmn
         print('Calculate the resistance matrix:')
@@ -104,16 +113,19 @@ def CoilGen(log, arg_list=None):
 
         # Optimize the stream function toward target field and further constraints
         print('Optimize the stream function toward target field and secondary constraints:')
-        coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)
+        coil_parts, combined_mesh, sf_b_field = stream_function_optimization(
+            coil_parts, target_field, input_args)
 
     else:
         # Load the preoptimized data
         print('Load preoptimized data:')
-        coil_parts, _, _, combined_mesh, sf_b_field, target_field, is_supressed_point = load_preoptimized_data(input_args)
+        coil_parts, _, _, combined_mesh, sf_b_field, target_field, is_supressed_point = load_preoptimized_data(
+            input_args)
 
     # Calculate the potential levels for the discretization
     print('Calculate the potential levels for the discretization:')
-    coil_parts, primary_surface_ind = calc_potential_levels(coil_parts, combined_mesh, input_args)
+    coil_parts, primary_surface_ind = calc_potential_levels(
+        coil_parts, combined_mesh, input_args)
 
     # Generate the contours
     print('Generate the contours:')
@@ -158,11 +170,13 @@ def CoilGen(log, arg_list=None):
 
     # Calculate the inductance by coil layout
     print('Calculate the inductance by coil layout:')
-    coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance = calculate_inductance_by_coil_layout(coil_parts, input_args)
+    coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance = calculate_inductance_by_coil_layout(
+        coil_parts, input_args)
 
     # Evaluate the field errors
     print('Evaluate the field errors:')
-    field_errors, _, _ = evaluate_field_errors(coil_parts, target_field, input_args)
+    field_errors, _, _ = evaluate_field_errors(
+        coil_parts, target_field, input_args)
 
     # Calculate the gradient
     print('Calculate the gradient:')
@@ -170,15 +184,21 @@ def CoilGen(log, arg_list=None):
 
     return coil_parts, combined_mesh, sf_b_field, target_field, coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance, field_errors, coil_gradient, is_supressed_point
 
+
 if __name__ == "__main__":
     # Set up logging
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
-    #logging.basicConfig(level=logging.INFO)
+    # logging.basicConfig(level=logging.INFO)
 
-    #arg_list=['--coil_mesh_file', 'create cylinder mesh']
-    arg_list=['--coil_mesh_file', 'create planary mesh']
-    #arg_list=['--coil_mesh_file', 'create bi-planary mesh']
-    #arg_list=['--coil_mesh_file', 'closed_cylinder_length_300mm_radius_150mm.stl']
-    #arg_list=['--coil_mesh_file', 'dental_gradient_ccs_single_low.stl']
+    # DEBUG:split_disconnected_mesh:Shape: (400, 6), (3, 441)
+    arg_list = ['--coil_mesh_file', 'create cylinder mesh'] # Runs OK
+
+    # split_disconnected_mesh.py", line 60, in split_disconnected_mesh
+    # DEBUG:split_disconnected_mesh:Shape: (800, 3), (3, 441)
+    # arg_list = ['--coil_mesh_file', 'create planary mesh'] # IndexError: index 441 is out of bounds for axis 1 with size 441
+    # arg_list = ['--coil_mesh_file', 'create bi-planary mesh'] # IndexError: index 882 is out of bounds for axis 1 with size 882
+    # DEBUG:split_disconnected_mesh:Shape: (124, 3), (3, 64)
+    # arg_list = ['--coil_mesh_file', 'closed_cylinder_length_300mm_radius_150mm.stl'] # IndexError: index 64 is out of bounds for axis 1 with size 64
+    # arg_list = ['--coil_mesh_file', 'dental_gradient_ccs_single_low.stl'] # IndexError: index 114 is out of bounds for axis 1 with size 114
     CoilGen(log, arg_list=arg_list)
