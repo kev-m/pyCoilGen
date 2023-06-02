@@ -41,7 +41,7 @@ def split_disconnected_mesh(coil_mesh_in):
             verts_to_sort = coil_mesh_in.faces[availFaceInds[availFaceSub], :]
 
     num_vert_groups = current_group
-
+    
     coil_parts = [None] * num_vert_groups  # Create a list to store coil parts
 
     for current_group in range(1, num_vert_groups + 1):
@@ -52,10 +52,7 @@ def split_disconnected_mesh(coil_mesh_in):
 
         unqVertIds, _, newVertIndices = np.unique(
             faces_of_group, return_index=True, return_inverse=True)
-        # coil_parts[current_group - 1] = {'coil_mesh': {}}
-        # coil_parts[current_group - 1]['coil_mesh']['faces'] = np.reshape(newVertIndices, faces_of_group.shape).T
-        # coil_parts[current_group - 1]['coil_mesh']['vertices'] = coil_mesh_in.vertices[:, unqVertIds]
-        # coil_parts[current_group - 1]['coil_mesh']['unique_vert_inds'] = unqVertIds
+        unqVertIds -= 1 # Matlab uses 1 index, so must subtract 1 from face indices
         faces = np.reshape(newVertIndices, faces_of_group.shape).T
         vertices = coil_mesh_in.vertices[:, unqVertIds]
         coil_part = DataStructure(

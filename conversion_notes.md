@@ -7,6 +7,9 @@ Note: Also need BLAS and gfortran to install scipy:
  ```
 
  # Conversion Notes
+ ## Indexing
+ Note that Matlab uses base index of 1 for arrays, whereas Numpy uses 0. Adjust all functions that create `faces` arrays accordingly.
+
  ## Data Structures
  ```python
 from dataclasses import dataclass
