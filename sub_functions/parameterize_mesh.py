@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.spatial import Delaunay
 
+from matlab_internal import faceNormal, triangulation, freeBoundary
+
 def parameterize_mesh(coil_parts, input):
     """
     Create the parameterized 2D mesh.
@@ -17,7 +19,7 @@ def parameterize_mesh(coil_parts, input):
     # Schmidt  rms@dgp.toronto.edu" based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes"
 
     surface_is_cylinder = input.surface_is_cylinder_flag
-    circular_factor = input.circular_diameter_factor_cylinder_parameterization
+    circular_factor = input.circular_diameter_factor
 
     for part_ind in range(len(coil_parts)):
 
