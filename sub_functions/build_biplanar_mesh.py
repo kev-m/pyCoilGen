@@ -1,6 +1,8 @@
+# System
 import numpy as np
 
-import numpy as np
+# Local imports
+from data_structures import DataStructure
 
 def build_biplanar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions, target_normal_x, target_normal_y, target_normal_z, center_position_x, center_position_y, center_position_z, plane_distance):
     """
@@ -59,10 +61,13 @@ def build_biplanar_mesh(planar_height, planar_width, num_lateral_divisions, num_
     faces_first_plane = np.vstack((faces_1, faces_2))
     faces_second_plane = np.vstack((faces_1, faces_2)) + vertices1.shape[1]
     
-    biplanar_mesh = {
-        'faces': np.vstack((faces_first_plane, faces_second_plane)),
-        'vertices': np.vstack((vertices1.T, vertices2.T))
-    }
+    #biplanar_mesh = {
+    #    'faces': np.vstack((faces_first_plane, faces_second_plane)),
+    #    'vertices': np.vstack((vertices1.T, vertices2.T))
+    #}
+    mesh = DataStructure(vertices=np.vstack((vertices1.T, vertices2.T)), faces=np.vstack((faces_first_plane, faces_second_plane)))
+    return mesh
+
     
     return biplanar_mesh
 
@@ -116,8 +121,8 @@ if __name__ == "__main__":
                                           target_normal_x, target_normal_y, target_normal_z,
                                           center_position_x, center_position_y, center_position_z,
                                           plane_distance)
-    print(mesh['vertices'])
-    print(mesh['faces'])
+    print(mesh.vertices)
+    print(mesh.faces)
 
 """
 [[ 2.5000000e-01 -1.5000000e+00  1.0000000e+00]
