@@ -78,8 +78,40 @@ def parameterize_mesh(coil_parts, input):
                 coil_parts[part_ind].coil_mesh.n = vertexNormal(triangulation(coil_parts[part_ind].coil_mesh.faces.T, coil_parts[part_ind].coil_mesh.vertices.T)).T
                 coil_parts[part_ind].coil_mesh.boundary = boundary_loop_nodes
 
+        else:
+            # The 3D mesh is already planar, but the normals must be aligned to the z-axis
 
+            # Rotate the planar mesh in the xy plane
+            mean_norm = np.mean(face_normals, axis=0)
+            new_norm = np.array([0, 0, 1])
+            v_c = np.cross(mean_norm, new_norm)
 
+            if np.linalg.norm(v_c) > 1e-8:
+                v_d = np.dot(mean_norm, new_norm)
+                mat_v = np.array([[0, -1 * v_c[2], v_c[1]], [v_c[2], 0, -1 * v_c[0]], [-1 * v_c[1], v_c[0], 0]])
+                rot_mat = np.eye(3) + mat_v + np.dot(mat_v, mat_v) * (1 / (1 + v_d))
+                out_a = np.sum(np.tile(rot_mat[0, :], (coil_parts[part_ind].coil_mesh.vertices.shape[1], 1)).T * coil_parts[part_ind].coil_mesh.vertices.T, axis=0)
+                out_b = np.sum(np.tile(rot_mat[1, :], (coil_parts[part_ind].coil_mesh.vertices.shape[1], 1)).T * coil_parts[part_ind].coil_mesh.vertices.T, axis=0)
+                out_c = np.sum(np.tile(rot_mat[2, :], (coil_parts[part_ind].coil_mesh.vertices.shape[1], 1)).T * coil_parts[part_ind].coil_mesh.vertices.T, axis=0)
+                coil_parts[part_ind].coil_mesh.uv = np.vstack((out_a, out_b))
+            else:
+                coil_parts[part_ind].coil_mesh.uv = coil_parts[part_ind].coil_mesh.vertices[:2, :]
 
+            boundary_edges = freeBoundary(triangulation(coil_parts[part_ind].coil_mesh.faces.T, np.vstack((coil_parts[part_ind].coil_mesh.uv, np.zeros((1, coil_parts[part_ind].coil_mesh.uv.shape[1]))))))
+            # Build the boundary loops from the boundary edges
+            is_new_node = np.hstack(([boundary_edges[:, 0].T], [0])) == np.hstack(([0], [boundary_edges[:, 1].T]))
+            is_new_node[0] = True
+            is_new_node[-1] = True
+            is_new_node = ~is_new_node
+            num_boundaries = np.sum(is_new_node) + 1
+            boundary_start = np.hstack(([1], np.where(is_new_node)[0] + 1))
+            boundary_end = np.hstack((np.where(is_new_node)[0], [boundary_edges.shape[0] - 1]))
+            boundary_loop_nodes = []
+
+            for boundary_ind in range(num_boundaries):
+                boundary_loop_nodes.append(np.hstack((boundary_edges[boundary_start[boundary_ind]:boundary_end[boundary_ind], 0], boundary_edges[boundary_start[boundary_ind], 0])))
+
+            coil_parts[part_ind].coil_mesh.n = vertexNormal(triangulation(coil_parts[part_ind].coil_mesh.faces.T, coil_parts[part_ind].coil_mesh.vertices.T)).T
+            coil_parts[part_ind].coil_mesh.boundary = boundary_loop_nodes
 
     return coil_parts

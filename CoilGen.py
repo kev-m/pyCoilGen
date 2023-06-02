@@ -10,17 +10,14 @@ import logging
 sub_functions_path = Path(__file__).resolve().parent / 'sub_functions'
 sys.path.append(str(sub_functions_path))
 
+# Import the required modules from sub_functions directory
 from read_mesh import read_mesh
 from parse_input import parse_input
 from split_disconnected_mesh import split_disconnected_mesh
 from refine_mesh import refine_mesh
-
-
-
-# Import the required modules from sub_functions directory
+from parameterize_mesh import parameterize_mesh
 
 """
-from parameterize_mesh import parameterize_mesh
 from define_target_field import define_target_field
 from temp_evaluation import temp_evaluation
 from calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
