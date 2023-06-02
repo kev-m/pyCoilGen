@@ -2,16 +2,22 @@
 import numpy as np
 from scipy.sparse import coo_matrix
 
+# Logging
+import logging
+
 # Local imports
 from data_structures import DataStructure
+
+log = logging.getLogger(__name__)
+
 
 def mesh_parameterization_iterative(mesh_in):
     """
     Performs iterative mesh parameterization based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes".
-    
+
     Args:
         mesh_in: Input mesh as a DataStructure object containing 'vertices' and 'faces' attributes.
-    
+
     Returns:
         mesh: Parameterized mesh as a DataStructure object containing 'v', 'n', 'u', 'f', 'e', 'bounds', 'version', 'vidx', and 'fidx' attributes.
     """
@@ -23,7 +29,8 @@ def mesh_parameterization_iterative(mesh_in):
         u=[],
         f=mesh_in.faces.T,  # Transpose faces for column-wise storage
         e=[],
-        bounds=[np.min(mesh_in.vertices), np.max(mesh_in.vertices), 0.5 * (np.min(mesh_in.vertices) + np.max(mesh_in.vertices))],
+        bounds=[np.min(mesh_in.vertices), np.max(mesh_in.vertices),
+                0.5 * (np.min(mesh_in.vertices) + np.max(mesh_in.vertices))],
         version=1,
         vidx=np.arange(1, mesh_in.vertices.shape[0] + 1),
         fidx=np.arange(1, mesh_in.faces.shape[0] + 1),
@@ -33,14 +40,20 @@ def mesh_parameterization_iterative(mesh_in):
     # Compute face normals
     for iii in range(mesh.f.shape[0]):
         fvv = mesh.v[mesh.f[iii, :], :]
+        log.debug(" fvv: %s", fvv)
         ee1 = fvv[1, :] - fvv[0, :]
         ee2 = fvv[2, :] - fvv[0, :]
         M = np.cross(ee1, ee2)
-        mag = np.sum(M * M, axis=1)
+        log.debug(" M: %s", M)
+        mag = np.array([np.sum(M * M, axis=0)])
+        log.debug(" mag: %s", mag)
         z = np.where(mag < np.finfo(float).eps)[0]
         mag[z] = 1
         Mlen = np.sqrt(mag)
-        mesh.fn[iii, :] = M / np.tile(Mlen, (1, M.shape[1]))
+        log.debug(" Mlen: %s", Mlen)
+        temp2 = np.tile(Mlen, (1, M.shape[1]))
+        temp = M / temp2
+        mesh.fn[iii, :] = temp
 
     e = np.zeros((mesh.f.shape[0] * 3 * 2, 3))
 
@@ -56,7 +69,8 @@ def mesh_parameterization_iterative(mesh_in):
     mesh.e = e
 
     # Convert edge list to sparse matrix
-    mesh.e = coo_matrix((e[:, 3], (e[:, 0] - 1, e[:, 1] - 1)), shape=(mesh.v.shape[0], mesh.v.shape[0]))
+    mesh.e = coo_matrix((e[:, 3], (e[:, 0] - 1, e[:, 1] - 1)),
+                        shape=(mesh.v.shape[0], mesh.v.shape[0]))
 
     # Find boundary vertices
     iiii, jjjj = np.where(mesh.e == 1)
@@ -68,13 +82,13 @@ def mesh_parameterization_iterative(mesh_in):
     be = np.unique(be, axis=0)
 
     # Determine boundary faces
-    mesh.isboundaryf = np.sum(mesh.isboundaryv[mesh.f[:, [0, 1, 2]]], axis=1) > 0
+    mesh.isboundaryf = np.sum(
+        mesh.isboundaryv[mesh.f[:, [0, 1, 2]]], axis=1) > 0
 
     # Initialize variables for boundary loops
     loops = []
     loopk = 1
     bloop = []
-
 
     while be.size > 0:
         bloop = []
@@ -129,7 +143,6 @@ def mesh_parameterization_iterative(mesh_in):
     else:
         mesh.loops = []
 
-
     mesh.te = mesh.e
     mesh.te[mesh.e != 0] = 0
 
@@ -178,7 +191,6 @@ def mesh_parameterization_iterative(mesh_in):
             A[jx, ky] += 1
             A[kx, jy] -= 1
 
-
     A = A + A.T
     Lc = Ld - A
     LcCons = Lc.copy()
@@ -209,7 +221,6 @@ def mesh_parameterization_iterative(mesh_in):
 
     return mesh
 
-import numpy as np
 
 def vmag2(M):
     """
@@ -223,6 +234,7 @@ def vmag2(M):
     """
     return np.sum(M * M, axis=1)
 
+
 def vadd(M, v):
     """
     Add a vector v to each row of matrix M.
@@ -235,6 +247,7 @@ def vadd(M, v):
         ndarray: Resulting matrix after adding v to each row of M.
     """
     return M + np.tile(v, (M.shape[0], 1))
+
 
 def vcot(A, B):
     """
@@ -251,6 +264,7 @@ def vcot(A, B):
     cotAB = tmp / np.sqrt(np.dot(A, A) * np.dot(B, B) - tmp * tmp)
     return cotAB
 
+
 def oneringv(mesh, nVertex):
     """
     Find the one-ring vertices of a given vertex in the mesh.
@@ -263,6 +277,7 @@ def oneringv(mesh, nVertex):
         ndarray: Indices of the one-ring vertices.
     """
     return np.nonzero(mesh.e[nVertex, :] != 0)[0]
+
 
 def faceArea(mesh, faces=None):
     """
@@ -288,6 +303,7 @@ def faceArea(mesh, faces=None):
 
     return A
 
+
 def triarea(p1, p2, p3):
     """
     Compute the area of a triangle defined by three points.
@@ -304,6 +320,7 @@ def triarea(p1, p2, p3):
     v = p3 - p1
     A = 0.5 * np.sqrt(np.dot(u, u) * np.dot(v, v) - np.dot(u, v)**2)
     return A
+
 
 def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False):
     """
@@ -366,6 +383,8 @@ def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False):
             W[qi, qj] = sumAB
 
     return W
+
+
 def onering(mesh, nVert, mode=None):
     """
     Find the one-ring neighborhood of a vertex in the mesh.

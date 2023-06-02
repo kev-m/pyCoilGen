@@ -28,12 +28,16 @@ class triangulation:
     def __init__(self, vertices, faces):
         self._vertices = vertices
         self._faces = faces
-        self._tri = Delaunay(vertices)
+        self._tri = None
 
     def freeBoundary(self):
+        if self._tri is None:
+            self._tri = Delaunay(self._vertices)
         return self._tri.convex_hull
     
     def normals(self):
+        if self._tri is None:
+            self._tri = Delaunay(self._vertices)
         boundary_tri = self._tri
         normals = np.cross(
             boundary_tri.points[boundary_tri.simplices][:, 1] - boundary_tri.points[boundary_tri.simplices][:, 0],
@@ -89,9 +93,36 @@ def faceNormal(triangulation):
     )
     log.debug("normals: %s, type: %s", normals, normals.dtype)
     #normals /= np.linalg.norm(normals, axis=0, keepdims=True)
+    return normals
     """
-
     return triangulation.normals()
+
+
+def calculate_face_normals(vertices, faces):
+    """
+    Calculate face normal vectors given vertices and faces.
+
+    Args:
+        vertices (numpy.ndarray): Array of vertex coordinates with shape (N, 3).
+        faces (numpy.ndarray): Array of faces defined by vertex indices with shape (M, 3).
+
+    Returns:
+        numpy.ndarray: Array of face normal vectors with shape (M, 3).
+    """
+    # Calculate vectors for each face
+    vec1 = vertices[faces[:, 1]] - vertices[faces[:, 0]]
+    log.debug("vec1: %s", vec1)
+    vec2 = vertices[faces[:, 2]] - vertices[faces[:, 0]]
+    log.debug("vec2: %s", vec2)
+
+    # Compute cross product to get face normals
+    normals = np.cross(vec1, vec2)
+    log.debug("normals: %s", normals)
+
+    # Normalize face normals
+    normals /= np.linalg.norm(normals, axis=-1, keepdims=True)
+
+    return normals
 
 
 
@@ -111,6 +142,7 @@ if __name__ == "__main__":
                       [3, 4, 2],
                       [4, 6, 2]])-1
 
+    """
     triangulations = triangulation(vertices, faces)
     print("triangulation:", triangulations)
 
@@ -121,3 +153,7 @@ if __name__ == "__main__":
     # freeBoundary
     boundaryFacets = freeBoundary(triangulations)
     print("freeBoundary:", boundaryFacets)
+    """
+
+    faceNormals2 = calculate_face_normals(vertices=vertices, faces=faces)
+    print("faceNormals", faceNormals2)

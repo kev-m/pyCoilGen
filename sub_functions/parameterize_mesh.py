@@ -4,7 +4,7 @@ from scipy.spatial import Delaunay
 from mesh_parameterization_iterative import mesh_parameterization_iterative
 
 
-from matlab_internal import faceNormal, triangulation, freeBoundary
+from matlab_internal import faceNormal, triangulation, freeBoundary, calculate_face_normals
 
 
 def parameterize_mesh(coil_parts, input):
@@ -28,11 +28,13 @@ def parameterize_mesh(coil_parts, input):
     for part_ind in range(len(coil_parts)):
 
         # Compute face normals
-        face_normals = faceNormal(triangulation(coil_parts[part_ind].coil_mesh.faces.T, coil_parts[part_ind].coil_mesh.vertices.T))
+        #face_normals = faceNormal(triangulation(coil_parts[part_ind].coil_mesh.faces.T, coil_parts[part_ind].coil_mesh.vertices.T))
+        face_normals = calculate_face_normals(faces=coil_parts[part_ind].coil_mesh.faces.T, vertices=coil_parts[part_ind].coil_mesh.vertices.T)
         max_face_normal_std = np.max([np.std(face_normals[:, 0]), np.std(face_normals[:, 1]), np.std(face_normals[:, 2])])
 
         coil_parts[part_ind].coil_mesh.v = coil_parts[part_ind].coil_mesh.vertices.T
-        coil_parts[part_ind].coil_mesh.fn = faceNormal(triangulation(coil_parts[part_ind].coil_mesh.faces.T, coil_parts[part_ind].coil_mesh.v))
+        #coil_parts[part_ind].coil_mesh.fn = faceNormal(triangulation(coil_parts[part_ind].coil_mesh.faces.T, coil_parts[part_ind].coil_mesh.v))
+        coil_parts[part_ind].coil_mesh.fn = face_normals
 
         # Check if vertex coordinates are rather constant in one of the three dimensions
         if not (max_face_normal_std < 1e-6):
