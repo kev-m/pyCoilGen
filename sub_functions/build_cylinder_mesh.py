@@ -163,11 +163,11 @@ if __name__ == "__main__":
     rotation_vector_y = 0.0
     rotation_vector_z = 0.0
     rotation_angle = np.pi / 4
-    vertices, faces = build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions,
+    mesh = build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions,
                                           num_longitudinal_divisions, rotation_vector_x, rotation_vector_y,
                                           rotation_vector_z, rotation_angle)
-    print(vertices)
-    print(faces)
+    print(mesh.vertices)
+    print(mesh.faces)
 
 """
  [[ 1.00000000e+00  0.00000000e+00  0.00000000e+00]
