@@ -218,7 +218,7 @@ def parse_input(arg_list=None):
                         help="Gauss integration order")
 
     # Add flag to set the roi into the geometric center of the mesh
-    parser.add_argument('--set_roi_into_mesh_center', type=int, default=0,
+    parser.add_argument('--set_roi_into_mesh_center', action='store_true',
                         help="Flag to set the ROI into the geometric center of the mesh")
 
     # In case of pcb layout, specify the track width
