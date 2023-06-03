@@ -9,162 +9,101 @@ from data_structures import DataStructure
 log = logging.getLogger(__name__)
 
 
-def build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions, num_longitudinal_divisions,
-                        rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle):
+import numpy as np
+
+def build_cylinder_mesh(
+        cylinder_height,
+        cylinder_radius,
+        num_circular_divisions,
+        num_longitudinal_divisions,
+        rotation_vector_x,
+        rotation_vector_y,
+        rotation_vector_z,
+        rotation_angle
+):
     """
-    Builds a cylinder mesh in 3D space.
+    Create a cylindrical regular mesh in any orientation.
 
     Args:
-        cylinder_height (float): The height of the cylinder.
-        cylinder_radius (float): The radius of the cylinder.
-        num_circular_divisions (int): The number of divisions for the circular cross-section.
-        num_longitudinal_divisions (int): The number of divisions along the height of the cylinder.
-        rotation_vector_x (float): The x-component of the rotation vector.
-        rotation_vector_y (float): The y-component of the rotation vector.
-        rotation_vector_z (float): The z-component of the rotation vector.
-        rotation_angle (float): The rotation angle in radians.
+        cylinder_height (float): Height of the cylinder.
+        cylinder_radius (float): Radius of the cylinder.
+        num_circular_divisions (int): Number of circular divisions.
+        num_longitudinal_divisions (int): Number of longitudinal divisions.
+        rotation_vector_x (float): X-component of the rotation vector.
+        rotation_vector_y (float): Y-component of the rotation vector.
+        rotation_vector_z (float): Z-component of the rotation vector.
+        rotation_angle (float): Rotation angle.
 
     Returns:
-        numpy.ndarray: The coordinates of the vertices and the indices of the faces in the cylinder mesh.
-            The vertices are represented as a 2D array of shape ((num_circular_divisions + 1) * (num_longitudinal_divisions + 1), 3),
-            and the faces are represented as a 2D array of shape (num_circular_divisions * num_longitudinal_divisions, 3).
-
-    Raises:
-        ValueError: If any of the input arguments is not positive.
-
-    Examples:
-        >>> cylinder_height = 2.0
-        >>> cylinder_radius = 1.0
-        >>> num_circular_divisions = 10
-        >>> num_longitudinal_divisions = 5
-        >>> rotation_vector_x = 1.0
-        >>> rotation_vector_y = 0.0
-        >>> rotation_vector_z = 0.0
-        >>> rotation_angle = np.pi / 4
-        >>> vertices, faces = build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions,
-        ...                                      num_longitudinal_divisions, rotation_vector_x, rotation_vector_y,
-        ...                                      rotation_vector_z, rotation_angle)
-        >>> print(vertices)
-        [[ 0.   -1.    0.  ]
-         [ 0.   -0.707 0.707]
-         [ 0.    0.    1.  ]
-         ...
-         [ 0.   -0.707 2.707]
-         [ 0.   -1.    3.  ]]
-        >>> print(faces)
-        [[ 0  1 10]
-         [ 1  2 10]
-         [ 2  3 10]
-         ...
-         [15  6 16]
-         [ 6  7 16]
-         [ 7  8 16]]
+        mesh: DataStructure with 'faces' and 'vertices' arrays of the cylindrical mesh.
     """
-    if cylinder_height <= 0 or cylinder_radius <= 0 or num_circular_divisions <= 0 or num_longitudinal_divisions <= 0:
-        raise ValueError("All input arguments must be positive.")
+    # Calculate positions along the circular divisions
+    theta = np.linspace(0, 2*np.pi, num_circular_divisions, endpoint=False)
+    x_positions = np.sin(theta) * cylinder_radius
+    y_positions = np.cos(theta) * cylinder_radius
 
-    # Create the circular cross-section vertices
-    angles = np.linspace(0, 2 * np.pi, num_circular_divisions + 1)
-    x_circular = cylinder_radius * np.cos(angles)
-    y_circular = cylinder_radius * np.sin(angles)
-    z_circular = np.zeros(num_circular_divisions + 1)
+    # Calculate positions along the longitudinal divisions
+    z_positions = np.linspace(-cylinder_height/2, cylinder_height/2, num_longitudinal_divisions+1)
 
-    # Create the longitudinal division vertices
-    z_longitudinal = np.linspace(
-        0, cylinder_height, num_longitudinal_divisions + 1)
+    # Create vertices
+    vertices_temp = []
+    for z in z_positions:
+        for x, y in zip(x_positions, y_positions):
+            vertices_temp.append([x, y, z])
+    vertices_temp = np.array(vertices_temp)
 
-    # Combine the circular and longitudinal vertices
-    vertices = np.empty(((num_circular_divisions + 1) *
-                        (num_longitudinal_divisions + 1), 3))
-    for i in range(num_longitudinal_divisions + 1):
-        vertices[i * (num_circular_divisions + 1): (i + 1) *
-                 (num_circular_divisions + 1), 0] = x_circular
-        vertices[i * (num_circular_divisions + 1): (i + 1) *
-                 (num_circular_divisions + 1), 1] = y_circular
-        vertices[i * (num_circular_divisions + 1): (i + 1) *
-                 (num_circular_divisions + 1), 2] = z_longitudinal[i]
+    # Create faces
+    faces = []
+    for i in range(num_longitudinal_divisions):
+        for j in range(num_circular_divisions):
+            a = i * num_circular_divisions + j
+            b = i * num_circular_divisions + (j + 1) % num_circular_divisions
+            c = (i + 1) * num_circular_divisions + j
+            d = (i + 1) * num_circular_divisions + (j + 1) % num_circular_divisions
+            faces.append([a, b, c])
+            faces.append([b, d, c])
+    faces = np.array(faces)
 
-    # Apply rotation to vertices
-    rotation_matrix = get_rotation_matrix(
-        rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle)
-    vertices = np.dot(vertices, rotation_matrix.T)
+    # Rotate the cylinder in the desired orientation
+    rot_vec = np.array([rotation_vector_x, rotation_vector_y, rotation_vector_z])
+    rot_mat = calc_3d_rotation_matrix_by_vector(rot_vec, rotation_angle)
 
-    # Create the faces
-    tri_1_vert_inds_1 = np.arange(
-        1, (num_circular_divisions)*(num_longitudinal_divisions)+1)
-    tri_1_vert_inds_2 = tri_1_vert_inds_1 + 1
+    vertices=np.dot(rot_mat, vertices_temp.T).T
+    cylinder_mesh = DataStructure(vertices=vertices, faces=faces)
 
-    # Take care of index overflow at the end of the rings
-    overflow_indices = np.where(
-        np.mod(tri_1_vert_inds_2 - 1, num_circular_divisions) == 0)
-    tri_1_vert_inds_2[overflow_indices] -= num_circular_divisions
-
-    tri_1_vert_inds_3 = tri_1_vert_inds_2 + num_circular_divisions
-
-    tri_2_vert_inds_1 = tri_1_vert_inds_1
-    tri_2_vert_inds_2 = tri_1_vert_inds_3
-    tri_2_vert_inds_3 = np.arange(
-        1, (num_circular_divisions)*(num_longitudinal_divisions)+1) + num_circular_divisions
-
-    faces_1 = np.vstack(
-        (tri_1_vert_inds_2, tri_1_vert_inds_1, tri_1_vert_inds_3))
-    faces_2 = np.vstack(
-        (tri_2_vert_inds_2, tri_2_vert_inds_1, tri_2_vert_inds_3))
-
-    faces = np.hstack((faces_1.T, faces_2.T)).T
-
-    mesh = DataStructure(vertices=vertices, faces=faces)
-    return mesh
+    return cylinder_mesh
 
 
-def get_rotation_matrix(rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle):
+def calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle):
     """
-    Calculates the rotation matrix based on the rotation vector and angle.
+    Calculate the 3D rotation matrix around a rotation axis given by a vector and an angle.
 
     Args:
-        rotation_vector_x (float): The x-component of the rotation vector.
-        rotation_vector_y (float): The y-component of the rotation vector.
-        rotation_vector_z (float): The z-component of the rotation vector.
-        rotation_angle (float): The rotation angle in radians.
+        rot_vec (numpy.ndarray): Rotation vector.
+        rot_angle (float): Rotation angle.
 
     Returns:
-        numpy.ndarray: The rotation matrix.
-
-    Raises:
-        ValueError: If the rotation angle is not finite.
-
-    Examples:
-        >>> rotation_vector_x = 1.0
-        >>> rotation_vector_y = 0.0
-        >>> rotation_vector_z = 0.0
-        >>> rotation_angle = np.pi / 4
-        >>> rotation_matrix = get_rotation_matrix(rotation_vector_x, rotation_vector_y,
-        ...                                       rotation_vector_z, rotation_angle)
-        >>> print(rotation_matrix)
-        [[ 1.     0.     0.   ]
-         [ 0.     0.707 -0.707]
-         [ 0.     0.707  0.707]]
+        numpy.ndarray: 3D rotation matrix.
     """
-    if not np.isfinite(rotation_angle):
-        raise ValueError("Rotation angle must be a finite value.")
+    rot_vec = rot_vec / np.linalg.norm(rot_vec)  # Normalize rotation vector
+    u_x, u_y, u_z = rot_vec
 
-    cos_theta = np.cos(rotation_angle)
-    sin_theta = np.sin(rotation_angle)
+    tmp1 = np.sin(rot_angle)
+    tmp2 = np.cos(rot_angle)
+    tmp3 = 1 - np.cos(rot_angle)
 
-    rotation_matrix = np.array([[cos_theta + rotation_vector_x ** 2 * (1 - cos_theta),
-                                 rotation_vector_x * rotation_vector_y *
-                                 (1 - cos_theta) - rotation_vector_z * sin_theta,
-                                 rotation_vector_x * rotation_vector_z * (1 - cos_theta) + rotation_vector_y * sin_theta],
-                                [rotation_vector_y * rotation_vector_x * (1 - cos_theta) + rotation_vector_z * sin_theta,
-                                 cos_theta + rotation_vector_y ** 2 *
-                                 (1 - cos_theta),
-                                 rotation_vector_y * rotation_vector_z * (1 - cos_theta) - rotation_vector_x * sin_theta],
-                                [rotation_vector_z * rotation_vector_x * (1 - cos_theta) - rotation_vector_y * sin_theta,
-                                 rotation_vector_z * rotation_vector_y *
-                                 (1 - cos_theta) + rotation_vector_x * sin_theta,
-                                 cos_theta + rotation_vector_z ** 2 * (1 - cos_theta)]])
+    rot_mat_out = np.zeros((3, 3))
+    rot_mat_out[0, 0] = tmp2 + u_x**2 * tmp3
+    rot_mat_out[0, 1] = u_x * u_y * tmp3 - u_z * tmp1
+    rot_mat_out[0, 2] = u_x * u_z * tmp3 + u_y * tmp1
+    rot_mat_out[1, 0] = u_y * u_x * tmp3 + u_z * tmp1
+    rot_mat_out[1, 1] = tmp2 + u_y**2 * tmp3
+    rot_mat_out[1, 2] = u_y * u_z * tmp3 - u_x * tmp1
+    rot_mat_out[2, 0] = u_z * u_x * tmp3 - u_y * tmp1
+    rot_mat_out[2, 1] = u_z * u_y * tmp3 + u_x * tmp1
+    rot_mat_out[2, 2] = tmp2 + u_z**2 * tmp3
 
-    return rotation_matrix
+    return rot_mat_out
 
 
 if __name__ == "__main__":
