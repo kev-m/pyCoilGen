@@ -11,7 +11,7 @@ from build_planar_mesh import build_planar_mesh
 #from build_circular_mesh import build_circular_mesh
 from build_biplanar_mesh import build_biplanar_mesh
 
-from data_structures import CoilMesh, DataStructure
+from data_structures import DataStructure
 
 log = logging.getLogger(__name__)
 
@@ -123,12 +123,12 @@ def create_unique_noded_mesh(non_unique_mesh):
     unique_assignments = np.column_stack((np.arange(1, len(unique_inds) + 1), unique_inds + 1))
 
     for tri_ind in range(faces.shape[0]):
-        faces[tri_ind, 0] = unique_assignments[faces[tri_ind, 0] - 1, 1]
-        faces[tri_ind, 1] = unique_assignments[faces[tri_ind, 1] - 1, 1]
-        faces[tri_ind, 2] = unique_assignments[faces[tri_ind, 2] - 1, 1]
+        faces[tri_ind, 0] = unique_assignments[faces[tri_ind, 0], 1]
+        faces[tri_ind, 1] = unique_assignments[faces[tri_ind, 1], 1]
+        faces[tri_ind, 2] = unique_assignments[faces[tri_ind, 2], 1]
 
     #unique_noded_mesh = {'faces': faces, 'vertices': unique_verts}
-    unique_noded_mesh = CoilMesh(unique_verts, None, faces)
+    unique_noded_mesh = DataStructure(vertices=unique_verts, faces=faces-1) 
     return unique_noded_mesh
 
 
