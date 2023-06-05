@@ -30,13 +30,32 @@ def build_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_lo
         tuple: Tuple containing the vertices and faces of the planar mesh.
 
     """
+    simple_vertices, faces = simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions)
+    vertices = apply_rotation_translation(simple_vertices, rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle,
+                      center_position_x, center_position_y, center_position_z)
+    return DataStructure(vertices=vertices, faces=faces)
+
+
+def simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions):
+    """
+    Generate a planar mesh with specified dimensions and parameters.
+
+    Args:
+        planar_height (float): Height of the planar mesh.
+        planar_width (float): Width of the planar mesh.
+        num_lateral_divisions (int): Number of divisions in the lateral direction.
+        num_longitudinal_divisions (int): Number of divisions in the longitudinal direction.
+
+    Returns:
+        tuple: Tuple containing the vertices and faces of the planar mesh.
+
+    """
 
     # Calculate the step size in the lateral and longitudinal directions
     lateral_step = planar_width / num_lateral_divisions
     longitudinal_step = planar_height / num_longitudinal_divisions
 
     # Generate the vertices of the planar mesh
-    # vertices = []
     vertices = np.empty(((num_lateral_divisions + 1) *
                         (num_longitudinal_divisions + 1), 3))
 
@@ -47,22 +66,13 @@ def build_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_lo
             y = j * longitudinal_step - planar_height / 2
             z = 0.0
 
-            # Apply rotation and translation to the vertex coordinates
-            x, y, z = apply_rotation_translation(x, y, z, rotation_vector_x, rotation_vector_y,
-                                                 rotation_vector_z, rotation_angle,
-                                                 center_position_x, center_position_y, center_position_z)
-
-            # vertices.append([x, y, z])
             vertices[index] = np.array([x, y, z])
             index += 1
 
 
     # Generate the faces of the planar mesh
-    #faces = []
     faces = np.empty(((num_lateral_divisions) *
                         (num_longitudinal_divisions) * 2, 3), dtype=int)
-    # 4,5 
-    # 40
     index = 0
     for i in range(num_lateral_divisions):
         for j in range(num_longitudinal_divisions):
@@ -81,18 +91,16 @@ def build_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_lo
             index += 1
 
     # return np.array(vertices), np.array(faces)
-    return DataStructure(vertices=vertices, faces=faces)
+    return vertices, faces
 
 
-def apply_rotation_translation(x, y, z, rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle,
+def apply_rotation_translation(vertices, rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle,
                                center_position_x, center_position_y, center_position_z):
     """
     Apply rotation and translation to a point in 3D space.
 
     Args:
-        x (float): X coordinate of the point.
-        y (float): Y coordinate of the point.
-        z (float): Z coordinate of the point.
+        vertices (ndarray) : Array of vertics
         rotation_vector_x (float): X component of the rotation vector.
         rotation_vector_y (float): Y component of the rotation vector.
         rotation_vector_z (float): Z component of the rotation vector.
@@ -102,20 +110,20 @@ def apply_rotation_translation(x, y, z, rotation_vector_x, rotation_vector_y, ro
         center_position_z (float): Z component of the center position.
 
     Returns:
-        tuple: Tuple containing the transformed coordinates (x, y, z).
+        vertices: ndarray containing the transformed input.
 
     """
 
     # Apply rotation around the rotation vector
     rotation_matrix = calculate_rotation_matrix(
         rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle)
-    rotated_point = np.dot(rotation_matrix, np.array([x, y, z]))
+    rotated_vertices = np.dot(vertices, rotation_matrix)
 
     # Apply translation
-    translated_point = rotated_point + \
+    translated_vertices = rotated_vertices + \
         np.array([center_position_x, center_position_y, center_position_z])
 
-    return tuple(translated_point)
+    return translated_vertices
 
 
 def calculate_rotation_matrix(rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle):

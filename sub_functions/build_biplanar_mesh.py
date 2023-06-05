@@ -1,13 +1,24 @@
 # System
 import numpy as np
 
+# Logging
+import logging
+
 # Local imports
 from data_structures import DataStructure
 
-def build_biplanar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions, target_normal_x, target_normal_y, target_normal_z, center_position_x, center_position_y, center_position_z, plane_distance):
+from build_planar_mesh import simple_planar_mesh, apply_rotation_translation
+
+log = logging.getLogger(__name__)
+
+def build_biplanar_mesh(planar_height, planar_width,
+                        num_lateral_divisions, num_longitudinal_divisions,
+                        target_normal_x, target_normal_y, target_normal_z,
+                        center_position_x, center_position_y, center_position_z,
+                        plane_distance):
     """
     Create a biplanar regular mesh in any orientation.
-    
+
     Parameters:
     - planar_height (float): Height of the planar mesh.
     - planar_width (float): Width of the planar mesh.
@@ -20,26 +31,40 @@ def build_biplanar_mesh(planar_height, planar_width, num_lateral_divisions, num_
     - center_position_y (float): Y-coordinate of the center position.
     - center_position_z (float): Z-coordinate of the center position.
     - plane_distance (float): Distance between the two planes.
-    
+
     Returns:
     - biplanar_mesh (dict): Dictionary containing the mesh faces and vertices.
     """
-    
-    # Define the mesh triangles
-    tri_1_vert_inds_1 = (np.tile(np.arange(1, num_lateral_divisions + 1), (num_longitudinal_divisions, 1)) + np.tile(np.arange(num_longitudinal_divisions)[:, np.newaxis], (1, num_lateral_divisions)) * (num_lateral_divisions + 1)).T
-    tri_1_vert_inds_2 = (np.tile(np.arange(2, num_lateral_divisions + 2), (num_longitudinal_divisions, 1)) + np.tile(np.arange(num_longitudinal_divisions)[:, np.newaxis], (1, num_lateral_divisions)) * (num_lateral_divisions + 1)).T
-    tri_1_vert_inds_3 = (np.tile(np.arange(2, num_lateral_divisions + 2), (num_longitudinal_divisions, 1)) + np.tile(np.arange(num_longitudinal_divisions)[:, np.newaxis] - 1, (1, num_lateral_divisions)) * (num_lateral_divisions + 1)).T
-    tri_2_vert_inds_1 = tri_1_vert_inds_1
-    tri_2_vert_inds_2 = (np.tile(np.arange(1, num_lateral_divisions + 1), (num_longitudinal_divisions, 1)) + np.tile(np.arange(num_longitudinal_divisions)[:, np.newaxis], (1, num_lateral_divisions)) * (num_lateral_divisions + 1)).T
-    tri_2_vert_inds_3 = tri_1_vert_inds_2
-    faces_1 = np.column_stack((tri_1_vert_inds_1.ravel(), tri_1_vert_inds_2.ravel(), tri_1_vert_inds_3.ravel()))
-    faces_2 = np.column_stack((tri_2_vert_inds_1.ravel(), tri_2_vert_inds_2.ravel(), tri_2_vert_inds_3.ravel()))
 
-    # Define the vertex positions
-    x_positions = np.linspace(-planar_width/2, planar_width/2, num_lateral_divisions + 1)
-    y_positions = np.linspace(-planar_height/2, planar_height/2, num_longitudinal_divisions + 1)
-    x, y = np.meshgrid(x_positions, y_positions)
-    
+    simple_vertices1, faces1 = simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions)
+    log.debug(" simple_vertices1 shape: %s", simple_vertices1.shape)
+    # Shift the vertices up
+    simple_vertices1 += np.array([0.0, 0.0, plane_distance/2.0])
+
+    simple_vertices2, faces2 = simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions)
+    log.debug(" simple_vertices2 shape: %s", simple_vertices2.shape)
+    # Shift the vertices down
+    simple_vertices2 -= np.array([0.0, 0.0, plane_distance/2.0])
+
+    # Combine the vertix arrays
+    simple_vertices = np.append(simple_vertices1, simple_vertices2, axis=0)
+    log.debug(" simple_vertices shape: %s", simple_vertices.shape)
+
+    log.debug(" faces1 shape: %s", faces1.shape)
+    num_faces1 = simple_vertices1.shape[0]
+    faces = np.append(faces1, faces2 + num_faces1, axis=0)
+
+    # Translate and shift
+    shifted_vertices = translate_and_shift(simple_vertices,
+                                           target_normal_x, target_normal_y, target_normal_z,
+                                           center_position_x, center_position_y, center_position_z)
+
+    return DataStructure(vertices=shifted_vertices, faces=faces)
+
+
+def translate_and_shift(vertices, 
+                        target_normal_x, target_normal_y, target_normal_z,
+                        center_position_x, center_position_y, center_position_z):
     old_normal = np.array([0, 0, 1])
     target_normal = np.array([target_normal_x, target_normal_y, target_normal_z])
     
@@ -50,26 +75,15 @@ def build_biplanar_mesh(planar_height, planar_width, num_lateral_divisions, num_
         rot_vec = np.array([1, 0, 0])
         rot_angle = 0
     
-    z1 = np.zeros_like(y) + plane_distance / 2
-    z2 = np.zeros_like(y) - plane_distance / 2
-    
-    rot_mat = calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle)
-    
-    vertices1 = np.dot(rot_mat, np.vstack((y.ravel(), x.ravel(), z1.ravel()))) + np.array([center_position_x, center_position_y, center_position_z]).reshape(3, 1)
-    vertices2 = np.dot(rot_mat, np.vstack((y.ravel(), x.ravel(), z2.ravel()))) + np.array([center_position_x, center_position_y, center_position_z]).reshape(3, 1)
-    
-    faces_first_plane = np.vstack((faces_1, faces_2))
-    faces_second_plane = np.vstack((faces_1, faces_2)) + vertices1.shape[1]
-    
-    #biplanar_mesh = {
-    #    'faces': np.vstack((faces_first_plane, faces_second_plane)),
-    #    'vertices': np.vstack((vertices1.T, vertices2.T))
-    #}
-    mesh = DataStructure(vertices=np.vstack((vertices1.T, vertices2.T)), faces=np.vstack((faces_first_plane, faces_second_plane)))
-    return mesh
+    # Rotate
+    rot_mat = calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle)    
+    rot_vertices = np.dot(vertices, rot_mat)
 
+    # Shift
+    shifted_vertices = rot_vertices + np.array([center_position_x, center_position_y, center_position_z])
+
+    return shifted_vertices
     
-    return biplanar_mesh
 
 def calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle):
     """
@@ -105,6 +119,10 @@ def calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle):
 
 
 if __name__ == "__main__":
+    # Set up logging
+    log = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.DEBUG)
+
     planar_height = 2.0
     planar_width = 3.0
     num_lateral_divisions = 4
@@ -117,10 +135,10 @@ if __name__ == "__main__":
     center_position_z = 0.0
     plane_distance = 0.5
     mesh = build_biplanar_mesh(planar_height, planar_width,
-                                          num_lateral_divisions, num_longitudinal_divisions,
-                                          target_normal_x, target_normal_y, target_normal_z,
-                                          center_position_x, center_position_y, center_position_z,
-                                          plane_distance)
+                               num_lateral_divisions, num_longitudinal_divisions,
+                               target_normal_x, target_normal_y, target_normal_z,
+                               center_position_x, center_position_y, center_position_z,
+                               plane_distance)
     print(mesh.vertices)
     print(mesh.faces)
 
