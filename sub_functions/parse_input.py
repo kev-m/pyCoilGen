@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 
 
-def parse_input(arg_list=None):
+def parse_input(parse_cli = True):
     """
     Parse the input arguments using argparse.
 
@@ -266,13 +266,22 @@ def parse_input(arg_list=None):
                         0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2], help="Parameters for the generation of the (default) biplanar mesh")
 
     # Parse the input arguments
-    if arg_list is not None:
-        input = parser.parse_args(arg_list)
+    if parse_cli == False:
+        input = parser.parse_args([])
     else:
         input = parser.parse_args()
 
     return parser, input
 
+def create_input(dictionary):
+    parser, input = parse_input(False)
+    for key, value in dictionary.items():
+        if hasattr(input, key):
+            setattr(input, key, value)
+        else:
+            print(f"Attribute '{key}' does not exist in the data structure.")
+
+    return parser, input
 
 if __name__ == "__main__":
     import logging

@@ -39,43 +39,43 @@ def read_mesh(input):
             # Load the stl file; read the coil mesh surface
             coil_mesh = stlread_local(input.geometry_source_path + '/' + input.coil_mesh_file)
             coil_mesh = create_unique_noded_mesh(coil_mesh)
-            coil_mesh.vertices = coil_mesh.vertices.T
-            coil_mesh.faces = coil_mesh.faces.T
+            #coil_mesh.vertices = coil_mesh.vertices.T
+            #coil_mesh.faces = coil_mesh.faces.T
 
         elif input.coil_mesh_file == 'create cylinder mesh':
             # No external mesh is specified by stl file; create default cylindrical mesh
             coil_mesh = build_cylinder_mesh(*input.cylinder_mesh_parameter_list)
             coil_mesh = create_unique_noded_mesh(coil_mesh)
-            coil_mesh.vertices = coil_mesh.vertices.T
-            coil_mesh.faces = coil_mesh.faces.T
+            #coil_mesh.vertices = coil_mesh.vertices.T
+            #coil_mesh.faces = coil_mesh.faces.T
 
         elif input.coil_mesh_file == 'create double cone mesh':
             # No external mesh is specified by stl file; create default double cone mesh
             coil_mesh = build_double_cone_mesh(*input.double_cone_mesh_parameter_list)
             coil_mesh = create_unique_noded_mesh(coil_mesh)
-            coil_mesh.vertices = coil_mesh.vertices.T
-            coil_mesh.faces = coil_mesh.faces.T
+            #coil_mesh.vertices = coil_mesh.vertices.T
+            #coil_mesh.faces = coil_mesh.faces.T
 
         elif input.coil_mesh_file == 'create planary mesh':
             # No external mesh is specified by stl file; create default planar mesh
             coil_mesh = build_planar_mesh(*input.planar_mesh_parameter_list)
             coil_mesh = create_unique_noded_mesh(coil_mesh)
-            coil_mesh.vertices = coil_mesh.vertices.T
-            coil_mesh.faces = coil_mesh.faces.T
+            #coil_mesh.vertices = coil_mesh.vertices.T
+            #coil_mesh.faces = coil_mesh.faces.T
 
         elif input.coil_mesh_file == 'create circular mesh':
             # No external mesh is specified by stl file; create default circular mesh
             coil_mesh = build_circular_mesh(*input.circular_mesh_parameter_list)
             coil_mesh = create_unique_noded_mesh(coil_mesh)
-            coil_mesh.vertices = coil_mesh.vertices.T
-            coil_mesh.faces = coil_mesh.faces.T
+            #coil_mesh.vertices = coil_mesh.vertices.T
+            #coil_mesh.faces = coil_mesh.faces.T
 
         elif input.coil_mesh_file == 'create bi-planary mesh':
             # No external mesh is specified by stl file; create default biplanar mesh
             coil_mesh = build_biplanar_mesh(*input.biplanar_mesh_parameter_list)
             coil_mesh = create_unique_noded_mesh(coil_mesh)
-            coil_mesh.vertices = coil_mesh.vertices.T
-            coil_mesh.faces = coil_mesh.faces.T
+            #coil_mesh.vertices = coil_mesh.vertices.T
+            #coil_mesh.faces = coil_mesh.faces.T
 
     else:
         loaded_file = load(cd() + '/' + input.sf_source_file)

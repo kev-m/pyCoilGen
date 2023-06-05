@@ -8,9 +8,6 @@ from data_structures import DataStructure
 
 log = logging.getLogger(__name__)
 
-
-import numpy as np
-
 def build_cylinder_mesh(
         cylinder_height,
         cylinder_radius,
