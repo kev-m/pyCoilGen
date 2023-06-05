@@ -21,7 +21,7 @@ def split_disconnected_mesh(coil_mesh_in):
 
     """
 
-    coil_mesh_in.faces = coil_mesh_in.faces.T  # Transpose the faces array
+    coil_mesh_in.faces = coil_mesh_in.faces#.T  # Transpose the faces array
 
     # Initialize vertex group array
     vert_group = np.zeros(coil_mesh_in.faces.shape[0], dtype=np.uint32)
@@ -53,8 +53,8 @@ def split_disconnected_mesh(coil_mesh_in):
         unqVertIds, _, newVertIndices = np.unique(
             faces_of_group, return_index=True, return_inverse=True)
         unqVertIds -= 1 # Matlab uses 1 index, so must subtract 1 from face indices
-        faces = np.reshape(newVertIndices, faces_of_group.shape).T
-        vertices = coil_mesh_in.vertices[:, unqVertIds]
+        faces = np.reshape(newVertIndices, faces_of_group.shape)#.T
+        vertices = coil_mesh_in.vertices[unqVertIds, :]
         coil_part = DataStructure(
             faces=faces, vertices=vertices, unique_vert_inds=unqVertIds)
         coil_parts[current_group - 1] = DataStructure(coil_mesh=coil_part)
