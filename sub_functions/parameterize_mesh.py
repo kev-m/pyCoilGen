@@ -29,10 +29,11 @@ def parameterize_mesh(coil_parts, input):
 
         # Compute face normals
         #face_normals = faceNormal(triangulation(coil_parts[part_ind].coil_mesh.faces.T, coil_parts[part_ind].coil_mesh.vertices.T))
-        face_normals = calculate_face_normals(faces=coil_parts[part_ind].coil_mesh.faces.T, vertices=coil_parts[part_ind].coil_mesh.vertices.T)
+        #face_normals = calculate_face_normals(faces=coil_parts[part_ind].coil_mesh.faces.T, vertices=coil_parts[part_ind].coil_mesh.vertices.T)
+        face_normals = calculate_face_normals(faces=coil_parts[part_ind].coil_mesh.faces, vertices=coil_parts[part_ind].coil_mesh.vertices)
         max_face_normal_std = np.max([np.std(face_normals[:, 0]), np.std(face_normals[:, 1]), np.std(face_normals[:, 2])])
 
-        coil_parts[part_ind].coil_mesh.v = coil_parts[part_ind].coil_mesh.vertices.T
+        coil_parts[part_ind].coil_mesh.v = coil_parts[part_ind].coil_mesh.vertices#.T
         #coil_parts[part_ind].coil_mesh.fn = faceNormal(triangulation(coil_parts[part_ind].coil_mesh.faces.T, coil_parts[part_ind].coil_mesh.v))
         coil_parts[part_ind].coil_mesh.fn = face_normals
 
