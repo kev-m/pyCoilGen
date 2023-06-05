@@ -1,0 +1,59 @@
+# System imports
+import sys
+from pathlib import Path
+import numpy as np
+
+# Trimesh
+import trimesh
+
+# Logging
+import logging
+
+# Local imports
+# Add the sub_functions directory to the Python module search path
+sub_functions_path = Path(__file__).resolve().parent / '../sub_functions'
+sys.path.append(str(sub_functions_path))
+
+# Import the required modules from sub_functions directory
+from build_cylinder_mesh import build_cylinder_mesh
+from read_mesh import create_unique_noded_mesh
+
+if __name__ == "__main__":
+    # Set up logging
+    log = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.DEBUG)
+    # logging.basicConfig(level=logging.INFO)
+
+    # attach to logger so trimesh messages will be printed to console
+    trimesh.util.attach_to_log()
+
+
+    cylinder_height = 0.8
+    cylinder_radius = 0.3
+    num_circular_divisions = 20
+    num_longitudinal_divisions = 20
+    rotation_vector_x = 1.0
+    rotation_vector_y = 0.0
+    rotation_vector_z = 0.0
+    rotation_angle = 0.0
+    coil_mesh = build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions,
+                               num_longitudinal_divisions, rotation_vector_x, rotation_vector_y,
+                               rotation_vector_z, rotation_angle)
+    coil_mesh = create_unique_noded_mesh(coil_mesh)
+    #coil_mesh.vertices = coil_mesh.vertices.T
+    #coil_mesh.faces = coil_mesh.faces.T
+    
+    log.debug(" coil_mesh: Vertices: %s", coil_mesh.vertices)
+    log.debug(" coil_mesh: Faces: %s", coil_mesh.faces)
+    log.debug(" shape vertices: %s", coil_mesh.vertices.shape)
+    log.debug(" faces min: %d, max: %s", np.min(coil_mesh.faces), np.max(coil_mesh.faces))
+
+    mesh = trimesh.Trimesh(vertices=coil_mesh.vertices, faces=coil_mesh.faces)
+
+    # is the current mesh watertight?
+    log.debug("mesh.is_watertight: %s", mesh.is_watertight)
+
+    # what's the euler number for the mesh?
+    log.debug("mesh.euler_number: %s", mesh.euler_number)
+
+    mesh.show()
