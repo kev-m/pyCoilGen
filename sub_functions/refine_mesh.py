@@ -1,5 +1,10 @@
 import numpy as np
 
+# Logging
+import logging
+
+log = logging.getLogger(__name__)
+
 def refine_mesh(coil_parts, input):
     """
     Increase the resolution of the mesh and interpolate the stream function.
@@ -83,5 +88,62 @@ def refine_mesh(coil_parts, input):
 
             coil_parts[part_ind].coil_mesh.vertices = subdivided_mesh.vertices.T
             coil_parts[part_ind].coil_mesh.faces = subdivided_mesh.faces.T
+
+    return coil_parts
+
+def refine_mesh_gpt(coil_parts, input):
+    """
+    Increase the resolution of the mesh.
+
+    Args:
+        coil_parts (object): Coil parts object with attributes 'coil_mesh'.
+        input (object): Input object with attributes 'iteration_num_mesh_refinement' and 'sf_source_file'.
+
+    Returns:
+        coil_parts (object): Updated coil parts object with refined mesh.
+
+    """
+    iteration_num_mesh_refinement = input.iteration_num_mesh_refinement
+    sf_source_file = input.sf_source_file
+
+    if sf_source_file == 'none':
+        log.debug(" - iteration_num_mesh_refinement: %d", iteration_num_mesh_refinement)
+        for part_ind in range(len(coil_parts)):
+            subdivided_mesh = coil_parts[part_ind].coil_mesh
+            
+            vertices = subdivided_mesh.vertices
+            faces = subdivided_mesh.faces
+
+            for _ in range(iteration_num_mesh_refinement):
+                new_faces = []
+                new_vertices = np.copy(vertices)
+
+                for face in faces:
+                    v1, v2, v3 = face
+
+                    # Compute midpoints of the edges
+                    v12 = (vertices[v1] + vertices[v2]) / 2.0
+                    v23 = (vertices[v2] + vertices[v3]) / 2.0
+                    v31 = (vertices[v3] + vertices[v1]) / 2.0
+
+                    # Add new vertices to the mesh
+                    new_vertices = np.vstack([new_vertices, v12, v23, v31])
+                    v12_idx = len(new_vertices) - 3
+                    v23_idx = len(new_vertices) - 2
+                    v31_idx = len(new_vertices) - 1
+
+                    # Create new faces using the new vertices
+                    new_faces.append([v1, v12_idx, v31_idx])
+                    new_faces.append([v12_idx, v2, v23_idx])
+                    new_faces.append([v31_idx, v23_idx, v3])
+                    new_faces.append([v12_idx, v23_idx, v31_idx])
+
+                # Update vertices and faces for the next iteration
+                vertices = new_vertices
+                faces = np.array(new_faces)
+
+
+            coil_parts[part_ind].coil_mesh.vertices = vertices
+            coil_parts[part_ind].coil_mesh.faces = faces
 
     return coil_parts
