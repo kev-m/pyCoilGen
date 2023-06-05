@@ -12,11 +12,12 @@ sys.path.append(str(sub_functions_path))
 
 # Import the required modules from sub_functions directory
 from read_mesh import read_mesh
-from parse_input import parse_input
+from parse_input import parse_input, create_input
 from split_disconnected_mesh import split_disconnected_mesh
-from refine_mesh import refine_mesh
+from refine_mesh import refine_mesh_2 as refine_mesh
 from parameterize_mesh import parameterize_mesh
 
+from data_structures import DataStructure
 """
 from define_target_field import define_target_field
 from temp_evaluation import temp_evaluation
@@ -43,7 +44,7 @@ from calculate_gradient import calculate_gradient
 from load_preoptimized_data import load_preoptimized_data
 """
 
-def CoilGen(log, arg_list=None):
+def CoilGen(log, input=None):
     # Create optimized coil finished coil layout
     # Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
     # 5.10.2021
@@ -55,7 +56,13 @@ def CoilGen(log, arg_list=None):
     # NS (2021). Curve intersections (https://www.mathworks.com/matlabcentral/fileexchange/22441-curve-intersections), MATLAB Central File Exchange.
 
     # Parse the input variables
-    input_parser, input_args = parse_input(arg_list)
+    if type(input) is dict:
+        log.debug(" - converting input dict to input type.")
+        input_parser, input_args = create_input(input)
+    elif input is None:
+        input_parser, input_args = parse_input(input)
+    else:
+        input_args = input
 
     # Print the input variables
     log.debug('Parse inputs: %s', input_args)
@@ -64,6 +71,7 @@ def CoilGen(log, arg_list=None):
         # Read the input mesh
         print('Load geometry:')
         coil_mesh, target_mesh, secondary_target_mesh = read_mesh(input_args)
+        #log.debug(" coil_mesh.faces: %s", coil_mesh.faces)
 
         # Split the mesh and the stream function into disconnected pieces
         print('Split the mesh and the stream function into disconnected pieces.')
@@ -72,6 +80,7 @@ def CoilGen(log, arg_list=None):
         # Upsample the mesh density by subdivision
         print('Upsample the mesh by subdivision:')
         coil_parts = refine_mesh(coil_parts, input_args)
+        #log.debug("coil_parts: %s", coil_parts)
 
         # Parameterize the mesh
         print('Parameterize the mesh:')
@@ -189,7 +198,7 @@ if __name__ == "__main__":
     # logging.basicConfig(level=logging.INFO)
 
     # DEBUG:split_disconnected_mesh:Shape: (400, 6), (3, 441)
-    arg_list = ['--coil_mesh_file', 'create cylinder mesh'] # Runs OK
+    input = DataStructure(coil_mesh_file='create cylinder mesh') # Runs OK
 
     # split_disconnected_mesh.py", line 60, in split_disconnected_mesh
     # DEBUG:split_disconnected_mesh:Shape: (800, 3), (3, 441)
@@ -198,4 +207,4 @@ if __name__ == "__main__":
     # DEBUG:split_disconnected_mesh:Shape: (124, 3), (3, 64)
     # arg_list = ['--coil_mesh_file', 'closed_cylinder_length_300mm_radius_150mm.stl'] # IndexError: index 64 is out of bounds for axis 1 with size 64
     # arg_list = ['--coil_mesh_file', 'dental_gradient_ccs_single_low.stl'] # IndexError: index 114 is out of bounds for axis 1 with size 114
-    CoilGen(log, arg_list=arg_list)
+    CoilGen(log, input=input)
