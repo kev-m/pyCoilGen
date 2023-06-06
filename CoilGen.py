@@ -14,7 +14,7 @@ sys.path.append(str(sub_functions_path))
 from read_mesh import read_mesh
 from parse_input import parse_input, create_input
 from split_disconnected_mesh import split_disconnected_mesh
-from refine_mesh import refine_mesh_gpt as refine_mesh
+from refine_mesh import refine_mesh_delegated as refine_mesh
 from parameterize_mesh import parameterize_mesh
 
 from data_structures import DataStructure

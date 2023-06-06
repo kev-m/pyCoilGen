@@ -27,7 +27,6 @@ if __name__ == "__main__":
     # attach to logger so trimesh messages will be printed to console
     trimesh.util.attach_to_log()
 
-
     cylinder_height = 0.8
     cylinder_radius = 0.3
     num_circular_divisions = 20
@@ -36,19 +35,21 @@ if __name__ == "__main__":
     rotation_vector_y = 0.0
     rotation_vector_z = 0.0
     rotation_angle = 0.0
-    coil_mesh = build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions,
+    data_mesh = build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions,
                                num_longitudinal_divisions, rotation_vector_x, rotation_vector_y,
                                rotation_vector_z, rotation_angle)
-    coil_mesh = create_unique_noded_mesh(coil_mesh)
-    #coil_mesh.vertices = coil_mesh.vertices.T
-    #coil_mesh.faces = coil_mesh.faces.T
+    coil_mesh = create_unique_noded_mesh(data_mesh)
     
-    log.debug(" coil_mesh: Vertices: %s", coil_mesh.vertices)
-    log.debug(" coil_mesh: Faces: %s", coil_mesh.faces)
-    log.debug(" shape vertices: %s", coil_mesh.vertices.shape)
-    log.debug(" faces min: %d, max: %s", np.min(coil_mesh.faces), np.max(coil_mesh.faces))
+    #log.debug(" coil_mesh: Vertices: %s", coil_mesh.get_vertices())
+    #log.debug(" coil_mesh: Faces: %s", coil_mesh.get_faces())
+    log.debug(" shape vertices: %s", coil_mesh.get_vertices().shape)
+    log.debug(" faces min: %d, max: %s", np.min(coil_mesh.get_faces()), np.max(coil_mesh.get_faces()))
 
-    mesh = trimesh.Trimesh(vertices=coil_mesh.vertices, faces=coil_mesh.faces)
+    parts = coil_mesh.separate_into_get_parts()
+    log.debug("Parts: %d", len(parts))
+
+    # Access the Trimesh implementation
+    mesh = coil_mesh.trimesh_obj
 
     # is the current mesh watertight?
     log.debug("mesh.is_watertight: %s", mesh.is_watertight)

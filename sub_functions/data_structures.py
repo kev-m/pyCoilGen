@@ -1,8 +1,20 @@
-from dataclasses import dataclass
-from typing import List, Tuple
+# System imports
 import numpy as np
 
+# Mesh implementation
+import trimesh
+
+# Logging
+import logging
+
+from dataclasses import dataclass
+from typing import List, Tuple
+
+log = logging.getLogger(__name__)
+
 # Generic class with named attributes
+
+
 class DataStructure:
     """
     Used to create a data structure with named attributes.
@@ -13,8 +25,104 @@ class DataStructure:
     Returns:
         DataStructure (object): an object with attributes, xxx.a, xxx.b, etc.
     """
+
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+
+# Mesh class that encapsulates and hides a specific implementation.
+class Mesh:
+    """
+    Represents a mesh without exposing the underlying mesh implementation.
+
+    Args:
+        vertices (ndarray, optional): A float array of vertices [x, y, z].
+        faces (ndarray, optional): An int array of face indices into the vertices array.
+        trimesh_obj (Trimesh, optional): An instance of Trimesh representing the mesh.
+
+    Raises:
+        ValueError: If neither vertices and faces, nor trimesh_obj are provided.
+
+    Returns:
+        Mesh (object): An abstract mesh.
+    """
+
+    def __init__(self, trimesh_obj=None, vertices=None, faces=None):
+        if trimesh_obj is not None:
+            self.trimesh_obj = trimesh_obj
+        elif vertices is not None and faces is not None:
+            self.trimesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
+        else:
+            raise ValueError(
+                "Either vertices and faces, or trimesh_obj must be provided.")
+
+    @staticmethod
+    def load_from_file(filename):
+        """
+        Load a mesh from a file.
+
+        Args:
+            filename (str): The path to the mesh file.
+
+        Returns:
+            Mesh: An instance of Mesh representing the loaded mesh.
+        """
+        trimesh_obj = trimesh.load_mesh(filename)
+        return Mesh(trimesh_obj=trimesh_obj)
+
+    def get_vertices(self):
+        """
+        Returns the vertices of the mesh.
+
+        Returns:
+            ndarray: The float array of vertices [x, y, z].
+        """
+        return self.trimesh_obj.vertices
+
+    def get_faces(self):
+        """
+        Returns the faces of the mesh.
+
+        Returns:
+            ndarray: The int array of face indices into the vertices array.
+        """
+        return self.trimesh_obj.faces
+
+    def separate_into_get_parts(self):
+        """
+        Split the mesh into parts, if possible.
+
+        Splits the Mesh contains multiple, seperate, parts.
+
+        Returns:
+            List[Mesh]: A list of Mesh objects.
+        """
+        trimesh_parts = self.trimesh_obj.split(only_watertight=False)
+        log.debug("Split into %d parts", len(trimesh_parts))
+
+        parts = []
+        for part in trimesh_parts:
+            parts.append(Mesh(part))
+
+        return parts
+
+    def refine(self, inplace=False):
+        """
+        Increase the resolution of the mesh by splitting face.
+
+        Args:
+            inplace (bool): Specify to modify the existing Mesh. If false, returns a new Mesh.
+
+
+        Returns:
+            Mesh: The refined Mesh.
+        """
+        mesh = self.trimesh_obj.subdivide()
+        if inplace:
+            self.trimesh_obj = mesh
+            return self
+        
+        return Mesh(mesh)
 
 @dataclass
 class UnsortedPoint:
@@ -22,6 +130,7 @@ class UnsortedPoint:
     Represents an unsorted point in the coil mesh.
     """
     potential: float
+
 
 @dataclass
 class Loop:
@@ -32,12 +141,14 @@ class Loop:
     edge_inds: np.ndarray
     current_orientation: int
 
+
 @dataclass
 class UnarrangedLoop:
     """
     Represents an unarranged loop in the coil mesh.
     """
     loop: List[Loop]
+
 
 @dataclass
 class RawPart:
@@ -46,6 +157,7 @@ class RawPart:
     """
     unsorted_points: List[UnsortedPoint]
     unarranged_loops: List[UnarrangedLoop]
+
 
 @dataclass
 class ContourLine:
@@ -56,6 +168,7 @@ class ContourLine:
     uv: np.ndarray
     potential: float
     current_orientation: int
+
 
 @dataclass
 class CoilMesh:
@@ -68,6 +181,7 @@ class CoilMesh:
     # boundary ??
     # normals ??
 
+
 @dataclass
 class CoilParts:
     """
@@ -77,6 +191,7 @@ class CoilParts:
     contour_lines: List[ContourLine]
     coil_mesh: CoilMesh
 
+
 @dataclass
 class ParameterizedMesh:
     """
@@ -84,6 +199,7 @@ class ParameterizedMesh:
     """
     f: np.ndarray
     uv: np.ndarray
+
 
 @dataclass
 class GradientData:
@@ -93,6 +209,7 @@ class GradientData:
     """
     mean_gradient_strength: float
     gradient_out: np.ndarray
+
 
 @dataclass
 class LocalOpeningGab:
@@ -104,12 +221,14 @@ class LocalOpeningGab:
     point_2: int
     opening_gab: float
 
+
 @dataclass
 class CalcRotationMatrixResult:
     """
     Represents the result of the calculation of a rotation matrix.
     """
     rot_mat_out: np.ndarray
+
 
 @dataclass
 class CalcLocalOpeningGabResult:
@@ -118,6 +237,7 @@ class CalcLocalOpeningGabResult:
     """
     local_opening_gab: float
 
+
 @dataclass
 class CalcLocalOpeningGabOutput:
     """
@@ -125,6 +245,7 @@ class CalcLocalOpeningGabOutput:
     TODO: find usage.
     """
     local_opening_gab: float
+
 
 @dataclass
 class LoopCalculationInput:
@@ -135,6 +256,7 @@ class LoopCalculationInput:
     point_1: int
     point_2: int
     opening_gab: float
+
 
 @dataclass
 class CalcLocalOpeningGab2Input:
@@ -148,6 +270,7 @@ class CalcLocalOpeningGab2Input:
     cut_direction: Tuple[float, float, float]
     opening_gab: float
 
+
 @dataclass
 class PotentialSortedCutPoints:
     """
@@ -156,6 +279,7 @@ class PotentialSortedCutPoints:
     """
     cut_points: np.ndarray
     cut_direction: Tuple[float, float, float]
+
 
 @dataclass
 class CalcGradientAlongVectorInput:
@@ -167,6 +291,7 @@ class CalcGradientAlongVectorInput:
     field_coords: np.ndarray
     target_endcoding_function: str
 
+
 @dataclass
 class Calc3DRotationMatrixInput:
     """
@@ -177,15 +302,19 @@ class Calc3DRotationMatrixInput:
     rot_angle: float
 
 # Generated for calc_potential_levels
+
+
 @dataclass
 class CoilPart:
     stream_function: List[float]
     contour_step: float
     potential_level_list: List[float]
 
+
 @dataclass
 class CombinedMesh:
     stream_function: List[float]
+
 
 @dataclass
 class InputParameters:
@@ -194,6 +323,8 @@ class InputParameters:
     level_set_method: str
 
 # Generated for calculate_basis_functions
+
+
 @dataclass
 class BasisElement:
     stream_function_potential: float
@@ -203,6 +334,7 @@ class BasisElement:
     face_normal: np.ndarray
     triangle_points_ABC: np.ndarray
     current: np.ndarray
+
 
 @dataclass
 class CoilPart:
@@ -215,6 +347,8 @@ class CoilPart:
     current_density_mat: np.ndarray
 
 # Generated for calculate_gradient
+
+
 @dataclass
 class LayoutGradient:
     dBxdxyz: np.ndarray
@@ -223,5 +357,3 @@ class LayoutGradient:
     gradient_in_target_direction: np.ndarray = None
     mean_gradient_in_target_direction: float = None
     std_gradient_in_target_direction: float = None
-
-  

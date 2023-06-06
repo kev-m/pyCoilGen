@@ -147,3 +147,25 @@ def refine_mesh_gpt(coil_parts, input):
             coil_parts[part_ind].coil_mesh.faces = faces
 
     return coil_parts
+
+def refine_mesh_delegated(coil_parts, input):
+    """
+    Increase the resolution of the mesh.
+
+    Args:
+        coil_parts (List[Mesh]): A list of Mesh objects.
+        input (object): Input object with attributes 'iteration_num_mesh_refinement' and 'sf_source_file'.
+
+    Returns:
+        (List[Mesh]): Updated coil parts object with refined mesh.
+
+    """
+    iteration_num_mesh_refinement = input.iteration_num_mesh_refinement
+    sf_source_file = input.sf_source_file
+
+    if sf_source_file == 'none':
+        log.debug(" - iteration_num_mesh_refinement: %d", iteration_num_mesh_refinement)
+        for part_ind in range(len(coil_parts)):
+            coil_parts[part_ind].refine(inplace=True)
+
+    return coil_parts

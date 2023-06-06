@@ -11,7 +11,7 @@ from build_planar_mesh import build_planar_mesh
 #from build_circular_mesh import build_circular_mesh
 from build_biplanar_mesh import build_biplanar_mesh
 
-from data_structures import DataStructure
+from data_structures import Mesh
 
 log = logging.getLogger(__name__)
 
@@ -37,45 +37,34 @@ def read_mesh(input):
         if input.coil_mesh_file.endswith('.stl'):
             log.debug("Loading STL")
             # Load the stl file; read the coil mesh surface
-            coil_mesh = stlread_local(input.geometry_source_path + '/' + input.coil_mesh_file)
-            coil_mesh = create_unique_noded_mesh(coil_mesh)
-            #coil_mesh.vertices = coil_mesh.vertices.T
-            #coil_mesh.faces = coil_mesh.faces.T
+            #coil_mesh = Mesh.stlread_local(input.geometry_source_path + '/' + input.coil_mesh_file)
+            #coil_mesh = create_unique_noded_mesh(mesh_data)
+            coil_mesh = Mesh.load_from_file(input.geometry_source_path + '/' + input.coil_mesh_file)
 
         elif input.coil_mesh_file == 'create cylinder mesh':
             # No external mesh is specified by stl file; create default cylindrical mesh
-            coil_mesh = build_cylinder_mesh(*input.cylinder_mesh_parameter_list)
-            coil_mesh = create_unique_noded_mesh(coil_mesh)
-            #coil_mesh.vertices = coil_mesh.vertices.T
-            #coil_mesh.faces = coil_mesh.faces.T
+            mesh_data = build_cylinder_mesh(*input.cylinder_mesh_parameter_list)
+            coil_mesh = create_unique_noded_mesh(mesh_data)
 
         elif input.coil_mesh_file == 'create double cone mesh':
             # No external mesh is specified by stl file; create default double cone mesh
-            coil_mesh = build_double_cone_mesh(*input.double_cone_mesh_parameter_list)
-            coil_mesh = create_unique_noded_mesh(coil_mesh)
-            #coil_mesh.vertices = coil_mesh.vertices.T
-            #coil_mesh.faces = coil_mesh.faces.T
+            mesh_data = build_double_cone_mesh(*input.double_cone_mesh_parameter_list)
+            coil_mesh = create_unique_noded_mesh(mesh_data)
 
         elif input.coil_mesh_file == 'create planary mesh':
             # No external mesh is specified by stl file; create default planar mesh
-            coil_mesh = build_planar_mesh(*input.planar_mesh_parameter_list)
-            coil_mesh = create_unique_noded_mesh(coil_mesh)
-            #coil_mesh.vertices = coil_mesh.vertices.T
-            #coil_mesh.faces = coil_mesh.faces.T
+            mesh_data = build_planar_mesh(*input.planar_mesh_parameter_list)
+            coil_mesh = create_unique_noded_mesh(mesh_data)
 
         elif input.coil_mesh_file == 'create circular mesh':
             # No external mesh is specified by stl file; create default circular mesh
-            coil_mesh = build_circular_mesh(*input.circular_mesh_parameter_list)
-            coil_mesh = create_unique_noded_mesh(coil_mesh)
-            #coil_mesh.vertices = coil_mesh.vertices.T
-            #coil_mesh.faces = coil_mesh.faces.T
+            mesh_data = build_circular_mesh(*input.circular_mesh_parameter_list)
+            coil_mesh = create_unique_noded_mesh(mesh_data)
 
         elif input.coil_mesh_file == 'create bi-planary mesh':
             # No external mesh is specified by stl file; create default biplanar mesh
-            coil_mesh = build_biplanar_mesh(*input.biplanar_mesh_parameter_list)
-            coil_mesh = create_unique_noded_mesh(coil_mesh)
-            #coil_mesh.vertices = coil_mesh.vertices.T
-            #coil_mesh.faces = coil_mesh.faces.T
+            mesh_data = build_biplanar_mesh(*input.biplanar_mesh_parameter_list)
+            coil_mesh = create_unique_noded_mesh(mesh_data)
 
     else:
         loaded_file = load(cd() + '/' + input.sf_source_file)
@@ -83,14 +72,14 @@ def read_mesh(input):
 
     # Read the target mesh surface
     if input.target_mesh_file != 'none':
-        target_mesh = stlread_local(input.geometry_source_path + '/' + input.target_mesh_file)
+        target_mesh = Mesh.load_from_file(input.geometry_source_path + '/' + input.target_mesh_file)
         target_mesh = create_unique_noded_mesh(target_mesh)
     else:
         target_mesh = None
 
     # Read the shielded mesh surface
     if input.secondary_target_mesh_file != 'none':
-        shielded_mesh = stlread_local(input.geometry_source_path + '/' + input.secondary_target_mesh_file)
+        shielded_mesh = Mesh.load_from_file(input.geometry_source_path + '/' + input.secondary_target_mesh_file)
         shielded_mesh = create_unique_noded_mesh(shielded_mesh)
     else:
         shielded_mesh = None
@@ -103,33 +92,16 @@ def create_unique_noded_mesh(non_unique_mesh):
     Create a mesh with unique nodes.
 
     Args:
-        non_unique_mesh (object): Mesh object with non-unique nodes.
+        non_unique_mesh (DataStructure): Mesh object with non-unique nodes.
 
     Returns:
-        unique_noded_mesh (object): Mesh object with unique nodes.
+        unique_noded_mesh (Mesh): Mesh object with unique nodes.
     """
 
     faces = non_unique_mesh.faces
     verts = non_unique_mesh.vertices
 
-    if faces.shape[1] != 3:
-        faces = faces.T
-
-    if verts.shape[1] != 3:
-        verts = verts.T
-
-    # Remove double nodes
-    unique_verts, unique_inds = np.unique(verts, axis=0, return_inverse=True)
-    unique_assignments = np.column_stack((np.arange(1, len(unique_inds) + 1), unique_inds + 1))
-
-    for tri_ind in range(faces.shape[0]):
-        faces[tri_ind, 0] = unique_assignments[faces[tri_ind, 0], 1]
-        faces[tri_ind, 1] = unique_assignments[faces[tri_ind, 1], 1]
-        faces[tri_ind, 2] = unique_assignments[faces[tri_ind, 2], 1]
-
-    #unique_noded_mesh = {'faces': faces, 'vertices': unique_verts}
-    unique_noded_mesh = DataStructure(vertices=unique_verts, faces=faces-1) 
-    return unique_noded_mesh
+    return Mesh(vertices=verts, faces=faces)
 
 
 def stlread_local(file):

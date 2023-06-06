@@ -111,9 +111,7 @@ def calculate_face_normals(vertices, faces):
     """
     # Calculate vectors for each face
     vec1 = vertices[faces[:, 1]] - vertices[faces[:, 0]]
-    log.debug("vec1: %s", vec1)
     vec2 = vertices[faces[:, 2]] - vertices[faces[:, 0]]
-    log.debug("vec2: %s", vec2)
 
     # Compute cross product to get face normals
     normals = np.cross(vec1, vec2)
