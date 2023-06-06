@@ -45,17 +45,18 @@ if __name__ == "__main__":
     # log.debug(" coil_mesh: Faces: %s", coil_mesh.faces)
 
     # DEBUG   (checking2.py: 44)  shape vertices: (114, 3)
-    log.debug(" shape vertices: %s", coil_mesh.vertices.shape)
+    log.debug(" shape vertices: %s", coil_mesh.get_vertices().shape)
     # DEBUG:__main__: shape faces: (182, 3)
-    log.debug(" shape faces: %s", coil_mesh.faces.shape)
+    log.debug(" shape faces: %s", coil_mesh.get_faces().shape)
     log.debug(" faces min: %d, max: %s", np.min(
-        coil_mesh.faces), np.max(coil_mesh.faces))
+        coil_mesh.get_faces()), np.max(coil_mesh.get_faces()))
 
     # mesh = trimesh.load('Geometry_Data/dental_gradient_ccs_single_low.stl')
     #  <trimesh.Trimesh(vertices.shape=(114, 3), faces.shape=(182, 3))>
     # log.debug(" coil_mesh: %s", mesh)
 
-    mesh = trimesh.Trimesh(vertices=coil_mesh.vertices, faces=coil_mesh.faces)
+    # Access implementation
+    mesh = coil_mesh.trimesh_obj
 
     # is the current mesh watertight?
     log.debug("mesh.is_watertight: %s", mesh.is_watertight)

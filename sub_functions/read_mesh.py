@@ -11,7 +11,7 @@ from build_planar_mesh import build_planar_mesh
 #from build_circular_mesh import build_circular_mesh
 from build_biplanar_mesh import build_biplanar_mesh
 
-from data_structures import Mesh
+from data_structures import DataStructure, Mesh
 
 log = logging.getLogger(__name__)
 

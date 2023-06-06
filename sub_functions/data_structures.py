@@ -102,7 +102,7 @@ class Mesh:
 
         parts = []
         for part in trimesh_parts:
-            parts.append(Mesh(part))
+            parts.append(DataStructure(coil_mesh=Mesh(part)))
 
         return parts
 
@@ -124,6 +124,24 @@ class Mesh:
         
         return Mesh(mesh)
 
+    def face_normals(self):
+        """
+        Get the normals of each face in the mesh.
+
+        Returns:
+            ndarray: An array of face normals with shape (num_faces, 3).
+        """
+        return self.trimesh_obj.face_normals
+
+    def boundary(self):
+        """
+        Get the boundary face indices of the mesh.
+
+        Returns:
+            ndarray: An array of boundary face indices.
+        """
+        return self.trimesh_obj.boundary_facets
+    
 @dataclass
 class UnsortedPoint:
     """

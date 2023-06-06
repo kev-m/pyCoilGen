@@ -166,6 +166,6 @@ def refine_mesh_delegated(coil_parts, input):
     if sf_source_file == 'none':
         log.debug(" - iteration_num_mesh_refinement: %d", iteration_num_mesh_refinement)
         for part_ind in range(len(coil_parts)):
-            coil_parts[part_ind].refine(inplace=True)
+            coil_parts[part_ind].coil_mesh.refine(inplace=True)
 
     return coil_parts
