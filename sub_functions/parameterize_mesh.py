@@ -1,12 +1,19 @@
+# System imports
+from typing import List
 import numpy as np
 
+# Logging
+import logging
+
+
+# Local imports
+from data_structures import Mesh
 from mesh_parameterization_iterative import mesh_parameterization_iterative
+from matlab_internal import faceNormal
 
+log = logging.getLogger(__name__)
 
-from matlab_internal import faceNormal, triangulation, freeBoundary, calculate_face_normals
-
-
-def parameterize_mesh(coil_parts, input):
+def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
     """
     Create the parameterized 2D mesh.
 
@@ -25,28 +32,32 @@ def parameterize_mesh(coil_parts, input):
     circular_factor = input.circular_diameter_factor
 
     for part_ind in range(len(coil_parts)):
+        mesh_part = coil_parts[part_ind].coil_mesh
 
+        log.debug(" - processing %d, vertices shape: %s", part_ind, mesh_part.get_vertices().shape)
         # Compute face normals
-        face_normals = calculate_face_normals(
-            faces=coil_parts[part_ind].coil_mesh.faces, vertices=coil_parts[part_ind].coil_mesh.vertices)
+        face_normals = mesh_part.face_normals()
+
         max_face_normal_std = np.max([np.std(face_normals[:, 0]), np.std(
             face_normals[:, 1]), np.std(face_normals[:, 2])])
+        
+        log.debug(" - max_face_normal_std: %s", max_face_normal_std)
 
-        coil_parts[part_ind].coil_mesh.v = coil_parts[part_ind].coil_mesh.vertices
-        coil_parts[part_ind].coil_mesh.fn = face_normals
+        mesh_part.v = mesh_part.get_vertices()
+        mesh_part.fn = face_normals
 
         # Check if vertex coordinates are rather constant in one of the three dimensions
         if not (max_face_normal_std < 1e-6):
             # Go for the parameterization; distinguish between cylinder and non-cylinder
 
             if not surface_is_cylinder:
-                coil_parts[part_ind].coil_mesh = mesh_parameterization_iterative(
-                    coil_parts[part_ind].coil_mesh)
+                mesh_part = mesh_parameterization_iterative(
+                    mesh_part)
                 # Create a 2D dataset for fit
             else:
                 # Planarization of cylinder
                 boundary_edges = freeBoundary(triangulation(
-                    coil_parts[part_ind].coil_mesh.faces.T, coil_parts[part_ind].coil_mesh.vertices.T))
+                    mesh_part.faces.T, mesh_part.vertices.T))
 
                 # Build the boundary loops from the boundary edges
                 is_new_node = np.hstack(([boundary_edges[:, 0].T], [0])) == np.hstack(
@@ -67,9 +78,9 @@ def parameterize_mesh(coil_parts, input):
                 # Check if the cylinder is oriented along the z-axis
                 # If so, make a rotated copy for the parameterization
                 opening_mean = np.mean(
-                    coil_parts[part_ind].coil_mesh.vertices[:, boundary_loop_nodes[0]], axis=1)
+                    mesh_part.vertices[:, boundary_loop_nodes[0]], axis=1)
                 overall_mean = np.mean(
-                    coil_parts[part_ind].coil_mesh.vertices, axis=1)
+                    mesh_part.vertices, axis=1)
                 old_orientation_vector = (
                     opening_mean - overall_mean) / np.linalg.norm(opening_mean - overall_mean)
                 z_vec = np.array([0, 0, 1])
@@ -85,7 +96,7 @@ def parameterize_mesh(coil_parts, input):
                 rot_mat = calc_3d_rotation_matrix_by_vector(
                     rotation_vector, angle)
                 rotated_vertices = np.dot(
-                    rot_mat, coil_parts[part_ind].coil_mesh.vertices)
+                    rot_mat, mesh_part.vertices)
                 point_coords = rotated_vertices
                 min_z_cylinder = np.min(point_coords[2, :])
                 point_coords[2, :] = point_coords[2, :] + min_z_cylinder
@@ -97,11 +108,11 @@ def parameterize_mesh(coil_parts, input):
                 v_coord = (point_coords[2, :] - np.mean(r_coord)
                            * circular_factor) * np.cos(phi_coord)
 
-                coil_parts[part_ind].coil_mesh.uv = np.vstack(
+                mesh_part.uv = np.vstack(
                     (u_coord, v_coord))
-                coil_parts[part_ind].coil_mesh.n = vertexNormal(triangulation(
-                    coil_parts[part_ind].coil_mesh.faces.T, coil_parts[part_ind].coil_mesh.vertices.T)).T
-                coil_parts[part_ind].coil_mesh.boundary = boundary_loop_nodes
+                mesh_part.n = vertexNormal(triangulation(
+                    mesh_part.faces.T, mesh_part.vertices.T)).T
+                mesh_part.boundary = boundary_loop_nodes
 
         else:
             # The 3D mesh is already planar, but the normals must be aligned to the z-axis
@@ -117,18 +128,18 @@ def parameterize_mesh(coil_parts, input):
                     [[0, -1 * v_c[2], v_c[1]], [v_c[2], 0, -1 * v_c[0]], [-1 * v_c[1], v_c[0], 0]])
                 rot_mat = np.eye(3) + mat_v + np.dot(mat_v,
                                                      mat_v) * (1 / (1 + v_d))
-                out_a = np.sum(np.tile(rot_mat[0, :], (coil_parts[part_ind].coil_mesh.vertices.shape[1], 1)
-                                       ).T * coil_parts[part_ind].coil_mesh.vertices.T, axis=0)
-                out_b = np.sum(np.tile(rot_mat[1, :], (coil_parts[part_ind].coil_mesh.vertices.shape[1], 1)
-                                       ).T * coil_parts[part_ind].coil_mesh.vertices.T, axis=0)
-                out_c = np.sum(np.tile(rot_mat[2, :], (coil_parts[part_ind].coil_mesh.vertices.shape[1], 1)
-                                       ).T * coil_parts[part_ind].coil_mesh.vertices.T, axis=0)
-                coil_parts[part_ind].coil_mesh.uv = np.vstack((out_a, out_b))
+                out_a = np.sum(np.tile(rot_mat[0, :], (mesh_part.vertices.shape[1], 1)
+                                       ).T * mesh_part.vertices.T, axis=0)
+                out_b = np.sum(np.tile(rot_mat[1, :], (mesh_part.vertices.shape[1], 1)
+                                       ).T * mesh_part.vertices.T, axis=0)
+                out_c = np.sum(np.tile(rot_mat[2, :], (mesh_part.vertices.shape[1], 1)
+                                       ).T * mesh_part.vertices.T, axis=0)
+                mesh_part.uv = np.vstack((out_a, out_b))
             else:
-                coil_parts[part_ind].coil_mesh.uv = coil_parts[part_ind].coil_mesh.vertices[:2, :]
+                mesh_part.uv = mesh_part.vertices[:2, :]
 
-            boundary_edges = freeBoundary(triangulation(coil_parts[part_ind].coil_mesh.faces.T, np.vstack(
-                (coil_parts[part_ind].coil_mesh.uv, np.zeros((1, coil_parts[part_ind].coil_mesh.uv.shape[1]))))))
+            boundary_edges = freeBoundary(triangulation(mesh_part.faces.T, np.vstack(
+                (mesh_part.uv, np.zeros((1, mesh_part.uv.shape[1]))))))
             # Build the boundary loops from the boundary edges
             is_new_node = np.hstack(([boundary_edges[:, 0].T], [0])) == np.hstack(
                 ([0], [boundary_edges[:, 1].T]))
@@ -145,8 +156,8 @@ def parameterize_mesh(coil_parts, input):
                 boundary_loop_nodes.append(np.hstack(
                     (boundary_edges[boundary_start[boundary_ind]:boundary_end[boundary_ind], 0], boundary_edges[boundary_start[boundary_ind], 0])))
 
-            coil_parts[part_ind].coil_mesh.n = vertexNormal(triangulation(
-                coil_parts[part_ind].coil_mesh.faces.T, coil_parts[part_ind].coil_mesh.vertices.T)).T
-            coil_parts[part_ind].coil_mesh.boundary = boundary_loop_nodes
+            mesh_part.n = vertexNormal(triangulation(
+                mesh_part.faces.T, mesh_part.vertices.T)).T
+            mesh_part.boundary = boundary_loop_nodes
 
     return coil_parts
