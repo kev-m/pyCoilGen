@@ -5,13 +5,13 @@ import numpy as np
 # Logging
 import logging
 
-
 # Local imports
 from data_structures import Mesh
 from mesh_parameterization_iterative import mesh_parameterization_iterative
 from matlab_internal import faceNormal
 
 log = logging.getLogger(__name__)
+
 
 def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
     """
@@ -33,18 +33,24 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
 
     for part_ind in range(len(coil_parts)):
         mesh_part = coil_parts[part_ind].coil_mesh
+        mesh_vertices = mesh_part.get_vertices()
+        mesh_faces = mesh_part.get_faces()
 
-        log.debug(" - processing %d, vertices shape: %s", part_ind, mesh_part.get_vertices().shape)
-        # Compute face normals
+        log.debug(" - processing %d, vertices shape: %s",
+                  part_ind, mesh_part.get_vertices().shape)
+
+        # Compute face and vertex normals
         face_normals = mesh_part.face_normals()
+        vertex_normals = mesh_part.vertex_normals()
 
         max_face_normal_std = np.max([np.std(face_normals[:, 0]), np.std(
             face_normals[:, 1]), np.std(face_normals[:, 2])])
-        
+
         log.debug(" - max_face_normal_std: %s", max_face_normal_std)
 
-        mesh_part.v = mesh_part.get_vertices()
+        mesh_part.v = mesh_vertices
         mesh_part.fn = face_normals
+        mesh_part.n = vertex_normals
 
         # Check if vertex coordinates are rather constant in one of the three dimensions
         if not (max_face_normal_std < 1e-6):
@@ -57,7 +63,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
             else:
                 # Planarization of cylinder
                 boundary_edges = freeBoundary(triangulation(
-                    mesh_part.faces.T, mesh_part.vertices.T))
+                    mesh_part.faces.T, mesh_vertices.T))
 
                 # Build the boundary loops from the boundary edges
                 is_new_node = np.hstack(([boundary_edges[:, 0].T], [0])) == np.hstack(
@@ -78,9 +84,9 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 # Check if the cylinder is oriented along the z-axis
                 # If so, make a rotated copy for the parameterization
                 opening_mean = np.mean(
-                    mesh_part.vertices[:, boundary_loop_nodes[0]], axis=1)
+                    mesh_vertices[:, boundary_loop_nodes[0]], axis=1)
                 overall_mean = np.mean(
-                    mesh_part.vertices, axis=1)
+                    mesh_vertices, axis=1)
                 old_orientation_vector = (
                     opening_mean - overall_mean) / np.linalg.norm(opening_mean - overall_mean)
                 z_vec = np.array([0, 0, 1])
@@ -96,7 +102,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 rot_mat = calc_3d_rotation_matrix_by_vector(
                     rotation_vector, angle)
                 rotated_vertices = np.dot(
-                    rot_mat, mesh_part.vertices)
+                    rot_mat, mesh_vertices)
                 point_coords = rotated_vertices
                 min_z_cylinder = np.min(point_coords[2, :])
                 point_coords[2, :] = point_coords[2, :] + min_z_cylinder
@@ -111,43 +117,71 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 mesh_part.uv = np.vstack(
                     (u_coord, v_coord))
                 mesh_part.n = vertexNormal(triangulation(
-                    mesh_part.faces.T, mesh_part.vertices.T)).T
+                    mesh_part.faces.T, mesh_vertices.T)).T
                 mesh_part.boundary = boundary_loop_nodes
 
         else:
             # The 3D mesh is already planar, but the normals must be aligned to the z-axis
+            log.debug(" - 3D mesh is already planar")
 
             # Rotate the planar mesh in the xy plane
             mean_norm = np.mean(face_normals, axis=0)
             new_norm = np.array([0, 0, 1])
             v_c = np.cross(mean_norm, new_norm)
 
-            if np.linalg.norm(v_c) > 1e-8:
-                v_d = np.dot(mean_norm, new_norm)
-                mat_v = np.array(
-                    [[0, -1 * v_c[2], v_c[1]], [v_c[2], 0, -1 * v_c[0]], [-1 * v_c[1], v_c[0], 0]])
-                rot_mat = np.eye(3) + mat_v + np.dot(mat_v,
-                                                     mat_v) * (1 / (1 + v_d))
-                out_a = np.sum(np.tile(rot_mat[0, :], (mesh_part.vertices.shape[1], 1)
-                                       ).T * mesh_part.vertices.T, axis=0)
-                out_b = np.sum(np.tile(rot_mat[1, :], (mesh_part.vertices.shape[1], 1)
-                                       ).T * mesh_part.vertices.T, axis=0)
-                out_c = np.sum(np.tile(rot_mat[2, :], (mesh_part.vertices.shape[1], 1)
-                                       ).T * mesh_part.vertices.T, axis=0)
-                mesh_part.uv = np.vstack((out_a, out_b))
-            else:
-                mesh_part.uv = mesh_part.vertices[:2, :]
+            log.debug(" - Orientation: mean_norm: %s, new_norm: %s, v_c: %s",
+                      mean_norm, new_norm, v_c)
 
-            boundary_edges = freeBoundary(triangulation(mesh_part.faces.T, np.vstack(
-                (mesh_part.uv, np.zeros((1, mesh_part.uv.shape[1]))))))
+            # Check if the normals are already aligned to the Z-axis
+            if np.linalg.norm(v_c) > 1e-8:
+                # Calculate the dot product between the mean normal and the target normal
+                v_d = np.dot(mean_norm, new_norm)
+
+                # Construct the rotation matrix
+                mat_v = np.array([[0, -v_c[2], v_c[1]],
+                                  [v_c[2], 0, -v_c[0]],
+                                  [-v_c[1], v_c[0], 0]])
+                rot_mat = np.eye(3) + mat_v + np.matmul(mat_v,
+                                                        mat_v) * (1 / (1 + v_d))
+
+                # Apply the rotation matrix to the vertices
+                rotated_vertices = np.matmul(mesh_vertices, rot_mat.T)
+
+                # Assign the rotated vertices to the UV attribute of the mesh
+                mesh_part.uv = rotated_vertices[:, :2]
+            else:
+                # Assign the original vertex coordinates to the UV attribute of the mesh
+                mesh_part.uv = mesh_vertices[:, :2]
+
+            log.debug(" - mesh_part.uv shape: %s", mesh_part.uv.shape)
+
+            # Compute the boundary
+
+            # Create a 2D triangulation for boundary extraction
+            boundary_vertices = np.vstack(
+                (mesh_part.uv, np.zeros((1, mesh_part.uv.shape[1]))))
+            boundary_mesh = Mesh(vertices=boundary_vertices,
+                                 faces=mesh_faces)
+
+            log.debug(" - boundary_vertices shape: %s",
+                      boundary_vertices.shape)
+            log.debug(" - mesh_faces shape: %s", mesh_faces.shape)
+
+            # Get the boundary edges.
+            boundary_edges = boundary_mesh.edge_unique_indices()
+            log.debug(" - boundary_edges shape: %s", boundary_edges.shape)
+
+            # DEBUG
+            mesh_part.display()
+
             # Build the boundary loops from the boundary edges
-            is_new_node = np.hstack(([boundary_edges[:, 0].T], [0])) == np.hstack(
-                ([0], [boundary_edges[:, 1].T]))
+            is_new_node = np.hstack(([boundary_edges[:, 0]], [0])) != np.hstack(
+                ([0], boundary_edges[:, 1]))
             is_new_node[0] = True
             is_new_node[-1] = True
-            is_new_node = ~is_new_node
+            is_new_node = np.logical_not(is_new_node)
             num_boundaries = np.sum(is_new_node) + 1
-            boundary_start = np.hstack(([1], np.where(is_new_node)[0] + 1))
+            boundary_start = np.hstack(([0], np.where(is_new_node)[0] + 1))
             boundary_end = np.hstack(
                 (np.where(is_new_node)[0], [boundary_edges.shape[0] - 1]))
             boundary_loop_nodes = []
@@ -156,8 +190,6 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 boundary_loop_nodes.append(np.hstack(
                     (boundary_edges[boundary_start[boundary_ind]:boundary_end[boundary_ind], 0], boundary_edges[boundary_start[boundary_ind], 0])))
 
-            mesh_part.n = vertexNormal(triangulation(
-                mesh_part.faces.T, mesh_part.vertices.T)).T
             mesh_part.boundary = boundary_loop_nodes
 
     return coil_parts

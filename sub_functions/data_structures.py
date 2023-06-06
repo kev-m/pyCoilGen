@@ -88,6 +88,30 @@ class Mesh:
         """
         return self.trimesh_obj.faces
 
+    def face_normals(self):
+        """
+        Get the normals of each face in the mesh.
+
+        Returns:
+            ndarray: An array of face normals with shape (num_faces, 3).
+        """
+        return self.trimesh_obj.face_normals
+
+    def vertex_normals(self):
+        """
+        Get the normals of each vertex in the mesh.
+
+        Returns:
+            ndarray: An array of vertex normals with shape (num_faces, 3).
+        """
+        return self.trimesh_obj.vertex_normals
+
+    def display(self):
+        """
+        Display the mesh
+        """
+        return self.trimesh_obj.show()
+
     def separate_into_get_parts(self):
         """
         Split the mesh into parts, if possible.
@@ -121,17 +145,8 @@ class Mesh:
         if inplace:
             self.trimesh_obj = mesh
             return self
-        
+
         return Mesh(mesh)
-
-    def face_normals(self):
-        """
-        Get the normals of each face in the mesh.
-
-        Returns:
-            ndarray: An array of face normals with shape (num_faces, 3).
-        """
-        return self.trimesh_obj.face_normals
 
     def boundary(self):
         """
@@ -141,7 +156,17 @@ class Mesh:
             ndarray: An array of boundary face indices.
         """
         return self.trimesh_obj.boundary_facets
-    
+
+    def edge_unique_indices(self):
+        """
+        Get the indices of the unique vertices on the Mesh edge.
+
+        Returns:
+            ndarray: An array of boundary face indices.
+        """
+        return self.trimesh_obj.edges_unique
+
+
 @dataclass
 class UnsortedPoint:
     """
