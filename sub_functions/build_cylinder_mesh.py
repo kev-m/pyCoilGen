@@ -4,6 +4,7 @@ import numpy as np
 import logging
 
 # Local imports
+from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
 from sub_functions.data_structures import DataStructure
 
 log = logging.getLogger(__name__)
@@ -70,37 +71,6 @@ def build_cylinder_mesh(
 
     return cylinder_mesh
 
-
-def calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle):
-    """
-    Calculate the 3D rotation matrix around a rotation axis given by a vector and an angle.
-
-    Args:
-        rot_vec (numpy.ndarray): Rotation vector.
-        rot_angle (float): Rotation angle.
-
-    Returns:
-        numpy.ndarray: 3D rotation matrix.
-    """
-    rot_vec = rot_vec / np.linalg.norm(rot_vec)  # Normalize rotation vector
-    u_x, u_y, u_z = rot_vec
-
-    tmp1 = np.sin(rot_angle)
-    tmp2 = np.cos(rot_angle)
-    tmp3 = 1 - np.cos(rot_angle)
-
-    rot_mat_out = np.zeros((3, 3))
-    rot_mat_out[0, 0] = tmp2 + u_x**2 * tmp3
-    rot_mat_out[0, 1] = u_x * u_y * tmp3 - u_z * tmp1
-    rot_mat_out[0, 2] = u_x * u_z * tmp3 + u_y * tmp1
-    rot_mat_out[1, 0] = u_y * u_x * tmp3 + u_z * tmp1
-    rot_mat_out[1, 1] = tmp2 + u_y**2 * tmp3
-    rot_mat_out[1, 2] = u_y * u_z * tmp3 - u_x * tmp1
-    rot_mat_out[2, 0] = u_z * u_x * tmp3 - u_y * tmp1
-    rot_mat_out[2, 1] = u_z * u_y * tmp3 + u_x * tmp1
-    rot_mat_out[2, 2] = tmp2 + u_z**2 * tmp3
-
-    return rot_mat_out
 
 
 if __name__ == "__main__":

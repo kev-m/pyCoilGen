@@ -8,7 +8,7 @@ import logging
 # Local imports
 from sub_functions.data_structures import Mesh
 from sub_functions.mesh_parameterization_iterative import mesh_parameterization_iterative
-from sub_functions.matlab_internal import faceNormal
+from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
 
 # Debugging
 from helpers.visualisation import visualize_vertex_connections
@@ -65,8 +65,11 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 # Create a 2D dataset for fit
             else:
                 # Planarization of cylinder
-                boundary_edges = freeBoundary(triangulation(
-                    mesh_part.faces.T, mesh_vertices.T))
+                # Get the faces
+                #boundary_edges = freeBoundary(triangulation(mesh_part.faces.T, mesh_vertices.T))
+                boundary_edges = mesh_part.boundary_edges()
+                log.debug(" - boundary_edges: %s -> %s", np.shape(boundary_edges), boundary_edges)
+
 
                 # Build the boundary loops from the boundary edges
                 is_new_node = np.hstack(([boundary_edges[:, 0].T], [0])) == np.hstack(
