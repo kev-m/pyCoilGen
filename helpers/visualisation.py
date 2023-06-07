@@ -60,9 +60,10 @@ def visualize_vertex_connections(vertices, image_x_size, image_path, mesh_uv=Non
     image.save(image_path)
 
 
-# Example usage:
-mesh_uv = [(0, 1), (1, 2), (2, 0)]  # Example vertex connections
-vertices = np.array([(-1, 0), (1, 1), (2, -1)])  # Example vertex coordinates
-image_path = 'vertex_connections.png'  # Output image path
+if __name__ == "__main__":
+    # Example usage:
+    mesh_uv = [(0, 1), (1, 2), (2, 0)]  # Example vertex connections
+    vertices = np.array([(-1, 0), (1, 1), (2, -1)])  # Example vertex coordinates
+    image_path = 'vertex_connections.png'  # Output image path
 
-visualize_vertex_connections(vertices, 800, image_path, mesh_uv)
+    visualize_vertex_connections(vertices, 800, image_path, mesh_uv)
