@@ -5,13 +5,13 @@ import os
 import logging
 
 # Local imports
-from build_cylinder_mesh import build_cylinder_mesh
+from sub_functions.build_cylinder_mesh import build_cylinder_mesh
 #from build_double_cone_mesh import build_double_cone_mesh
-from build_planar_mesh import build_planar_mesh
+from sub_functions.build_planar_mesh import build_planar_mesh
 #from build_circular_mesh import build_circular_mesh
-from build_biplanar_mesh import build_biplanar_mesh
+from sub_functions.build_biplanar_mesh import build_biplanar_mesh
 
-from data_structures import DataStructure, Mesh
+from sub_functions.data_structures import DataStructure, Mesh
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def read_mesh(input):
             mesh_data = build_double_cone_mesh(*input.double_cone_mesh_parameter_list)
             coil_mesh = create_unique_noded_mesh(mesh_data)
 
-        elif input.coil_mesh_file == 'create planary mesh':
+        elif input.coil_mesh_file == 'create planar mesh':
             # No external mesh is specified by stl file; create default planar mesh
             mesh_data = build_planar_mesh(*input.planar_mesh_parameter_list)
             coil_mesh = create_unique_noded_mesh(mesh_data)

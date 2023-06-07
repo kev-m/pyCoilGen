@@ -16,3 +16,4 @@ build/
 .vscode
 workspace.code-workspace
 matlab/
+images/

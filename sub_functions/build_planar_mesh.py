@@ -3,7 +3,7 @@ import numpy as np
 import logging
 
 # Local imports
-from data_structures import DataStructure
+from sub_functions.data_structures import DataStructure
 
 log = logging.getLogger(__name__)
 
@@ -168,7 +168,6 @@ if __name__ == "__main__":
     planar_height = 2.0
     planar_width = 3.0
     num_lateral_divisions = 4
-    num_circular_divisions = 5
     num_longitudinal_divisions = 5
     rotation_vector_x = 1.0
     rotation_vector_y = 0.0

@@ -148,14 +148,35 @@ class Mesh:
 
         return Mesh(mesh)
 
-    def boundary(self):
+    def boundary_edges(self):
         """
         Get the boundary face indices of the mesh.
 
         Returns:
             ndarray: An array of boundary face indices.
         """
-        return self.trimesh_obj.boundary_facets
+        boundary = self.trimesh_obj.facets_boundary
+        if len(np.shape(boundary)) == 3:
+            log.debug(" boundary: Extracting sub-array")
+            boundary = boundary[0]
+
+        return boundary
+    
+    def boundary_edges2(self):
+        """
+        Get the boundary face indices of the mesh.
+
+        Returns:
+            ndarray: An array of boundary face indices.
+        """
+        # Compute the unique edges of the mesh
+        edges_unique, edges_counts = np.unique(
+            self.trimesh_obj.edges_unique, axis=0, return_counts=True)
+
+        # Filter out edges that are only connected to a single face
+        boundary_edges = edges_unique[edges_counts == 1]
+
+        return boundary_edges
 
     def edge_unique_indices(self):
         """

@@ -5,9 +5,9 @@ import numpy as np
 import logging
 
 # Local imports
-from data_structures import DataStructure
+from sub_functions.data_structures import DataStructure
 
-from build_planar_mesh import simple_planar_mesh, apply_rotation_translation
+from sub_functions.build_planar_mesh import simple_planar_mesh, apply_rotation_translation
 
 log = logging.getLogger(__name__)
 

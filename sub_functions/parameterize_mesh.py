@@ -6,9 +6,12 @@ import numpy as np
 import logging
 
 # Local imports
-from data_structures import Mesh
-from mesh_parameterization_iterative import mesh_parameterization_iterative
-from matlab_internal import faceNormal
+from sub_functions.data_structures import Mesh
+from sub_functions.mesh_parameterization_iterative import mesh_parameterization_iterative
+from sub_functions.matlab_internal import faceNormal
+
+# Debugging
+from helpers.visualisation import visualize_vertex_connections
 
 log = logging.getLogger(__name__)
 
@@ -25,8 +28,8 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
         object: Updated coil parts object with parameterized mesh.
     """
 
-    # The non-cylindrical parameterization is taken from "matlabmesh
-    # @ Ryan Schmidt  rms@dgp.toronto.edu" based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes"
+    # The non-cylindrical parameterization is taken from "matlabmesh @ Ryan Schmidt  rms@dgp.toronto.edu"
+    # based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes"
 
     surface_is_cylinder = input.surface_is_cylinder_flag
     circular_factor = input.circular_diameter_factor
@@ -153,43 +156,58 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 # Assign the original vertex coordinates to the UV attribute of the mesh
                 mesh_part.uv = mesh_vertices[:, :2]
 
+            # DEBUG
+            visualize_vertex_connections(mesh_part.uv, 800, 'images/vertex_connections.png')
+
             log.debug(" - mesh_part.uv shape: %s", mesh_part.uv.shape)
 
-            # Compute the boundary
-
-            # Create a 2D triangulation for boundary extraction
-            boundary_vertices = np.vstack(
-                (mesh_part.uv, np.zeros((1, mesh_part.uv.shape[1]))))
-            boundary_mesh = Mesh(vertices=boundary_vertices,
-                                 faces=mesh_faces)
-
-            log.debug(" - boundary_vertices shape: %s",
-                      boundary_vertices.shape)
-            log.debug(" - mesh_faces shape: %s", mesh_faces.shape)
-
-            # Get the boundary edges.
-            boundary_edges = boundary_mesh.edge_unique_indices()
-            log.debug(" - boundary_edges shape: %s", boundary_edges.shape)
+            # Compute the boundary edges of the mesh
+            boundary_edges = mesh_part.boundary_edges()
+            #log.debug(" - boundary_edges: %s -> %s", np.shape(boundary_edges), boundary_edges)
 
             # DEBUG
-            mesh_part.display()
+            visualize_vertex_connections(mesh_part.uv, 800, 'images/boundary_edges1.png', boundary_edges)
 
-            # Build the boundary loops from the boundary edges
-            is_new_node = np.hstack(([boundary_edges[:, 0]], [0])) != np.hstack(
-                ([0], boundary_edges[:, 1]))
-            is_new_node[0] = True
-            is_new_node[-1] = True
-            is_new_node = np.logical_not(is_new_node)
-            num_boundaries = np.sum(is_new_node) + 1
-            boundary_start = np.hstack(([0], np.where(is_new_node)[0] + 1))
-            boundary_end = np.hstack(
-                (np.where(is_new_node)[0], [boundary_edges.shape[0] - 1]))
-            boundary_loop_nodes = []
+            # Initialize variables
+            boundary_loops = []
+            visited = set()
 
-            for boundary_ind in range(num_boundaries):
-                boundary_loop_nodes.append(np.hstack(
-                    (boundary_edges[boundary_start[boundary_ind]:boundary_end[boundary_ind], 0], boundary_edges[boundary_start[boundary_ind], 0])))
+            # Iterate through the boundary edges
+            for edge in boundary_edges:
+                # Check if the edge has already been visited
+                if edge[0] in visited or edge[1] in visited:
+                    continue
+                
+                # Start a new boundary loop
+                boundary_loop = [edge[0]]
+                current_vertex = edge[1]
 
-            mesh_part.boundary = boundary_loop_nodes
+                # Traverse the boundary loop
+                while current_vertex != edge[0]:
+                    # Add the current vertex to the boundary loop
+                    boundary_loop.append(current_vertex)
+                    visited.add(current_vertex)
+                    
+                    # Find the next boundary edge connected to the current vertex
+                    next_edge = None
+                    for e in boundary_edges:
+                        if e[0] == current_vertex and e[1] not in visited:
+                            next_edge = e
+                            #log.debug(" - next_edge: %s", next_edge)
+                            break
+
+                    if next_edge is None:
+                        #log.debug(" - No edge, trying again")
+                        break
+                    # Update the current vertex
+                    current_vertex = next_edge[1]
+
+                # Add the completed boundary loop to the list
+                boundary_loops.append(boundary_loop)
+   
+
+            log.debug(" - boundary_loops: %s", boundary_loops)
+
+            mesh_part.boundary = boundary_loops
 
     return coil_parts

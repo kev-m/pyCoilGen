@@ -4,7 +4,7 @@ import numpy as np
 import logging
 
 # Local imports
-from data_structures import DataStructure
+from sub_functions.data_structures import DataStructure
 
 log = logging.getLogger(__name__)
 
