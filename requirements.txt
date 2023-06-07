@@ -5,3 +5,13 @@ numpy==1.21.6
 # sudo apt-get install libopenblas-dev
 # sudo apt install gfortran
 scipy==1.7.3
+
+# For Mesh support
+trimesh==3.21.7
+# For mesh visualisation
+pyglet<2
+# Missing Trimesh dependency
+networkx==2.6.3
+
+# For visualisation of matrices
+pillow<=9.5
