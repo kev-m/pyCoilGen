@@ -66,21 +66,18 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
             else:
                 # Planarization of cylinder
                 # Get the faces
-                #boundary_edges = freeBoundary(triangulation(mesh_part.faces.T, mesh_vertices.T))
+                # boundary_edges = freeBoundary(triangulation(mesh_part.faces.T, mesh_vertices.T))
                 boundary_edges = mesh_part.boundary_edges()
                 log.debug(" - boundary_edges: %s -> %s", np.shape(boundary_edges), boundary_edges)
 
-
                 # Build the boundary loops from the boundary edges
-                is_new_node = np.hstack(([boundary_edges[:, 0].T], [0])) == np.hstack(
-                    ([0], [boundary_edges[:, 1].T]))
+                is_new_node = np.hstack(([boundary_edges[:, 0].T], [0])) == np.hstack(([0], [boundary_edges[:, 1].T]))
                 is_new_node[0] = True
                 is_new_node[-1] = True
                 is_new_node = ~is_new_node
                 num_boundaries = np.sum(is_new_node) + 1
                 boundary_start = np.hstack(([1], np.where(is_new_node)[0] + 1))
-                boundary_end = np.hstack(
-                    (np.where(is_new_node)[0], [boundary_edges.shape[0] - 1]))
+                boundary_end = np.hstack((np.where(is_new_node)[0], [boundary_edges.shape[0] - 1]))
                 boundary_loop_nodes = []
 
                 for boundary_ind in range(num_boundaries):
@@ -113,17 +110,12 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 min_z_cylinder = np.min(point_coords[2, :])
                 point_coords[2, :] = point_coords[2, :] + min_z_cylinder
                 phi_coord = np.arctan2(point_coords[1, :], point_coords[0, :])
-                r_coord = np.sqrt(
-                    point_coords[0, :]**2 + point_coords[1, :]**2)
-                u_coord = (point_coords[2, :] - np.mean(r_coord)
-                           * circular_factor) * np.sin(phi_coord)
-                v_coord = (point_coords[2, :] - np.mean(r_coord)
-                           * circular_factor) * np.cos(phi_coord)
+                r_coord = np.sqrt(point_coords[0, :]**2 + point_coords[1, :]**2)
+                u_coord = (point_coords[2, :] - np.mean(r_coord) * circular_factor) * np.sin(phi_coord)
+                v_coord = (point_coords[2, :] - np.mean(r_coord) * circular_factor) * np.cos(phi_coord)
 
-                mesh_part.uv = np.vstack(
-                    (u_coord, v_coord))
-                mesh_part.n = vertexNormal(triangulation(
-                    mesh_part.faces.T, mesh_vertices.T)).T
+                mesh_part.uv = np.vstack((u_coord, v_coord))
+                mesh_part.n = vertexNormal(triangulation(mesh_part.faces.T, mesh_vertices.T)).T
                 mesh_part.boundary = boundary_loop_nodes
 
         else:
@@ -166,7 +158,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
 
             # Compute the boundary edges of the mesh
             boundary_edges = mesh_part.boundary_edges()
-            #log.debug(" - boundary_edges: %s -> %s", np.shape(boundary_edges), boundary_edges)
+            # log.debug(" - boundary_edges: %s -> %s", np.shape(boundary_edges), boundary_edges)
 
             # DEBUG
             visualize_vertex_connections(mesh_part.uv, 800, 'images/boundary_edges1.png', boundary_edges)
@@ -180,7 +172,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 # Check if the edge has already been visited
                 if edge[0] in visited or edge[1] in visited:
                     continue
-                
+
                 # Start a new boundary loop
                 boundary_loop = [edge[0]]
                 current_vertex = edge[1]
@@ -190,27 +182,49 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                     # Add the current vertex to the boundary loop
                     boundary_loop.append(current_vertex)
                     visited.add(current_vertex)
-                    
+
                     # Find the next boundary edge connected to the current vertex
                     next_edge = None
                     for e in boundary_edges:
                         if e[0] == current_vertex and e[1] not in visited:
                             next_edge = e
-                            #log.debug(" - next_edge: %s", next_edge)
+                            # log.debug(" - next_edge: %s", next_edge)
                             break
 
                     if next_edge is None:
-                        #log.debug(" - No edge, trying again")
+                        # log.debug(" - No edge, trying again")
                         break
                     # Update the current vertex
                     current_vertex = next_edge[1]
 
                 # Add the completed boundary loop to the list
                 boundary_loops.append(boundary_loop)
-   
 
-            log.debug(" - boundary_loops: %s", boundary_loops)
+            # DEBUG
+            total_elements = sum(len(sublist) for sublist in boundary_loops)
+            # log.debug(" - boundary_loops shape: len(%s) -> %s", total_elements, boundary_loops)
 
-            mesh_part.boundary = boundary_loops
+            # Boundaries appear to be split into two windings, sharing the first element, merge linked boundaries:
+            reduced_loops = []
+            boundary_part = boundary_loops[0]
+            for index in range(1, len(boundary_loops)):
+                next_part = boundary_loops[index]
+                # Merge the loops if they share the same start vertex.
+                if boundary_part[0] == next_part[0]:
+                    # Drop the first element and reverse the rest
+                    next_part = next_part[1:]
+                    next_part.reverse()
+                    boundary_part += next_part
+                else:
+                    reduced_loops.append(boundary_part)
+                    boundary_part = next_part
+
+            reduced_loops.append(boundary_part)
+            # DEBUG
+            # total_elements = sum(len(sublist) for sublist in reduced_loops)
+            # log.debug(" - new_loops shape: len(%s) -> %s",total_elements, reduced_loops)
+
+            #mesh_part.boundary = boundary_loops
+            mesh_part.boundary = reduced_loops
 
     return coil_parts
