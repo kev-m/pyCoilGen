@@ -76,10 +76,10 @@ def debug1():
         'tikonov_reg_factor': 10  # Tikonov regularization factor for the SF optimization
     }
 
-    coil_parts, combined_mesh, sf_b_field, target_field, coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance, field_errors, coil_gradient, is_supressed_point = CoilGen(
-        log, arg_dict)
+    x = CoilGen(log, arg_dict)
 
 
+# A Planar mesh with a hole in the middle
 def debug2():
     from sub_functions.data_structures import DataStructure, Mesh
     from sub_functions.parameterize_mesh import parameterize_mesh
@@ -106,7 +106,7 @@ def debug2():
             y = y_min + j * y_step
 
             # Check if the vertex is inside the hole region
-            #if hole_min <= x <= hole_max and hole_min <= y <= hole_max:
+            # if hole_min <= x <= hole_max and hole_min <= y <= hole_max:
             #    continue  # Skip this vertex
 
             z = 0.0  # Z-coordinate is 0 for a planar mesh
@@ -135,8 +135,8 @@ def debug2():
 
     faces = np.array(faces)
     # Print the vertices and faces arrays
-    print("Vertices:\n", vertices)
-    print("Faces:\n", faces)
+    # print("Vertices:\n", vertices)
+    # print("Faces:\n", faces)
 
     mesh = Mesh(vertices=vertices, faces=faces)
 
@@ -147,10 +147,20 @@ def debug2():
     result = parameterize_mesh(parts, input_params)
 
 
+# Planar mesh from a file
+def debug3():
+    arg_dict = {
+        'coil_mesh_file': 'dental_gradient_ccs_single_low.stl',
+        'iteration_num_mesh_refinement': 0,  # the number of refinements for the mesh;
+    }
+    x = CoilGen(log, arg_dict)
+
+
 if __name__ == "__main__":
     # Set up logging
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
 
-    # debug1()
-    debug2()
+    debug1() # Cylindrical mesh
+    # debug2() # Planar mesh with a hole
+    # debug3() #
