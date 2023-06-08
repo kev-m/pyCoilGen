@@ -10,6 +10,10 @@ Note: Also need BLAS and gfortran to install scipy:
  ## Indexing
  Note that Matlab uses base index of 1 for arrays, whereas Numpy uses 0. Adjust all functions that create `faces` arrays accordingly.
 
+ ## Mesh Geometry
+ Confirm: Are mesh normals computed according to the right-hand rule? i.e. defined using the "counter-clockwise" or "anti-clockwise"
+ vertex ordering, where the vertices of the face are specified in a counter-clockwise direction when viewed from the outside of the mesh.
+
  ## Data Structures
  ```python
 from dataclasses import dataclass
