@@ -156,9 +156,10 @@ class Mesh:
             ndarray: An array of boundary face indices.
         """
         boundary = self.trimesh_obj.facets_boundary
-        if len(np.shape(boundary)) == 3:
-            log.debug(" boundary: Extracting sub-array")
-            boundary = boundary[0]
+        log.debug(" - boundary_edges: shape: %s", np.shape(boundary))
+        #if len(np.shape(boundary)) == 3:
+        #    log.debug(" boundary: Extracting sub-array")
+        #    boundary = boundary[0]
 
         return boundary
     
