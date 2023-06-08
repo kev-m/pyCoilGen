@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 class DataStructure:
     """
-    Used to create a data structure with named attributes.
+    Used to create a generic data structure with named attributes.
 
     Args:
         kwargs (values): name=value pairs of attributes, e.g. a=1, b=2, etc.
@@ -162,30 +162,11 @@ class Mesh:
 
         return boundary
     
-    def boundary_edges2(self):
-        """
-        Get the boundary face indices of the mesh.
-
-        Returns:
-            ndarray: An array of boundary face indices.
-        """
-        # Compute the unique edges of the mesh
-        edges_unique, edges_counts = np.unique(
-            self.trimesh_obj.edges_unique, axis=0, return_counts=True)
-
-        # Filter out edges that are only connected to a single face
-        boundary_edges = edges_unique[edges_counts == 1]
-
-        return boundary_edges
-
-    def edge_unique_indices(self):
-        """
-        Get the indices of the unique vertices on the Mesh edge.
-
-        Returns:
-            ndarray: An array of boundary face indices.
-        """
-        return self.trimesh_obj.edges_unique
+#
+#
+#  Generated data classes that are not (yet) used.
+#
+#
 
 
 @dataclass
