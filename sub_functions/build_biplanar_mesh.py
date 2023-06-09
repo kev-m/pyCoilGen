@@ -55,11 +55,11 @@ def build_biplanar_mesh(planar_height, planar_width,
     faces = np.append(faces1, faces2 + num_faces1, axis=0)
 
     # Translate and shift
-    shifted_vertices = translate_and_shift(simple_vertices,
+    shifted_vertices, normal_rep = translate_and_shift(simple_vertices,
                                            target_normal_x, target_normal_y, target_normal_z,
                                            center_position_x, center_position_y, center_position_z)
 
-    return DataStructure(vertices=shifted_vertices, faces=faces)
+    return DataStructure(vertices=shifted_vertices, faces=faces, normal=normal_rep)
 
 
 def translate_and_shift(vertices, 
@@ -72,17 +72,21 @@ def translate_and_shift(vertices,
         rot_vec = np.cross(old_normal, target_normal) / np.linalg.norm(np.cross(old_normal, target_normal))
         rot_angle = np.arcsin(np.linalg.norm(np.cross(old_normal, target_normal)) / (np.linalg.norm(old_normal) * np.linalg.norm(target_normal)))
     else:
-        rot_vec = np.array([1, 0, 0])
+        rot_vec = np.array([0, 0, 1])
         rot_angle = 0
     
     # Rotate
     rot_mat = calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle)    
     rot_vertices = np.dot(vertices, rot_mat)
 
+    # Calculate representative normal
+    normal = np.array([0.0, 0.0, 1.0])
+    normal_rep = np.dot(normal, rot_mat)
+
     # Shift
     shifted_vertices = rot_vertices + np.array([center_position_x, center_position_y, center_position_z])
 
-    return shifted_vertices
+    return shifted_vertices, normal_rep
     
 
 if __name__ == "__main__":

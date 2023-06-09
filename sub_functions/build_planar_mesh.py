@@ -31,9 +31,9 @@ def build_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_lo
 
     """
     simple_vertices, faces = simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions)
-    vertices = apply_rotation_translation(simple_vertices, rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle,
+    vertices, normal_rep = apply_rotation_translation(simple_vertices, rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle,
                       center_position_x, center_position_y, center_position_z)
-    return DataStructure(vertices=vertices, faces=faces)
+    return DataStructure(vertices=vertices, faces=faces, normal=normal_rep)
 
 
 def simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions):
@@ -111,6 +111,7 @@ def apply_rotation_translation(vertices, rotation_vector_x, rotation_vector_y, r
 
     Returns:
         vertices: ndarray containing the transformed input.
+        normal_rep: ndarray vector of the new surface normal
 
     """
 
@@ -122,8 +123,12 @@ def apply_rotation_translation(vertices, rotation_vector_x, rotation_vector_y, r
     # Apply translation
     translated_vertices = rotated_vertices + \
         np.array([center_position_x, center_position_y, center_position_z])
+    
+    # Calculate representative normal
+    normal = [0.0, 0.0, 1.0]
+    normal_rep = np.dot(normal, rotation_matrix)
 
-    return translated_vertices
+    return translated_vertices, normal_rep
 
 
 def calculate_rotation_matrix(rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle):

@@ -101,7 +101,9 @@ def create_unique_noded_mesh(non_unique_mesh):
     faces = non_unique_mesh.faces
     verts = non_unique_mesh.vertices
 
-    return Mesh(vertices=verts, faces=faces)
+    mesh = Mesh(vertices=verts, faces=faces)
+    mesh.normal_rep = non_unique_mesh.normal
+    return mesh
 
 
 def stlread_local(file):

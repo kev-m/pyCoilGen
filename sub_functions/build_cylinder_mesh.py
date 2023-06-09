@@ -66,8 +66,12 @@ def build_cylinder_mesh(
     rot_vec = np.array([rotation_vector_x, rotation_vector_y, rotation_vector_z])
     rot_mat = calc_3d_rotation_matrix_by_vector(rot_vec, rotation_angle)
 
-    vertices=np.dot(rot_mat, vertices_temp.T).T
-    cylinder_mesh = DataStructure(vertices=vertices, faces=faces)
+    # Calculate representative normal
+    normal = np.array([0.0, 0.0, 1.0])
+    normal_rep = np.dot(normal, rot_mat)
+
+    vertices=np.dot(vertices_temp, rot_mat)
+    cylinder_mesh = DataStructure(vertices=vertices, faces=faces, normal=normal_rep)
 
     return cylinder_mesh
 

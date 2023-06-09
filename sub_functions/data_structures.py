@@ -56,6 +56,17 @@ class Mesh:
             raise ValueError(
                 "Either vertices and faces, or trimesh_obj must be provided.")
 
+        # Known properties
+        # Assigned in read_mesh
+        self.normal_rep = None  # Representative normal for the mesh ([x,y,z])
+        # Calculated in parameterize_mesh
+        self.v = None           # (n,3) : The array of mesh vertices (n, [x,y,z]).
+        self.n = None           # (n,3) : The vertex normals (n, [x,y.z]).
+        self.uv = None          # Vertices, UV texture matrix (n, [x,y,z=0])
+        self.boundary = None    # List of 1D lists of vertex indices along mesh boundaries (m,[i])
+
+
+
     @staticmethod
     def load_from_file(filename):
         """
@@ -111,6 +122,12 @@ class Mesh:
         Display the mesh
         """
         return self.trimesh_obj.show()
+
+    def save_to_file(self, filename):
+        """
+        Save this mesh to a file.
+        """
+        raise Exception("Not implemented!")
 
     def separate_into_get_parts(self):
         """
