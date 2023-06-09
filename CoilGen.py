@@ -86,6 +86,9 @@ def CoilGen(log, input=None):
         print('Parameterize the mesh:')
         coil_parts = parameterize_mesh(coil_parts, input_args)
 
+        # WIP
+        return coil_parts
+
         # Define the target field
         print('Define the target field:')
         target_field, is_supressed_point = define_target_field(

@@ -13,13 +13,16 @@ print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
+from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary
+from sub_functions.read_mesh import create_unique_noded_mesh
+from sub_functions.parameterize_mesh import parameterize_mesh, get_boundary_loop_nodes
+from sub_functions.data_structures import DataStructure, Mesh
 from CoilGen import CoilGen
 
 
 def debug1():
+    print("Planar mesh")
     from sub_functions.build_planar_mesh import build_planar_mesh
-    from sub_functions.parameterize_mesh import parameterize_mesh
-    from sub_functions.data_structures import DataStructure, Mesh
 
     planar_height = 2.0
     planar_width = 3.0
@@ -37,23 +40,26 @@ def debug1():
                              center_position_x, center_position_y, center_position_z)
 
     mesh = Mesh(vertices=mesh.vertices, faces=mesh.faces)
+    print (mesh.trimesh_obj.is_watertight)
 
-    #mesh.display()
+    vertices = mesh.get_vertices()
+    faces = mesh.get_faces()
+    log.debug(" Vertices shape: %s", vertices.shape)
+    vertex_counts = np.bincount(faces.flatten())
+    print("vertex_counts: ", vertex_counts)
 
-    from sub_functions.data_structures import DataStructure
-    parts = [DataStructure(coil_mesh=mesh)]
+    # mesh.display()
 
-    input_params = DataStructure(surface_is_cylinder_flag=False, circular_diameter_factor=0.0)
-    result = parameterize_mesh(parts, input_params)
+    #from sub_functions.data_structures import DataStructure
+    #parts = [DataStructure(coil_mesh=mesh)]
+
+    #input_params = DataStructure(surface_is_cylinder_flag=False, circular_diameter_factor=0.0)
+    #result = parameterize_mesh(parts, input_params)
 
 
 # A Planar mesh with a hole in the middle
 def debug2():
-    from sub_functions.data_structures import DataStructure, Mesh
-    from sub_functions.parameterize_mesh import parameterize_mesh
-
-    input_params = DataStructure(
-        surface_is_cylinder_flag=False, circular_diameter_factor=0.0)
+    print("Planar mesh with hole")
 
     # Create small planar mesh with a hole
     # Define the mesh parameters
@@ -106,13 +112,26 @@ def debug2():
     # print("Vertices:\n", vertices)
     # print("Faces:\n", faces)
 
-    mesh = Mesh(vertices=vertices, faces=faces)
+    planar_mesh = DataStructure(vertices=vertices, faces=faces, normal=np.array([0,0,1]))
 
     # mesh.display()
+    vertex_counts = np.bincount(faces.flatten())
+    print("vertex_counts: ", vertex_counts)
 
-    from sub_functions.data_structures import DataStructure
+    mesh = create_unique_noded_mesh(planar_mesh)
+    print (mesh.trimesh_obj.is_watertight)
+    vertices = mesh.get_vertices()
+    faces = mesh.get_faces()
+    log.debug(" Vertices shape: %s", vertices.shape)
+
     parts = [DataStructure(coil_mesh=mesh)]
-    result = parameterize_mesh(parts, input_params)
+
+    input_params = DataStructure(surface_is_cylinder_flag=True, circular_diameter_factor=1.0)
+    coil_parts = parameterize_mesh(parts, input_params)
+    mesh_part = coil_parts[0].coil_mesh
+    visualize_vertex_connections(mesh_part.uv, 800, 'images/planar_hole_projected2.png')
+
+
 
 # Planar mesh from a file
 def debug3():
@@ -125,35 +144,40 @@ def debug3():
 
 # Plain cylindrical mesh
 def debug4():
+    print("Cylindrical mesh")
     from sub_functions.build_cylinder_mesh import build_cylinder_mesh
-    from sub_functions.parameterize_mesh import parameterize_mesh
-    from sub_functions.data_structures import DataStructure, Mesh
 
     # planar_mesh_parameter_list
     cylinder_height = 0.5
     cylinder_radius = 0.25
     num_circular_divisions = 8
-    num_longitudinal_divisions = 5
-    rotation_vector_x = 1.0
-    rotation_vector_y = 0.0
+    num_longitudinal_divisions = 6
+    rotation_vector_x = 0.0
+    rotation_vector_y = 1.0
     rotation_vector_z = 0.0
-    rotation_angle = 0.0
+    rotation_angle = np.pi/4.0 # 0.0
 
     # cylinder_mesh_parameter_list
 
-    mesh = build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions,
+    cylinder_mesh = build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions,
                                num_longitudinal_divisions, rotation_vector_x, rotation_vector_y,
                                rotation_vector_z, rotation_angle)
 
-    mesh = Mesh(vertices=mesh.vertices, faces=mesh.faces)
 
-    mesh.display()
+    mesh = create_unique_noded_mesh(cylinder_mesh)
+    log.debug(" Normal: %s", mesh.normal_rep)
+    print (mesh.trimesh_obj.is_watertight)
+    vertices = mesh.get_vertices()
+    faces = mesh.get_faces()
+    log.debug(" Vertices shape: %s", vertices.shape)
 
     from sub_functions.data_structures import DataStructure
     parts = [DataStructure(coil_mesh=mesh)]
 
     input_params = DataStructure(surface_is_cylinder_flag=True, circular_diameter_factor=1.0)
-    result = parameterize_mesh(parts, input_params)
+    coil_parts = parameterize_mesh(parts, input_params)
+    mesh_part = coil_parts[0].coil_mesh
+    visualize_vertex_connections(mesh_part.uv, 800, 'images/cylinder_projected2.png')
 
 
 if __name__ == "__main__":
@@ -161,7 +185,7 @@ if __name__ == "__main__":
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
 
-    # debug1()  # Planar mesh
-    # debug2() # Planar mesh with a hole
+    debug1() # Planar mesh
+    debug2() # Planar mesh with a hole
     # debug3() # Planar mesh from file
     debug4() # Cylindrical mesh
