@@ -39,17 +39,18 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
         mesh_vertices = mesh_part.get_vertices()
         mesh_faces = mesh_part.get_faces()
 
-        log.debug(" - processing %d, vertices shape: %s",
-                  part_ind, mesh_part.get_vertices().shape)
+        log.debug(" - processing %d, vertices shape: %s", part_ind, mesh_part.get_vertices().shape)
 
         # Compute face and vertex normals
         face_normals = mesh_part.face_normals()
         vertex_normals = mesh_part.vertex_normals()
 
-        max_face_normal_std = np.max([np.std(face_normals[:, 0]), np.std(
-            face_normals[:, 1]), np.std(face_normals[:, 2])])
+        max_face_normal = [np.std(face_normals[:, 0]),
+                           np.std(face_normals[:, 1]),
+                           np.std(face_normals[:, 2])]
+        max_face_normal_std = np.max(max_face_normal)
 
-        log.debug(" - max_face_normal_std: %s", max_face_normal_std)
+        log.debug(" - max_face_normal: %s, max_face_normal_std: %s", max_face_normal, max_face_normal_std)
 
         mesh_part.v = mesh_vertices
         mesh_part.fn = face_normals
@@ -58,50 +59,50 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
         # Check if vertex coordinates are rather constant in one of the three dimensions
         if not (max_face_normal_std < 1e-6):
             # Go for the parameterization; distinguish between cylinder and non-cylinder
-
             if not surface_is_cylinder:
-                mesh_part = mesh_parameterization_iterative(
-                    mesh_part)
+                mesh_part = mesh_parameterization_iterative(mesh_part)
                 # Create a 2D dataset for fit
             else:
                 # Planarization of cylinder
-                # Get the faces
-                # boundary_edges = freeBoundary(triangulation(mesh_part.faces.T, mesh_vertices.T))
-                boundary_loop_nodes = get_boundary_loop_nodes(mesh_part)
+                visualize_vertex_connections(mesh_vertices, 800, 'images/cylinder_projected1.png')
 
-                print(mesh_vertices)
-                #[:, boundary_loop_nodes[0]])
+                # Create 2D mesh for UV matrix:
+                # Rotate cylinder normal parallel to z-axis [0,0,1]
+                orig_norm = mesh_part.normal_rep
+                new_norm = np.array([0, 0, 1])
+                v_c = np.cross(orig_norm, new_norm)
+                log.debug(" -- mesh_part.normal_rep: %s, new_norm: %s, v_c: %s", orig_norm, new_norm, v_c)
 
-                # Check if the cylinder is oriented along the z-axis
-                # If so, make a rotated copy for the parameterization
-                opening_mean = np.mean(mesh_vertices[:, boundary_loop_nodes[0]], axis=1)
-                overall_mean = np.mean(mesh_vertices, axis=1)
-                old_orientation_vector = (opening_mean - overall_mean) / np.linalg.norm(opening_mean - overall_mean)
-                z_vec = np.array([0, 0, 1])
-                sina = np.linalg.norm(np.cross(old_orientation_vector, z_vec)) / (
-                    np.linalg.norm(old_orientation_vector) * np.linalg.norm(z_vec))
-                cosa = np.dot(old_orientation_vector, z_vec) / \
-                    (np.linalg.norm(old_orientation_vector) * np.linalg.norm(z_vec))
-                angle = np.arctan2(sina, cosa)
-                rotation_vector = np.cross(old_orientation_vector, np.array(
-                    [0, 0, 1])) / np.linalg.norm(np.cross(old_orientation_vector, np.array([0, 0, 1])))
+                # Project the mesh onto to x-y plane [x,y,z] -> [x+x*z, y+y*z, 0]
+                projected_vertices = mesh_vertices.copy()
+                # Rotate the vertices
+                # 1. First, check if rotation is required by checking the magnitude of the transformation vector
+                mag = np.sum([v_c[0]*v_c[0], v_c[1]*v_c[1], v_c[2]*v_c[2]])
+                if mag > 0.0:
+                    #projected_vertices = align_normals(projected_vertices, mesh_part.normal_rep, new_norm)
+                    v_d = np.dot(orig_norm, new_norm)
+                    # Construct the rotation matrix
+                    mat_v = np.array([[0, -v_c[2], v_c[1]],
+                                    [v_c[2], 0, -v_c[0]],
+                                    [-v_c[1], v_c[0], 0]])
+                    rot_mat = np.eye(3) + mat_v + np.matmul(mat_v, mat_v) * (1 / (1 + v_d))
 
-                # Calculate 3D rotation matrix by vector and angle
-                rot_mat = calc_3d_rotation_matrix_by_vector(
-                    rotation_vector, angle)
-                rotated_vertices = np.dot(
-                    rot_mat, mesh_vertices)
-                point_coords = rotated_vertices
-                min_z_cylinder = np.min(point_coords[2, :])
-                point_coords[2, :] = point_coords[2, :] + min_z_cylinder
-                phi_coord = np.arctan2(point_coords[1, :], point_coords[0, :])
-                r_coord = np.sqrt(point_coords[0, :]**2 + point_coords[1, :]**2)
-                u_coord = (point_coords[2, :] - np.mean(r_coord) * circular_factor) * np.sin(phi_coord)
-                v_coord = (point_coords[2, :] - np.mean(r_coord) * circular_factor) * np.cos(phi_coord)
+                    # Apply the rotation matrix to the vertices
+                    projected_vertices = np.matmul(projected_vertices, rot_mat.T)
+                    input_vertices = projected_vertices.copy()
+                else:
+                    input_vertices = mesh_vertices
 
-                mesh_part.uv = np.vstack((u_coord, v_coord))
-                mesh_part.n = vertexNormal(triangulation(mesh_part.faces.T, mesh_vertices.T)).T
-                mesh_part.boundary = boundary_loop_nodes
+                # Project the vertices onto the X-Y plane
+                projected_vertices[:, 0] += input_vertices[:, 0] * input_vertices[:, 2]
+                projected_vertices[:, 1] += input_vertices[:, 1] * input_vertices[:, 2]
+                projected_vertices[:, 2] = 0  # Set z-coordinate to zero (projection onto x-y plane)
+                projected_vertices_2d = projected_vertices[:,:2]
+
+                mesh_uv = Mesh(vertices=projected_vertices, faces=mesh_faces)
+                # Retrieve the vertices and the boundary loops of the projected cylinder
+                mesh_part.uv = mesh_uv.get_vertices()
+                mesh_part.boundary = get_boundary_loop_nodes(mesh_uv)
 
         else:
             # The 3D mesh is already planar, but the normals must be aligned to the z-axis
@@ -112,8 +113,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
             new_norm = np.array([0, 0, 1])
             v_c = np.cross(mean_norm, new_norm)
 
-            log.debug(" - Orientation: mean_norm: %s, new_norm: %s, v_c: %s",
-                      mean_norm, new_norm, v_c)
+            log.debug(" - Orientation: mean_norm: %s, new_norm: %s, v_c: %s", mean_norm, new_norm, v_c)
 
             # Check if the normals are already aligned to the Z-axis
             if np.linalg.norm(v_c) > 1e-8:
@@ -124,8 +124,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 mat_v = np.array([[0, -v_c[2], v_c[1]],
                                   [v_c[2], 0, -v_c[0]],
                                   [-v_c[1], v_c[0], 0]])
-                rot_mat = np.eye(3) + mat_v + np.matmul(mat_v,
-                                                        mat_v) * (1 / (1 + v_d))
+                rot_mat = np.eye(3) + mat_v + np.matmul(mat_v, mat_v) * (1 / (1 + v_d))
 
                 # Apply the rotation matrix to the vertices
                 rotated_vertices = np.matmul(mesh_vertices, rot_mat.T)
@@ -136,31 +135,63 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 # Assign the original vertex coordinates to the UV attribute of the mesh
                 mesh_part.uv = mesh_vertices[:, :2]
 
-            # DEBUG
-            visualize_vertex_connections(mesh_part.uv, 800, 'images/vertex_connections.png')
-
             log.debug(" - mesh_part.uv shape: %s", mesh_part.uv.shape)
 
-            # mesh_part.boundary = boundary_loops
             mesh_part.boundary = get_boundary_loop_nodes(mesh_part)
 
     return coil_parts
 
+# TODO: Consider moving these functions to other files
+def align_normals(vertices, original_normal, desired_normal):
+    """
+    Aligns the normals of vertices with a desired normal vector.
+
+    Args:
+        vertices (ndarray): An Nx3 array of vertices [x, y, z].
+        original_normal (ndarray): A 3D vector representing the original normal.
+        desired_normal (ndarray): A 3D vector representing the desired normal.
+
+    Returns:
+        ndarray: Transformed vertices with aligned normals.
+    """
+    # Ensure the input vectors are normalized
+    original_normal = original_normal / np.linalg.norm(original_normal)
+    desired_normal = desired_normal / np.linalg.norm(desired_normal)
+
+    v_c = np.cross(original_normal, desired_normal)
+    v_d = np.dot(original_normal, desired_normal)
+    
+    # Construct the rotation matrix
+    mat_v = np.array([[0, -v_c[2], v_c[1]],
+                    [v_c[2], 0, -v_c[0]],
+                    [-v_c[1], v_c[0], 0]])
+    rot_mat = np.eye(3) + mat_v + np.matmul(mat_v, mat_v) * (1 / (1 + v_d))
+
+    # Apply the rotation matrix to the vertices
+    transformed_vertices = np.matmul(vertices, rot_mat.T)
+
+    return transformed_vertices
+
 
 def get_boundary_loop_nodes(mesh_part: Mesh):
+    """
+    Compute the indices of the vertices on the boundaries of the mesh.
+
+    NOTE: This implementation only works for planar meshes.
+    """
     # Compute the boundary edges of the mesh
     boundary_edges = mesh_part.boundary_edges()
     # log.debug(" - boundary_edges: %s -> %s", np.shape(boundary_edges), boundary_edges)
 
     # DEBUG
-    #visualize_vertex_connections(mesh_part.uv, 800, 'images/boundary_edges1.png', boundary_edges)
+    # visualize_vertex_connections(mesh_part.uv, 800, 'images/boundary_edges1.png', boundary_edges)
 
     # Initialize variables
     boundary_loops = []
     visited = set()
 
     # Iterate through the boundary edges
-    for facet in boundary_edges: 
+    for facet in boundary_edges:
         for edge in facet:
             # log.debug(" - Edge: %s", edge)
             # Check if the edge has already been visited
@@ -199,7 +230,7 @@ def get_boundary_loop_nodes(mesh_part: Mesh):
     # log.debug(" - boundary_loops shape: len(%s) -> %s", total_elements, boundary_loops)
     # return boundary_loops
 
-    # Boundaries appear to be split into two windings, sharing the first element, merge linked boundaries:
+    # Boundaries appear to be split into two windings, sharing the first element. Merge linked boundaries:
     reduced_loops = []
     boundary_part = boundary_loops[0]
     for index in range(1, len(boundary_loops)):
@@ -216,7 +247,7 @@ def get_boundary_loop_nodes(mesh_part: Mesh):
 
     reduced_loops.append(boundary_part)
     # DEBUG
-    total_elements = sum(len(sublist) for sublist in reduced_loops)
-    log.debug(" - new_loops shape: len(%s) -> %s",total_elements, reduced_loops)
+    # total_elements = sum(len(sublist) for sublist in reduced_loops)
+    # log.debug(" - new_loops shape: len(%s) -> %s", total_elements, reduced_loops)
 
     return reduced_loops
