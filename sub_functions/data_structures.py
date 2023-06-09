@@ -12,9 +12,8 @@ from typing import List, Tuple
 
 log = logging.getLogger(__name__)
 
+
 # Generic class with named attributes
-
-
 class DataStructure:
     """
     Used to create a generic data structure with named attributes.
@@ -64,8 +63,6 @@ class Mesh:
         self.n = None           # (n,3) : The vertex normals (n, [x,y.z]).
         self.uv = None          # Vertices, UV texture matrix (n, [x,y,z=0])
         self.boundary = None    # List of 1D lists of vertex indices along mesh boundaries (m,[i])
-
-
 
     @staticmethod
     def load_from_file(filename):
@@ -174,12 +171,26 @@ class Mesh:
         """
         boundary = self.trimesh_obj.facets_boundary
         log.debug(" - boundary_edges: shape: %s", np.shape(boundary))
-        #if len(np.shape(boundary)) == 3:
+        # if len(np.shape(boundary)) == 3:
         #    log.debug(" boundary: Extracting sub-array")
         #    boundary = boundary[0]
 
         return boundary
-    
+
+# Used by define_target_field
+
+
+class TargetField:
+    """
+    To be defined.
+    """
+
+    def __init__(self):
+        self.b = None
+        self.coords = None
+        self.weights = None
+        self.target_field_group_inds = None
+
 #
 #
 #  Generated data classes that are not (yet) used.

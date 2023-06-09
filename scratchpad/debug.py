@@ -123,6 +123,7 @@ def debug2():
     vertices = mesh.get_vertices()
     faces = mesh.get_faces()
     log.debug(" Vertices shape: %s", vertices.shape)
+    log.debug(" Faces shape: %s", faces.shape)
 
     parts = [DataStructure(coil_mesh=mesh)]
 
@@ -185,7 +186,7 @@ if __name__ == "__main__":
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
 
-    #debug1() # Planar mesh
-    #debug2() # Planar mesh with a hole
+    # debug1() # Planar mesh
+    # debug2() # Planar mesh with a hole
     debug3() # Planar mesh from file
-    #debug4() # Cylindrical mesh
+    # debug4() # Cylindrical mesh
