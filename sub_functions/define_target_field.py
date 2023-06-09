@@ -3,7 +3,7 @@ import logging
 
 import numpy as np
 import os
-import sympy
+from sympy import symbols, diff, lambdify
 
 
 from scipy.io import loadmat
@@ -180,31 +180,56 @@ def symbolic_calculation_of_gradient(input, target_field):
         target_dbzbz (ndarray): Gradient in z-direction.
     """
     try:
-        x, y, z = sympy.symbols('x y z')
-        dbzdx_fun = str(sympy.diff(sympy.sympify(input.field_shape_function), x))
-        dbzdy_fun = str(sympy.diff(sympy.sympify(input.field_shape_function), y))
-        dbzdz_fun = str(sympy.diff(sympy.sympify(input.field_shape_function), z))
-        # Change the function handle for array-wise
-        dbzdx_fun = dbzdx_fun.replace("/", "./").replace("^", ".^").replace("*", ".*")
-        dbzdy_fun = dbzdy_fun.replace("/", "./").replace("^", ".^").replace("*", ".*")
-        dbzdz_fun = dbzdz_fun.replace("/", "./").replace("^", ".^").replace("*", ".*")
-        log.debug(' - dbzdx_fun: %s', dbzdx_fun)
-        log.debug(' - dbzdy_fun: %s', dbzdy_fun)
-        log.debug(' - dbzdz_fun: %s', dbzdz_fun)
-        dbzdx_fun = eval("@(x,y,z) " + dbzdx_fun)
-        dbzdy_fun = eval("@(x,y,z) " + dbzdy_fun)
-        dbzdz_fun = eval("@(x,y,z) " + dbzdz_fun)
+
+
+        x, y, z = symbols('x y z')
+        dbzdx_expr = diff(input.field_shape_function, x)
+        dbzdy_expr = diff(input.field_shape_function, y)
+        dbzdz_expr = diff(input.field_shape_function, z)
+
+        # Convert expressions to string representations
+        dbzdx_str = str(dbzdx_expr)
+        dbzdy_str = str(dbzdy_expr)
+        dbzdz_str = str(dbzdz_expr)
+
+        # Modify string representations for array-wise operations
+        dbzdx_str = dbzdx_str.replace("/", "./")
+        dbzdx_str = dbzdx_str.replace("^", ".^")
+        dbzdx_str = dbzdx_str.replace("*", ".*")
+
+        dbzdy_str = dbzdy_str.replace("/", "./")
+        dbzdy_str = dbzdy_str.replace("^", ".^")
+        dbzdy_str = dbzdy_str.replace("*", ".*")
+
+        dbzdz_str = dbzdz_str.replace("/", "./")
+        dbzdz_str = dbzdz_str.replace("^", ".^")
+        dbzdz_str = dbzdz_str.replace("*", ".*")
+
+        # Debugging
+        log.debug(' - dbzdx_fun: %s', dbzdx_str)
+        log.debug(' - dbzdy_fun: %s', dbzdy_str)
+        log.debug(' - dbzdz_fun: %s', dbzdz_str)
+
+        # Define lambdify functions for array-wise operations
+        dbzdx_fun = lambdify((x, y, z), dbzdx_str)
+        dbzdy_fun = lambdify((x, y, z), dbzdy_str)
+        dbzdz_fun = lambdify((x, y, z), dbzdz_str)
+
+        # Evaluate the lambdify functions
         target_dbzbx = dbzdx_fun(target_field[0, :], target_field[1, :], target_field[2, :])
         target_dbzby = dbzdy_fun(target_field[0, :], target_field[1, :], target_field[2, :])
         target_dbzbz = dbzdz_fun(target_field[0, :], target_field[1, :], target_field[2, :])
 
-        if target_dbzbx.size == 1:
+        #if target_dbzbx.size == 1:
+        if len(target_dbzbx) == 1:
             target_dbzbx = np.repeat(target_dbzbx, target_field.shape[1])
 
-        if target_dbzby.size == 1:
+        #if target_dbzby.size == 1:
+        if len(target_dbzby) == 1:
             target_dbzby = np.repeat(target_dbzby, target_field.shape[1])
 
-        if target_dbzbz.size == 1:
+        #if target_dbzbz.size == 1:
+        if len(target_dbzbz) == 1:
             target_dbzbz = np.repeat(target_dbzbz, target_field.shape[1])
 
     except Exception as e:
