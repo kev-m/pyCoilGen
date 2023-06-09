@@ -64,6 +64,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 # Create a 2D dataset for fit
             else:
                 # Planarization of cylinder
+                # DEBUG
                 visualize_vertex_connections(mesh_vertices, 800, 'images/cylinder_projected1.png')
 
                 # Create 2D mesh for UV matrix:
@@ -79,16 +80,8 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 # 1. First, check if rotation is required by checking the magnitude of the transformation vector
                 mag = np.sum([v_c[0]*v_c[0], v_c[1]*v_c[1], v_c[2]*v_c[2]])
                 if mag > 0.0:
-                    #projected_vertices = align_normals(projected_vertices, mesh_part.normal_rep, new_norm)
                     v_d = np.dot(orig_norm, new_norm)
-                    # Construct the rotation matrix
-                    mat_v = np.array([[0, -v_c[2], v_c[1]],
-                                    [v_c[2], 0, -v_c[0]],
-                                    [-v_c[1], v_c[0], 0]])
-                    rot_mat = np.eye(3) + mat_v + np.matmul(mat_v, mat_v) * (1 / (1 + v_d))
-
-                    # Apply the rotation matrix to the vertices
-                    projected_vertices = np.matmul(projected_vertices, rot_mat.T)
+                    projected_vertices = align_normals(projected_vertices, orig_norm, new_norm)
                     input_vertices = projected_vertices.copy()
                 else:
                     input_vertices = mesh_vertices
@@ -108,6 +101,9 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
             # The 3D mesh is already planar, but the normals must be aligned to the z-axis
             log.debug(" - 3D mesh is already planar")
 
+            # DEBUG
+            visualize_vertex_connections(mesh_vertices, 800, 'images/planar_projected1.png')
+
             # Rotate the planar mesh in the xy plane
             mean_norm = np.mean(face_normals, axis=0)
             new_norm = np.array([0, 0, 1])
@@ -117,17 +113,8 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
 
             # Check if the normals are already aligned to the Z-axis
             if np.linalg.norm(v_c) > 1e-8:
-                # Calculate the dot product between the mean normal and the target normal
-                v_d = np.dot(mean_norm, new_norm)
-
-                # Construct the rotation matrix
-                mat_v = np.array([[0, -v_c[2], v_c[1]],
-                                  [v_c[2], 0, -v_c[0]],
-                                  [-v_c[1], v_c[0], 0]])
-                rot_mat = np.eye(3) + mat_v + np.matmul(mat_v, mat_v) * (1 / (1 + v_d))
-
                 # Apply the rotation matrix to the vertices
-                rotated_vertices = np.matmul(mesh_vertices, rot_mat.T)
+                rotated_vertices = align_normals(mesh_vertices, mean_norm, new_norm)
 
                 # Assign the rotated vertices to the UV attribute of the mesh
                 mesh_part.uv = rotated_vertices[:, :2]
@@ -160,7 +147,7 @@ def align_normals(vertices, original_normal, desired_normal):
 
     v_c = np.cross(original_normal, desired_normal)
     v_d = np.dot(original_normal, desired_normal)
-    
+
     # Construct the rotation matrix
     mat_v = np.array([[0, -v_c[2], v_c[1]],
                     [v_c[2], 0, -v_c[0]],
