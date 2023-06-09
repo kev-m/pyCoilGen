@@ -13,5 +13,8 @@ pyglet<2
 # Missing Trimesh dependency
 networkx==2.6.3
 
+# For target field calculations
+sympy==1.10.1
+
 # For visualisation of matrices
 pillow<=9.5

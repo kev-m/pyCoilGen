@@ -16,10 +16,10 @@ from sub_functions.parse_input import parse_input, create_input
 from sub_functions.split_disconnected_mesh import split_disconnected_mesh
 from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh
+from sub_functions.define_target_field import define_target_field
 
 from sub_functions.data_structures import DataStructure
 """
-from define_target_field import define_target_field
 from temp_evaluation import temp_evaluation
 from calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 from calculate_basis_functions import calculate_basis_functions
@@ -86,13 +86,12 @@ def CoilGen(log, input=None):
         print('Parameterize the mesh:')
         coil_parts = parameterize_mesh(coil_parts, input_args)
 
-        # WIP
-        return coil_parts
-
         # Define the target field
         print('Define the target field:')
-        target_field, is_supressed_point = define_target_field(
-            coil_parts, target_mesh, secondary_target_mesh, input_args)
+        target_field, is_supressed_point = define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args)
+
+        # WIP
+        return coil_parts
 
         # Evaluate the temp data; check whether precalculated values can be used from previous iterations
         print('Evaluate the temp data:')
@@ -108,13 +107,11 @@ def CoilGen(log, input=None):
 
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
-        coil_parts = calculate_sensitivity_matrix(
-            coil_parts, target_field, input_args)
+        coil_parts = calculate_sensitivity_matrix(coil_parts, target_field, input_args)
 
         # Calculate the gradient sensitivity matrix Gn
         print('Calculate the gradient sensitivity matrix:')
-        coil_parts = calculate_gradient_sensitivity_matrix(
-            coil_parts, target_field, input_args)
+        coil_parts = calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args)
 
         # Calculate the resistance matrix Rmn
         print('Calculate the resistance matrix:')
@@ -122,8 +119,7 @@ def CoilGen(log, input=None):
 
         # Optimize the stream function toward target field and further constraints
         print('Optimize the stream function toward target field and secondary constraints:')
-        coil_parts, combined_mesh, sf_b_field = stream_function_optimization(
-            coil_parts, target_field, input_args)
+        coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)
 
     else:
         # Load the preoptimized data

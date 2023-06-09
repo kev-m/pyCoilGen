@@ -185,7 +185,7 @@ if __name__ == "__main__":
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
 
-    debug1() # Planar mesh
-    debug2() # Planar mesh with a hole
-    # debug3() # Planar mesh from file
-    debug4() # Cylindrical mesh
+    #debug1() # Planar mesh
+    #debug2() # Planar mesh with a hole
+    debug3() # Planar mesh from file
+    #debug4() # Cylindrical mesh
