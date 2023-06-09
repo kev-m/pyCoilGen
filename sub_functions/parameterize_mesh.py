@@ -11,7 +11,7 @@ from sub_functions.mesh_parameterization_iterative import mesh_parameterization_
 from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
 
 # Debugging
-from helpers.visualisation import visualize_vertex_connections
+# from helpers.visualisation import visualize_vertex_connections
 
 log = logging.getLogger(__name__)
 
@@ -65,14 +65,14 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
             else:
                 # Planarization of cylinder
                 # DEBUG
-                visualize_vertex_connections(mesh_vertices, 800, 'images/cylinder_projected1.png')
+                # visualize_vertex_connections(mesh_vertices, 800, 'images/cylinder_projected1.png')
 
                 # Create 2D mesh for UV matrix:
                 # Rotate cylinder normal parallel to z-axis [0,0,1]
                 orig_norm = mesh_part.normal_rep
                 new_norm = np.array([0, 0, 1])
                 v_c = np.cross(orig_norm, new_norm)
-                log.debug(" -- mesh_part.normal_rep: %s, new_norm: %s, v_c: %s", orig_norm, new_norm, v_c)
+                # log.debug(" -- mesh_part.normal_rep: %s, new_norm: %s, v_c: %s", orig_norm, new_norm, v_c)
 
                 # Project the mesh onto to x-y plane [x,y,z] -> [x+x*z, y+y*z, 0]
                 projected_vertices = mesh_vertices.copy()
@@ -102,14 +102,14 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
             log.debug(" - 3D mesh is already planar")
 
             # DEBUG
-            visualize_vertex_connections(mesh_vertices, 800, 'images/planar_projected1.png')
+            # visualize_vertex_connections(mesh_vertices, 800, 'images/planar_projected1.png')
 
             # Rotate the planar mesh in the xy plane
             mean_norm = np.mean(face_normals, axis=0)
             new_norm = np.array([0, 0, 1])
             v_c = np.cross(mean_norm, new_norm)
 
-            log.debug(" - Orientation: mean_norm: %s, new_norm: %s, v_c: %s", mean_norm, new_norm, v_c)
+            # log.debug(" - Orientation: mean_norm: %s, new_norm: %s, v_c: %s", mean_norm, new_norm, v_c)
 
             # Check if the normals are already aligned to the Z-axis
             if np.linalg.norm(v_c) > 1e-8:
