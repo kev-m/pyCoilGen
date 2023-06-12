@@ -14,9 +14,9 @@ from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh
 from sub_functions.define_target_field import define_target_field
 from sub_functions.data_structures import DataStructure, CoilSolution, OptimisationParameters
-from sub_functions.temp_evaluation import temp_evaluation
+# from sub_functions.temp_evaluation import temp_evaluation
+from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 """
-from calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 from calculate_basis_functions import calculate_basis_functions
 from calculate_sensitivity_matrix import calculate_sensitivity_matrix
 from calculate_gradient_sensitivity_matrix import calculate_gradient_sensitivity_matrix
@@ -93,15 +93,16 @@ def CoilGen(log, input=None):
         solution.is_suppressed_point = is_suppressed_point
 
         # Evaluate the temp data; check whether precalculated values can be used from previous iterations
-        print('Evaluate the temp data:')
-        input_args = temp_evaluation(solution, input_args, target_field)
-
-        # WIP
-        return solution
+        # print('Evaluate the temp data:')
+        # input_args = temp_evaluation(solution, input_args, target_field)
 
         # Find indices of mesh nodes for one ring basis functions
         print('Calculate mesh one ring:')
-        coil_parts = calculate_one_ring_by_mesh(coil_parts, input_args)
+        coil_parts = calculate_one_ring_by_mesh(solution, coil_parts, input_args)
+
+        # WIP
+        solution.coil_parts = coil_parts
+        return solution
 
         # Create the basis function container which represents the current density
         print('Create the basis function container which represents the current density:')

@@ -144,6 +144,7 @@ def debug3():
     x = CoilGen(log, arg_dict)
 
     log.debug(" Target field: %s", x.target_field)
+    log.debug(" coil_parts[0].one_ring_list: %s", x.coil_parts[0].one_ring_list)
 
 
 # Plain cylindrical mesh
