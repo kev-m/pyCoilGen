@@ -221,15 +221,15 @@ def symbolic_calculation_of_gradient(input, target_field):
         target_dbzbz = dbzdz_fun(target_field[0, :], target_field[1, :], target_field[2, :])
 
         #if target_dbzbx.size == 1:
-        if len(target_dbzbx) == 1:
+        if is_multivalued(target_dbzbx) == False:
             target_dbzbx = np.repeat(target_dbzbx, target_field.shape[1])
 
         #if target_dbzby.size == 1:
-        if len(target_dbzby) == 1:
+        if is_multivalued(target_dbzby) == False:
             target_dbzby = np.repeat(target_dbzby, target_field.shape[1])
 
         #if target_dbzbz.size == 1:
-        if len(target_dbzbz) == 1:
+        if is_multivalued(target_dbzbz) == False:
             target_dbzbz = np.repeat(target_dbzbz, target_field.shape[1])
 
     except Exception as e:
@@ -240,3 +240,15 @@ def symbolic_calculation_of_gradient(input, target_field):
         log.error('Gradient Calculation from Symbolic Target failed')
 
     return target_dbzbx, target_dbzby, target_dbzbz
+
+def is_multivalued(variable):
+    """
+    Checks if the given variable is multi-valued.
+
+    Args:
+        variable: The variable to be checked.
+
+    Returns:
+        bool: True if the variable is multi-valued, False otherwise.
+    """
+    return isinstance(variable, (list, tuple, set, dict, np.ndarray))
