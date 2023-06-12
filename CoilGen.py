@@ -6,10 +6,6 @@ from pathlib import Path
 import logging
 
 # Local imports
-# Add the sub_functions directory to the Python module search path
-#sub_functions_path = Path(__file__).resolve().parent / 'sub_functions'
-#sys.path.append(str(sub_functions_path))
-
 # Import the required modules from sub_functions directory
 from sub_functions.read_mesh import read_mesh
 from sub_functions.parse_input import parse_input, create_input
@@ -17,10 +13,9 @@ from sub_functions.split_disconnected_mesh import split_disconnected_mesh
 from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh
 from sub_functions.define_target_field import define_target_field
-
-from sub_functions.data_structures import DataStructure, CoilSolution
+from sub_functions.data_structures import DataStructure, CoilSolution, OptimisationParameters
+from sub_functions.temp_evaluation import temp_evaluation
 """
-from temp_evaluation import temp_evaluation
 from calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 from calculate_basis_functions import calculate_basis_functions
 from calculate_sensitivity_matrix import calculate_sensitivity_matrix
@@ -43,6 +38,7 @@ from evaluate_field_errors import evaluate_field_errors
 from calculate_gradient import calculate_gradient
 from load_preoptimized_data import load_preoptimized_data
 """
+
 
 def CoilGen(log, input=None):
     # Create optimized coil finished coil layout
@@ -73,7 +69,7 @@ def CoilGen(log, input=None):
         # Read the input mesh
         print('Load geometry:')
         coil_mesh, target_mesh, secondary_target_mesh = read_mesh(input_args)
-        #log.debug(" coil_mesh.faces: %s", coil_mesh.faces)
+        # log.debug(" coil_mesh.faces: %s", coil_mesh.faces)
 
         # Split the mesh and the stream function into disconnected pieces
         print('Split the mesh and the stream function into disconnected pieces.')
@@ -82,7 +78,7 @@ def CoilGen(log, input=None):
         # Upsample the mesh density by subdivision
         print('Upsample the mesh by subdivision:')
         coil_parts = refine_mesh(coil_parts, input_args)
-        #log.debug("coil_parts: %s", coil_parts)
+        # log.debug("coil_parts: %s", coil_parts)
 
         # Parameterize the mesh
         print('Parameterize the mesh:')
@@ -91,16 +87,17 @@ def CoilGen(log, input=None):
 
         # Define the target field
         print('Define the target field:')
-        target_field, is_suppressed_point = define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args)
+        target_field, is_suppressed_point = define_target_field(
+            coil_parts, target_mesh, secondary_target_mesh, input_args)
         solution.target_field = target_field
         solution.is_suppressed_point = is_suppressed_point
 
-        # WIP
-        return solution
-
         # Evaluate the temp data; check whether precalculated values can be used from previous iterations
         print('Evaluate the temp data:')
-        input_args = temp_evaluation(input_args, target_field)
+        input_args = temp_evaluation(solution, input_args, target_field)
+
+        # WIP
+        return solution
 
         # Find indices of mesh nodes for one ring basis functions
         print('Calculate mesh one ring:')
@@ -202,7 +199,7 @@ if __name__ == "__main__":
     # logging.basicConfig(level=logging.INFO)
 
     # DEBUG:split_disconnected_mesh:Shape: (400, 6), (3, 441)
-    input = {'coil_mesh_file' : 'create cylinder mesh'} # Runs OK
+    input = {'coil_mesh_file': 'create cylinder mesh'}  # Runs OK
 
     # split_disconnected_mesh.py", line 60, in split_disconnected_mesh
     # DEBUG:split_disconnected_mesh:Shape: (800, 3), (3, 441)

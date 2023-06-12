@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 
 
-def parse_input(parse_cli = True):
+def parse_input(parse_cli=True):
     """
     Parse the input arguments using argparse.
 
@@ -273,6 +273,7 @@ def parse_input(parse_cli = True):
 
     return parser, input
 
+
 def create_input(dictionary):
     parser, input = parse_input(False)
     for key, value in dictionary.items():
@@ -283,13 +284,14 @@ def create_input(dictionary):
 
     return parser, input
 
+
 if __name__ == "__main__":
     import logging
     # Set up logging
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
     # logging.basicConfig(level=logging.INFO)
-    
+
     # Check that boolean works as expected
     arg_list = ["--skip_sweep"]
     parser, input = parse_input(arg_list)
@@ -298,7 +300,7 @@ if __name__ == "__main__":
     arg_list = []
     parser, input = parse_input(arg_list)
     log.debug("input.skip_sweep: %s", input.skip_sweep)
-    
+
     # Random other checks
     log.debug("input.track_width_factor: %s", input.track_width_factor)
     log.debug("input.cylinder_mesh_parameter_list: %s", input.cylinder_mesh_parameter_list)

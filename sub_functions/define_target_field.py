@@ -1,6 +1,4 @@
-# Logging
-import logging
-
+# System
 import numpy as np
 import os
 from sympy import symbols, diff, lambdify
@@ -8,11 +6,12 @@ from sympy import symbols, diff, lambdify
 
 from scipy.io import loadmat
 from scipy.spatial import Delaunay
-from scipy.interpolate import LinearNDInterpolator
+
+# Logging
+import logging
 
 # Local imports
 from sub_functions.data_structures import TargetField
-
 
 log = logging.getLogger(__name__)
 
@@ -37,12 +36,11 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
     if input.target_field_definition_file != 'none':
         # Load target field definition file
         target_field_definition_file = os.path.join("target_fields", input.target_field_definition_file)
-        #loaded_target_field = loadmat(target_field_definition_file)
+        # loaded_target_field = loadmat(target_field_definition_file)
         loaded_target_field = np.load(target_field_definition_file)
-        #struct_name = loaded_target_field.keys()[0]
+        # struct_name = loaded_target_field.keys()[0]
         struct_name = list(loaded_target_field.keys())[0]
         loaded_target_field = loaded_target_field[struct_name]
-
 
         if input.target_field_definition_field_name in loaded_target_field:
             loaded_field = loaded_target_field[input.target_field_definition_field_name]
@@ -181,7 +179,6 @@ def symbolic_calculation_of_gradient(input, target_field):
     """
     try:
 
-
         x, y, z = symbols('x y z')
         dbzdx_expr = diff(input.field_shape_function, x)
         dbzdy_expr = diff(input.field_shape_function, y)
@@ -220,15 +217,12 @@ def symbolic_calculation_of_gradient(input, target_field):
         target_dbzby = dbzdy_fun(target_field[0, :], target_field[1, :], target_field[2, :])
         target_dbzbz = dbzdz_fun(target_field[0, :], target_field[1, :], target_field[2, :])
 
-        #if target_dbzbx.size == 1:
         if is_multivalued(target_dbzbx) == False:
             target_dbzbx = np.repeat(target_dbzbx, target_field.shape[1])
 
-        #if target_dbzby.size == 1:
         if is_multivalued(target_dbzby) == False:
             target_dbzby = np.repeat(target_dbzby, target_field.shape[1])
 
-        #if target_dbzbz.size == 1:
         if is_multivalued(target_dbzbz) == False:
             target_dbzbz = np.repeat(target_dbzbz, target_field.shape[1])
 
@@ -240,6 +234,7 @@ def symbolic_calculation_of_gradient(input, target_field):
         log.error('Gradient Calculation from Symbolic Target failed')
 
     return target_dbzbx, target_dbzby, target_dbzbz
+
 
 def is_multivalued(variable):
     """
