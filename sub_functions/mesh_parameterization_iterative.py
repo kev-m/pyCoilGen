@@ -6,12 +6,12 @@ from scipy.sparse import coo_matrix
 import logging
 
 # Local imports
-from sub_functions.data_structures import DataStructure
+from sub_functions.data_structures import DataStructure, Mesh
 
 log = logging.getLogger(__name__)
 
 
-def mesh_parameterization_iterative(mesh_in):
+def mesh_parameterization_iterative(input_mesh : Mesh):
     """
     Performs iterative mesh parameterization based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes".
 
@@ -23,18 +23,20 @@ def mesh_parameterization_iterative(mesh_in):
     """
 
     # Initialize mesh properties
+    mesh_vertices = input_mesh.get_vertices()
+    mesh_faces = input_mesh.get_faces()
     mesh = DataStructure(
-        v=mesh_in.vertices.T,  # Transpose vertices for column-wise storage
+        v=mesh_vertices.T,  # Transpose vertices for column-wise storage
         n=[],
         u=[],
-        f=mesh_in.faces.T,  # Transpose faces for column-wise storage
+        f=mesh_faces.T,  # Transpose faces for column-wise storage
         e=[],
-        bounds=[np.min(mesh_in.vertices), np.max(mesh_in.vertices),
-                0.5 * (np.min(mesh_in.vertices) + np.max(mesh_in.vertices))],
+        bounds=[np.min(mesh_vertices), np.max(mesh_vertices),
+                0.5 * (np.min(mesh_vertices) + np.max(mesh_vertices))],
         version=1,
-        vidx=np.arange(1, mesh_in.vertices.shape[0] + 1),
-        fidx=np.arange(1, mesh_in.faces.shape[0] + 1),
-        fn=mesh_in.fn
+        vidx=np.arange(1, mesh_vertices.shape[0] + 1),
+        fidx=np.arange(1, mesh_faces.shape[0] + 1),
+        fn=input_mesh.fn
     )
 
     # Compute face normals
@@ -165,8 +167,8 @@ def mesh_parameterization_iterative(mesh_in):
         mesh.valence[vi] = len(jj)
 
     mesh.unique_vert_inds = mesh_in.unique_vert_inds
-    mesh.n = vertexNormal(triangulation(mesh_in.faces, mesh_in.vertices))
-    mesh.fn = faceNormal(triangulation(mesh_in.faces, mesh_in.vertices))
+    mesh.n = vertexNormal(triangulation(mesh_faces, mesh_vertices))
+    mesh.fn = faceNormal(triangulation(mesh_faces, mesh_vertices))
     iboundary = mesh.vidx[mesh.isboundaryv != 0]
     dists = vmag2(vadd(mesh.v[iboundary], -mesh.v[iboundary[0]]))
     maxi = np.argmax(dists)
@@ -499,4 +501,4 @@ def ncross(v1, v2):
     Returns:
         ndarray: Normalized cross product.
     """
-    return normalize(np.cross(v1, v2))
+    return  np. linalg. norm(np.cross(v1, v2))
