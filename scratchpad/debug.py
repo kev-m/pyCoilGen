@@ -139,8 +139,11 @@ def debug3():
     arg_dict = {
         'coil_mesh_file': 'dental_gradient_ccs_single_low.stl',
         'iteration_num_mesh_refinement': 0,  # the number of refinements for the mesh;
+        'field_shape_function': 'x',  # definition of the target field
     }
     x = CoilGen(log, arg_dict)
+
+    log.debug(" Target field: %s", x.target_field)
 
 
 # Plain cylindrical mesh
