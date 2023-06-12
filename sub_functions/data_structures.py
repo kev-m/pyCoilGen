@@ -203,13 +203,13 @@ class CoilSolution:
     def __init__(self):
         self.coil_parts = None
         self.target_field = None
+        self.optimisation = OptimisationParameters()
 
     def __str__(self):
         return as_string(self)
 
+
 # Used by define_target_field
-
-
 @dataclass
 class TargetField:
     """
@@ -222,6 +222,18 @@ class TargetField:
 
     def __str__(self):
         return as_string(self)
+
+
+
+
+# Used by temp_evaluation
+@dataclass
+class OptimisationParameters:
+    preoptimization_hash = None
+    optimized_hash = None
+    use_preoptimization_temp = False
+    use_optimized_temp = False
+
 #
 #
 #  Generated data classes that are not (yet) used.
