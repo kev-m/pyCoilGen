@@ -1,4 +1,5 @@
 # System imports
+from typing import List, Tuple
 import numpy as np
 
 # Mesh implementation
@@ -7,10 +8,19 @@ import trimesh
 # Logging
 import logging
 
+# Local imports
 from dataclasses import dataclass
-from typing import List, Tuple
 
 log = logging.getLogger(__name__)
+
+
+# Generic solution to print data classes
+def as_string(class_instance):
+    properties = vars(class_instance)
+    properties_str = ""
+    for prop, value in properties.items():
+        properties_str += f"{prop}: {value}\n"
+    return properties_str
 
 
 # Generic class with named attributes
@@ -63,6 +73,9 @@ class Mesh:
         self.n = None           # (n,3) : The vertex normals (n, [x,y.z]).
         self.uv = None          # Vertices, UV texture matrix (n, [x,y,z=0])
         self.boundary = None    # List of 1D lists of vertex indices along mesh boundaries (m,[i])
+
+    def __str__(self):
+        return as_string(self)
 
     @staticmethod
     def load_from_file(filename):
@@ -177,20 +190,38 @@ class Mesh:
 
         return boundary
 
+
+class CoilSolution:
+    """
+    Represents a high-level CoilGen solution.
+
+    Attributes:
+        coil_parts (list): A list of mesh parts that make up the coil surface.
+        target_field: The target field associated with the CoilSolution.
+    """
+
+    def __init__(self):
+        self.coil_parts = None
+        self.target_field = None
+
+    def __str__(self):
+        return as_string(self)
+
 # Used by define_target_field
 
 
+@dataclass
 class TargetField:
     """
     To be defined.
     """
+    b = None
+    coords = None
+    weights = None
+    target_field_group_inds = None
 
-    def __init__(self):
-        self.b = None
-        self.coords = None
-        self.weights = None
-        self.target_field_group_inds = None
-
+    def __str__(self):
+        return as_string(self)
 #
 #
 #  Generated data classes that are not (yet) used.

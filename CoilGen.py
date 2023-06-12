@@ -18,7 +18,7 @@ from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh
 from sub_functions.define_target_field import define_target_field
 
-from sub_functions.data_structures import DataStructure
+from sub_functions.data_structures import DataStructure, CoilSolution
 """
 from temp_evaluation import temp_evaluation
 from calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
@@ -67,6 +67,8 @@ def CoilGen(log, input=None):
     # Print the input variables
     log.debug('Parse inputs: %s', input_args)
 
+    solution = CoilSolution()
+
     if input_args.sf_source_file == 'none':
         # Read the input mesh
         print('Load geometry:')
@@ -85,13 +87,16 @@ def CoilGen(log, input=None):
         # Parameterize the mesh
         print('Parameterize the mesh:')
         coil_parts = parameterize_mesh(coil_parts, input_args)
+        solution.coil_parts = coil_parts
 
         # Define the target field
         print('Define the target field:')
-        target_field, is_supressed_point = define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args)
+        target_field, is_suppressed_point = define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args)
+        solution.target_field = target_field
+        solution.is_suppressed_point = is_suppressed_point
 
         # WIP
-        return coil_parts
+        return solution
 
         # Evaluate the temp data; check whether precalculated values can be used from previous iterations
         print('Evaluate the temp data:')
@@ -124,7 +129,7 @@ def CoilGen(log, input=None):
     else:
         # Load the preoptimized data
         print('Load preoptimized data:')
-        coil_parts, _, _, combined_mesh, sf_b_field, target_field, is_supressed_point = load_preoptimized_data(
+        coil_parts, _, _, combined_mesh, sf_b_field, target_field, is_suppressed_point = load_preoptimized_data(
             input_args)
 
     # Calculate the potential levels for the discretization
@@ -187,7 +192,7 @@ def CoilGen(log, input=None):
     print('Calculate the gradient:')
     coil_gradient = calculate_gradient(coil_parts, target_field, input_args)
 
-    return coil_parts, combined_mesh, sf_b_field, target_field, coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance, field_errors, coil_gradient, is_supressed_point
+    return coil_parts, combined_mesh, sf_b_field, target_field, coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance, field_errors, coil_gradient, is_suppressed_point
 
 
 if __name__ == "__main__":
@@ -197,7 +202,7 @@ if __name__ == "__main__":
     # logging.basicConfig(level=logging.INFO)
 
     # DEBUG:split_disconnected_mesh:Shape: (400, 6), (3, 441)
-    input = DataStructure(coil_mesh_file='create cylinder mesh') # Runs OK
+    input = {'coil_mesh_file' : 'create cylinder mesh'} # Runs OK
 
     # split_disconnected_mesh.py", line 60, in split_disconnected_mesh
     # DEBUG:split_disconnected_mesh:Shape: (800, 3), (3, 441)
@@ -206,4 +211,4 @@ if __name__ == "__main__":
     # DEBUG:split_disconnected_mesh:Shape: (124, 3), (3, 64)
     # arg_list = ['--coil_mesh_file', 'closed_cylinder_length_300mm_radius_150mm.stl'] # IndexError: index 64 is out of bounds for axis 1 with size 64
     # arg_list = ['--coil_mesh_file', 'dental_gradient_ccs_single_low.stl'] # IndexError: index 114 is out of bounds for axis 1 with size 114
-    CoilGen(log, input=input)
+    solution = CoilGen(log, input=input)
