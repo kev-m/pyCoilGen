@@ -102,6 +102,7 @@ def create_unique_noded_mesh(non_unique_mesh):
     verts = non_unique_mesh.vertices
 
     mesh = Mesh(vertices=verts, faces=faces)
+    mesh.cleanup()
     mesh.normal_rep = non_unique_mesh.normal
     return mesh
 

@@ -73,6 +73,15 @@ class Mesh:
         self.uv = None          # Vertices, UV texture matrix (n, [x,y,z=0])
         self.boundary = None    # List of 1D lists of vertex indices along mesh boundaries (m,[i])
 
+    def  cleanup(self):
+        """
+        Clean up the mesh by removing duplicate and unused vertices.
+        """
+        # Perform simplification operations
+        self.trimesh_obj.remove_duplicate_faces()
+        self.trimesh_obj.remove_unreferenced_vertices()
+
+
     def __str__(self):
         return as_string(self)
 
@@ -125,6 +134,9 @@ class Mesh:
             ndarray: An array of vertex normals with shape (num_faces, 3).
         """
         return self.trimesh_obj.vertex_normals
+
+    def get_vertex_triangles(self):
+        return self.trimesh_obj.vertex_neighbors
 
     def display(self):
         """
@@ -235,6 +247,19 @@ class OptimisationParameters:
     optimized_hash = None
     use_preoptimization_temp = False
     use_optimized_temp = False
+
+
+
+# Generated for calculate_basis_functions
+class BasisElement:
+    stream_function_potential: float
+    triangles: List[int]
+    one_ring: np.ndarray 
+    area: np.ndarray                    # n x 1
+    face_normal: np.ndarray             # n x 3
+    triangle_points_ABC: np.ndarray     # n x 3
+    current: np.ndarray                 # n x 3
+
 
 #
 #
@@ -440,19 +465,6 @@ class InputParameters:
     levels: int
     pot_offset_factor: float
     level_set_method: str
-
-# Generated for calculate_basis_functions
-
-
-@dataclass
-class BasisElement:
-    stream_function_potential: float
-    triangles: List[int]
-    one_ring: np.ndarray
-    area: np.ndarray
-    face_normal: np.ndarray
-    triangle_points_ABC: np.ndarray
-    current: np.ndarray
 
 
 @dataclass
