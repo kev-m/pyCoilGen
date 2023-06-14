@@ -36,7 +36,7 @@ def calculate_one_ring_by_mesh(coil_solution : CoilSolution, coil_parts, input):
 
         if not optimisation.use_preoptimization_temp:
             num_nodes = part_vertices.shape[0]
-            vertex_triangles = trimesh_obj.vertex_adjacency_graph
+            vertex_triangles = part_mesh.get_vertex_triangles()
 
             # Compute one-ring neighborhood
             one_ring_list = []
@@ -57,7 +57,8 @@ def calculate_one_ring_by_mesh(coil_solution : CoilSolution, coil_parts, input):
 
             # Update the coil_part with one-ring neighborhood information
             node_triangle_mat = np.zeros((num_nodes, part_faces.shape[0]), dtype=bool)
-            node_triangle_mat[range(num_nodes), vertex_triangles] = True
+            for index in range(num_nodes):
+                node_triangle_mat[index, vertex_triangles[index]] = True
             
             coil_part.one_ring_list = one_ring_list
             coil_part.node_triangles = vertex_triangles

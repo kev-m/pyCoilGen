@@ -112,16 +112,20 @@ def debug2():
     # print("Vertices:\n", vertices)
     # print("Faces:\n", faces)
 
+    log.debug(" Original vertices shape: %s", vertices.shape)
+    log.debug(" Original faces shape: %s", faces.shape)
+
     planar_mesh = DataStructure(vertices=vertices, faces=faces, normal=np.array([0,0,1]))
 
+    mesh = create_unique_noded_mesh(planar_mesh)
     # mesh.display()
+    # print (mesh.trimesh_obj.is_watertight)
+    vertices = mesh.get_vertices()
+    faces = mesh.get_faces()
+
     vertex_counts = np.bincount(faces.flatten())
     print("vertex_counts: ", vertex_counts)
 
-    mesh = create_unique_noded_mesh(planar_mesh)
-    print (mesh.trimesh_obj.is_watertight)
-    vertices = mesh.get_vertices()
-    faces = mesh.get_faces()
     log.debug(" Vertices shape: %s", vertices.shape)
     log.debug(" Faces shape: %s", faces.shape)
 

@@ -16,8 +16,8 @@ from sub_functions.define_target_field import define_target_field
 from sub_functions.data_structures import DataStructure, CoilSolution, OptimisationParameters
 # from sub_functions.temp_evaluation import temp_evaluation
 from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
+from sub_functions.calculate_basis_functions import calculate_basis_functions
 """
-from calculate_basis_functions import calculate_basis_functions
 from calculate_sensitivity_matrix import calculate_sensitivity_matrix
 from calculate_gradient_sensitivity_matrix import calculate_gradient_sensitivity_matrix
 from calculate_resistance_matrix import calculate_resistance_matrix
@@ -100,13 +100,13 @@ def CoilGen(log, input=None):
         print('Calculate mesh one ring:')
         coil_parts = calculate_one_ring_by_mesh(solution, coil_parts, input_args)
 
+        # Create the basis function container which represents the current density
+        print('Create the basis function container which represents the current density:')
+        coil_parts = calculate_basis_functions(solution, coil_parts, input_args)
+
         # WIP
         solution.coil_parts = coil_parts
         return solution
-
-        # Create the basis function container which represents the current density
-        print('Create the basis function container which represents the current density:')
-        coil_parts = calculate_basis_functions(coil_parts, input_args)
 
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
