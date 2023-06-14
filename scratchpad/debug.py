@@ -147,8 +147,11 @@ def debug3():
     }
     x = CoilGen(log, arg_dict)
 
-    log.debug(" Target field: %s", x.target_field)
-    log.debug(" coil_parts[0].one_ring_list: %s", x.coil_parts[0].one_ring_list)
+    mesh_part = x.coil_parts[0].coil_mesh
+    # visualize_vertex_connections(mesh_part.uv, 800, 'images/dental_gradient_projected2.png')
+    # mesh_part.display()
+    # log.debug(" Target field: %s", x.target_field)
+    # log.debug(" coil_parts[0].one_ring_list: %s", x.coil_parts[0].one_ring_list)
 
 
 # Plain cylindrical mesh

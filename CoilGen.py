@@ -17,8 +17,8 @@ from sub_functions.data_structures import DataStructure, CoilSolution, Optimisat
 # from sub_functions.temp_evaluation import temp_evaluation
 from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 from sub_functions.calculate_basis_functions import calculate_basis_functions
+from sub_functions.calculate_sensitivity_matrix import calculate_sensitivity_matrix
 """
-from calculate_sensitivity_matrix import calculate_sensitivity_matrix
 from calculate_gradient_sensitivity_matrix import calculate_gradient_sensitivity_matrix
 from calculate_resistance_matrix import calculate_resistance_matrix
 from stream_function_optimization import stream_function_optimization
@@ -104,13 +104,13 @@ def CoilGen(log, input=None):
         print('Create the basis function container which represents the current density:')
         coil_parts = calculate_basis_functions(solution, coil_parts, input_args)
 
+        # Calculate the sensitivity matrix Cn
+        print('Calculate the sensitivity matrix:')
+        coil_parts = calculate_sensitivity_matrix(solution, coil_parts, target_field, input_args)
+
         # WIP
         solution.coil_parts = coil_parts
         return solution
-
-        # Calculate the sensitivity matrix Cn
-        print('Calculate the sensitivity matrix:')
-        coil_parts = calculate_sensitivity_matrix(coil_parts, target_field, input_args)
 
         # Calculate the gradient sensitivity matrix Gn
         print('Calculate the gradient sensitivity matrix:')
@@ -132,8 +132,7 @@ def CoilGen(log, input=None):
 
     # Calculate the potential levels for the discretization
     print('Calculate the potential levels for the discretization:')
-    coil_parts, primary_surface_ind = calc_potential_levels(
-        coil_parts, combined_mesh, input_args)
+    coil_parts, primary_surface_ind = calc_potential_levels(coil_parts, combined_mesh, input_args)
 
     # Generate the contours
     print('Generate the contours:')
@@ -183,8 +182,7 @@ def CoilGen(log, input=None):
 
     # Evaluate the field errors
     print('Evaluate the field errors:')
-    field_errors, _, _ = evaluate_field_errors(
-        coil_parts, target_field, input_args)
+    field_errors, _, _ = evaluate_field_errors(coil_parts, target_field, input_args)
 
     # Calculate the gradient
     print('Calculate the gradient:')
