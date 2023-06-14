@@ -20,41 +20,47 @@ def calculate_one_ring_by_mesh(coil_solution : CoilSolution, coil_parts, input):
     Returns:
         list: Updated coil_parts with one-ring neighborhood information.
     """
+    optimisation = coil_solution.optimisation # Retrieve the solution optmisation parameters
+
     for part_ind in range(len(coil_parts)):
+        # Extract the intermediate variables
         coil_part = coil_parts[part_ind]
-        part_mesh = coil_part.coil_mesh
-        part_vertices = part_mesh.get_vertices()
+        part_mesh = coil_part.coil_mesh # Get the Mesh instance
+        part_vertices = part_mesh.get_vertices() # Get the vertices for the coil part.
         part_faces = part_mesh.get_faces()
-        trimesh_obj = part_mesh.trimesh_obj
-        optimisation = coil_solution.optimisation
+        trimesh_obj = part_mesh.trimesh_obj # Retrieve the encapsulated Trimesh instance
+        optimisation = coil_solution.optimisation # Retrieve the solution optmisation parameters
+
+        # Transpose the faces array to match Python convention
+        #part_faces = part_faces.T
 
         if not optimisation.use_preoptimization_temp:
-            num_nodes = part_vertices.shape[0] # The number of vertices
-            # Extract the corner vertices of triangles for each node
-            node_triangles = trimesh_obj.vertex_adjacency_graph
-            node_triangles_corners = [part_faces[node_triangles[node_ind]] for node_ind in range(num_nodes)]
-            one_ring_list = [None] * num_nodes
+            num_nodes = part_vertices.shape[0]
+            vertex_triangles = trimesh_obj.vertex_adjacency_graph
 
-            # Compute the one-ring neighborhood for each vertex
+            # Compute one-ring neighborhood
+            one_ring_list = []
             for node_ind in range(num_nodes):
-                single_cell = [node_triangles_corners[node_ind][i].tolist() for i in range(len(node_triangles_corners[node_ind]))]
-                one_ring_list[node_ind] = [cell for cell in single_cell if node_ind not in cell]
+                neighbors = vertex_triangles[node_ind]
+                neighbor_faces = part_faces[neighbors]
+                one_ring_list.append(neighbor_faces)
 
-            # Make sure that the current orientation is uniform for all elements
+            # Check and adjust the orientation of the one-ring neighborhood
             for node_ind in range(num_nodes):
-                for face_ind in range(len(one_ring_list[node_ind])):
-                    point_aa = part_vertices[one_ring_list[node_ind][face_ind][0], :]
-                    point_bb = part_vertices[one_ring_list[node_ind][face_ind][1], :]
-                    point_cc = part_vertices[node_ind, :]
+                for face_ind in range(one_ring_list[node_ind].shape[0]):
+                    point_aa = part_vertices[one_ring_list[node_ind][face_ind][0]]
+                    point_bb = part_vertices[one_ring_list[node_ind][face_ind][1]]
+                    point_cc = part_vertices[node_ind]
                     cross_vec = np.cross(point_bb - point_aa, point_aa - point_cc)
+                    if np.dot(part_mesh.n[node_ind], cross_vec) > 0:
+                        one_ring_list[node_ind][face_ind] = np.flip(one_ring_list[node_ind][face_ind])
 
-                    if np.dot(coil_part.coil_mesh.n[node_ind, :], cross_vec) > 0:
-                        one_ring_list[node_ind][face_ind] = np.flipud(one_ring_list[node_ind][face_ind])
-
+            # Update the coil_part with one-ring neighborhood information
             node_triangle_mat = np.zeros((num_nodes, part_faces.shape[0]), dtype=bool)
-
+            node_triangle_mat[range(num_nodes), vertex_triangles] = True
+            
             coil_part.one_ring_list = one_ring_list
-            coil_part.node_triangles = node_triangles
+            coil_part.node_triangles = vertex_triangles
             coil_part.node_triangle_mat = node_triangle_mat
 
         else:

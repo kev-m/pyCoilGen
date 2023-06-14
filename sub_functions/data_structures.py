@@ -62,8 +62,7 @@ class Mesh:
         elif vertices is not None and faces is not None:
             self.trimesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
         else:
-            raise ValueError(
-                "Either vertices and faces, or trimesh_obj must be provided.")
+            raise ValueError("Either vertices and faces, or trimesh_obj must be provided.")
 
         # Known properties
         # Assigned in read_mesh
@@ -190,6 +189,9 @@ class Mesh:
 
         return boundary
 
+@dataclass
+class CoilPart:
+    coil_mesh: Mesh = None
 
 class CoilSolution:
     """
@@ -201,7 +203,7 @@ class CoilSolution:
     """
 
     def __init__(self):
-        self.coil_parts = None
+        self.coil_parts: List[CoilPart] = []
         self.target_field = None
         self.optimisation = OptimisationParameters()
 
