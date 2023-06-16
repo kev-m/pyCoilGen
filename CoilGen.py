@@ -8,13 +8,15 @@ import logging
 # Local imports
 # Import the required modules from sub_functions directory
 from sub_functions.constants import *
+from sub_functions.data_structures import DataStructure, CoilSolution, OptimisationParameters
+
+# From original project
 from sub_functions.read_mesh import read_mesh
 from sub_functions.parse_input import parse_input, create_input
 from sub_functions.split_disconnected_mesh import split_disconnected_mesh
 from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh
 from sub_functions.define_target_field import define_target_field
-from sub_functions.data_structures import DataStructure, CoilSolution, OptimisationParameters
 # from sub_functions.temp_evaluation import temp_evaluation
 from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 from sub_functions.calculate_basis_functions import calculate_basis_functions
@@ -75,6 +77,10 @@ def CoilGen(log, input=None):
         print('Load geometry:')
         coil_mesh, target_mesh, secondary_target_mesh = read_mesh(input_args)
         # log.debug(" coil_mesh.faces: %s", coil_mesh.faces)
+
+        if input['debug'] > DEBUG_VERBOSE:
+            coil_mesh.display()
+
 
         # Split the mesh and the stream function into disconnected pieces
         print('Split the mesh and the stream function into disconnected pieces.')

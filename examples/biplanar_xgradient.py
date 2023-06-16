@@ -12,6 +12,7 @@ print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 
 from CoilGen import CoilGen
+from sub_functions.constants import DEBUG_VERBOSE
 
 if __name__ == "__main__":
     # Set up logging
@@ -32,21 +33,21 @@ if __name__ == "__main__":
         'levels': 14,
         # a potential offset value for the minimal and maximal contour potential ; must be between 0 and 1
         'pot_offset_factor': '0.25',
-        'surface_is_cylinder_flag' : True, 
+        'surface_is_cylinder_flag': True,
         # the width for the interconnections are interconnected; in meter
         'interconnection_cut_width': 0.05,
         # the length for which overlapping return paths will be shifted along the surface normals; in meter
         'normal_shift_length': 0.01,
         'iteration_num_mesh_refinement': 1,  # the number of refinements for the mesh;
-        'set_roi_into_mesh_center' : True,
+        'set_roi_into_mesh_center': True,
         'force_cut_selection': ['high'],
         # Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
         'level_set_method': 'primary',
         'interconnection_method': 'regular',
-        'skip_postprocessing' : False, 
-        'skip_inductance_calculation' : False, 
+        'skip_postprocessing': False,
+        'skip_inductance_calculation': False,
         'tikonov_reg_factor': 10,  # Tikonov regularization factor for the SF optimization
-        'debug' : 1
+        'debug': DEBUG_VERBOSE,
     }
 
-     result = CoilGen(log, arg_dict)
+    result = CoilGen(log, arg_dict)

@@ -12,6 +12,7 @@ sub_functions_path = Path(__file__).resolve().parent / '..'
 print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 from CoilGen import CoilGen
+from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
 
 if __name__ == "__main__":
@@ -49,7 +50,8 @@ if __name__ == "__main__":
         'sf_opt_method': 'tikkonov', # ...
         'fmincon_parameter': [1000.0, 10 ^ 10, 1.000000e-10, 1.000000e-10, 1.000000e-10],
         'tikonov_reg_factor': 100,  # %Tikonov regularization factor for the SF optimization
-        'debug' : 2,
+        #'debug': DEBUG_VERBOSE,
+        'debug': DEBUG_BASIC,
     }
 
     result = CoilGen(log, arg_dict)

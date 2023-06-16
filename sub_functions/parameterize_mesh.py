@@ -11,7 +11,7 @@ from sub_functions.mesh_parameterization_iterative import mesh_parameterization_
 from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
 from sub_functions.constants import *
 # Debugging
-# from helpers.visualisation import visualize_vertex_connections
+from helpers.visualisation import visualize_vertex_connections
 
 log = logging.getLogger(__name__)
 
@@ -69,7 +69,8 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
             else:
                 # Planarization of cylinder
                 # DEBUG
-                # visualize_vertex_connections(mesh_vertices, 800, 'images/cylinder_projected1.png')
+                if input.debug >= DEBUG_VERBOSE:
+                    visualize_vertex_connections(mesh_vertices, 800, f'images/parameterize_mesh_cyl{part_ind}_0.png')
 
                 # Create 2D mesh for UV matrix:
                 # Rotate cylinder normal parallel to z-axis [0,0,1]
@@ -101,6 +102,11 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 mesh_part.uv = mesh_uv.get_vertices()
                 mesh_part.boundary = get_boundary_loop_nodes(mesh_uv)
 
+                # DEBUG
+                if input.debug >= DEBUG_VERBOSE:
+                    visualize_vertex_connections(mesh_part.uv, 800, f'images/parameterize_mesh_cyl{part_ind}_1.png')
+
+
         else:
             # The 3D mesh is already planar, but the normals must be aligned to the z-axis
             # DEBUG
@@ -108,7 +114,8 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 log.debug(" - 3D mesh is already planar")
 
             # DEBUG
-            # visualize_vertex_connections(mesh_vertices, 800, 'images/planar_projected1.png')
+            if input.debug >= DEBUG_VERBOSE:
+                visualize_vertex_connections(mesh_part.uv, 800, f'images/parameterize_mesh_planar{part_ind}_0.png')
 
             # Rotate the planar mesh in the xy plane
             mean_norm = np.mean(face_normals, axis=0)
@@ -133,6 +140,10 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 log.debug(" - mesh_part.uv shape: %s", mesh_part.uv.shape)
 
             mesh_part.boundary = get_boundary_loop_nodes(mesh_part)
+
+            # DEBUG
+            if input.debug >= DEBUG_VERBOSE:
+                visualize_vertex_connections(mesh_part.uv, 800, f'images/parameterize_mesh_planar{part_ind}_1.png')
 
     return coil_parts
 
