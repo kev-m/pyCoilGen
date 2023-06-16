@@ -14,8 +14,8 @@ from sub_functions.data_structures import DataStructure, CoilSolution, Optimisat
 from sub_functions.read_mesh import read_mesh
 from sub_functions.parse_input import parse_input, create_input
 from sub_functions.split_disconnected_mesh import split_disconnected_mesh
-#from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
-from sub_functions.refine_mesh import refine_mesh
+from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
+# from sub_functions.refine_mesh import refine_mesh # Broken
 from sub_functions.parameterize_mesh import parameterize_mesh
 from sub_functions.define_target_field import define_target_field
 # from sub_functions.temp_evaluation import temp_evaluation

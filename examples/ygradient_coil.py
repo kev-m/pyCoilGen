@@ -36,7 +36,7 @@ if __name__ == "__main__":
         'surface_is_cylinder_flag': True,
         'interconnection_cut_width': 0.1,  # % the width for the interconnections are interconnected; in meter
         'normal_shift_length': 0.025,  # % the length for which overlapping return paths will be shifted along the surface normals; in meter
-        'iteration_num_mesh_refinement': 1,  # % the number of refinements for the mesh;
+        'iteration_num_mesh_refinement': 0,  # % the number of refinements for the mesh;
         'set_roi_into_mesh_center': True,
         'force_cut_selection': {'high'},  # ...
         'level_set_method': 'primary',  # ... %Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"

@@ -17,7 +17,7 @@ from helpers.visualisation import visualize_vertex_connections, visualize_3D_bou
 from sub_functions.data_structures import DataStructure, Mesh, CoilPart
 from sub_functions.read_mesh import create_unique_noded_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh, get_boundary_loop_nodes
-from sub_functions.refine_mesh import refine_mesh
+from sub_functions.refine_mesh import  refine_mesh_delegated as refine_mesh
 from CoilGen import CoilGen
 
 
@@ -202,13 +202,43 @@ def debug4():
     mesh_part = coil_parts[0].coil_mesh
     visualize_vertex_connections(mesh_part.uv, 800, 'images/cylinder_projected2.png')
 
+# Test Mesh refinement
+def debug5():
+    # Test 1: Trivial case: A single face
+    vertices = np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0]])
+    faces = np.array([[0, 1, 2]])
+    mesh = Mesh(vertices=vertices, faces=faces)
+
+    mesh.refine(inplace=True)
+
+    new_vertices = mesh.get_vertices()
+    new_faces = mesh.get_faces()
+
+    log.debug(" New vertices: %s -> %s", new_vertices.shape, new_vertices)
+    log.debug(" New faces: %s -> %s", new_faces.shape, new_faces)
+
+    # mesh.display()
+    coil_parts = [CoilPart(coil_mesh=mesh)]
+    input_args = DataStructure(sf_source_file='none', iteration_num_mesh_refinement=1)
+    coil_parts = refine_mesh(coil_parts, input_args)
+    
+    mesh = coil_parts[0].coil_mesh
+    mesh.display()
+
+    new_vertices = mesh.get_vertices()
+    new_faces = mesh.get_faces()
+
+    log.debug(" New vertices: %s -> %s", new_vertices.shape, new_vertices)
+    log.debug(" New faces: %s -> %s", new_faces.shape, new_faces)
+
 
 if __name__ == "__main__":
     # Set up logging
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
 
-    debug1() # Planar mesh
+    # debug1() # Planar mesh
     # debug2() # Planar mesh with a hole
     # debug3() # Planar mesh from file
     # debug4() # Cylindrical mesh
+    debug5() # Refine a simple 1 face mesh into four.
