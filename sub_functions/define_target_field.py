@@ -111,10 +111,12 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
             # Select points inside a sphere
             target_points = target_points[:, np.sqrt(np.sum(target_points**2, axis=0)) <= input.target_region_radius]
 
-            all_verts = np.hstack([part.coil_mesh.get_vertices() for part in coil_parts])
+            ## Conversion: Changed hstack to vstack
+            all_verts = np.vstack([part.coil_mesh.get_vertices() for part in coil_parts])
 
+            ## Conversion: Changed axies=1 to axis=0
             if input.set_roi_into_mesh_center:
-                target_points -= np.mean(all_verts, axis=1)[:, np.newaxis]
+                target_points -= np.mean(all_verts, axis=0)[:, np.newaxis]
 
         # Remove identical points
         _, unique_inds = np.unique(target_points.T, axis=0, return_index=True)

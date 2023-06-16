@@ -74,6 +74,10 @@ class Mesh:
         self.uv = None          # Vertices, UV texture matrix (n, [x,y,z=0])
         self.boundary = None    # List of 1D lists of vertex indices along mesh boundaries (m,[i])
 
+    def recreate(self, vertices, faces):
+        self.trimesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
+        self.cleanup()
+
     def  cleanup(self):
         """
         Clean up the mesh by removing duplicate and unused vertices.
@@ -454,7 +458,7 @@ class Calc3DRotationMatrixInput:
 
 
 @dataclass
-class CoilPart:
+class CoilPartX2:
     stream_function: List[float]
     contour_step: float
     potential_level_list: List[float]
@@ -473,7 +477,7 @@ class InputParameters:
 
 
 @dataclass
-class CoilPart:
+class CoilPartX:
     is_real_triangle_mat: np.ndarray
     triangle_corner_coord_mat: np.ndarray
     current_mat: np.ndarray

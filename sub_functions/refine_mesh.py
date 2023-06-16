@@ -3,91 +3,78 @@ import numpy as np
 # Logging
 import logging
 
+# Local imports
+from sub_functions.data_structures import Mesh
+
 log = logging.getLogger(__name__)
 
-def refine_mesh(coil_parts, input):
+import numpy as np
+
+def refine_mesh(coil_parts, input_args):
     """
     Increase the resolution of the mesh and interpolate the stream function.
 
     Args:
-        coil_parts (object): Coil parts object with attributes 'coil_mesh'.
-        input (object): Input object with attributes 'iteration_num_mesh_refinement' and 'sf_source_file'.
+    - coil_parts (list): List of coil parts.
+    - input (dict): Input parameters.
 
     Returns:
-        coil_parts (object): Updated coil parts object with refined mesh.
-
+    - coil_parts (list): List of coil parts with refined mesh.
     """
-    iteration_num_mesh_refinement = input.iteration_num_mesh_refinement
-    sf_source_file = input.sf_source_file
+
+    iteration_num_mesh_refinement = input_args['iteration_num_mesh_refinement']
+    sf_source_file = input_args['sf_source_file']
 
     if sf_source_file == 'none':
         for part_ind in range(len(coil_parts)):
-            subdivided_mesh = coil_parts[part_ind].coil_mesh
-            subdivided_mesh.faces = subdivided_mesh.faces.T
-            subdivided_mesh.vertices = subdivided_mesh.vertices.T
+            coil_part = coil_parts[part_ind]
+            part_mesh = coil_part.coil_mesh
+            part_vertices = part_mesh.get_vertices()  # Get the vertices for the coil part.
+            part_faces = part_mesh.get_faces()  # Get the faces for the coil part.
+            log.debug(" %d --- part_faces.shape: %s", part_ind, part_faces.shape)
 
             for num_subdivision_sf in range(iteration_num_mesh_refinement):
                 # Upsample the stream function
-                coord_1_3 = np.vstack(
-                    [
-                        np.mean(subdivided_mesh.vertices[subdivided_mesh.faces[:, [0, 2]]], axis=1),
-                        np.mean(subdivided_mesh.vertices[subdivided_mesh.faces[:, [0, 2]]], axis=1),
-                        np.mean(subdivided_mesh.vertices[subdivided_mesh.faces[:, [0, 2]]], axis=1),
-                    ]
-                ).T
-                coord_3_2 = np.vstack(
-                    [
-                        np.mean(subdivided_mesh.vertices[subdivided_mesh.faces[:, [2, 1]]], axis=1),
-                        np.mean(subdivided_mesh.vertices[subdivided_mesh.faces[:, [2, 1]]], axis=1),
-                        np.mean(subdivided_mesh.vertices[subdivided_mesh.faces[:, [2, 1]]], axis=1),
-                    ]
-                ).T
-                coord_2_1 = np.vstack(
-                    [
-                        np.mean(subdivided_mesh.vertices[subdivided_mesh.faces[:, [1, 0]]], axis=1),
-                        np.mean(subdivided_mesh.vertices[subdivided_mesh.faces[:, [1, 0]]], axis=1),
-                        np.mean(subdivided_mesh.vertices[subdivided_mesh.faces[:, [1, 0]]], axis=1),
-                    ]
-                ).T
+                # Calculate edge centers
+                coord_1_3 = np.mean(part_vertices[part_faces[:, [0, 2]], :], axis=1)
+                coord_3_2 = np.mean(part_vertices[part_faces[:, [2, 1]], :], axis=1)
+                coord_2_1 = np.mean(part_vertices[part_faces[:, [1, 0]], :], axis=1)
 
-                all_coords = np.vstack(
-                    [
-                        subdivided_mesh.vertices,
-                        coord_1_3,
-                        coord_3_2,
-                        coord_2_1,
-                    ]
-                )
-                coord_ind_1 = subdivided_mesh.faces[:, 0]
-                coord_ind_2 = subdivided_mesh.faces[:, 1]
-                coord_ind_3 = subdivided_mesh.faces[:, 2]
-                new_coord_inds_1_3 = np.arange(1, coord_1_3.shape[1] + 1) + subdivided_mesh.vertices.shape[1]
-                new_coord_inds_3_2 = np.arange(1, coord_3_2.shape[1] + 1) + (
-                    subdivided_mesh.vertices.shape[1] + coord_1_3.shape[1]
-                )
-                new_coord_inds_2_1 = np.arange(1, coord_2_1.shape[1] + 1) + (
-                    subdivided_mesh.vertices.shape[1] + coord_1_3.shape[1] + coord_3_2.shape[1]
-                )
+                # Upsample the mesh
+                all_coords = np.concatenate((part_vertices, coord_1_3, coord_3_2, coord_2_1))
+                coord_ind_1 = part_faces[:, 0]
+                coord_ind_2 = part_faces[:, 1]
+                coord_ind_3 = part_faces[:, 2]
+                new_coord_inds_1_3 = np.arange(1, coord_1_3.shape[0] + 1) + part_vertices.shape[0]
+                new_coord_inds_3_2 = np.arange(1, coord_3_2.shape[0] + 1) + (part_vertices.shape[0] + coord_1_3.shape[0])
+                new_coord_inds_2_1 = np.arange(1, coord_2_1.shape[0] + 1) + (part_vertices.shape[0] + coord_1_3.shape[0] + coord_3_2.shape[0])
 
-                new_tri_1 = np.column_stack([coord_ind_1, new_coord_inds_1_3, new_coord_inds_2_1])
-                new_tri_2 = np.column_stack([new_coord_inds_1_3, coord_ind_3, new_coord_inds_3_2])
-                new_tri_3 = np.column_stack([new_coord_inds_3_2, coord_ind_2, new_coord_inds_2_1])
-                new_tri_4 = np.column_stack([new_coord_inds_1_3, new_coord_inds_3_2, new_coord_inds_2_1])
-                new_tri = np.vstack([new_tri_1, new_tri_2, new_tri_3, new_tri_4])
+                # Build the new triangles
+                new_tri_1 = np.column_stack((coord_ind_1, new_coord_inds_1_3, new_coord_inds_2_1))
+                new_tri_2 = np.column_stack((new_coord_inds_1_3, coord_ind_3, new_coord_inds_3_2))
+                new_tri_3 = np.column_stack((new_coord_inds_3_2, coord_ind_2, new_coord_inds_2_1))
+                new_tri_4 = np.column_stack((new_coord_inds_1_3, new_coord_inds_3_2, new_coord_inds_2_1))
+                new_faces = np.concatenate((new_tri_1, new_tri_2, new_tri_3, new_tri_4))
 
-                all_coords_unique, ic = np.unique(all_coords, axis=0, return_inverse=True)
-                ind_replace_list = np.column_stack([np.arange(1, ic.shape[0] + 1), ic])
+                # Delete double counted nodes
+                """
+                # all_coords_unique: The sorted unique values
+                # unique_inverse: The indices to reconstruct the original array from the unique array.
+                all_coords_unique, unique_inverse = np.unique(all_coords, axis=0, return_inverse=True)
+                log.debug(" %d --- new_faces.shape: %s", part_ind, new_faces.shape)
+                log.debug(" %d --- unique_inverse.shape: %s", part_ind, unique_inverse.shape)
+                ## new_faces = np.reshape(unique_inverse[new_faces.flatten()], new_faces.shape)
+                new_faces = np.reshape(unique_inverse[new_faces], new_faces.shape)
 
-                to_replace, by_what = np.isin(new_tri, ind_replace_list[:, 0], assume_unique=True), np.isin(
-                    ind_replace_list[:, 0], new_tri, assume_unique=True
-                )
-                new_tri[to_replace] = ind_replace_list[by_what[to_replace], 1]
+                # Update the coil part mesh
+                coil_part.coil_mesh.set_vertices(all_coords_unique)
+                coil_part.coil_mesh.set_faces(new_faces)
+                """
+                # Recreate the coil_part and let Trimesh sort out vertex and face cleanup
+                #coil_part = Mesh(vertices=all_coords, faces=new_faces)
+                part_mesh.recreate(vertices=all_coords, faces=new_faces)
 
-                subdivided_mesh.faces = new_tri
-                subdivided_mesh.vertices = all_coords_unique
-
-            coil_parts[part_ind].coil_mesh.vertices = subdivided_mesh.vertices.T
-            coil_parts[part_ind].coil_mesh.faces = subdivided_mesh.faces.T
+            coil_parts[part_ind] = coil_part
 
     return coil_parts
 
@@ -171,3 +158,27 @@ def refine_mesh_delegated(coil_parts, input):
                 coil_parts[part_ind].coil_mesh.refine(inplace=True)
 
     return coil_parts
+
+if __name__ == "__main__":
+    # Set up logging
+    log = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.DEBUG)
+
+    # Example vertices and faces arrays
+    vertices = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2], [1, 1, 1], [0, 0, 0], [2, 2, 2]])
+    faces = np.array([[0, 1, 2], [1, 2, 3], [3, 4, 5]])
+
+    log.debug(" --- vertices.shape: %s", vertices.shape)
+    log.debug(" --- faces.shape: %s", faces.shape)
+
+    # Get unique vertices and their indices
+    unique_vertices, vertex_indices = np.unique(vertices, axis=0, return_inverse=True)
+
+    log.debug(" --- unique_vertices.shape: %s", unique_vertices.shape)
+    log.debug(" --- vertex_indices.shape: %s", vertex_indices.shape)
+
+
+    # Build new faces array with unique vertex indices
+    new_faces = vertex_indices[faces]
+
+    print(new_faces)

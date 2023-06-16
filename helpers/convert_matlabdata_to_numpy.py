@@ -22,6 +22,10 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     # logging.basicConfig(level=logging.INFO)
 
-    mat = load_matlab('../CoilGen/target_fields/intraoral_dental_target_field')
+    #mat = load_matlab('../CoilGen/target_fields/intraoral_dental_target_field')
+    #log.debug(" Loaded: %s", mat)
+    #result = save_numpy('target_fields/intraoral_dental_target_field', mat)
+
+    mat = load_matlab('debug/result_x_gradient')
     log.debug(" Loaded: %s", mat)
-    result = save_numpy('target_fields/intraoral_dental_target_field', mat)
+    result = save_numpy('debug/result_x_gradient', mat)
