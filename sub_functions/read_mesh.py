@@ -37,9 +37,11 @@ def read_mesh(input):
         if input.coil_mesh_file.endswith('.stl'):
             log.debug("Loading STL")
             # Load the stl file; read the coil mesh surface
-            #coil_mesh = Mesh.stlread_local(input.geometry_source_path + '/' + input.coil_mesh_file)
-            #coil_mesh = create_unique_noded_mesh(mesh_data)
             coil_mesh = Mesh.load_from_file(input.geometry_source_path + '/' + input.coil_mesh_file)
+            # TODO: Need to populate normal_rep with representative normal.
+            # HACK: Assume [0,0,1]
+            log.warn(" Loaded mesh from STL. Assuming shape representative normal is [0,0,1]!")
+            coil_mesh.normal_rep = np.array([0.0, 0.0, 1.0])
 
         elif input.coil_mesh_file == 'create cylinder mesh':
             # No external mesh is specified by stl file; create default cylindrical mesh

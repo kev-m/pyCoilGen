@@ -166,7 +166,9 @@ class Mesh:
 
         parts = []
         for part in trimesh_parts:
-            parts.append(DataStructure(coil_mesh=Mesh(part)))
+            mesh_part = Mesh(part)
+            mesh_part.normal_rep = self.normal_rep
+            parts.append(DataStructure(coil_mesh=mesh_part))
 
         return parts
 
@@ -197,8 +199,7 @@ class Mesh:
         """
         boundary = self.trimesh_obj.facets_boundary
         # DEBUG
-        if input.debug >= DEBUG_BASIC:
-            log.debug(" - boundary_edges: shape: %s", np.shape(boundary))
+        log.debug(" - boundary_edges: shape: %s", np.shape(boundary))
         # if len(np.shape(boundary)) == 3:
         #    log.debug(" boundary: Extracting sub-array")
         #    boundary = boundary[0]
