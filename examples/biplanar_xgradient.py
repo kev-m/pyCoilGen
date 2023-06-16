@@ -45,8 +45,8 @@ if __name__ == "__main__":
         'interconnection_method': 'regular',
         'skip_postprocessing' : False, 
         'skip_inductance_calculation' : False, 
-        'tikonov_reg_factor': 10  # Tikonov regularization factor for the SF optimization
+        'tikonov_reg_factor': 10,  # Tikonov regularization factor for the SF optimization
+        'debug' : 1
     }
 
-    coil_parts, combined_mesh, sf_b_field, target_field, coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance, field_errors, coil_gradient, is_supressed_point = CoilGen(
-        log, arg_dict)
+     result = CoilGen(log, arg_dict)

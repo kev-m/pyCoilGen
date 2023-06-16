@@ -7,6 +7,7 @@ import logging
 
 # Local imports
 # Import the required modules from sub_functions directory
+from sub_functions.constants import *
 from sub_functions.read_mesh import read_mesh
 from sub_functions.parse_input import parse_input, create_input
 from sub_functions.split_disconnected_mesh import split_disconnected_mesh
@@ -53,7 +54,9 @@ def CoilGen(log, input=None):
 
     # Parse the input variables
     if type(input) is dict:
-        log.debug(" - converting input dict to input type.")
+        # DEBUG
+        if input['debug'] >= DEBUG_VERBOSE:
+            log.debug(" - converting input dict to input type.")
         input_parser, input_args = create_input(input)
     elif input is None:
         input_parser, input_args = parse_input(input)
@@ -61,7 +64,9 @@ def CoilGen(log, input=None):
         input_args = input
 
     # Print the input variables
-    log.debug('Parse inputs: %s', input_args)
+    # DEBUG
+    if input['debug'] >= DEBUG_VERBOSE:
+        log.debug('Parse inputs: %s', input_args)
 
     solution = CoilSolution()
 
@@ -198,7 +203,7 @@ if __name__ == "__main__":
     # logging.basicConfig(level=logging.INFO)
 
     # DEBUG:split_disconnected_mesh:Shape: (400, 6), (3, 441)
-    input = {'coil_mesh_file': 'create cylinder mesh'}  # Runs OK
+    input = {'debug': DEBUG_VERBOSE, 'coil_mesh_file': 'create cylinder mesh'}  # Runs OK
 
     # split_disconnected_mesh.py", line 60, in split_disconnected_mesh
     # DEBUG:split_disconnected_mesh:Shape: (800, 3), (3, 441)

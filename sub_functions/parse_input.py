@@ -1,6 +1,8 @@
 import argparse
 from pathlib import Path
 
+# local imports
+from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
 def parse_input(parse_cli=True):
     """
@@ -264,6 +266,9 @@ def parse_input(parse_cli=True):
     # Add the parameters for the generation of the (default) biplanar mesh
     parser.add_argument('--biplanar_mesh_parameter_list', nargs='+', type=float, default=[
                         0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2], help="Parameters for the generation of the (default) biplanar mesh")
+
+    # Add the parameters for the generation of the (default) biplanar mesh
+    parser.add_argument('--debug', type=int, default=0, help=f"Debug verbosity level: 0 = None, {DEBUG_BASIC} = Basic, {DEBUG_VERBOSE} = Verbose")
 
     # Parse the input arguments
     if parse_cli == False:

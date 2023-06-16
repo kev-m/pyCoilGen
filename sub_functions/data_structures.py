@@ -10,6 +10,7 @@ import logging
 
 # Local imports
 from dataclasses import dataclass
+from sub_functions.constants import *
 
 log = logging.getLogger(__name__)
 
@@ -160,6 +161,7 @@ class Mesh:
             List[Mesh]: A list of Mesh objects.
         """
         trimesh_parts = self.trimesh_obj.split(only_watertight=False)
+        # DEBUG
         log.debug("Split into %d parts", len(trimesh_parts))
 
         parts = []
@@ -194,7 +196,9 @@ class Mesh:
             ndarray: An array of boundary face indices.
         """
         boundary = self.trimesh_obj.facets_boundary
-        log.debug(" - boundary_edges: shape: %s", np.shape(boundary))
+        # DEBUG
+        if input.debug >= DEBUG_BASIC:
+            log.debug(" - boundary_edges: shape: %s", np.shape(boundary))
         # if len(np.shape(boundary)) == 3:
         #    log.debug(" boundary: Extracting sub-array")
         #    boundary = boundary[0]

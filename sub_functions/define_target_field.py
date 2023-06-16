@@ -12,6 +12,7 @@ import logging
 
 # Local imports
 from sub_functions.data_structures import TargetField
+from sub_functions.constants import *
 
 log = logging.getLogger(__name__)
 
@@ -202,10 +203,11 @@ def symbolic_calculation_of_gradient(input, target_field):
         dbzdz_str = dbzdz_str.replace("^", ".^")
         dbzdz_str = dbzdz_str.replace("*", ".*")
 
-        # Debugging
-        log.debug(' - dbzdx_fun: %s', dbzdx_str)
-        log.debug(' - dbzdy_fun: %s', dbzdy_str)
-        log.debug(' - dbzdz_fun: %s', dbzdz_str)
+        # DEBUG
+        if input.debug >= DEBUG_BASIC:
+            log.debug(' - dbzdx_fun: %s', dbzdx_str)
+            log.debug(' - dbzdy_fun: %s', dbzdy_str)
+            log.debug(' - dbzdz_fun: %s', dbzdz_str)
 
         # Define lambdify functions for array-wise operations
         dbzdx_fun = lambdify((x, y, z), dbzdx_str)

@@ -9,7 +9,7 @@ import logging
 from sub_functions.data_structures import Mesh
 from sub_functions.mesh_parameterization_iterative import mesh_parameterization_iterative
 from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
-
+from sub_functions.constants import *
 # Debugging
 # from helpers.visualisation import visualize_vertex_connections
 
@@ -39,7 +39,9 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
         mesh_vertices = mesh_part.get_vertices()
         mesh_faces = mesh_part.get_faces()
 
-        log.debug(" - processing %d, vertices shape: %s", part_ind, mesh_part.get_vertices().shape)
+        # DEBUG
+        if input.debug >= DEBUG_BASIC:
+            log.debug(" - processing %d, vertices shape: %s", part_ind, mesh_part.get_vertices().shape)
 
         # Compute face and vertex normals
         face_normals = mesh_part.face_normals()
@@ -50,7 +52,9 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                            np.std(face_normals[:, 2])]
         max_face_normal_std = np.max(max_face_normal)
 
-        log.debug(" - max_face_normal: %s, max_face_normal_std: %s", max_face_normal, max_face_normal_std)
+        # DEBUG
+        if input.debug >= DEBUG_BASIC:
+            log.debug(" - max_face_normal: %s, max_face_normal_std: %s", max_face_normal, max_face_normal_std)
 
         mesh_part.v = mesh_vertices
         mesh_part.fn = face_normals
@@ -90,7 +94,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 projected_vertices[:, 0] += input_vertices[:, 0] * input_vertices[:, 2]
                 projected_vertices[:, 1] += input_vertices[:, 1] * input_vertices[:, 2]
                 projected_vertices[:, 2] = 0  # Set z-coordinate to zero (projection onto x-y plane)
-                projected_vertices_2d = projected_vertices[:,:2]
+                projected_vertices_2d = projected_vertices[:, :2]
 
                 mesh_uv = Mesh(vertices=projected_vertices, faces=mesh_faces)
                 # Retrieve the vertices and the boundary loops of the projected cylinder
@@ -99,7 +103,9 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
 
         else:
             # The 3D mesh is already planar, but the normals must be aligned to the z-axis
-            log.debug(" - 3D mesh is already planar")
+            # DEBUG
+            if input.debug >= DEBUG_BASIC:
+                log.debug(" - 3D mesh is already planar")
 
             # DEBUG
             # visualize_vertex_connections(mesh_vertices, 800, 'images/planar_projected1.png')
@@ -122,11 +128,14 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 # Assign the original vertex coordinates to the UV attribute of the mesh
                 mesh_part.uv = mesh_vertices[:, :2]
 
-            log.debug(" - mesh_part.uv shape: %s", mesh_part.uv.shape)
+            # DEBUG
+            if input.debug >= DEBUG_BASIC:
+                log.debug(" - mesh_part.uv shape: %s", mesh_part.uv.shape)
 
             mesh_part.boundary = get_boundary_loop_nodes(mesh_part)
 
     return coil_parts
+
 
 # TODO: Consider moving these functions to other files
 def align_normals(vertices, original_normal, desired_normal):
@@ -150,8 +159,8 @@ def align_normals(vertices, original_normal, desired_normal):
 
     # Construct the rotation matrix
     mat_v = np.array([[0, -v_c[2], v_c[1]],
-                    [v_c[2], 0, -v_c[0]],
-                    [-v_c[1], v_c[0], 0]])
+                      [v_c[2], 0, -v_c[0]],
+                      [-v_c[1], v_c[0], 0]])
     rot_mat = np.eye(3) + mat_v + np.matmul(mat_v, mat_v) * (1 / (1 + v_d))
 
     # Apply the rotation matrix to the vertices

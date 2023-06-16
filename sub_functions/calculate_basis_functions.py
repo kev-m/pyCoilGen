@@ -6,6 +6,7 @@ import logging
 
 # Local imports
 from sub_functions.data_structures import CoilSolution, BasisElement, CoilPart
+from sub_functions.constants import DEBUG_VERBOSE
 
 log = logging.getLogger(__name__)
 
@@ -76,9 +77,10 @@ def calculate_basis_functions(coil_solution: CoilSolution, coil_parts: List[Coil
                     current_density_mat[vertex_index, x] = node_basis_element.current[tri_ind].T
 
                     # DEBUG
-                    log.debug(" -- node_basis_element.current shape: %s", node_basis_element.current.shape)  # n x 3
-                    log.debug(" -- node_basis_element.area shape: %s", node_basis_element.area.shape)  # n x 1
-                    log.debug(" -- ")
+                    if input.debug >= DEBUG_VERBOSE:
+                        log.debug(" -- node_basis_element.current shape: %s", node_basis_element.current.shape)  # n x 3
+                        log.debug(" -- node_basis_element.area shape: %s", node_basis_element.area.shape)  # n x 1
+                        log.debug(" -- ")
 
             # Create outputs in matrix form
             highst_triangle_count_per_node = max(
