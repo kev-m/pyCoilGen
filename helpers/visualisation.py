@@ -36,7 +36,7 @@ def visualize_vertex_connections(vertices3d, image_x_size, image_path, edges=Non
     translated_vertices = scaled_vertices + np.array([image_x_size, image_y_size]) / image_x_size * v_width - midpoint
 
     # Create a blank image
-    image = Image.new('RGB', (image_x_size, image_y_size), color='white')
+    image = Image.new('RGB', (image_x_size+20, image_y_size+20), color='white')
     draw = ImageDraw.Draw(image)
 
     # Draw the vertex connections
