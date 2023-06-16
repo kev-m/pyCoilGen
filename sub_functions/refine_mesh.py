@@ -22,8 +22,8 @@ def refine_mesh(coil_parts, input_args):
     - coil_parts (list): List of coil parts with refined mesh.
     """
 
-    iteration_num_mesh_refinement = input_args['iteration_num_mesh_refinement']
-    sf_source_file = input_args['sf_source_file']
+    iteration_num_mesh_refinement = input_args.iteration_num_mesh_refinement
+    sf_source_file = input_args.sf_source_file
 
     if sf_source_file == 'none':
         for part_ind in range(len(coil_parts)):
@@ -45,9 +45,9 @@ def refine_mesh(coil_parts, input_args):
                 coord_ind_1 = part_faces[:, 0]
                 coord_ind_2 = part_faces[:, 1]
                 coord_ind_3 = part_faces[:, 2]
-                new_coord_inds_1_3 = np.arange(1, coord_1_3.shape[0] + 1) + part_vertices.shape[0]
-                new_coord_inds_3_2 = np.arange(1, coord_3_2.shape[0] + 1) + (part_vertices.shape[0] + coord_1_3.shape[0])
-                new_coord_inds_2_1 = np.arange(1, coord_2_1.shape[0] + 1) + (part_vertices.shape[0] + coord_1_3.shape[0] + coord_3_2.shape[0])
+                new_coord_inds_1_3 = np.arange(0, coord_1_3.shape[0]) + part_vertices.shape[0]
+                new_coord_inds_3_2 = np.arange(0, coord_3_2.shape[0]) + (part_vertices.shape[0] + coord_1_3.shape[0])
+                new_coord_inds_2_1 = np.arange(0, coord_2_1.shape[0]) + (part_vertices.shape[0] + coord_1_3.shape[0] + coord_3_2.shape[0])
 
                 # Build the new triangles
                 new_tri_1 = np.column_stack((coord_ind_1, new_coord_inds_1_3, new_coord_inds_2_1))

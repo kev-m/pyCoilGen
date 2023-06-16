@@ -54,7 +54,7 @@ def debug1():
 
 
     coil_parts = [CoilPart(coil_mesh=mesh)]
-    input_args = {'sf_source_file': 'none', 'iteration_num_mesh_refinement' : 1}
+    input_args = DataStructure(sf_source_file='none', iteration_num_mesh_refinement=1)
     coil_parts = refine_mesh(coil_parts, input_args)
 
     vertices2 = mesh.get_vertices()
