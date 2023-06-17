@@ -58,8 +58,8 @@ def build_cylinder_mesh(
             b = i * num_circular_divisions + (j + 1) % num_circular_divisions
             c = (i + 1) * num_circular_divisions + j
             d = (i + 1) * num_circular_divisions + (j + 1) % num_circular_divisions
-            faces.append([a, b, c])
-            faces.append([b, d, c])
+            faces.append([a, c, b])
+            faces.append([b, c, d])
     faces = np.array(faces)
 
     # Rotate the cylinder in the desired orientation

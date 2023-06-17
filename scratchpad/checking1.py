@@ -11,12 +11,12 @@ import logging
 
 # Local imports
 # Add the sub_functions directory to the Python module search path
-sub_functions_path = Path(__file__).resolve().parent / '../sub_functions'
+sub_functions_path = Path(__file__).resolve().parent / '..'
 sys.path.append(str(sub_functions_path))
 
 # Import the required modules from sub_functions directory
-from build_cylinder_mesh import build_cylinder_mesh
-from read_mesh import create_unique_noded_mesh
+from sub_functions.build_cylinder_mesh import build_cylinder_mesh
+from sub_functions.read_mesh import create_unique_noded_mesh
 
 if __name__ == "__main__":
     # Set up logging
@@ -25,12 +25,12 @@ if __name__ == "__main__":
     # logging.basicConfig(level=logging.INFO)
 
     # attach to logger so trimesh messages will be printed to console
-    trimesh.util.attach_to_log()
+    # trimesh.util.attach_to_log()
 
     cylinder_height = 0.8
     cylinder_radius = 0.3
-    num_circular_divisions = 20
-    num_longitudinal_divisions = 20
+    num_circular_divisions = 4 # 20
+    num_longitudinal_divisions = 3 # 20
     rotation_vector_x = 1.0
     rotation_vector_y = 0.0
     rotation_vector_z = 0.0
