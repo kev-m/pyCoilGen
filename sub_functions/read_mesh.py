@@ -6,14 +6,15 @@ import logging
 
 # Local imports
 from sub_functions.build_cylinder_mesh import build_cylinder_mesh
-#from build_double_cone_mesh import build_double_cone_mesh
+# from build_double_cone_mesh import build_double_cone_mesh
 from sub_functions.build_planar_mesh import build_planar_mesh
-#from build_circular_mesh import build_circular_mesh
+# from build_circular_mesh import build_circular_mesh
 from sub_functions.build_biplanar_mesh import build_biplanar_mesh
 
 from sub_functions.data_structures import DataStructure, Mesh
 
 log = logging.getLogger(__name__)
+
 
 def read_mesh(input):
     """
@@ -29,7 +30,7 @@ def read_mesh(input):
     """
 
     coil_mesh = None
-    
+
     # Read the input mesh
     if input.sf_source_file == 'none':
         log.debug("Loading mesh: %s", input.coil_mesh_file)
@@ -104,7 +105,7 @@ def create_unique_noded_mesh(non_unique_mesh):
     verts = non_unique_mesh.vertices
 
     mesh = Mesh(vertices=verts, faces=faces)
-    mesh.cleanup()
+    # mesh.cleanup() # Changes mesh a lot.
     mesh.normal_rep = non_unique_mesh.normal
     return mesh
 
@@ -128,7 +129,7 @@ def stlread_local(file):
         M = np.fromfile(fid, dtype=np.uint8)
 
     f, v, n = stlbinary(M)
-    #output = {'faces': f, 'vertices': v, 'normals': n}
+    # output = {'faces': f, 'vertices': v, 'normals': n}
     output = DataStructure(faces=f, vertices=v, normals=n)
     return output
 
@@ -160,7 +161,7 @@ def stlbinary(M):
         return F, V, N
 
     T = M[84:]
-    F = np.empty((numFaces, 3), dtype='int') # Integer indices
+    F = np.empty((numFaces, 3), dtype='int')  # Integer indices
     V = np.empty((3 * numFaces, 3))
     N = np.empty((numFaces, 3))
 
@@ -197,12 +198,14 @@ def stlbinary(M):
 
     return F, V, N
 
+
 def stlascii(M):
     print('ASCII STL files currently not supported.')
     F = []
     V = []
     N = []
     return F, V, N
+
 
 def isbinary(A):
     if len(A) < 5:
