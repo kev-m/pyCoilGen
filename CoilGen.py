@@ -133,22 +133,15 @@ def CoilGen(log, input=None):
         assert (compare(coil_mesh.v, m_v))      # Pass
         assert (compare(coil_mesh.fn, m_fn))    # Pass
         assert (compare(coil_mesh.n, m_n))      # Pass
-        # TODO: Check uv and boundary loops
-        log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
-        log.debug(" m_boundary: %s", m_boundary)
+
         # Plot the two boundaries and see the difference
-        visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
-        visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
-        assert (compare(coil_mesh.boundary, m_boundary)) # Fail
+        #visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
+        #visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
+        assert (compare(coil_mesh.boundary, m_boundary)) # Pass
 
         # Plot the two UV and see the difference
-        visualize_vertex_connections(coil_mesh.uv, 800, 'images/uv2_coil_mesh.png')
-        visualize_vertex_connections(m_uv, 800, 'images/uv2_m_uv.png')
-        
-        # DEBUG:__main__: coil_mesh.uv: (264, 2)
-        # log.debug(" coil_mesh.uv: %s", coil_mesh.uv)
-        # log.debug(" m_uv: %s", m_uv)
-
+        #visualize_vertex_connections(coil_mesh.uv, 800, 'images/uv2_coil_mesh.png')
+        #visualize_vertex_connections(m_uv, 800, 'images/uv2_m_uv.png')
         assert (compare(coil_mesh.uv, m_uv))    # Pass
 
         # Define the target field
