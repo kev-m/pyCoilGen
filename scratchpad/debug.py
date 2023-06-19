@@ -231,6 +231,12 @@ def debug5():
     log.debug(" New vertices: %s -> %s", new_vertices.shape, new_vertices)
     log.debug(" New faces: %s -> %s", new_faces.shape, new_faces)
 
+def debug6():
+    # Load mesh
+    from sub_functions.read_mesh import stlread_local
+    output = stlread_local('Geometry_Data/cylinder_radius500mm_length1500mm.stl')
+    log.debug(" cylinder_radius500mm_length1500mm: vertices: %s, faces: %s, normals: %s", np.shape(output.vertices), np.shape(output.faces), np.shape(output.normals) )
+
 
 if __name__ == "__main__":
     # Set up logging
@@ -241,4 +247,5 @@ if __name__ == "__main__":
     # debug2() # Planar mesh with a hole
     # debug3() # Planar mesh from file
     # debug4() # Cylindrical mesh
-    debug5() # Refine a simple 1 face mesh into four.
+    # debug5() # Refine a simple 1 face mesh into four.
+    debug6() # Examine cylinder_radius500mm_length1500mm.stl

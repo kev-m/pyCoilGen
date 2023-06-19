@@ -5,8 +5,12 @@ from pathlib import Path
 # Logging
 import logging
 
+# Debug and development checking imports
+from helpers.extraction import get_element_by_name, load_matlab
+from helpers.visualisation import compare, visualize_vertex_connections
+from sub_functions.data_structures import Mesh
+
 # Local imports
-# Import the required modules from sub_functions directory
 from sub_functions.constants import *
 from sub_functions.data_structures import DataStructure, CoilSolution, OptimisationParameters
 
@@ -66,9 +70,23 @@ def CoilGen(log, input=None):
     else:
         input_args = input
 
+    set_level(input_args.debug)
+
+    ######################################################################################
+    # DEVELOPMENT: Remove this
+    mat_contents = load_matlab('debug/result_x_gradient')
+    matlab_data = mat_contents['x_channel']
+    m_faces = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.faces')-1
+    log.debug(" m_faces: %s, %s", m_faces, m_faces.shape)
+    m_vertices = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.vertices')
+    log.debug(" m_vertices: %s, %s", m_vertices, m_vertices.shape)
+    #m_mesh = Mesh(vertices=m_vertices, faces=m_faces)
+    #m_mesh.display()
+    ######################################################################################
+
     # Print the input variables
     # DEBUG
-    if input['debug'] >= DEBUG_VERBOSE:
+    if CURRENT_LEVEL >= DEBUG_VERBOSE:
         log.debug('Parse inputs: %s', input_args)
 
     solution = CoilSolution()
@@ -79,9 +97,10 @@ def CoilGen(log, input=None):
         coil_mesh, target_mesh, secondary_target_mesh = read_mesh(input_args)
         # log.debug(" coil_mesh.faces: %s", coil_mesh.faces)
 
+        assert (compare(coil_mesh.get_faces(), m_faces))
+
         if input['debug'] > DEBUG_VERBOSE:
             coil_mesh.display()
-
 
         # Split the mesh and the stream function into disconnected pieces
         print('Split the mesh and the stream function into disconnected pieces.')
@@ -91,6 +110,9 @@ def CoilGen(log, input=None):
         print('Upsample the mesh by subdivision:')
         coil_parts = refine_mesh(coil_parts, input_args)
         # log.debug("coil_parts: %s", coil_parts)
+
+        assert (compare(coil_parts[0].coil_mesh.get_faces(), m_faces))
+        #coil_parts[0].coil_mesh.display()
 
         # Parameterize the mesh
         print('Parameterize the mesh:')
@@ -210,7 +232,7 @@ if __name__ == "__main__":
     # logging.basicConfig(level=logging.INFO)
 
     # DEBUG:split_disconnected_mesh:Shape: (400, 6), (3, 441)
-    input = {'debug': DEBUG_VERBOSE, 'coil_mesh_file': 'create cylinder mesh'}  # Runs OK
+    ### input = {'debug': DEBUG_VERBOSE, 'coil_mesh_file': 'create cylinder mesh'}  # Runs OK
 
     # split_disconnected_mesh.py", line 60, in split_disconnected_mesh
     # DEBUG:split_disconnected_mesh:Shape: (800, 3), (3, 441)
@@ -219,4 +241,44 @@ if __name__ == "__main__":
     # DEBUG:split_disconnected_mesh:Shape: (124, 3), (3, 64)
     # arg_list = ['--coil_mesh_file', 'closed_cylinder_length_300mm_radius_150mm.stl'] # IndexError: index 64 is out of bounds for axis 1 with size 64
     # arg_list = ['--coil_mesh_file', 'dental_gradient_ccs_single_low.stl'] # IndexError: index 114 is out of bounds for axis 1 with size 114
-    solution = CoilGen(log, input=input)
+    ### solution = CoilGen(log, input=input)
+
+    import numpy as np
+
+    arg_dict = {
+        'field_shape_function': 'y',  # % definition of the target field
+        #'coil_mesh_file': 'cylinder_radius500mm_length1500mm.stl',
+        'coil_mesh_file': 'create cylinder mesh',
+        'cylinder_mesh_parameter_list': [0.4,  0.1125, 50, 50,  0.,  1.,  0., 0.],
+        'target_mesh_file': 'none',
+        'secondary_target_mesh_file': 'none',
+        'secondary_target_weight': 0.5,
+        'target_region_radius': 0.15,  # ...  % in meter
+        'use_only_target_mesh_verts': False,
+        'sf_source_file': 'none',
+        # % the number of potential steps that determines the later number of windings (Stream function discretization)
+        'levels': 20,
+        'pot_offset_factor': 0.25,  # % a potential offset value for the minimal and maximal contour potential ; must be between 0 and 1
+        'surface_is_cylinder_flag': True,
+        'interconnection_cut_width': 0.1,  # % the width for the interconnections are interconnected; in meter
+        'normal_shift_length': 0.025,  # % the length for which overlapping return paths will be shifted along the surface normals; in meter
+        'iteration_num_mesh_refinement': 0,  # % the number of refinements for the mesh;
+        'set_roi_into_mesh_center': True,
+        'force_cut_selection': {'high'},  # ...
+        'level_set_method': 'primary',  # ... %Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
+        'interconnection_method': 'regular',
+        'skip_postprocessing': False,
+        'skip_inductance_calculation': False,
+        'make_cylndrical_pcb': True,
+        'conductor_cross_section_width': 0.015,
+        'cross_sectional_points': np.array([np.sin(np.linspace(0, 2 * np.pi, 10)),
+                                     np.cos(np.linspace(0, 2 * np.pi, 10))]) * 0.01,
+        'sf_opt_method': 'tikkonov', # ...
+        'fmincon_parameter': [1000.0, 10 ^ 10, 1.000000e-10, 1.000000e-10, 1.000000e-10],
+        'tikonov_reg_factor': 100,  # %Tikonov regularization factor for the SF optimization
+        #'debug': DEBUG_VERBOSE,
+        'debug': DEBUG_BASIC,
+    }
+
+    solution = CoilGen(log, arg_dict)
+

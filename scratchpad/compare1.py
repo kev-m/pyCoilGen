@@ -115,12 +115,13 @@ if __name__ == "__main__":
     name = 'out'
     name = 'out.coil_parts[0]'
     name = 'out.coil_parts[0].coil_mesh'
-    name = 'out.coil_parts[0].coil_mesh.boundary'
-    #name = 'out.coil_parts[0].coil_mesh.faces[1]'
-    #name = 'out.coil_parts[0].coil_mesh.faces.faces[0]'
-    #name = 'out.coil_parts[0].coil_mesh.unique_vert_inds'
-    name = 'out.coil_parts[0].coil_mesh.uv'
-    #name = 'out.coil_parts[0].one_ring_list'
+    # name = 'out.coil_parts[0].coil_mesh.boundary'
+    name = 'out.coil_parts[0].coil_mesh.faces'
+    # name = 'out.coil_parts[0].coil_mesh.faces.faces[0]'
+    # name = 'out.coil_parts[0].coil_mesh.unique_vert_inds'
+    # name = 'out.coil_parts[0].coil_mesh.uv'
+    # name = 'out.coil_parts[0].one_ring_list'
+    name = 'out.input_data'
 
     # Get the corresponding numpy element
     input_data = get_element_by_name(x_channel, name, transpose=True)
@@ -128,6 +129,8 @@ if __name__ == "__main__":
     log.debug(" -- input_data.dtype : %s", input_data.dtype)
     log.debug("  -- shape: %s", input_data.shape)
     log.debug("  -- value: %s", input_data)
+    log.debug("  -- value: %s", input_data['coil_mesh_file'])
+    log.debug("  -- value: %s", input_data['cylinder_mesh_parameter_list'])
 
     # 2. Extract input parameters structure
     # input = matlab_data.input
