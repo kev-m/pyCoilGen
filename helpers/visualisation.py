@@ -28,28 +28,31 @@ def compare(instance1, instance2, double_tolerance = 0.001):
     return False
 
 
-def visualize_vertex_connections(vertices3d, image_x_size, image_path, edges=None):
-    if edges is not None:
-        shape_edges = np.shape(edges)
+def visualize_vertex_connections(vertices2_or_3d, image_x_size, image_path, boundaries=None):
+    if boundaries is not None:
+        shape_edges = np.shape(boundaries)
         log.debug(" faces shape: %s", shape_edges)
         if len(shape_edges) == 3:
             log.debug(" Edges shape: Extracting sub-array")
-            edges = edges[0]
-            log.debug(" new edges shape: %s", np.shape(edges))
+            boundaries = boundaries[0]
+            log.debug(" new edges shape: %s", np.shape(boundaries))
     else:
         log.debug(" Edges shape: None")
 
-    vertices = vertices3d[:, :2]
-    log.debug(" vertices shape: %s", vertices.shape)
+    if vertices2_or_3d.shape[1] == 3:
+        vertices_2d = vertices2_or_3d[:, :2]
+    else:
+        vertices_2d = vertices2_or_3d
+    log.debug(" vertices shape: %s", vertices_2d.shape)
     # Find the midpoint of all vertices
-    midpoint = np.mean(vertices, axis=0)
+    midpoint = np.mean(vertices_2d, axis=0)
 
-    v_width = np.max(vertices[:, 0]) - np.min(vertices[:, 0]) + 10
-    v_height = np.max(vertices[:, 1]) - np.min(vertices[:, 1]) + 10
+    v_width = np.max(vertices_2d[:, 0]) - np.min(vertices_2d[:, 0]) + 10
+    v_height = np.max(vertices_2d[:, 1]) - np.min(vertices_2d[:, 1]) + 10
 
     # print("v_width: ", v_width, ", v_height", v_height)
     # Scale the vertices to fit within the image size
-    scaled_vertices = vertices - np.min(vertices, axis=0)
+    scaled_vertices = vertices_2d - np.min(vertices_2d, axis=0)
     scaled_vertices *= int((image_x_size - 1) / np.max(scaled_vertices))
 
     # Translate the scaled vertices based on the midpoint
@@ -63,15 +66,17 @@ def visualize_vertex_connections(vertices3d, image_x_size, image_path, edges=Non
     # Draw the vertex connections
     radius_start = 5
     radius_end = 7
-    if edges is not None:
-        for edge in edges:
-            x1, y1 = translated_vertices[edge[0]]
-            x2, y2 = translated_vertices[edge[1]]
-            draw.line([(x1, y1), (x2, y2)], fill='black')
-            draw.ellipse((x1 - radius_start, y1 - radius_start, x1 + radius_start, y1 + radius_start), fill='red')
-            draw.ellipse((x2 - radius_end, y2 - radius_end, x2 + radius_end, y2 + radius_end), fill='blue')
+    if boundaries is not None:
+        for boundary in boundaries:
+            edges = len(boundary)
+            for edge_index in range(edges-1):
+                x1, y1 = translated_vertices[boundary[edge_index]]
+                x2, y2 = translated_vertices[boundary[edge_index+1]]
+                draw.line([(x1, y1), (x2, y2)], fill='black')
+                draw.ellipse((x1 - radius_start, y1 - radius_start, x1 + radius_start, y1 + radius_start), fill='red')
+                draw.ellipse((x2 - radius_end, y2 - radius_end, x2 + radius_end, y2 + radius_end), fill='blue')
     else:
-        for index in range(vertices.shape[0]-1):
+        for index in range(vertices_2d.shape[0]-1):
             x1, y1 = translated_vertices[index]
             draw.ellipse((x1 - radius_start, y1 - radius_start, x1 + radius_start, y1 + radius_start), fill='red')
             x2, y2 = translated_vertices[index+1]
