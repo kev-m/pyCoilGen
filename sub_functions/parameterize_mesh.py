@@ -79,7 +79,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 v_c = np.cross(orig_norm, new_norm)
                 # log.debug(" -- mesh_part.normal_rep: %s, new_norm: %s, v_c: %s", orig_norm, new_norm, v_c)
 
-                # Project the mesh onto to x-y plane [x,y,z] -> [x+x*z, y+y*z, 0]
+                # Project the mesh onto to x-y plane
                 projected_vertices = mesh_vertices.copy()
                 # Rotate the vertices
                 # 1. First, check if rotation is required by checking the magnitude of the transformation vector
@@ -89,17 +89,26 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                     projected_vertices = align_normals(projected_vertices, orig_norm, new_norm)
                     input_vertices = projected_vertices.copy()
                 else:
-                    input_vertices = mesh_vertices
+                    input_vertices = mesh_vertices.copy()
 
-                # Project the vertices onto the X-Y plane
+                # Calculate the UV matrix: MATLAB CoilGen method
+                point_coords = input_vertices.T
+                min_z_cylinder = np.min(point_coords[2])
+                point_coords[2] = point_coords[2] + min_z_cylinder
+                phi_coord = np.arctan2(point_coords[1], point_coords[0])
+                r_coord = np.sqrt(point_coords[0]**2 + point_coords[1]**2)
+                u_coord = (point_coords[2] - np.mean(r_coord) * circular_factor) * np.sin(phi_coord)
+                v_coord = (point_coords[2] - np.mean(r_coord) * circular_factor) * np.cos(phi_coord)
+                mesh_part.uv = np.vstack((u_coord, v_coord)).T
+
+                # Find the boundaries by projecting the cylinder onto the X-Y plane:
+                # Project the vertices onto the X-Y plane:  [x,y,z] -> [x+x*z, y+y*z, 0]
                 projected_vertices[:, 0] += input_vertices[:, 0] * input_vertices[:, 2]
                 projected_vertices[:, 1] += input_vertices[:, 1] * input_vertices[:, 2]
                 projected_vertices[:, 2] = 0  # Set z-coordinate to zero (projection onto x-y plane)
-                projected_vertices_2d = projected_vertices[:, :2]
-
                 mesh_uv = Mesh(vertices=projected_vertices, faces=mesh_faces)
+
                 # Retrieve the vertices and the boundary loops of the projected cylinder
-                mesh_part.uv = projected_vertices_2d
                 mesh_part.boundary = get_boundary_loop_nodes(mesh_uv)
 
                 # DEBUG
