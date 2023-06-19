@@ -26,6 +26,6 @@ if __name__ == "__main__":
     #log.debug(" Loaded: %s", mat)
     #result = save_numpy('target_fields/intraoral_dental_target_field', mat)
 
-    mat = load_matlab('debug/result_x_gradient')
+    mat = load_matlab('debug/result_y_gradient')
     log.debug(" Loaded: %s", mat)
-    result = save_numpy('debug/result_x_gradient', mat)
+    result = save_numpy('debug/result_y_gradient', mat)

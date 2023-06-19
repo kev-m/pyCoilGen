@@ -105,9 +105,9 @@ if __name__ == "__main__":
     # logging.basicConfig(level=logging.INFO)
 
     # 1. Load Matlab
-    mat_contents = load_matlab('debug/result_x_gradient')
+    mat_contents = load_matlab('debug/result_y_gradient')
     log.debug("mat_contents: %s", mat_contents.keys())
-    x_channel = mat_contents['x_channel']
+    x_channel = mat_contents['coil_layouts']
 
     print_structure(x_channel, '-')
 
@@ -129,8 +129,8 @@ if __name__ == "__main__":
     log.debug(" -- input_data.dtype : %s", input_data.dtype)
     log.debug("  -- shape: %s", input_data.shape)
     log.debug("  -- value: %s", input_data)
-    log.debug("  -- value: %s", input_data['coil_mesh_file'])
-    log.debug("  -- value: %s", input_data['cylinder_mesh_parameter_list'])
+    #log.debug("  -- value: %s", input_data['coil_mesh_file'])
+    #log.debug("  -- value: %s", input_data['cylinder_mesh_parameter_list'])
 
     # 2. Extract input parameters structure
     # input = matlab_data.input
