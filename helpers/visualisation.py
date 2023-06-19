@@ -7,6 +7,27 @@ import logging
 log = logging.getLogger(__name__)
 
 
+def compare(instance1, instance2):
+    if not type(instance1) == type(instance2):
+        log.debug(" Not the same type: %s is not %s", type(instance1), type(instance2))
+        return False
+
+    if isinstance(instance1, np.ndarray):
+        if not instance1.shape == instance2.shape:
+            log.debug(" Not the same shape: %s is not %s", np.shape(instance1), np.shape(instance2))
+            return False
+        log.debug(" Shape[0] %s", instance1.shape[0])
+        for index in range(instance1.shape[0]):
+            log.debug(" %d -> %s", index, instance1[index])
+            if not np.array_equal(instance1[index], instance2[index]):
+                log.debug(" Not the same value at index [%d]: %s is not %s", index, instance1[index], instance2[index])
+                return False
+            return True
+
+    log.debug(" %s is not supported", instance1.dtype)
+    return False
+
+
 def visualize_vertex_connections(vertices3d, image_x_size, image_path, edges=None):
     if edges is not None:
         shape_edges = np.shape(edges)
@@ -18,7 +39,7 @@ def visualize_vertex_connections(vertices3d, image_x_size, image_path, edges=Non
     else:
         log.debug(" Edges shape: None")
 
-    vertices = vertices3d[:,:2]
+    vertices = vertices3d[:, :2]
     log.debug(" vertices shape: %s", vertices.shape)
     # Find the midpoint of all vertices
     midpoint = np.mean(vertices, axis=0)
@@ -60,17 +81,18 @@ def visualize_vertex_connections(vertices3d, image_x_size, image_path, edges=Non
     # Save the image
     image.save(image_path)
 
+
 def project_vertex_onto_plane(vertex, pov):
     # Extract the coordinates of the vertex and POV
     x1, y1, z1 = vertex
     _, _, z2 = pov
-    
+
     # Calculate the projection factor based on the distance between vertex and POV
     projection_factor = z2 / (z2 - z1)
-    
+
     # Perform the perspective projection onto the X-Y plane
     projected_vertex = np.array([x1, y1, z1]) * projection_factor
-    
+
     return projected_vertex[:2]  # Return only the X and Y coordinates
 
 
@@ -85,9 +107,9 @@ def visualize_3D_boundary(boundary_loops, vertices, image_x_size, image_path):
     z_depth = np.max(vertices[:, 2]) - np.min(vertices[:, 2])
 
     log.debug(" - v_width: %s, v_height: %s", v_width, v_height)
-    pov = [0,0,np.max(vertices[:, 2]) + z_depth/10.]
+    pov = [0, 0, np.max(vertices[:, 2]) + z_depth/10.]
 
-    #scale_x = 
+    # scale_x =
 
     # For each boundary loop:
     for boundary in boundary_loops:
@@ -97,7 +119,6 @@ def visualize_3D_boundary(boundary_loops, vertices, image_x_size, image_path):
             vertex = vertices[vertex_index]
             # project the vertex onto an x-y plane
             log.debug(" -- Vertex: %s, %s", vertex, project_vertex_onto_plane(vertex, pov))
-
 
 
 if __name__ == "__main__":
