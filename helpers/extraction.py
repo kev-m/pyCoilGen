@@ -107,3 +107,12 @@ def get_element_by_name(np_data_array, name, transpose=True):
     if transpose and isinstance(result, (np.ndarray)):
         return result.T
     return result
+
+def get_and_show_debug(np_data_array, name, transpose=True):
+    item = get_element_by_name(np_data_array, name, transpose)
+    if isinstance(item, np.ndarray):
+        log.debug(" %s: shape %s", name, item.shape)
+    else:
+        log.debug(" %s: type %s", name, item.dtype)
+
+    return item

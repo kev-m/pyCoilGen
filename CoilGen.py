@@ -6,7 +6,7 @@ from pathlib import Path
 import logging
 
 # Debug and development checking imports
-from helpers.extraction import get_element_by_name, load_matlab
+from helpers.extraction import get_element_by_name, load_matlab, get_and_show_debug
 from helpers.visualisation import compare, visualize_vertex_connections
 from sub_functions.data_structures import Mesh
 
@@ -74,14 +74,25 @@ def CoilGen(log, input=None):
 
     ######################################################################################
     # DEVELOPMENT: Remove this
-    mat_contents = load_matlab('debug/result_x_gradient')
-    matlab_data = mat_contents['x_channel']
+    mat_contents = load_matlab('debug/result_y_gradient')
+    matlab_data = mat_contents['coil_layouts']
     m_faces = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.faces')-1
-    log.debug(" m_faces: %s, %s", m_faces, m_faces.shape)
+    # log.debug(" m_faces: %s, %s", m_faces, m_faces.shape)
     m_vertices = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.vertices')
-    log.debug(" m_vertices: %s, %s", m_vertices, m_vertices.shape)
-    #m_mesh = Mesh(vertices=m_vertices, faces=m_faces)
-    #m_mesh.display()
+    # log.debug(" m_vertices: %s, %s", m_vertices, m_vertices.shape)
+
+    m_v = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.v', False)
+    m_fn = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.fn', False)
+    m_n = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.n')
+
+    m_uv = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.uv')
+    m_boundary_x = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.boundary')-1
+    log.debug("m_boundary_x shape: %s", m_boundary_x[0][0].shape)
+    m_boundary = np.ndarray((2,25), dtype=int)
+    m_boundary[0,:] = m_boundary_x[0][0].reshape((25))
+    m_boundary[1,:] = m_boundary_x[1][0].reshape((25))
+
+    log.debug("m_boundary: %s", m_boundary)
     ######################################################################################
 
     # Print the input variables
@@ -112,12 +123,23 @@ def CoilGen(log, input=None):
         # log.debug("coil_parts: %s", coil_parts)
 
         assert (compare(coil_parts[0].coil_mesh.get_faces(), m_faces))
-        #coil_parts[0].coil_mesh.display()
+        # coil_parts[0].coil_mesh.display()
 
         # Parameterize the mesh
         print('Parameterize the mesh:')
         coil_parts = parameterize_mesh(coil_parts, input_args)
         solution.coil_parts = coil_parts
+
+        # TODO: v, fn, n
+        coil_mesh = coil_parts[0].coil_mesh
+        assert (compare(coil_mesh.v, m_v))      # Pass
+        assert (compare(coil_mesh.fn, m_fn))    # Pass
+        assert (compare(coil_mesh.n, m_n))      # PAss
+        # TODO: Check uv and boundary loops
+        log.debug("m_boundary: %s", m_boundary)
+        log.debug("coil_mesh.boundary: %s", coil_mesh.boundary)
+        assert (compare(coil_mesh.boundary, m_boundary))
+        assert (compare(coil_mesh.uv, m_uv))    # FAIL
 
         # Define the target field
         print('Define the target field:')
@@ -232,7 +254,7 @@ if __name__ == "__main__":
     # logging.basicConfig(level=logging.INFO)
 
     # DEBUG:split_disconnected_mesh:Shape: (400, 6), (3, 441)
-    ### input = {'debug': DEBUG_VERBOSE, 'coil_mesh_file': 'create cylinder mesh'}  # Runs OK
+    # input = {'debug': DEBUG_VERBOSE, 'coil_mesh_file': 'create cylinder mesh'}  # Runs OK
 
     # split_disconnected_mesh.py", line 60, in split_disconnected_mesh
     # DEBUG:split_disconnected_mesh:Shape: (800, 3), (3, 441)
@@ -241,15 +263,15 @@ if __name__ == "__main__":
     # DEBUG:split_disconnected_mesh:Shape: (124, 3), (3, 64)
     # arg_list = ['--coil_mesh_file', 'closed_cylinder_length_300mm_radius_150mm.stl'] # IndexError: index 64 is out of bounds for axis 1 with size 64
     # arg_list = ['--coil_mesh_file', 'dental_gradient_ccs_single_low.stl'] # IndexError: index 114 is out of bounds for axis 1 with size 114
-    ### solution = CoilGen(log, input=input)
+    # solution = CoilGen(log, input=input)
 
     import numpy as np
 
     arg_dict = {
         'field_shape_function': 'y',  # % definition of the target field
-        #'coil_mesh_file': 'cylinder_radius500mm_length1500mm.stl',
-        'coil_mesh_file': 'create cylinder mesh',
-        'cylinder_mesh_parameter_list': [0.4,  0.1125, 50, 50,  0.,  1.,  0., 0.],
+        'coil_mesh_file': 'cylinder_radius500mm_length1500mm.stl',
+        # 'coil_mesh_file': 'create cylinder mesh',
+        # 'cylinder_mesh_parameter_list': [0.4,  0.1125, 50, 50,  0.,  1.,  0., 0.],
         'target_mesh_file': 'none',
         'secondary_target_mesh_file': 'none',
         'secondary_target_weight': 0.5,
@@ -272,13 +294,12 @@ if __name__ == "__main__":
         'make_cylndrical_pcb': True,
         'conductor_cross_section_width': 0.015,
         'cross_sectional_points': np.array([np.sin(np.linspace(0, 2 * np.pi, 10)),
-                                     np.cos(np.linspace(0, 2 * np.pi, 10))]) * 0.01,
-        'sf_opt_method': 'tikkonov', # ...
+                                            np.cos(np.linspace(0, 2 * np.pi, 10))]) * 0.01,
+        'sf_opt_method': 'tikkonov',  # ...
         'fmincon_parameter': [1000.0, 10 ^ 10, 1.000000e-10, 1.000000e-10, 1.000000e-10],
         'tikonov_reg_factor': 100,  # %Tikonov regularization factor for the SF optimization
-        #'debug': DEBUG_VERBOSE,
+        # 'debug': DEBUG_VERBOSE,
         'debug': DEBUG_BASIC,
     }
 
     solution = CoilGen(log, arg_dict)
-

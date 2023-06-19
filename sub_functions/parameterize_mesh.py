@@ -99,7 +99,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
 
                 mesh_uv = Mesh(vertices=projected_vertices, faces=mesh_faces)
                 # Retrieve the vertices and the boundary loops of the projected cylinder
-                mesh_part.uv = mesh_uv.get_vertices()
+                mesh_part.uv = projected_vertices_2d
                 mesh_part.boundary = get_boundary_loop_nodes(mesh_uv)
 
                 # DEBUG
@@ -188,7 +188,7 @@ def get_boundary_loop_nodes(mesh_part: Mesh):
     """
     # Compute the boundary edges of the mesh
     boundary_edges = mesh_part.boundary_edges()
-    # log.debug(" - boundary_edges: %s -> %s", np.shape(boundary_edges), boundary_edges)
+    #log.debug(" - boundary_edges: %s -> %s", np.shape(boundary_edges), boundary_edges)
 
     # DEBUG
     # visualize_vertex_connections(mesh_part.uv, 800, 'images/boundary_edges1.png', boundary_edges)
@@ -244,17 +244,18 @@ def get_boundary_loop_nodes(mesh_part: Mesh):
         next_part = boundary_loops[index]
         # Merge the loops if they share the same start vertex.
         if boundary_part[0] == next_part[0]:
-            # Drop the first element and reverse the rest
-            next_part = next_part[1:]
+            # Reverse the rest
             next_part.reverse()
             boundary_part += next_part
         else:
+            boundary_part.reverse() # MATLAB has the boundaries in the opposite direction
             reduced_loops.append(boundary_part)
             boundary_part = next_part
 
+    boundary_part.reverse() # MATLAB has the boundaries in the opposite direction
     reduced_loops.append(boundary_part)
     # DEBUG
     # total_elements = sum(len(sublist) for sublist in reduced_loops)
     # log.debug(" - new_loops shape: len(%s) -> %s", total_elements, reduced_loops)
 
-    return reduced_loops
+    return np.asarray(reduced_loops)
