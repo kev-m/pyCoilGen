@@ -3,19 +3,13 @@ import numpy as np
 # Logging
 import logging
 
-# TODO: Remove this
-import sys
-from pathlib import Path
-sub_functions_path = Path(__file__).resolve().parent / '..'
-print(sub_functions_path)
-sys.path.append(str(sub_functions_path))
-
 
 # Local imports
 from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
 from sub_functions.data_structures import DataStructure
 
 log = logging.getLogger(__name__)
+
 
 def build_cylinder_mesh(
         cylinder_height,
@@ -51,21 +45,21 @@ def build_cylinder_mesh(
     z_positions = np.linspace(-cylinder_height / 2, cylinder_height / 2,
                               num_longitudinal_divisions+1)
 
-    log.debug(" Shape x_positions: %s", np.shape(x_positions))
-    log.debug(" Shape y_positions: %s", np.shape(y_positions))
-    log.debug(" Shape z_positions: %s", np.shape(z_positions))
+    # log.debug(" Shape x_positions: %s", np.shape(x_positions))
+    # log.debug(" Shape y_positions: %s", np.shape(y_positions))
+    # log.debug(" Shape z_positions: %s", np.shape(z_positions))
 
     # Create the mesh vertices
     vertices_x = np.tile(x_positions, num_longitudinal_divisions+1)
     vertices_y = np.tile(y_positions, num_longitudinal_divisions+1)
     vertices_z = np.repeat(z_positions, len(x_positions))
-    log.debug(" Shape vertices_x: %s", np.shape(vertices_x))
-    log.debug(" Shape vertices_y: %s", np.shape(vertices_y))
-    log.debug(" Shape vertices_z: %s", np.shape(vertices_z))
+    # log.debug(" Shape vertices_x: %s", np.shape(vertices_x))
+    # log.debug(" Shape vertices_y: %s", np.shape(vertices_y))
+    # log.debug(" Shape vertices_z: %s", np.shape(vertices_z))
     vertices = np.vstack((vertices_x, vertices_y, vertices_z))
 
     # Set the vertices in the center
-    log.debug(" Shape vertices: %s", vertices.shape)
+    # log.debug(" Shape vertices: %s", vertices.shape)
     vertices = vertices - np.mean(vertices, axis=1, keepdims=True)
 
     # Create the faces for the cylinder mesh
@@ -80,12 +74,12 @@ def build_cylinder_mesh(
 
     faces_1 = np.column_stack((tri_1_vert_inds_2, tri_1_vert_inds_1, tri_1_vert_inds_3))
     faces_2 = np.column_stack((tri_2_vert_inds_2, tri_2_vert_inds_1, tri_2_vert_inds_3))
-    faces = np.vstack((faces_1, faces_2)) # Subtract 1 due to Matlab index offset starting at 1
+    faces = np.vstack((faces_1, faces_2))  # Subtract 1 due to Matlab index offset starting at 1
 
     # Rotate the cylinder in the desired orientation
     rot_vec = np.array([rotation_vector_x, rotation_vector_y, rotation_vector_z])
     rot_mat = calc_3d_rotation_matrix_by_vector(rot_vec, rotation_angle)
-    vertices=np.dot(vertices.T, rot_mat)
+    vertices = np.dot(vertices.T, rot_mat)
 
     # Calculate representative normal
     normal = np.array([0.0, 0.0, 1.0])
@@ -94,7 +88,6 @@ def build_cylinder_mesh(
     cylinder_mesh = DataStructure(vertices=vertices, faces=faces, normal=normal_rep)
 
     return cylinder_mesh
-
 
 
 if __name__ == "__main__":
@@ -107,7 +100,7 @@ if __name__ == "__main__":
 
     log.debug(" faces: %s, %s, min: %s, max: %s", mesh.faces, mesh.faces.shape, np.min(mesh.faces), np.max(mesh.faces))
     log.debug(" Should be:\n [2500 2499 2549]], (5000, 3)")
-    
+
     log.debug(" vertices: %s, %s", mesh.vertices, mesh.vertices.shape)
     log.debug(" Should be:\n [-1.40999888e-02  1.11612904e-01  1.96078431e-01]], (2550, 3)")
 
@@ -116,7 +109,7 @@ if __name__ == "__main__":
 
     t_faces = tri_mesh.get_faces()
     log.debug(" t_faces: %s, %s, min: %s, max: %s", t_faces, t_faces.shape, np.min(t_faces), np.max(t_faces))
-    #tri_mesh.display()
+    # tri_mesh.display()
 
 """
 DEBUG:__main__: m_faces: [[   1    0   51]
@@ -133,7 +126,7 @@ DEBUG:__main__: m_vertices: [[ 4.14973067e-20  1.12500000e-01 -1.96078431e-01]
  [-4.14140122e-02  1.04599855e-01  1.96078431e-01]
  [-2.79776123e-02  1.08965606e-01  1.96078431e-01]
  [-1.40999888e-02  1.11612904e-01  1.96078431e-01]], (2550, 3)
-"""    
+"""
 
 """    
     cylinder_height = 2.0
