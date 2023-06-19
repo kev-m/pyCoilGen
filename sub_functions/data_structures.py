@@ -111,7 +111,7 @@ class Mesh:
         Returns:
             ndarray: The float array of vertices [x, y, z].
         """
-        return self.trimesh_obj.vertices
+        return self.trimesh_obj.vertices.view(np.ndarray)
 
     def get_faces(self):
         """
@@ -120,7 +120,7 @@ class Mesh:
         Returns:
             ndarray: The int array of face indices into the vertices array.
         """
-        return self.trimesh_obj.faces
+        return self.trimesh_obj.faces.view(np.ndarray)
 
     def face_normals(self):
         """
