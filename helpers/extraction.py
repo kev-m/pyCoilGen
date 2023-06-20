@@ -46,7 +46,7 @@ def print_structure(mat_input, indent_char=' ', indent=None):
 def _get_element_by_name_internal(data, parts, transpose=True):
     key_len = len(parts)
     if key_len == 0:
-        if CURRENT_LEVEL >= DEBUG_VERBOSE:
+        if get_level() >= DEBUG_VERBOSE:
             log.debug(" No more children")
         return data
     key = parts[0]
@@ -58,7 +58,7 @@ def _get_element_by_name_internal(data, parts, transpose=True):
     else:
         key_index = 0
 
-    if CURRENT_LEVEL >= DEBUG_VERBOSE:
+    if get_level() >= DEBUG_VERBOSE:
         log.debug(" - Searching for %s[%d]", key, key_index)
     dtype = data.dtype
     fields = dtype.fields
@@ -66,18 +66,24 @@ def _get_element_by_name_internal(data, parts, transpose=True):
         field_index = 0
         for field_name, field_info in fields.items():
             if field_name == key:
-                if CURRENT_LEVEL >= DEBUG_VERBOSE:
+                if get_level() >= DEBUG_VERBOSE:
                     log.debug("Found: %s", field_name)
                 if key_len == 1:
-                    if CURRENT_LEVEL >= DEBUG_VERBOSE:
+                    if get_level() >= DEBUG_VERBOSE:
                         log.debug("Returning data[%s][%d]", field_name, key_index)
+                        log.debug(" -- shape %s", np.shape(data[field_name][key_index][0]))
                     return data[field_name][key_index][0]
                 else:
-                    return _get_element_by_name_internal(data[field_index][key_index][0], parts[1:])
+                    part_data = data[field_index][key_index]
+                    log.debug(" Part_data: %s", part_data.dtype)
+                    # DEBUG: Problem here
+                    if key == 'target_field':
+                        log.debug("target_field found!")
+                    return _get_element_by_name_internal(part_data[0], parts[1:])
             field_index += 1
         raise AttributeError(f"Key {key} not found!")
     else:
-        if CURRENT_LEVEL >= DEBUG_VERBOSE:
+        if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- %s", np.shape(data[key_index]))
         if transpose and isinstance(data, (np.ndarray)):
             return data.T[key_index]
@@ -100,7 +106,7 @@ def get_element_by_name(np_data_array, name, transpose=True):
         AttributeError: If the key is not found.
         IndexError: If the array index is invalid.
     """
-    if CURRENT_LEVEL >= DEBUG_BASIC:
+    if get_level() >= DEBUG_BASIC:
         log.debug(" Searching for %s", name)
     elements = name.split('.')
     result = _get_element_by_name_internal(data=np_data_array, parts=elements, transpose=transpose)

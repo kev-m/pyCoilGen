@@ -81,21 +81,30 @@ def CoilGen(log, input=None):
     m_vertices = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.vertices')
     # log.debug(" m_vertices: %s, %s", m_vertices, m_vertices.shape)
 
+    # Mesh parameterisation
     m_v = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.v', False)
     m_fn = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.fn', False)
     m_n = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.n')
 
     m_uv = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.uv')
     m_boundary_x = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.boundary')-1
-    m_boundary = np.ndarray((2,25), dtype=int)
+    m_boundary = np.ndarray((2, 25), dtype=int)
     m_boundary[0] = m_boundary_x[0][0].reshape((25))
     m_boundary[1] = m_boundary_x[1][0].reshape((25))
+
+    # Target field
+    # b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
+    t_b = get_and_show_debug(matlab_data, 'out.target_field')['b'][0][0]
+    t_coords = get_and_show_debug(matlab_data, 'out.target_field')['coords']
+    t_weights = get_and_show_debug(matlab_data, 'out.target_field')['weights']
+    t_target_field_group_inds = get_and_show_debug(matlab_data, 'out.target_field')['target_field_group_inds']
+    t_target_gradient_dbdxyz = get_and_show_debug(matlab_data, 'out.target_field')['target_gradient_dbdxyz']
 
     ######################################################################################
 
     # Print the input variables
     # DEBUG
-    if CURRENT_LEVEL >= DEBUG_VERBOSE:
+    if get_level() >= DEBUG_VERBOSE:
         log.debug('Parse inputs: %s', input_args)
 
     solution = CoilSolution()
@@ -128,20 +137,21 @@ def CoilGen(log, input=None):
         coil_parts = parameterize_mesh(coil_parts, input_args)
         solution.coil_parts = coil_parts
 
-        # TODO: v, fn, n
+        ######################################################
+        # Verify: v, fn, n, boundary, uv
         coil_mesh = coil_parts[0].coil_mesh
         assert (compare(coil_mesh.v, m_v))      # Pass
         assert (compare(coil_mesh.fn, m_fn))    # Pass
         assert (compare(coil_mesh.n, m_n))      # Pass
 
         # Plot the two boundaries and see the difference
-        #visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
-        #visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
-        assert (compare(coil_mesh.boundary, m_boundary)) # Pass
+        # visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
+        # visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
+        assert (compare(coil_mesh.boundary, m_boundary))  # Pass
 
         # Plot the two UV and see the difference
-        #visualize_vertex_connections(coil_mesh.uv, 800, 'images/uv2_coil_mesh.png')
-        #visualize_vertex_connections(m_uv, 800, 'images/uv2_m_uv.png')
+        # visualize_vertex_connections(coil_mesh.uv, 800, 'images/uv2_coil_mesh.png')
+        # visualize_vertex_connections(m_uv, 800, 'images/uv2_m_uv.png')
         assert (compare(coil_mesh.uv, m_uv))    # Pass
 
         # Define the target field
@@ -150,6 +160,12 @@ def CoilGen(log, input=None):
             coil_parts, target_mesh, secondary_target_mesh, input_args)
         solution.target_field = target_field
         solution.is_suppressed_point = is_suppressed_point
+
+        #####################################################
+        # Verify:  b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
+        assert (compare(target_field.b, t_b))               # ?
+        assert (compare(target_field.coords, t_coords))     # ?
+        assert (compare(target_field.weights, t_weights))   # ?
 
         # Evaluate the temp data; check whether precalculated values can be used from previous iterations
         # print('Evaluate the temp data:')
@@ -301,8 +317,154 @@ if __name__ == "__main__":
         'sf_opt_method': 'tikkonov',  # ...
         'fmincon_parameter': [1000.0, 10 ^ 10, 1.000000e-10, 1.000000e-10, 1.000000e-10],
         'tikonov_reg_factor': 100,  # %Tikonov regularization factor for the SF optimization
-        # 'debug': DEBUG_VERBOSE,
-        'debug': DEBUG_BASIC,
+        'debug': DEBUG_VERBOSE,
+        # 'debug': DEBUG_BASIC,
+    }
+
+    arg_dict = {
+        "area_perimeter_deletion_ratio": 5,
+        "b_0_direction": 0,
+        "biplanar_mesh_parameter_list": [
+            0.25,
+            0.25,
+            20.0,
+            20.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.2
+        ],
+        "circular_diameter_factor_cylinder_parameterization": 1,
+        "circular_mesh_parameter_list": [
+            0.25,
+            20.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+        ],
+        "coil_mesh_file": "cylinder_radius500mm_length1500mm.stl",
+        "conductor_cross_section_height": 0.002,
+        "conductor_cross_section_width": 0.015,
+        "conductor_thickness": 0.005,
+        "cross_sectional_points": [
+            0.0,
+            0.006427876096865392,
+            0.00984807753012208,
+            0.008660254037844387,
+            0.0034202014332566888,
+            -0.0034202014332566867,
+            -0.008660254037844389,
+            -0.009848077530122082,
+            -0.006427876096865396,
+            -2.4492935982947065e-18
+        ],
+        "cylinder_mesh_parameter_list": [
+            0.8,
+            0.3,
+            20.0,
+            20.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0
+        ],
+        "double_cone_mesh_parameter_list": [
+            0.8,
+            0.3,
+            0.3,
+            0.1,
+            20.0,
+            20.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0
+        ],
+        "field_shape_function": "y",
+        "fieldtype_to_evaluate": [
+            "",
+            "MCOS",
+            "string",
+            "[[3707764736], [2], [1], [1], [10], [3]]"
+        ],
+        "fmincon_parameter": [
+            1000.0,
+            10000000000.0,
+            1e-10,
+            1e-10,
+            1e-10
+        ],
+        "force_cut_selection": "['high']",
+        "gauss_order": 2,
+        # "geometry_source_path": "C:\\Users\\amrein\\Documents\\PhD_Work\\CoilGen\\Geometry_Data",
+        "group_interconnection_method": "crossed",
+        "interconnection_cut_width": 0.1,
+        "interconnection_method": "regular",
+        "iteration_num_mesh_refinement": 0,
+        "level_set_method": "primary",
+        "levels": 20,
+        "make_cylndrical_pcb": 1,
+        "max_allowed_angle_within_coil_track": 120,
+        "min_allowed_angle_within_coil_track": 0.0001,
+        "min_loop_signifcance": 3,
+        "min_point_loop_number": 20,
+        "normal_shift_length": 0.025,
+        "normal_shift_smooth_factors": [
+            2,
+            3,
+            2
+        ],
+        # "output_directory": "C:\\Users\\amrein\\Documents\\PhD_Work\\CoilGen",
+        "pcb_interconnection_method": "spiral_in_out",
+        "pcb_spiral_end_shift_factor": 10,
+        "planar_mesh_parameter_list": [
+            0.25,
+            0.25,
+            20.0,
+            20.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+        ],
+        "plot_flag": 1,
+        "pot_offset_factor": 0.25,
+        "save_stl_flag": 1,
+        "secondary_target_mesh_file": "none",
+        "secondary_target_weight": 0.5,
+        "set_roi_into_mesh_center": 1,
+        "sf_opt_method": "tikkonov",
+        "sf_source_file": "none",
+        "skip_calculation_min_winding_distance": 1,
+        "skip_inductance_calculation": 0,
+        "skip_normal_shift": 0,
+        "skip_postprocessing": 0,
+        "skip_sweep": 0,
+        "smooth_factor": 1,
+        "smooth_flag": 1,
+        "specific_conductivity_conductor": 1.8e-8,
+        "surface_is_cylinder_flag": 1,
+        "target_field_definition_field_name": "none",
+        "target_field_definition_file": "none",
+        "target_gradient_strength": 1,
+        "target_mesh_file": "none",
+        "target_region_radius": 0.15,
+        "target_region_resolution": 5,
+        "tikonov_reg_factor": 100,
+        "tiny_segment_length_percentage": 0,
+        "track_width_factor": 0.5,
+        "use_only_target_mesh_verts": 0,
+        "debug": DEBUG_VERBOSE,
     }
 
     solution = CoilGen(log, arg_dict)
