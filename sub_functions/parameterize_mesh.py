@@ -257,10 +257,16 @@ def get_boundary_loop_nodes(mesh_part: Mesh):
             next_part.reverse()
             boundary_part += next_part
         else:
+            # Make sure that the boundary closes:
+            if boundary_part[-1] != boundary_part[0]:
+                boundary_part.append(boundary_part[0])
             boundary_part.reverse() # MATLAB has the boundaries in the opposite direction
             reduced_loops.append(boundary_part)
             boundary_part = next_part
 
+    # Make sure that the boundary closes:
+    if boundary_part[-1] != boundary_part[0]:
+        boundary_part.append(boundary_part[0])
     boundary_part.reverse() # MATLAB has the boundaries in the opposite direction
     reduced_loops.append(boundary_part)
     # DEBUG
