@@ -1,6 +1,7 @@
 # System imports
 import sys
 from pathlib import Path
+import numpy as np
 
 # Logging
 import logging
@@ -76,10 +77,12 @@ def CoilGen(log, input=None):
     # DEVELOPMENT: Remove this
     mat_contents = load_matlab('debug/result_y_gradient')
     matlab_data = mat_contents['coil_layouts']
+    # mat_contents = load_matlab('debug/generate_halbch_gradient_system')
+    # matlab_data = mat_contents['x_channel']
     m_faces = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.faces')-1
-    # log.debug(" m_faces: %s, %s", m_faces, m_faces.shape)
     m_vertices = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.vertices')
-    # log.debug(" m_vertices: %s, %s", m_vertices, m_vertices.shape)
+    log.debug(" m_faces: %s, %s", m_faces, m_faces.shape)
+    log.debug(" m_vertices: %s, %s", m_vertices, m_vertices.shape)
 
     # Mesh parameterisation
     m_v = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.v', False)
@@ -88,17 +91,21 @@ def CoilGen(log, input=None):
 
     m_uv = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.uv')
     m_boundary_x = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.boundary')-1
-    m_boundary = np.ndarray((2, 25), dtype=int)
-    m_boundary[0] = m_boundary_x[0][0].reshape((25))
-    m_boundary[1] = m_boundary_x[1][0].reshape((25))
+    log.debug(" m_boundary_x: %s", m_boundary_x.shape)
+    m_boundary_points = m_boundary_x[0].shape[0]
+    m_boundary = np.ndarray((2, m_boundary_points), dtype=int)
+    m_boundary[0] = m_boundary_x[0].reshape((m_boundary_points))
+    m_boundary[1] = m_boundary_x[1].reshape((m_boundary_points))
 
     # Target field
     # b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
-    t_b = get_and_show_debug(matlab_data, 'out.target_field')['b'][0][0]
-    t_coords = get_and_show_debug(matlab_data, 'out.target_field')['coords']
-    t_weights = get_and_show_debug(matlab_data, 'out.target_field')['weights']
-    t_target_field_group_inds = get_and_show_debug(matlab_data, 'out.target_field')['target_field_group_inds']
-    t_target_gradient_dbdxyz = get_and_show_debug(matlab_data, 'out.target_field')['target_gradient_dbdxyz']
+    m_target_field = get_and_show_debug(matlab_data, 'out.target_field')
+    log.debug("m_target_field :%s", m_target_field._fieldnames)
+    m_tf_b = m_target_field.b
+    m_tf_coords = m_target_field.coords
+    m_tf_weights = m_target_field.weights
+    m_tf_target_field_group_inds = m_target_field.target_field_group_inds
+    m_tf_target_gradient_dbdxyz = m_target_field.target_gradient_dbdxyz
 
     ######################################################################################
 
@@ -145,8 +152,8 @@ def CoilGen(log, input=None):
         assert (compare(coil_mesh.n, m_n))      # Pass
 
         # Plot the two boundaries and see the difference
-        # visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
-        # visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
+        visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
+        visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
         assert (compare(coil_mesh.boundary, m_boundary))  # Pass
 
         # Plot the two UV and see the difference
@@ -163,9 +170,12 @@ def CoilGen(log, input=None):
 
         #####################################################
         # Verify:  b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
-        assert (compare(target_field.b, t_b))               # ?
-        assert (compare(target_field.coords, t_coords))     # ?
-        assert (compare(target_field.weights, t_weights))   # ?
+        log.debug(" t_b:shape \n%s", m_tf_b.shape)
+        log.debug(" t_b min:%s", np.min(m_tf_b, axis=1))
+        log.debug(" t_b max:%s", np.max(m_tf_b, axis=1))
+        assert (compare(target_field.b, m_tf_b))               # Pass
+        assert (compare(target_field.coords, m_tf_coords))     # Fail: Not the same shape: (3, 33) is not (3, 257)
+        assert (compare(target_field.weights, m_tf_weights))   # ?
 
         # Evaluate the temp data; check whether precalculated values can be used from previous iterations
         # print('Evaluate the temp data:')
@@ -284,13 +294,11 @@ if __name__ == "__main__":
     # arg_list = ['--coil_mesh_file', 'dental_gradient_ccs_single_low.stl'] # IndexError: index 114 is out of bounds for axis 1 with size 114
     # solution = CoilGen(log, input=input)
 
-    import numpy as np
-
-    arg_dict = {
+    arg_dict1 = {
         'field_shape_function': 'y',  # % definition of the target field
-        'coil_mesh_file': 'cylinder_radius500mm_length1500mm.stl',
-        # 'coil_mesh_file': 'create cylinder mesh',
-        # 'cylinder_mesh_parameter_list': [0.4,  0.1125, 50, 50,  0.,  1.,  0., 0.],
+        # 'coil_mesh_file': 'cylinder_radius500mm_length1500mm.stl',
+        'coil_mesh_file': 'create cylinder mesh',
+        'cylinder_mesh_parameter_list': [0.4,  0.1125, 50, 50,  0.,  1.,  0., 0.],
         'target_mesh_file': 'none',
         'secondary_target_mesh_file': 'none',
         'secondary_target_weight': 0.5,
@@ -321,7 +329,7 @@ if __name__ == "__main__":
         # 'debug': DEBUG_BASIC,
     }
 
-    arg_dict = {
+    arg_dict2 = {
         "area_perimeter_deletion_ratio": 5,
         "b_0_direction": 0,
         "biplanar_mesh_parameter_list": [
@@ -388,12 +396,12 @@ if __name__ == "__main__":
             0.0
         ],
         "field_shape_function": "y",
-        "fieldtype_to_evaluate": [
-            "",
-            "MCOS",
-            "string",
-            "[[3707764736], [2], [1], [1], [10], [3]]"
-        ],
+        # "fieldtype_to_evaluate": [
+        #     "",
+        #     "MCOS",
+        #     "string",
+        #     "[[3707764736], [2], [1], [1], [10], [3]]"
+        # ],
         "fmincon_parameter": [
             1000.0,
             10000000000.0,
@@ -401,7 +409,7 @@ if __name__ == "__main__":
             1e-10,
             1e-10
         ],
-        "force_cut_selection": "['high']",
+        "force_cut_selection": ['high'],
         "gauss_order": 2,
         # "geometry_source_path": "C:\\Users\\amrein\\Documents\\PhD_Work\\CoilGen\\Geometry_Data",
         "group_interconnection_method": "crossed",
@@ -467,4 +475,4 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    solution = CoilGen(log, arg_dict)
+    solution = CoilGen(log, arg_dict2)

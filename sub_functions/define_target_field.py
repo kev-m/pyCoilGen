@@ -60,7 +60,7 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
                 f"The target field with name '{input.target_field_definition_file}' does not exist in the provided file.")
 
     else:
-        if target_mesh is not None:
+        if target_mesh is not None:  # Create evenly distributed points within the surface of the "target mesh"
             if not input.use_only_target_mesh_verts:
                 target_mesh_x_bounds = [np.min(target_mesh.get_vertices()[:, 0]),
                                         np.max(target_mesh.get_vertices()[:, 0])]
@@ -82,56 +82,64 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
                 target_z_coords = np.linspace(target_mesh_z_bounds[0], target_mesh_z_bounds[1], num_points_per_z_dim)
 
                 target_grid_x, target_grid_y, target_grid_z = np.meshgrid(
-                    target_x_coords, target_y_coords, target_z_coords, indexing='ij')
-                target_points = np.array([target_grid_x.flatten(), target_grid_y.flatten(), target_grid_z.flatten()])
+                    target_x_coords, target_y_coords, target_z_coords)
+                target_points = np.vstack((target_grid_x.ravel(), target_grid_y.ravel(), target_grid_z.ravel()))
 
-                # Remove points outside the target surface
-                tri = Delaunay(target_mesh.get_vertices()[:, :2])
-                in_tri = tri.find_simplex(target_points[:2].T) >= 0
-                target_points = target_points[:, in_tri]
-
-                # Add surface vertices from the target mesh
-                target_points = np.hstack((target_mesh.get_vertices().T, target_points))
-
+                # Remove points not inside the target surface
+                in_indices = target_mesh.get_trimesh_obj().contains(target_points.T)
+                target_points = target_points[:, in_indices]
+                target_points = np.hstack((target_mesh.get_vertices().T, target_points)
+                                          )  # Add surface vertices from target mesh
             else:
                 target_points = target_mesh.get_vertices().T
-
-        else:
+        else:  # Define target point coordinates as points inside a sphere of a given radius
             num_points_per_dim = input.target_region_resolution
-            target_x_coords = np.linspace(-2 * input.target_region_radius, 2 *
-                                          input.target_region_radius, num_points_per_dim)
-            target_y_coords = np.linspace(-2 * input.target_region_radius, 2 *
-                                          input.target_region_radius, num_points_per_dim)
-            target_z_coords = np.linspace(-2 * input.target_region_radius, 2 *
-                                          input.target_region_radius, num_points_per_dim)
-            target_grid_x, target_grid_y, target_grid_z = np.meshgrid(
-                target_x_coords, target_y_coords, target_z_coords, indexing='ij')
-            target_points = np.array([target_grid_x.flatten(), target_grid_y.flatten(), target_grid_z.flatten()])
+            target_x_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input.target_region_radius
+            # -0.3000 -0.2625 -0.2250 -0.1875 -0.1500 -0.1125 -0.0750 -0.0375 0 0.0375 0.0750 0.1125 0.1500 0.1875 0.2250 0.2625 0.3000
+            target_y_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input.target_region_radius
+            target_z_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input.target_region_radius
+            log.debug(" target_x_coords shape:%s", target_x_coords.shape) # 1x17
+            target_grid_x, target_grid_y, target_grid_z = np.meshgrid(target_x_coords, target_y_coords, target_z_coords)
+            target_points = np.vstack((target_grid_x.ravel(), target_grid_y.ravel(), target_grid_z.ravel()))
+            # target_points (x)
+            # DEBUG:__main__: t_b min:[ 0.    0.   -0.15]
+            # DEBUG:__main__: t_b max:[0.   0.   0.15]
+            log.debug(" target_points shape:%s", target_points.shape)
+            log.debug(" target_points min:%s", np.min(target_points, axis=1))
+            log.debug(" target_points max:%s", np.max(target_points, axis=1))
 
             # Select points inside a sphere
-            target_points = target_points[:, np.sqrt(np.sum(target_points**2, axis=0)) <= input.target_region_radius]
+            # Calculate the Euclidean distance for each point
+            distances = np.sqrt(np.sum(target_points[:3, :] ** 2, axis=0))
+            log.debug(" distances shape:%s", distances.shape)
 
-            ## Conversion: Changed hstack to vstack
+            # Filter out points outside the target region radius
+            target_points2 = target_points[:, distances <= input.target_region_radius]
+            log.debug(" target_points2 shape:%s", target_points2.shape)
+
             all_verts = np.vstack([part.coil_mesh.get_vertices() for part in coil_parts])
+            log.debug(" all_verts shape:%s", all_verts.shape)
 
-            ## Conversion: Changed axies=1 to axis=0
             if input.set_roi_into_mesh_center:
-                target_points -= np.mean(all_verts, axis=0)[:, np.newaxis]
+                mean_pos = np.mean(all_verts, axis=0, keepdims=True)
+                log.debug(" mean_pos shape:%s", mean_pos.shape)
+                target_points3 = target_points2 - mean_pos.T
 
         # Remove identical points
-        _, unique_inds = np.unique(target_points.T, axis=0, return_index=True)
-        target_points = target_points[:, unique_inds]
+        _, unique_inds = np.unique(target_points3, axis=1, return_index=True)
+        target_points = target_points3[:, unique_inds]
 
         # Define the target field shape
         def field_func(x, y, z): return eval(input.field_shape_function)
         target_field = np.zeros_like(target_points)
         target_field[2, :] = field_func(target_points[0, :], target_points[1, :], target_points[2, :])
+        log.debug(" target_field shape:%s", target_field.shape)
 
         # Add points where the magnetic field should be suppressed (=>0)
         if secondary_target_mesh is not None:
             num_suppressed_points = secondary_target_mesh.get_vertices().shape[1]
             target_points = np.hstack((target_points, secondary_target_mesh.get_vertices()))
-            target_field = np.hstack((target_field, np.zeros((3, num_suppressed_points))))
+            target_field = np.hstack((target_field, np.zeros((target_field.shape[0], num_suppressed_points))))
             is_supressed_point = np.zeros(target_points.shape[1], dtype=bool)
             is_supressed_point[-num_suppressed_points:] = True
         else:
@@ -149,7 +157,7 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
         else:
             target_field = target_field * input.target_gradient_strength
 
-        # Define weightings from 0 to 1 that weigh the significance of target points
+        # Define weightings from 0 to 1 that weights the significance of target points
         target_field_weighting = np.ones(target_field.shape[1])
         target_field_weighting[is_supressed_point] = input.secondary_target_weight
         target_field_group_inds = np.ones(target_field.shape[1])

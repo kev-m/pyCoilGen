@@ -18,7 +18,7 @@ def compare(instance1, instance2, double_tolerance = 0.001):
             return False
         log.debug(" Shape[0] %s", instance1.shape[0])
         for index in range(instance1.shape[0]):
-            log.debug(" %d -> %s", index, instance1[index])
+            # log.debug(" %d -> %s", index, instance1[index])
             if not np.allclose(instance1[index], instance2[index], atol=double_tolerance):
                 log.debug(" Not the same value at index [%d]: %s is not %s", index, instance1[index], instance2[index])
                 return False
