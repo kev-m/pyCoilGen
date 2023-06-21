@@ -9,8 +9,9 @@ from sub_functions.constants import *
 
 log = logging.getLogger(__name__)
 
+
 def load_matlab(filename):
-    mat = loadmat(filename+'.mat')  # , struct_as_record=False)
+    mat = loadmat(filename+'.mat', struct_as_record=False, squeeze_me=True)
     return mat
 
 
@@ -24,16 +25,15 @@ def print_structure(mat_input, indent_char=' ', indent=None):
     """
     if indent is None:
         indent = indent_char
-    for item in mat_input:
+    for item in [mat_input]:
         try:
-            dtype = item.dtype
-            fields = dtype.fields
+            fields = item._fieldnames
             if fields is not None:
                 index = 0
-                for field_name, field_info in fields.items():
+                for field_name in fields:
                     print(f'{indent}: {field_name}')
                     try:
-                        next_item = item[index]
+                        next_item = item.__dict__[field_name]
                         if isinstance(next_item, object):
                             print_structure(next_item, indent+indent_char, indent_char)
                             index += 1
@@ -60,34 +60,33 @@ def _get_element_by_name_internal(data, parts, transpose=True):
 
     if get_level() >= DEBUG_VERBOSE:
         log.debug(" - Searching for %s[%d]", key, key_index)
-    dtype = data.dtype
-    fields = dtype.fields
+
+    if isinstance(data, np.ndarray):
+        if get_level() >= DEBUG_VERBOSE:
+            log.debug(" -- Found array for key %s", key)
+        return data[key_index]
+
+    fields = data._fieldnames
     if fields is not None:
         field_index = 0
-        for field_name, field_info in fields.items():
+        for field_name in fields:
             if field_name == key:
                 if get_level() >= DEBUG_VERBOSE:
                     log.debug("Found: %s", field_name)
                 if key_len == 1:
+                    part_data = data.__dict__[field_name]
                     if get_level() >= DEBUG_VERBOSE:
                         log.debug("Returning data[%s][%d]", field_name, key_index)
-                        log.debug(" -- shape %s", np.shape(data[field_name][key_index][0]))
-                    return data[field_name][key_index][0]
+                    # TODO: Implement Transpose here
+                    return data.__dict__[field_name]
                 else:
-                    part_data = data[field_index][key_index]
-                    log.debug(" Part_data: %s", part_data.dtype)
-                    # DEBUG: Problem here
-                    if key == 'target_field':
-                        log.debug("target_field found!")
-                    return _get_element_by_name_internal(part_data[0], parts[1:])
+                    # log.debug("---- data.type: %s", data.dtype)
+                    part_data = data.__dict__[field_name]
+                    return _get_element_by_name_internal(part_data, parts[1:])
             field_index += 1
         raise AttributeError(f"Key {key} not found!")
-    else:
-        if get_level() >= DEBUG_VERBOSE:
-            log.debug(" -- %s", np.shape(data[key_index]))
-        if transpose and isinstance(data, (np.ndarray)):
-            return data.T[key_index]
-        return data[key_index]
+    else:  # for coil_mesh[0], coil_mesh.uv : dtype('O')
+        raise Exception("Unexpected structure data")
 
 
 def get_element_by_name(np_data_array, name, transpose=True):
@@ -114,11 +113,12 @@ def get_element_by_name(np_data_array, name, transpose=True):
         return result.T
     return result
 
+
 def get_and_show_debug(np_data_array, name, transpose=True):
     item = get_element_by_name(np_data_array, name, transpose)
     if isinstance(item, np.ndarray):
         log.debug(" %s: shape %s", name, item.shape)
     else:
-        log.debug(" %s: type %s", name, item.dtype)
+        log.debug(" %s: fields %s", name, item._fieldnames)
 
     return item

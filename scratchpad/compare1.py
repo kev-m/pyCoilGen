@@ -11,7 +11,7 @@ def get_level():
     return 2
 
 def load_matlab(filename):
-    mat = loadmat(filename+'.mat')  # , struct_as_record=False)
+    mat = loadmat(filename+'.mat', struct_as_record=False, squeeze_me=True)
     return mat
 
 
@@ -25,16 +25,17 @@ def print_structure(mat_input, indent_char = ' ', indent = None):
     """
     if indent is None:
         indent = indent_char
-    for item in mat_input:
+    for item in [mat_input]:
         try:
-            dtype = item.dtype
-            fields = dtype.fields
+            # dtype = item.dtype
+            #fields = dtype.fields
+            fields = item._fieldnames
             if fields is not None:
                 index = 0
-                for field_name, field_info in fields.items():
+                for field_name in fields:
                     print(f'{indent}: {field_name}')
                     try:
-                        next_item = item[index]
+                        next_item = item.__dict__[field_name]
                         if isinstance(next_item, object):
                             print_structure(next_item, indent+indent_char, indent_char)
                             index += 1
@@ -60,42 +61,34 @@ def _get_element_by_name_internal(data, parts, transpose=True):
 
     if get_level() >= DEBUG_VERBOSE:
         log.debug(" - Searching for %s[%d]", key, key_index)
-    dtype = data.dtype
-    fields = dtype.fields
+
+    if isinstance(data, np.ndarray):
+        if get_level() >= DEBUG_VERBOSE:
+            log.debug(" -- Found array for key %s", key)
+        return data[key_index]
+
+    fields = data._fieldnames
     if fields is not None:
         field_index = 0
-        for field_name, field_info in fields.items():
+        for field_name in fields:
             if field_name == key:
                 if get_level() >= DEBUG_VERBOSE:
                     log.debug("Found: %s", field_name)
                 if key_len == 1:
-                    part_data = data[field_name][key_index]
+                    part_data = data.__dict__[field_name]
                     log.debug(" Part_data[%s][%d]: %s", field_index, key_index, part_data.dtype)
-
                     if get_level() >= DEBUG_VERBOSE:
                         log.debug("Returning data[%s][%d]", field_name, key_index)
                     # TODO: Implement Transpose here
-                    return data[field_name][key_index][0]
-                else:
-                    
-                    log.debug("---- data.type: %s", data.dtype)
-                    if len(data) == len(fields):
-                        part_data = data[field_index][key_index]
-                        return _get_element_by_name_internal(part_data[0], parts[1:])
-                    else:
-                        # DEBUG: Problem here
-                        if key == 'target_field':
-                            log.debug("target_field found!")
-                            log.debug(" len: %d", len(data))
-                            log.debug(" shape: %s", data.shape)
-                            log.debug(" type: %s", data.dtype)
-                        return _get_element_by_name_internal(data[key][key_index], parts[1:])
+                    return data.__dict__[field_name]
+                else:                    
+                    #log.debug("---- data.type: %s", data.dtype)
+                    part_data = data.__dict__[field_name]
+                    return _get_element_by_name_internal(part_data, parts[1:])
             field_index += 1
         raise AttributeError(f"Key {key} not found!")
     else: # for coil_mesh[0], coil_mesh.uv : dtype('O')
-        if get_level() >= DEBUG_VERBOSE:
-            log.debug(" --- %s", np.shape(data[key_index]))
-        return data[key_index]
+        raise Exception("Unexpected structure data")
 
 def get_element_by_name(np_data_array, name, transpose=True):
     """
@@ -129,49 +122,13 @@ class MyEncoder(json.JSONEncoder):
         return obj.decode('UTF-8')
         #return json.JSONEncoder.default(self, obj)
 
-if __name__ == "__main__":
-    # Set up logging
-    log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.DEBUG)
-    # logging.basicConfig(level=logging.INFO)
-
-    # 1. Load Matlab
-    mat_contents = load_matlab('debug/result_y_gradient')
-    log.debug("mat_contents: %s", mat_contents.keys())
-    x_channel = mat_contents['coil_layouts']
-
-    print_structure(x_channel, '-')
-
-    # Dot-notation name
-    name = 'out'
-    name = 'out.coil_parts[0]'
-    name = 'out.coil_parts[0].coil_mesh'
-    name = 'out.coil_parts[0].coil_mesh.boundary'
-    # name = 'out.coil_parts[0].coil_mesh.faces'
-    # name = 'out.coil_parts[0].coil_mesh.faces.faces[0]'
-    # name = 'out.coil_parts[0].coil_mesh.unique_vert_inds'
-    # name = 'out.coil_parts[0].coil_mesh.uv'
-    # name = 'out.coil_parts[0].one_ring_list'
-    name = 'out.target_field.b'
-
-    # Get the corresponding numpy element
-    target_field = get_element_by_name(x_channel, name, transpose=True)
-    log.debug(" -- target_field.dtype : %s", target_field.dtype)
-    log.debug("  -- shape: %s", target_field.shape)
-    #log.debug("  -- value: %s", target_field)
-    #log.debug("  -- value: %s", target_field['coil_mesh_file'])
-    #log.debug("  -- value: %s", target_field['cylinder_mesh_parameter_list'])
-
-    #b = target_field#['b']
-    #log.debug(" -- b: %s", b.dtype.fields)
-    #log.debug(" -- b: %s", b)
-
-    # 2. Extract input parameters structure
+def print_config(x_channel):
     name = 'out.input_data'
     input_data = get_element_by_name(x_channel, name)
     # input_dict = object_to_dict(input_data)
     log.debug("  -- input: type: %s", input_data.dtype)
     log.debug("  -- input: fields: %s", input_data.dtype.fields)
+
     input_dict = {}
     for field_name, field_info in input_data.dtype.fields.items():
         log.debug(" -- Field %s type: %s", field_name, input_data[field_name].dtype)
@@ -195,8 +152,51 @@ if __name__ == "__main__":
             
             input_dict[field_name] = p_value
 
-    json_obj = json.dumps(input_dict, cls=MyEncoder)
-    print(json_obj)
+    #json_obj = json.dumps(input_dict, cls=MyEncoder)
+    #print(json_obj)
 
+if __name__ == "__main__":
+    # Set up logging
+    log = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.DEBUG)
+    # logging.basicConfig(level=logging.INFO)
+
+    # 1. Load Matlab
+    mat_contents = load_matlab('debug/result_y_gradient')
+    log.debug("mat_contents: %s", mat_contents.keys())
+    x_channel = mat_contents['coil_layouts']
+
+    log.debug(" -- x_channel _fieldnames : %s", x_channel._fieldnames)
+    log.debug(" -- x_channel : %s", x_channel.out._fieldnames)
+
+
+    print_structure(x_channel, '-')
+
+    # Dot-notation name
+    name = 'out'
+    name = 'out.coil_parts[0]'
+    name = 'out.coil_parts[0].coil_mesh'
+    name = 'out.coil_parts[0].coil_mesh.boundary'
+    # name = 'out.coil_parts[0].coil_mesh.faces'
+    name = 'out.coil_parts[0].coil_mesh.faces.faces[0]'
+    # name = 'out.coil_parts[0].coil_mesh.unique_vert_inds'
+    # name = 'out.coil_parts[0].coil_mesh.uv'
+    # name = 'out.coil_parts[0].one_ring_list'
+    # name = 'out.target_field.b'
+
+    # Get the corresponding numpy element
+    target_field = get_element_by_name(x_channel, name, transpose=True)
+    log.debug(" -- target_field.dtype : %s", target_field.dtype)
+    log.debug("  -- shape: %s", target_field.shape)
+    #log.debug("  -- value: %s", target_field)
+    #log.debug("  -- value: %s", target_field['coil_mesh_file'])
+    #log.debug("  -- value: %s", target_field['cylinder_mesh_parameter_list'])
+
+    #b = target_field#['b']
+    #log.debug(" -- b: %s", b.dtype.fields)
+    #log.debug(" -- b: %s", b)
+
+    # 2. Extract input parameters structure
+    # print_config(x_channel)
 
     # 3. Call CoilGen code with equivalent input parameters
