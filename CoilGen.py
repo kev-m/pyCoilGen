@@ -8,7 +8,7 @@ import logging
 
 # Debug and development checking imports
 from helpers.extraction import get_element_by_name, load_matlab, get_and_show_debug
-from helpers.visualisation import compare, visualize_vertex_connections
+from helpers.visualisation import compare, visualize_vertex_connections, visualize_multi_connections
 from sub_functions.data_structures import Mesh
 
 # Local imports
@@ -113,7 +113,7 @@ def CoilGen(log, input=None):
 
     # One Ring List
     m_c_part = get_and_show_debug(matlab_data, 'out.coil_parts[0]')
-    m_or_one_ring_list = m_c_part.one_ring_list
+    m_or_one_ring_list = m_c_part.one_ring_list - 1
     m_or_node_triangles = m_c_part.node_triangles
     m_or_node_triangle_mat = m_c_part.node_triangle_mat
 
@@ -213,7 +213,11 @@ def CoilGen(log, input=None):
         log.debug(" -- m_or_node_triangle_mat len: %s", m_or_node_triangle_mat.shape)  # 264,480
         log.debug(" -- node_triangle_mat shape: %s", node_triangle_mat.shape)  # 264,480
 
-        assert (compare(one_ring_list, m_or_one_ring_list))
+
+        visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list.png', one_ring_list)
+        visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list_m.png', m_or_one_ring_list)
+
+        assert (compare(one_ring_list, m_or_one_ring_list))         # FAIL
         assert (compare(node_triangles, m_or_node_triangles))
         assert (compare(node_triangle_mat, m_or_node_triangle_mat))
 
@@ -576,4 +580,4 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    solution=CoilGen(log, arg_dict1)
+    solution=CoilGen(log, arg_dict2)

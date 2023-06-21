@@ -9,67 +9,77 @@ from sub_functions.data_structures import CoilSolution
 
 log = logging.getLogger(__name__)
 
-def calculate_one_ring_by_mesh(coil_solution : CoilSolution, coil_parts, input):
+
+def calculate_one_ring_by_mesh(coil_solution: CoilSolution, coil_parts, input):
     """
     Calculate the one-ring neighborhood of vertices in the coil mesh.
 
     Args:
-        coil_parts (list): List of CoilPart objects.
-        input (object): Input object containing evaluation parameters.
+        coil_parts (List[CoilPart]): List of coil parts.
+        input: Input parameters.
 
     Returns:
-        list: Updated coil_parts with one-ring neighborhood information.
+        List[CoilPart]: Updated list of coil parts with calculated one ring information.
     """
-    optimisation = coil_solution.optimisation # Retrieve the solution optmisation parameters
+    optimisation = coil_solution.optimisation  # Retrieve the solution optmisation parameters
+    if not optimisation.use_preoptimization_temp:
+        for part_ind in range(len(coil_parts)):
+            # Extract the intermediate variables
+            coil_part = coil_parts[part_ind]
+            part_mesh = coil_part.coil_mesh  # Get the Mesh instance
+            part_vertices = part_mesh.get_vertices()  # Get the vertices for the coil part.
+            part_faces = part_mesh.get_faces()
+            trimesh_obj = part_mesh.trimesh_obj  # Retrieve the encapsulated Trimesh instance
+            optimisation = coil_solution.optimisation  # Retrieve the solution optmisation parameters
+            # part_faces = part_faces.T  # Transpose the faces array
 
-    for part_ind in range(len(coil_parts)):
-        # Extract the intermediate variables
-        coil_part = coil_parts[part_ind]
-        part_mesh = coil_part.coil_mesh # Get the Mesh instance
-        part_vertices = part_mesh.get_vertices() # Get the vertices for the coil part.
-        part_faces = part_mesh.get_faces()
-        trimesh_obj = part_mesh.trimesh_obj # Retrieve the encapsulated Trimesh instance
-        optimisation = coil_solution.optimisation # Retrieve the solution optmisation parameters
-
-        # Transpose the faces array to match Python convention
-        #part_faces = part_faces.T
-
-        if not optimisation.use_preoptimization_temp:
+            # TODO: one_ring_list is not calculated the same as MATLAB
             num_nodes = part_vertices.shape[0]
-            vertex_triangles = part_mesh.get_vertex_triangles()
+            # node_triangles = part_mesh.get_vertex_adjacency()
+            node_triangles = part_mesh.get_vertex_triangles()
+            node_triangles_corners = [
+                part_faces[x, :] for x in node_triangles
+            ]  # Get triangle corners for each node
 
-            # Compute one-ring neighborhood
-            one_ring_list = []
+            one_ring_list = np.empty(num_nodes, dtype=object) #[]
             for node_ind in range(num_nodes):
-                neighbors = vertex_triangles[node_ind]
-                neighbor_faces = part_faces[neighbors]
-                one_ring_list.append(np.array(neighbor_faces))
+                single_cell = [node_triangles_corners[node_ind][i, :]
+                               for i in range(node_triangles_corners[node_ind].shape[0])]
 
-            # Check and adjust the orientation of the one-ring neighborhood
+                neighbor_faces = [
+                    x[x != node_ind] for x in single_cell
+                ]  # Remove the current node index from each triangle's corner indices
+                one_ring_list[node_ind] = neighbor_faces
+
+            # Make sure that the current orientation is uniform for all elements (old)
             for node_ind in range(num_nodes):
-                for face_ind in range(one_ring_list[node_ind].shape[0]):
+                for face_ind in range(len(one_ring_list[node_ind])):
                     point_aa = part_vertices[one_ring_list[node_ind][face_ind][0]]
                     point_bb = part_vertices[one_ring_list[node_ind][face_ind][1]]
                     point_cc = part_vertices[node_ind]
                     cross_vec = np.cross(point_bb - point_aa, point_aa - point_cc)
-                    if np.dot(part_mesh.n[node_ind], cross_vec) > 0:
-                        one_ring_list[node_ind][face_ind] = np.flip(one_ring_list[node_ind][face_ind])
+
+                    if np.sign(np.dot(part_mesh.n[node_ind], cross_vec)) > 0:
+                        one_ring_list[node_ind][face_ind] = np.flipud(
+                            one_ring_list[node_ind][face_ind]
+                        )
 
             # Update the coil_part with one-ring neighborhood information
             node_triangle_mat = np.zeros((num_nodes, part_faces.shape[0]), dtype=int)
             for index in range(num_nodes):
-                node_triangle_mat[index, vertex_triangles[index]] = 1
+                node_triangle_mat[index, node_triangles[index]] = 1
             
             coil_part.one_ring_list = np.array(one_ring_list, dtype=object)
-            coil_part.node_triangles = np.array(vertex_triangles, dtype=object)
+            coil_part.node_triangles = np.array(node_triangles, dtype=object)
             coil_part.node_triangle_mat = node_triangle_mat
+            # coil_part.coil_mesh.faces = part_faces.T
 
-        else:
-            raise Exception("Optimisation is not implemented!")
-            # Use pre-optimized data from input object
-            coil_part.one_ring_list = optimisation.one_ring_list
-            coil_part.node_triangles = optimisation.node_triangles
-            coil_part.node_triangle_mat = optimisation.node_triangle_mat
+    else:
+        raise Exception("Optimisation is not implemented!")
+        # Use pre-optimized data from input object
+        coil_part.one_ring_list = optimisation.one_ring_list
+        coil_part.node_triangles = optimisation.node_triangles
+        coil_part.node_triangle_mat = optimisation.node_triangle_mat
 
     return coil_parts
 
@@ -106,4 +116,3 @@ def calculate_one_ring_by_mesh(coil_solution : CoilSolution, coil_parts, input):
             coil_part.node_triangle_mat = node_triangle_mat
             part_faces = part_faces.T
     """
-
