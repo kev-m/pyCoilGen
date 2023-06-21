@@ -43,7 +43,7 @@ def calculate_one_ring_by_mesh(coil_solution : CoilSolution, coil_parts, input):
             for node_ind in range(num_nodes):
                 neighbors = vertex_triangles[node_ind]
                 neighbor_faces = part_faces[neighbors]
-                one_ring_list.append(neighbor_faces)
+                one_ring_list.append(np.array(neighbor_faces))
 
             # Check and adjust the orientation of the one-ring neighborhood
             for node_ind in range(num_nodes):
@@ -56,12 +56,12 @@ def calculate_one_ring_by_mesh(coil_solution : CoilSolution, coil_parts, input):
                         one_ring_list[node_ind][face_ind] = np.flip(one_ring_list[node_ind][face_ind])
 
             # Update the coil_part with one-ring neighborhood information
-            node_triangle_mat = np.zeros((num_nodes, part_faces.shape[0]), dtype=bool)
+            node_triangle_mat = np.zeros((num_nodes, part_faces.shape[0]), dtype=int)
             for index in range(num_nodes):
-                node_triangle_mat[index, vertex_triangles[index]] = True
+                node_triangle_mat[index, vertex_triangles[index]] = 1
             
-            coil_part.one_ring_list = one_ring_list
-            coil_part.node_triangles = vertex_triangles
+            coil_part.one_ring_list = np.array(one_ring_list, dtype=object)
+            coil_part.node_triangles = np.array(vertex_triangles, dtype=object)
             coil_part.node_triangle_mat = node_triangle_mat
 
         else:
