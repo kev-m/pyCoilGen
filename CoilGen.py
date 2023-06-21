@@ -170,9 +170,6 @@ def CoilGen(log, input=None):
 
         #####################################################
         # Verify:  b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
-        log.debug(" t_b:shape \n%s", m_tf_b.shape)
-        log.debug(" t_b min:%s", np.min(m_tf_b, axis=1))
-        log.debug(" t_b max:%s", np.max(m_tf_b, axis=1))
         assert (compare(target_field.b, m_tf_b))               # Pass
         assert (compare(target_field.weights, m_tf_weights))   # Pass
         assert (compare(target_field.coords, m_tf_coords))     # Pass

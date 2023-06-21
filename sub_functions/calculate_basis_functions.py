@@ -77,7 +77,7 @@ def calculate_basis_functions(coil_solution: CoilSolution, coil_parts: List[Coil
                     current_density_mat[vertex_index, x] = node_basis_element.current[tri_ind].T
 
                     # DEBUG
-                    if input.debug >= DEBUG_VERBOSE:
+                    if input.debug > DEBUG_VERBOSE:
                         log.debug(" -- node_basis_element.current shape: %s", node_basis_element.current.shape)  # n x 3
                         log.debug(" -- node_basis_element.area shape: %s", node_basis_element.area.shape)  # n x 1
                         log.debug(" -- ")

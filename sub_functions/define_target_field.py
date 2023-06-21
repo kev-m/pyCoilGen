@@ -97,65 +97,34 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
             target_x_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input.target_region_radius
             target_y_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input.target_region_radius
             target_z_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input.target_region_radius
-            log.debug(" target_x_coords shape:%s", target_x_coords.shape)  # 1x17
             target_grid_x, target_grid_y, target_grid_z = np.meshgrid(target_x_coords, target_y_coords, target_z_coords)
+
             # target_points = np.vstack((target_grid_x.ravel(), target_grid_y.ravel(), target_grid_z.ravel()))
             # For some unknown reason I need to swap y and z coords to match MATLAB
             target_points = np.vstack((target_grid_x.ravel(), target_grid_z.ravel(), target_grid_y.ravel()))
-            # -0.3    -0.3    -0.3    -0.3    -0.3   <-- index 2
-            # -0.3    -0.3    -0.3    -0.3    -0.3   <-- index 0
-            # -0.3    -0.2625 -0.225  -0.1875 -0.15  <-- index 1
-            # should be:
-            # -0.3	-0.3	-0.3	-0.3	-0.3  
-            # -0.3	-0.2625	-0.225	-0.1875	-0.15
-            # -0.3	-0.3	-0.3	-0.3	-0.3 
-            log.debug(" target_points:\n%s", target_points[:, :5])
 
             # Select points inside a sphere
             # Calculate the Euclidean distance for each point
             distances = np.sqrt(np.sum(target_points[:3, :] ** 2, axis=0))
-            log.debug(" distances shape:%s", distances.shape)
-            log.debug(" distances:\n%s", distances[:5])
 
             # Filter out points outside the target region radius
             target_points2 = target_points[:, distances <= input.target_region_radius]
-            log.debug(" target_points2 shape:%s", target_points2.shape)
-            log.debug(" target_points2:\n%s", target_points2[:, :5])
 
             all_verts = np.vstack([part.coil_mesh.get_vertices() for part in coil_parts])
-            log.debug(" all_verts shape:%s", all_verts.shape)
 
             if input.set_roi_into_mesh_center:
                 mean_pos = np.mean(all_verts, axis=0, keepdims=True) # 
-                log.debug(" mean_pos shape:%s", mean_pos.shape)
-                log.debug(" mean_pos :%s", mean_pos)
                 target_points3 = target_points2 - mean_pos.T
 
-        log.debug(" target_points3:\n%s", target_points3[:, :5])
         # Remove identical points
         _, unique_inds = np.unique(target_points3, axis=1, return_index=True)
         target_points = target_points3[:, unique_inds]
         target_points = target_points3
-        log.debug(" target_points3 shape:%s", target_points3.shape)
-        log.debug(" target_points shape:%s", target_points.shape)
-        log.debug(" target_points:\n%s", target_points[:, :5])
-
-        # Check: Equal to MATLAB?
-        log.debug(" target_points == MATLAB?: %s", np.allclose(target_points[:, :5],
-            [
-                [0.0,	-0.075,	-0.075,	-0.075,	-0.0375],
-                [0.,	-0.0375,	0.,	0.0375,	-0.075],
-                [-0.15,	-0.1125,	-0.1125,	-0.1125,	-0.1125]
-            ], rtol=0.001))
-        #   [   [-0.15   -0.1125 -0.1125 -0.1125 -0.1125]  <-- index 2
-        #       [ 0.     -0.075  -0.075  -0.075  -0.0375]  <-- index 0
-        #       [ 0.     -0.0375  0.      0.0375 -0.075 ]] <-- index 1
 
         # Define the target field shape
         def field_func(x, y, z): return eval(input.field_shape_function)
         target_field=np.zeros_like(target_points)
         target_field[2, :]=field_func(target_points[0, :], target_points[1, :], target_points[2, :])
-        log.debug(" target_field shape:%s", target_field.shape)
 
         # Add points where the magnetic field should be suppressed (=>0)
         if secondary_target_mesh is not None:
@@ -188,7 +157,9 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
         # Calculate the gradients from the symbolic definition of the target field
         target_dbzbx, target_dbzby, target_dbzbz=symbolic_calculation_of_gradient(input, target_field)
 
-        log.debug(" Final target_points:\n%s", target_points[:, :5])
+        if get_level() > DEBUG_BASIC:
+            log.debug(" Final target_field:\n%s", target_field[:, :5])
+            log.debug(" Final target_points:\n%s", target_points[:, :5])
         target_field_out.b=target_field
         target_field_out.coords=target_points
         target_field_out.weights=target_field_weighting
