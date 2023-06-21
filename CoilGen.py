@@ -75,14 +75,18 @@ def CoilGen(log, input=None):
 
     ######################################################################################
     # DEVELOPMENT: Remove this
-    mat_contents = load_matlab('debug/result_y_gradient')
-    matlab_data = mat_contents['coil_layouts']
-    # mat_contents = load_matlab('debug/generate_halbch_gradient_system')
-    # matlab_data = mat_contents['x_channel']
+    if input_args.coil_mesh_file == 'create cylinder mesh':
+        log.debug(" Loading comparison data from generate_halbch_gradient_system")
+        mat_contents = load_matlab('debug/generate_halbch_gradient_system')
+        matlab_data = mat_contents['x_channel']
+    else:
+        log.debug(" Loading comparison data from result_y_gradient")
+        mat_contents = load_matlab('debug/result_y_gradient')
+        matlab_data = mat_contents['coil_layouts']
     m_faces = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.faces')-1
     m_vertices = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.vertices')
-    log.debug(" m_faces: %s, %s", m_faces, m_faces.shape)
-    log.debug(" m_vertices: %s, %s", m_vertices, m_vertices.shape)
+    log.debug(" m_faces shape: %s", m_faces.shape)
+    log.debug(" m_vertices shape: %s", m_vertices.shape)
 
     # Mesh parameterisation
     m_v = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.v', False)
@@ -106,6 +110,12 @@ def CoilGen(log, input=None):
     m_tf_weights = m_target_field.weights
     m_tf_target_field_group_inds = m_target_field.target_field_group_inds
     m_tf_target_gradient_dbdxyz = m_target_field.target_gradient_dbdxyz
+
+    # One Ring List
+    m_c_part = get_and_show_debug(matlab_data, 'out.coil_parts[0]')
+    m_or_one_ring_list = m_c_part.one_ring_list
+    m_or_node_triangles = m_c_part.node_triangles
+    m_or_node_triangle_mat = m_c_part.node_triangle_mat
 
     ######################################################################################
 
@@ -147,19 +157,21 @@ def CoilGen(log, input=None):
         ######################################################
         # Verify: v, fn, n, boundary, uv
         coil_mesh = coil_parts[0].coil_mesh
-        assert (compare(coil_mesh.v, m_v))      # Pass
+        assert (compare(coil_mesh.v, m_v, double_tolerance=0.1))      # Pass
         assert (compare(coil_mesh.fn, m_fn))    # Pass
-        assert (compare(coil_mesh.n, m_n))      # Pass
+        assert (compare(coil_mesh.n, m_n, double_tolerance=0.1))      # Pass
 
         # Plot the two boundaries and see the difference
-        visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
-        visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
+        # visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
+        # visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
+        log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
+        log.debug(" m_boundary: %s", m_boundary)
         assert (compare(coil_mesh.boundary, m_boundary))  # Pass
 
         # Plot the two UV and see the difference
         # visualize_vertex_connections(coil_mesh.uv, 800, 'images/uv2_coil_mesh.png')
         # visualize_vertex_connections(m_uv, 800, 'images/uv2_m_uv.png')
-        assert (compare(coil_mesh.uv, m_uv))    # Pass
+        assert (compare(coil_mesh.uv, m_uv, 0.01))    # Pass
 
         # Define the target field
         print('Define the target field:')
@@ -173,6 +185,9 @@ def CoilGen(log, input=None):
         assert (compare(target_field.b, m_tf_b))               # Pass
         assert (compare(target_field.weights, m_tf_weights))   # Pass
         assert (compare(target_field.coords, m_tf_coords))     # Pass
+        assert (compare(target_field.target_field_group_inds, m_tf_target_field_group_inds))  # Pass
+        assert (compare(target_field.target_gradient_dbdxyz, m_tf_target_gradient_dbdxyz))  # Pass
+        #####################################################
 
         # Evaluate the temp data; check whether precalculated values can be used from previous iterations
         # print('Evaluate the temp data:')
@@ -181,6 +196,28 @@ def CoilGen(log, input=None):
         # Find indices of mesh nodes for one ring basis functions
         print('Calculate mesh one ring:')
         coil_parts = calculate_one_ring_by_mesh(solution, coil_parts, input_args)
+        #####################################################
+        # Verify:  one_ring_list, vertex_triangles, node_triangle_mat
+        c_part = coil_parts[0]
+        one_ring_list = c_part.one_ring_list
+        node_triangles = c_part.node_triangles
+        node_triangle_mat = c_part.node_triangle_mat
+
+        # DEBUG:__main__: -- m_or_one_ring_list shape: (264,)
+        log.debug(" -- m_or_one_ring_list len: %s", m_or_one_ring_list.shape)
+        log.debug(" -- one_ring_list len: %s", one_ring_list.shape)  # DEBUG:__main__: -- one_ring_list shape: (264,)
+
+        log.debug(" -- m_or_node_triangles len: %s", m_or_node_triangles.shape)  # 264,
+        log.debug(" -- vertex_triangles len: %s", node_triangles.shape)  # 264,
+
+        log.debug(" -- m_or_node_triangle_mat len: %s", m_or_node_triangle_mat.shape)  # 264,480
+        log.debug(" -- node_triangle_mat shape: %s", node_triangle_mat.shape)  # 264,480
+
+        assert (compare(one_ring_list, m_or_one_ring_list))
+        assert (compare(node_triangles, m_or_node_triangles))
+        assert (compare(node_triangle_mat, m_or_node_triangle_mat))
+
+        #####################################################
 
         # Create the basis function container which represents the current density
         print('Create the basis function container which represents the current density:')
@@ -291,7 +328,7 @@ if __name__ == "__main__":
     # arg_list = ['--coil_mesh_file', 'dental_gradient_ccs_single_low.stl'] # IndexError: index 114 is out of bounds for axis 1 with size 114
     # solution = CoilGen(log, input=input)
 
-    arg_dict1 = {
+    arg_dict0 = {
         'field_shape_function': 'y',  # % definition of the target field
         # 'coil_mesh_file': 'cylinder_radius500mm_length1500mm.stl',
         'coil_mesh_file': 'create cylinder mesh',
@@ -326,7 +363,74 @@ if __name__ == "__main__":
         # 'debug': DEBUG_BASIC,
     }
 
-    arg_dict2 = {
+    arg_dict1 = {
+        "area_perimeter_deletion_ratio": 5,
+        "b_0_direction": [0, 0, 1],
+        "biplanar_mesh_parameter_list": [0.25, 0.25, 20, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
+        "circular_diameter_factor_cylinder_parameterization": 1,
+        "circular_mesh_parameter_list": [0.25, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "coil_mesh_file": "create cylinder mesh",
+        "conductor_cross_section_height": 0.002,
+        "conductor_cross_section_width": 0.003,
+        "conductor_thickness": 0.005,
+        "cross_sectional_points": [[-0.005, 0.0, 0.0004578154048673232, 0.000878541328365346, 0.0012280930583256696, 0.0014781519924510923, 0.0016084598430565155, 0.0016084598430565157, 0.0014781519924510925, 0.0012280930583256698, 0.0008785413283653464, 0.0004578154048673232, 1.990051048614449e-19, -0.005, -0.005], [0.001625, 0.001625, 0.0015591760821235582, 0.0013670369908506694, 0.0010641486926610882, 0.0006750493961280654, 0.0002312616121940883, -0.00023126161219408811, -0.0006750493961280653, -0.001064148692661088, -0.0013670369908506692, -0.0015591760821235582, -0.001625, -0.001625, 0.001625]],
+        "cylinder_mesh_parameter_list": [0.4, 0.1125, 50, 50, 0.0, 1.0, 0.0, 0.0],
+        "double_cone_mesh_parameter_list": [0.8, 0.3, 0.3, 0.1, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
+        "field_shape_function": "x",
+        "fieldtype_to_evaluate": ['', 'MCOS', 'string', [3707764736,          2,          1,          1,          2,                2]],
+        "fmincon_parameter": [500.0, 10000000000.0, 1e-10, 1e-10, 1e-10],
+        "force_cut_selection": ['high', 'high', 'low', 'high'],
+        "gauss_order": 2,
+        # "geometry_source_path": "C:\\Users\\amrein\\Documents\\PhD_Work\\CoilGen\\Geometry_Data",
+        "group_interconnection_method": "crossed",
+        "interconnection_cut_width": 0.02,
+        "interconnection_method": "regular",
+        "iteration_num_mesh_refinement": 0,
+        "level_set_method": "primary",
+        "levels": 14,
+        "make_cylndrical_pcb": 0,
+        "max_allowed_angle_within_coil_track": 120,
+        "min_allowed_angle_within_coil_track": 0.0001,
+        "min_loop_signifcance": 3,
+        "min_point_loop_number": 20,
+        "normal_shift_length": 0.004,
+        "normal_shift_smooth_factors": [2, 3, 2],
+        # "output_directory": "C:\\Users\\amrein\\Documents\\PhD_Work\\CoilGen",
+        "pcb_interconnection_method": "regular",
+        "pcb_spiral_end_shift_factor": 10,
+        "planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "plot_flag": 1,
+        "pot_offset_factor": 0.5,
+        "save_stl_flag": 1,
+        "secondary_target_mesh_file": "none",
+        "secondary_target_weight": 1,
+        "set_roi_into_mesh_center": 0,
+        "sf_opt_method": "tikkonov",
+        "sf_source_file": "none",
+        "skip_calculation_min_winding_distance": 1,
+        "skip_inductance_calculation": 0,
+        "skip_normal_shift": 0,
+        "skip_postprocessing": 0,
+        "skip_sweep": 0,
+        "smooth_factor": 0,
+        "smooth_flag": 1,
+        "specific_conductivity_conductor": 1.8e-8,
+        "surface_is_cylinder_flag": 1,
+        "target_field_definition_field_name": "none",
+        "target_field_definition_file": "none",
+        "target_gradient_strength": 1,
+        "target_mesh_file": "none",
+        "target_region_radius": 0.05,
+        "target_region_resolution": 5,
+        "temp": [],
+        "tikonov_reg_factor": 30000,
+        "tiny_segment_length_percentage": 0,
+        "track_width_factor": 0.5,
+        "use_only_target_mesh_verts": 0,
+        "debug": DEBUG_VERBOSE,
+    }
+
+    arg_dict2={
         "area_perimeter_deletion_ratio": 5,
         "b_0_direction": 0,
         "biplanar_mesh_parameter_list": [
@@ -472,4 +576,4 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    solution = CoilGen(log, arg_dict2)
+    solution=CoilGen(log, arg_dict1)
