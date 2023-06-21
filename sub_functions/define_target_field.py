@@ -115,6 +115,8 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
             if input.set_roi_into_mesh_center:
                 mean_pos = np.mean(all_verts, axis=0, keepdims=True) # 
                 target_points3 = target_points2 - mean_pos.T
+            else:
+                target_points3 = target_points2
 
         # Remove identical points
         _, unique_inds = np.unique(target_points3, axis=1, return_index=True)
