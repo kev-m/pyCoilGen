@@ -76,7 +76,6 @@ def _get_element_by_name_internal(data, parts, transpose=True):
                     log.debug("Found: %s", field_name)
                 if key_len == 1:
                     part_data = data.__dict__[field_name]
-                    log.debug(" Part_data[%s][%d]: %s", field_index, key_index, part_data.dtype)
                     if get_level() >= DEBUG_VERBOSE:
                         log.debug("Returning data[%s][%d]", field_name, key_index)
                     # TODO: Implement Transpose here
@@ -126,34 +125,29 @@ def print_config(x_channel):
     name = 'out.input_data'
     input_data = get_element_by_name(x_channel, name)
     # input_dict = object_to_dict(input_data)
-    log.debug("  -- input: type: %s", input_data.dtype)
-    log.debug("  -- input: fields: %s", input_data.dtype.fields)
+    log.debug("  -- input: fields: %s", input_data._fieldnames)
 
     input_dict = {}
-    for field_name, field_info in input_data.dtype.fields.items():
-        log.debug(" -- Field %s type: %s", field_name, input_data[field_name].dtype)
+    for field_name in input_data._fieldnames:
+        log.debug(" -- Field %s ", field_name)
 
         if field_name == 'fieldtype_to_evaluate':
             log.debug(' -- item of interest')
 
-        value = input_data[field_name][0][0]
-        if len(value) > 0:
-            value = value[0]
-            log.debug(" --- Field %s shape: %s", field_name, np.shape(value))
-            log.debug(" --- Field %s = %s", field_name, value)
-            if len(value) > 1:
-                p_value = value.tolist()
-            else:
-                p_value = value.tolist()[0]
+        value = input_data.__dict__[field_name]
 
-            if isinstance(p_value, bytes):
-                p_value = p_value.decode('UTF-8')
-                log.debug(" Decoding %s to string: %s",field_name, p_value)
-            
-            input_dict[field_name] = p_value
+        log.debug(" --- Field %s shape: %s", field_name, np.shape(value))
+        log.debug('    -- value: %s', value)
 
-    #json_obj = json.dumps(input_dict, cls=MyEncoder)
-    #print(json_obj)
+
+        if isinstance(value, bytes):
+            p_value = p_value.decode('UTF-8')
+            log.debug(" Decoding %s to string: %s",field_name, value)
+        
+        input_dict[field_name] = value
+
+    json_obj = json.dumps(input_dict, cls=MyEncoder)
+    print(json_obj)
 
 if __name__ == "__main__":
     # Set up logging
@@ -162,9 +156,16 @@ if __name__ == "__main__":
     # logging.basicConfig(level=logging.INFO)
 
     # 1. Load Matlab
-    mat_contents = load_matlab('debug/result_y_gradient')
-    log.debug("mat_contents: %s", mat_contents.keys())
-    x_channel = mat_contents['coil_layouts']
+
+    if True:
+        log.debug(" Loading comparison data from generate_halbch_gradient_system")
+        mat_contents = load_matlab('debug/generate_halbch_gradient_system')
+        x_channel = mat_contents['x_channel']
+    else:
+        mat_contents = load_matlab('debug/result_y_gradient')
+        log.debug("mat_contents: %s", mat_contents.keys())
+        x_channel = mat_contents['coil_layouts']
+
 
     log.debug(" -- x_channel _fieldnames : %s", x_channel._fieldnames)
     log.debug(" -- x_channel : %s", x_channel.out._fieldnames)
@@ -197,6 +198,6 @@ if __name__ == "__main__":
     #log.debug(" -- b: %s", b)
 
     # 2. Extract input parameters structure
-    # print_config(x_channel)
+    print_config(x_channel)
 
     # 3. Call CoilGen code with equivalent input parameters
