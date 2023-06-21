@@ -174,8 +174,8 @@ def CoilGen(log, input=None):
         log.debug(" t_b min:%s", np.min(m_tf_b, axis=1))
         log.debug(" t_b max:%s", np.max(m_tf_b, axis=1))
         assert (compare(target_field.b, m_tf_b))               # Pass
-        assert (compare(target_field.coords, m_tf_coords))     # Fail: Not the same shape: (3, 33) is not (3, 257)
-        assert (compare(target_field.weights, m_tf_weights))   # ?
+        assert (compare(target_field.weights, m_tf_weights))   # Pass
+        assert (compare(target_field.coords, m_tf_coords))     # Pass
 
         # Evaluate the temp data; check whether precalculated values can be used from previous iterations
         # print('Evaluate the temp data:')

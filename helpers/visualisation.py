@@ -7,7 +7,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def compare(instance1, instance2, double_tolerance = 0.001):
+def compare(instance1, instance2, double_tolerance=0.001):
     if not type(instance1) == type(instance2):
         log.debug(" Not the same type: %s is not %s", type(instance1), type(instance2))
         return False
@@ -16,15 +16,19 @@ def compare(instance1, instance2, double_tolerance = 0.001):
         if not instance1.shape == instance2.shape:
             log.debug(" Not the same shape: %s is not %s", np.shape(instance1), np.shape(instance2))
             return False
-        log.debug(" Shape[0] %s", instance1.shape[0])
         for index in range(instance1.shape[0]):
             # log.debug(" %d -> %s", index, instance1[index])
             if not np.allclose(instance1[index], instance2[index], atol=double_tolerance):
-                log.debug(" Not the same value at index [%d]: %s is not %s", index, instance1[index], instance2[index])
+                if isinstance(instance1[index], np.ndarray):
+                    log.debug(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
+                              index, instance1[index][:5], instance2[index][:5])
+                else:
+                    log.debug(" Not the same value at index [%d]: %s is not %s",
+                              index, instance1[index], instance2[index])
                 return False
             return True
 
-    log.debug(" %s is not supported", instance1.dtype)
+    log.error("compare(): Type(%s) is not supported", type(instance1))
     return False
 
 
