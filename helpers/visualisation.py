@@ -18,6 +18,11 @@ def compare(instance1, instance2, double_tolerance=0.001):
             return False
         for index in range(instance1.shape[0]):
             # log.debug(" %d -> %s", index, instance1[index])
+            if not np.shape(instance1[index]) == np.shape(instance2[index]):
+                log.debug(" Not the same shape at index %d: %s is not %s",
+                          index, np.shape(instance1[index]), np.shape(instance2[index]))
+                return False
+
             if not np.allclose(instance1[index], instance2[index], atol=double_tolerance):
                 if isinstance(instance1[index], np.ndarray):
                     log.debug(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
