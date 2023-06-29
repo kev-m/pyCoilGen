@@ -10,7 +10,7 @@ from sub_functions.data_structures import CoilSolution
 log = logging.getLogger(__name__)
 
 
-def calculate_one_ring_by_mesh(coil_solution: CoilSolution, coil_parts, input):
+def calculate_one_ring_by_mesh(coil_solution: CoilSolution, coil_parts, input, m_orl_debug):
     """
     Calculate the one-ring neighborhood of vertices in the coil mesh.
 
@@ -33,10 +33,36 @@ def calculate_one_ring_by_mesh(coil_solution: CoilSolution, coil_parts, input):
             optimisation = coil_solution.optimisation  # Retrieve the solution optmisation parameters
             # part_faces = part_faces.T  # Transpose the faces array
 
-            # TODO: one_ring_list is not calculated the same as MATLAB
+
+            # DEBUG: Remove this
+            # dict_keys(['__header__', '__version__', '__globals__', 'node_triangles', 'node_triangles_corners', 'one_ring_list'])
+            # log.debug("m_orl_debug: %s", m_orl_debug.keys())
+            m_orl_node_triangles = m_orl_debug['node_triangles'] - 1
+            m_orl_node_triangles_corners = m_orl_debug['node_triangles_corners']
+            m_orl_one_ring_list = m_orl_debug['one_ring_list']
+
             num_nodes = part_vertices.shape[0]
-            # node_triangles = part_mesh.get_vertex_adjacency()
-            node_triangles = part_mesh.get_vertex_triangles()
+
+            # TODO: one_ring_list is not calculated the same as MATLAB
+            node_triangles = np.empty(num_nodes, dtype=object) #[]
+
+            # TODO: Create function on Mesh class and delegate to trimesh_obj
+            node_triangles_tri = trimesh_obj.vertex_faces
+            # This creates an n,m array where m is padded with -1's. See 
+            # https://trimsh.org/trimesh.base.html#trimesh.base.Trimesh.vertex_faces
+            # Iterate and create reduced numpy arrays
+
+            print(trimesh_obj.vertex_faces[0:10])
+            print(trimesh_obj.vertices[0:10])
+
+            node_triangles = np.array([row[row != -1] for row in node_triangles_tri], dtype=object)
+
+            log.debug("node_triangles:\n%s", node_triangles[0:10])
+            # print(trimesh_obj.vertex_degree)
+
+            log.debug("m_orl_node_triangles:\n%s", m_orl_node_triangles)
+
+
             node_triangles_corners = [
                 part_faces[x, :] for x in node_triangles
             ]  # Get triangle corners for each node

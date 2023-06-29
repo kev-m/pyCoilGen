@@ -117,6 +117,14 @@ def CoilGen(log, input=None):
     m_or_node_triangles = m_c_part.node_triangles
     m_or_node_triangle_mat = m_c_part.node_triangle_mat
 
+    m_orl_debug = load_matlab('debug/one_ring_debug2')
+    # dict_keys(['__header__', '__version__', '__globals__', 'node_triangles', 'node_triangles_corners', 'one_ring_list'])
+    # log.debug("m_orl_debug: %s", m_orl_debug.keys())
+    m_orl_node_triangles = m_orl_debug['node_triangles']
+    m_orl_node_triangles_corners = m_orl_debug['node_triangles_corners']
+    m_orl_one_ring_list = m_orl_debug['one_ring_list']
+
+    # END of Remove this
     ######################################################################################
 
     # Print the input variables
@@ -131,6 +139,7 @@ def CoilGen(log, input=None):
         print('Load geometry:')
         coil_mesh, target_mesh, secondary_target_mesh = read_mesh(input_args)
         # log.debug(" coil_mesh.faces: %s", coil_mesh.faces)
+        log.debug(" coil_mesh.vertex_faces: %s", coil_mesh.trimesh_obj.vertex_faces[0:10])
 
         assert (compare(coil_mesh.get_faces(), m_faces))
 
@@ -140,6 +149,10 @@ def CoilGen(log, input=None):
         # Split the mesh and the stream function into disconnected pieces
         print('Split the mesh and the stream function into disconnected pieces.')
         coil_parts = split_disconnected_mesh(coil_mesh)
+
+        log.debug(" coil_parts[0]..vertex_faces: %s", coil_parts[0].coil_mesh.trimesh_obj.vertex_faces[0:10])
+        log.debug(" coil_parts[0]..vertex_faces: %s", coil_parts[0].coil_mesh.trimesh_obj.vertex_faces[-10:])
+        # coil_parts[0].coil_mesh.display()
 
         # Upsample the mesh density by subdivision
         print('Upsample the mesh by subdivision:')
@@ -195,7 +208,7 @@ def CoilGen(log, input=None):
 
         # Find indices of mesh nodes for one ring basis functions
         print('Calculate mesh one ring:')
-        coil_parts = calculate_one_ring_by_mesh(solution, coil_parts, input_args)
+        coil_parts = calculate_one_ring_by_mesh(solution, coil_parts, input_args, m_orl_debug)
         #####################################################
         # Verify:  one_ring_list, vertex_triangles, node_triangle_mat
         c_part = coil_parts[0]
