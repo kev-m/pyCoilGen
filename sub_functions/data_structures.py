@@ -140,9 +140,6 @@ class Mesh:
         """
         return self.trimesh_obj.vertex_normals
 
-    def get_vertex_triangles(self):
-        return self.trimesh_obj.vertex_neighbors
-
     def display(self):
         """
         Display the mesh
@@ -154,27 +151,6 @@ class Mesh:
         Save this mesh to a file.
         """
         raise Exception("Not implemented!")
-
-    def separate_into_get_parts(self):
-        """
-        Split the mesh into parts, if possible.
-
-        Splits the Mesh contains multiple, seperate, parts.
-
-        Returns:
-            List[Mesh]: A list of Mesh objects.
-        """
-        trimesh_parts = self.trimesh_obj.split(only_watertight=False)
-        # DEBUG
-        log.debug("Split into %d parts", len(trimesh_parts))
-
-        parts = []
-        for part in trimesh_parts:
-            mesh_part = Mesh(part)
-            mesh_part.normal_rep = self.normal_rep
-            parts.append(DataStructure(coil_mesh=mesh_part))
-
-        return parts
 
     def refine(self, inplace=False):
         """
