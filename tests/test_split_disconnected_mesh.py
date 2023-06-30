@@ -1,51 +1,21 @@
 # Hack code
-# Set up paths
+# Set up paths: Add the project root directory to the Python path
 import sys
-import os    
-# Add the project root directory to the Python path
+import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-# Test code
-import json
-from sub_functions.data_structures import Mesh
-from sub_functions.split_disconnected_mesh import split_disconnected_mesh
-from helpers.visualisation import compare
 
 import numpy as np
-def compute_connected_face_indices(vertices, faces):
-    num_vertices = len(vertices)
-    num_faces = len(faces)
-    connected_indices = []
+import json
 
-    # Initialise variables
-    face_set_indices = np.full((num_vertices), -1, dtype=int) # Unused
-    face_sets = np.ndarray((num_vertices), dtype=object)
-    face_sets[0] = faces[0] # Add the indices of the first face 
-    face_set_index = 0
-
-    # Check intersection of faces with face_sets
-    connected_faces = []
-    list_of_connections = [connected_faces]
-    for i in range(0, num_faces-1):
-        intersection = np.intersect1d(face_sets[face_set_index], faces[i])
-        if intersection.size > 0:
-            # Merge the sets if faces have a common vertex
-            face_sets[face_set_index] = np.union1d(face_sets[face_set_index], faces[i])
-            face_set_indices[faces[i]] = face_set_index
-            connected_faces.append(faces[1])
-        else:
-            print(faces[i], "not in", face_sets)
-            face_set_index += 1
-            #face_sets[face_set_index] = faces[i]
-            face_sets = np.append(face_sets, faces[i])
-            face_set_indices[faces[i]] = face_set_index
-            list_of_connections.append(connected_faces)
-            connected_faces = []
-
-    return list_of_connections
+# Test support
+from helpers.visualisation import compare
+from sub_functions.data_structures import Mesh
+# Code under test
+from sub_functions.split_disconnected_mesh import split_disconnected_mesh
 
 
-def test_split_disconnected_mesh():
+def test_split_disconnected_mesh_simple_planar_mesh():
     with open('tests/test_data/planar_mesh.json', 'r') as file:
         mesh_data = json.load(file)
 
@@ -58,7 +28,51 @@ def test_split_disconnected_mesh():
 
     assert compare(test_mesh.get_vertices(), split_mesh.get_vertices())
     assert compare(test_mesh.get_faces(), split_mesh.get_faces())
-    compare(mesh.trimesh_obj.vertex_faces, split_mesh.trimesh_obj.vertex_faces)
+    assert compare(mesh.trimesh_obj.vertex_faces, split_mesh.trimesh_obj.vertex_faces)
+
+
+def test_split_disconnected_mesh_biplanar_mesh():
+    with open('tests/test_data/biplanar_mesh.json', 'r') as file:
+        mesh_data = json.load(file)
+
+
+    # Create faces ndarray from list
+    num_faces = len(mesh_data['faces'])
+    nd_faces = np.empty((num_faces, 3), dtype=int)
+    index = 0
+    for vertex in mesh_data['faces']:
+        nd_faces[index] = vertex
+        index += 1
+
+    # Create vertices ndarray from list
+    num_vertices = len(mesh_data['vertices'])
+    nd_vertices = np.empty((num_vertices, 3), dtype=float)
+    index = 0
+    for vertex in mesh_data['vertices']:
+        nd_vertices[index] = vertex
+        index += 1
+
+    mesh = Mesh(vertices=nd_vertices, faces=nd_faces)
+
+    assert compare(mesh.get_faces(), nd_faces)
+    assert compare(mesh.get_vertices(), nd_vertices)
+
+    parts = split_disconnected_mesh(mesh)
+
+    assert len(parts) == 2
+
+    split_mesh0 = parts[0].coil_mesh
+    part0_vertices = nd_vertices[:int(num_vertices/2),:]
+    part0_faces = nd_faces[:int(num_faces/2),:]
+    assert compare(split_mesh0.get_vertices(), part0_vertices)
+    assert compare(split_mesh0.get_faces(), part0_faces)
+
+    split_mesh1 = parts[1].coil_mesh
+    part1_vertices = nd_vertices[int(num_vertices/2):,:] # 2nd half
+    part1_faces = nd_faces[int(num_faces/2):,:] # 2nd half
+    part1_faces = part1_faces - np.min(part1_faces) # Re-zero the vertex indices
+    assert compare(split_mesh1.get_vertices(), part1_vertices)
+    assert compare(split_mesh1.get_faces(), part1_faces)
 
 
 if __name__ == "__main__":
@@ -67,5 +81,24 @@ if __name__ == "__main__":
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
 
+    """
     # Run test
-    test_split_disconnected_mesh()
+    with open('tests/test_data/biplanar_mesh.json', 'r') as file:
+        mesh_data = json.load(file)
+
+    num_faces = len(mesh_data['faces'])
+    nd_faces = np.empty((num_faces, 3), dtype=int)
+    index = 0
+    for face in mesh_data['faces']:
+        nd_faces[index] = face
+        index += 1
+
+    lists_of_connected_faces, face_set_vertices = compute_connected_face_indices(
+        vertices=mesh_data['vertices'], faces=nd_faces)
+
+    print(len(lists_of_connected_faces) == 2, len(lists_of_connected_faces))
+    print(len(lists_of_connected_faces[0]) == 40, len(lists_of_connected_faces[0]))
+    print(len(lists_of_connected_faces[1]) == 40, len(lists_of_connected_faces[1]))
+    """    
+
+    test_split_disconnected_mesh_biplanar_mesh()

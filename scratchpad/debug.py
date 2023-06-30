@@ -2,6 +2,7 @@
 import sys
 from pathlib import Path
 import numpy as np
+import json
 
 # Logging
 import logging
@@ -40,6 +41,11 @@ def debug1():
                              rotation_vector_x, rotation_vector_y, rotation_vector_z, rotation_angle,
                              center_position_x, center_position_y, center_position_z)
 
+    # Create debug data
+    planar_mesh = {'vertices': mesh.vertices.tolist(), 'faces' : mesh.faces.tolist(), 'normal' : mesh.normal.tolist()}
+    with open('tests/test_data/planar_mesh.json', 'w') as file:
+        json.dump(planar_mesh, file)
+
     mesh = Mesh(vertices=mesh.vertices, faces=mesh.faces)
     print (mesh.trimesh_obj.is_watertight)
 
@@ -62,6 +68,32 @@ def debug1():
 
     #input_params = DataStructure(surface_is_cylinder_flag=False, circular_diameter_factor=0.0)
     #result = parameterize_mesh(parts, input_params)
+
+# Save a small bi-planar mesh to file
+def debug1b():
+    print("Bi-planar mesh")
+    from sub_functions.build_biplanar_mesh import build_biplanar_mesh
+
+    planar_height = 2.0
+    planar_width = 3.0
+    num_lateral_divisions = 4
+    num_longitudinal_divisions = 5
+    target_normal_x = 0.0
+    target_normal_y = 0.0
+    target_normal_z = 1.0
+    center_position_x = 0.0
+    center_position_y = 0.0
+    center_position_z = 0.0
+    plane_distance = 0.5
+
+    mesh = build_biplanar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions,
+                             target_normal_x, target_normal_y, target_normal_z,
+                             center_position_x, center_position_y, center_position_z, plane_distance)
+
+    # Create debug data
+    planar_mesh = {'vertices': mesh.vertices.tolist(), 'faces' : mesh.faces.tolist(), 'normal' : mesh.normal.tolist()}
+    with open('tests/test_data/biplanar_mesh.json', 'w') as file:
+        json.dump(planar_mesh, file)
 
 
 # A Planar mesh with a hole in the middle
@@ -243,9 +275,10 @@ if __name__ == "__main__":
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
 
-    # debug1() # Planar mesh
+    #debug1() # Planar mesh
+    debug1b() # Planar mesh
     # debug2() # Planar mesh with a hole
     # debug3() # Planar mesh from file
     # debug4() # Cylindrical mesh
     # debug5() # Refine a simple 1 face mesh into four.
-    debug6() # Examine cylinder_radius500mm_length1500mm.stl
+    # debug6() # Examine cylinder_radius500mm_length1500mm.stl

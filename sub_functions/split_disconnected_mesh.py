@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 def compute_connected_face_indices(vertices, faces):
     num_vertices = len(vertices)
     num_faces = len(faces)
-    connected_indices = []
 
     # Initialise variables
     face_set_vertices = np.full((num_vertices), -1, dtype=int)  # Unused
@@ -24,7 +23,7 @@ def compute_connected_face_indices(vertices, faces):
     # Check intersection of faces with face_sets
     connected_faces = []
     lists_of_connected_faces = [connected_faces]
-    for i in range(0, num_faces-1):
+    for i in range(0, num_faces):
         intersection = np.intersect1d(face_sets[face_set_index], faces[i])
         if intersection.size > 0:
             # Merge the sets if faces have a common vertex
@@ -32,14 +31,14 @@ def compute_connected_face_indices(vertices, faces):
             face_set_vertices[faces[i]] = face_set_index
             connected_faces.append(faces[i])
         else:
-            print(faces[i], "not in", face_sets)
+            log.debug(" %s not in %s", faces[i], face_sets)
+            # Start new connected list
             face_set_index += 1
-            # face_sets[face_set_index] = faces[i]
-            face_sets = np.append(face_sets, faces[i])
+            face_sets[face_set_index] = faces[i]
             face_set_vertices[faces[i]] = face_set_index
-            lists_of_connected_faces.append(connected_faces)  # Add old list
+            # Create and add current connected_faces to running list
             connected_faces = [faces[i]]
-            lists_of_connected_faces.append(connected_faces)  # Add new list
+            lists_of_connected_faces.append(connected_faces)
 
     return lists_of_connected_faces, face_set_vertices
 
@@ -64,8 +63,9 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
     for face_connections in connected_faces:
         vertex_indices = np.where(face_set_vertices == index)[0]
         connected_vertices = mesh_vertices[vertex_indices, :]
-        mesh_part = Mesh(vertices=connected_vertices, faces=face_connections)
-        mesh_part.unique_vert_inds = face_connections
+        face_connections_x = face_connections - np.min(face_connections)
+        mesh_part = Mesh(vertices=connected_vertices, faces=face_connections_x)
+        mesh_part.unique_vert_inds = face_connections_x
         mesh_part.normal_rep = coil_mesh_in.normal_rep
         coil_parts.append(CoilPart(coil_mesh=mesh_part))
         index += 1
