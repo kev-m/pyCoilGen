@@ -79,6 +79,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 v_c = np.cross(orig_norm, new_norm)
                 # log.debug(" -- mesh_part.normal_rep: %s, new_norm: %s, v_c: %s", orig_norm, new_norm, v_c)
 
+                # Find the boundaries by projecting the cylinder onto the X-Y plane:
                 # Project the mesh onto to x-y plane
                 projected_vertices = mesh_vertices.copy()
                 # Rotate the vertices
@@ -91,30 +92,49 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 else:
                     input_vertices = mesh_vertices.copy()
 
-                # Calculate the UV matrix: MATLAB CoilGen method
-                point_coords = input_vertices.T
-                min_z_cylinder = np.min(point_coords[2])
-                point_coords[2] = point_coords[2] + min_z_cylinder
-                phi_coord = np.arctan2(point_coords[1], point_coords[0])
-                r_coord = np.sqrt(point_coords[0]**2 + point_coords[1]**2)
-                u_coord = (point_coords[2] - np.mean(r_coord) * circular_factor) * np.sin(phi_coord)
-                v_coord = (point_coords[2] - np.mean(r_coord) * circular_factor) * np.cos(phi_coord)
-                mesh_part.uv = np.vstack((u_coord, v_coord)).T
-
-                # Find the boundaries by projecting the cylinder onto the X-Y plane:
                 # Project the vertices onto the X-Y plane:  [x,y,z] -> [x+x*z, y+y*z, 0]
                 projected_vertices[:, 0] += input_vertices[:, 0] * input_vertices[:, 2]
                 projected_vertices[:, 1] += input_vertices[:, 1] * input_vertices[:, 2]
                 projected_vertices[:, 2] = 0  # Set z-coordinate to zero (projection onto x-y plane)
-                mesh_uv = Mesh(vertices=projected_vertices, faces=mesh_faces)
+                mesh_2d = Mesh(vertices=projected_vertices, faces=mesh_faces)
 
                 # Retrieve the vertices and the boundary loops of the projected cylinder
-                mesh_part.boundary = get_boundary_loop_nodes(mesh_uv)
+                boundary_loop_nodes = get_boundary_loop_nodes(mesh_2d)
 
+                # MATLAB
+                opening_mean = np.mean(mesh_vertices[boundary_loop_nodes[0], :], axis=0)  # -0.0141, -0.0141, -0.75
+                overall_mean = np.mean(mesh_vertices, axis=0)
+
+                old_orientation_vector = (opening_mean - overall_mean) / \
+                    np.linalg.norm(opening_mean - overall_mean, axis=0)
+
+                z_vec = np.array([0, 0, 1])
+                sina = np.linalg.norm(np.cross(old_orientation_vector, z_vec)) / \
+                    (np.linalg.norm(old_orientation_vector) * np.linalg.norm(z_vec))
+                cosa = np.linalg.norm(np.dot(old_orientation_vector, z_vec)) / \
+                    (np.linalg.norm(old_orientation_vector) * np.linalg.norm(z_vec))
+                angle = np.arctan2(sina, cosa)
+                cross_product = np.cross(old_orientation_vector, np.array([0, 0, 1]))
+                rotation_vector = cross_product / np.linalg.norm(cross_product)
+
+                # TODO: Note: Needed to tranpose the calc_3d_rotation_matrix_by_vector result
+                rot_mat = calc_3d_rotation_matrix_by_vector(rotation_vector, angle).T
+                rotated_vertices = np.dot(input_vertices, rot_mat)
+
+                # Calculate the UV matrix: MATLAB CoilGen method
+                point_coords = rotated_vertices.T  # input_vertices.T
+                min_z_cylinder = np.min(point_coords[2])  # Minimum of the Z co-ordinates # -0.7631
+                point_coords[2] = point_coords[2] + min_z_cylinder  # Shift the Z-co-ordinates
+                phi_coord = np.arctan2(point_coords[1], point_coords[0])
+                r_coord = np.sqrt(point_coords[0]**2 + point_coords[1]**2)
+                u_coord = (point_coords[2] - np.mean(r_coord) * circular_factor) * np.sin(phi_coord)
+                v_coord = (point_coords[2] - np.mean(r_coord) * circular_factor) * np.cos(phi_coord)
+
+                mesh_part.uv = np.vstack((u_coord, v_coord)).T
+                mesh_part.boundary = boundary_loop_nodes
                 # DEBUG
                 if input.debug >= DEBUG_VERBOSE:
                     visualize_vertex_connections(mesh_part.uv, 800, f'images/parameterize_mesh_cyl{part_ind}_1.png')
-
 
         else:
             # The 3D mesh is already planar, but the normals must be aligned to the z-axis
@@ -197,7 +217,7 @@ def get_boundary_loop_nodes(mesh_part: Mesh):
     """
     # Compute the boundary edges of the mesh
     boundary_edges = mesh_part.boundary_edges()
-    #log.debug(" - boundary_edges: %s -> %s", np.shape(boundary_edges), boundary_edges)
+    # log.debug(" - boundary_edges: %s -> %s", np.shape(boundary_edges), boundary_edges)
 
     # DEBUG
     # visualize_vertex_connections(mesh_part.uv, 800, 'images/boundary_edges1.png', boundary_edges)
@@ -260,14 +280,14 @@ def get_boundary_loop_nodes(mesh_part: Mesh):
             # Make sure that the boundary closes:
             if boundary_part[-1] != boundary_part[0]:
                 boundary_part.append(boundary_part[0])
-            boundary_part.reverse() # MATLAB has the boundaries in the opposite direction
+            boundary_part.reverse()  # MATLAB has the boundaries in the opposite direction
             reduced_loops.append(boundary_part)
             boundary_part = next_part
 
     # Make sure that the boundary closes:
     if boundary_part[-1] != boundary_part[0]:
         boundary_part.append(boundary_part[0])
-    boundary_part.reverse() # MATLAB has the boundaries in the opposite direction
+    boundary_part.reverse()  # MATLAB has the boundaries in the opposite direction
     reduced_loops.append(boundary_part)
     # DEBUG
     # total_elements = sum(len(sublist) for sublist in reduced_loops)
