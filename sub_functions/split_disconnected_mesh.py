@@ -65,7 +65,7 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
         connected_vertices = mesh_vertices[vertex_indices, :]
         face_connections_x = face_connections - np.min(face_connections)
         mesh_part = Mesh(vertices=connected_vertices, faces=face_connections_x)
-        mesh_part.unique_vert_inds = face_connections_x
+        mesh_part.unique_vert_inds = face_connections
         mesh_part.normal_rep = coil_mesh_in.normal_rep
         coil_parts.append(CoilPart(coil_mesh=mesh_part))
         index += 1
