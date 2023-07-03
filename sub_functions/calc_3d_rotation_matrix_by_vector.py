@@ -35,7 +35,7 @@ def calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle):
     rot_mat_out[2, 1] = u_z * u_y * tmp3 + u_x * tmp1
     rot_mat_out[2, 2] = tmp2 + u_z * u_z * tmp3
 
-    return rot_mat_out
+    return rot_mat_out.T
 
 if __name__ == "__main__":
     # Example usage

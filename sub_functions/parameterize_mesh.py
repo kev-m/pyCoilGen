@@ -117,8 +117,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 cross_product = np.cross(old_orientation_vector, np.array([0, 0, 1]))
                 rotation_vector = cross_product / np.linalg.norm(cross_product)
 
-                # TODO: Note: Needed to tranpose the calc_3d_rotation_matrix_by_vector result
-                rot_mat = calc_3d_rotation_matrix_by_vector(rotation_vector, angle).T
+                rot_mat = calc_3d_rotation_matrix_by_vector(rotation_vector, angle)
                 rotated_vertices = np.dot(input_vertices, rot_mat)
 
                 # Calculate the UV matrix: MATLAB CoilGen method
