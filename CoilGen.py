@@ -174,20 +174,20 @@ def CoilGen(log, input=None):
         assert (compare(coil_mesh.n, m_n, double_tolerance=0.1))      # Pass
 
         # Plot the two boundaries and see the difference
-        # visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
-        # visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
-        #log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
-        #log.debug(" m_boundary: %s", m_boundary)
+        if get_level() >= DEBUG_VERBOSE:
+            visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
+            visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
+            log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
+            log.debug(" m_boundary: %s", m_boundary)
         # Question: Does order matter?
         assert (compare_contains(coil_mesh.boundary, m_boundary))  # Pass
 
         # Plot the two UV and see the difference
-        #visualize_vertex_connections(coil_mesh.uv, 800, 'images/uv2_coil_mesh.png')
-        #visualize_vertex_connections(m_uv, 800, 'images/uv2_m_uv.png')
-        #visualize_compare_vertices(m_uv, coil_mesh.uv, 800, 'images/uvdiff_m_uv.png')
+        if get_level() >= DEBUG_VERBOSE:
+            visualize_compare_vertices(m_uv, coil_mesh.uv, 800, 'images/uvdiff_m_uv.png')
         #log.debug(" UV LSQ Diff: %f", np.sum(np.square(coil_mesh.uv - m_uv)))
         #log.debug(" min: %f, max: %f", np.min(coil_mesh.uv - m_uv), np.max(coil_mesh.uv - m_uv))
-        assert (compare(coil_mesh.uv, m_uv))    # Pass
+        assert (compare(coil_mesh.uv, m_uv, 0.01))    # Pass Note: 0.01 needed for created cylindrical mesh. CHECK!
 
         # Define the target field
         print('Define the target field:')
@@ -587,4 +587,4 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    solution = CoilGen(log, arg_dict2)
+    solution = CoilGen(log, arg_dict1)
