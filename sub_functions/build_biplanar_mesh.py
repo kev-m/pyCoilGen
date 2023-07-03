@@ -5,6 +5,7 @@ import numpy as np
 import logging
 
 # Local imports
+from sub_functions.constants import get_level, DEBUG_BASIC
 from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
 from sub_functions.data_structures import DataStructure
 from sub_functions.build_planar_mesh import simple_planar_mesh, apply_rotation_translation
@@ -37,20 +38,22 @@ def build_biplanar_mesh(planar_height, planar_width,
     """
 
     simple_vertices1, faces1 = simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions)
-    log.debug(" simple_vertices1 shape: %s", simple_vertices1.shape)
+    if get_level() > DEBUG_BASIC:
+        log.debug(" simple_vertices1 shape: %s", simple_vertices1.shape)
     # Shift the vertices up
     simple_vertices1 += np.array([0.0, 0.0, plane_distance/2.0])
 
     simple_vertices2, faces2 = simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions)
-    log.debug(" simple_vertices2 shape: %s", simple_vertices2.shape)
+    if get_level() > DEBUG_BASIC:
+        log.debug(" simple_vertices2 shape: %s", simple_vertices2.shape)
     # Shift the vertices down
     simple_vertices2 -= np.array([0.0, 0.0, plane_distance/2.0])
 
     # Combine the vertex arrays
     simple_vertices = np.append(simple_vertices1, simple_vertices2, axis=0)
-    log.debug(" simple_vertices shape: %s", simple_vertices.shape)
-
-    log.debug(" faces1 shape: %s", faces1.shape)
+    if get_level() > DEBUG_BASIC:
+        log.debug(" simple_vertices shape: %s", simple_vertices.shape)
+        log.debug(" faces1 shape: %s", faces1.shape)
     num_faces1 = simple_vertices1.shape[0]
     faces = np.append(faces1, faces2 + num_faces1, axis=0)
 
