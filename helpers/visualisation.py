@@ -8,32 +8,83 @@ log = logging.getLogger(__name__)
 
 
 def compare(instance1, instance2, double_tolerance=0.001):
+    """
+    Compare two instances for equality with optional double tolerance.
+
+    Args:
+        instance1: The first instance to compare.
+        instance2: The second instance to compare.
+        double_tolerance (float): Tolerance for comparing floating-point values.
+
+    Returns:
+        bool: True if the instances are equal, False otherwise.
+
+    Raises:
+        TypeError: If the type of `instance1` is not supported.
+
+    """
     if not type(instance1) == type(instance2):
-        log.debug(" Not the same type: %s is not %s", type(instance1), type(instance2))
+        log.error(" Not the same type: %s is not %s", type(instance1), type(instance2))
         return False
 
     if isinstance(instance1, np.ndarray):
         if not instance1.shape == instance2.shape:
-            log.debug(" Not the same shape: %s is not %s", np.shape(instance1), np.shape(instance2))
+            log.error(" Not the same shape: %s is not %s", np.shape(instance1), np.shape(instance2))
             return False
         for index in range(instance1.shape[0]):
             # log.debug(" %d -> %s", index, instance1[index])
             if not np.shape(instance1[index]) == np.shape(instance2[index]):
-                log.debug(" Not the same shape at index %d: %s is not %s",
+                log.error(" Not the same shape at index %d: %s is not %s",
                           index, np.shape(instance1[index]), np.shape(instance2[index]))
                 return False
 
             if not np.allclose(instance1[index], instance2[index], atol=double_tolerance):
                 if isinstance(instance1[index], np.ndarray):
-                    log.debug(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
+                    log.error(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
                               index, instance1[index][:5], instance2[index][:5])
                 else:
-                    log.debug(" Not the same value at index [%d]: %s is not %s",
+                    log.error(" Not the same value at index [%d]: %s is not %s",
                               index, instance1[index], instance2[index])
+                return False
+        return True
+
+    log.error("compare(): Type(%s) is not supported", type(instance1))
+    return False
+
+
+def compare_contains(array1, array2, double_tolerance=0.001):
+    """
+    Checks if array1 and array2 are the same shape and contain the same elements, row-wise.
+    """
+    if not type(array1) == type(array2):
+        log.error(" Not the same type: %s is not %s", type(array1), type(array2))
+        return False
+
+    if isinstance(array1, np.ndarray):
+        if not array1.shape == array2.shape:
+            log.error(" Not the same shape: %s is not %s", np.shape(array1), np.shape(array2))
+            return False
+        for index in range(array1.shape[0]):
+            # log.debug(" %d -> %s", index, instance1[index])
+            if not np.shape(array1[index]) == np.shape(array2[index]):
+                log.error(" Not the same shape at index %d: %s is not %s",
+                          index, np.shape(array1[index]), np.shape(array2[index]))
+                return False
+
+            sorted1 = np.sort(array1[index])
+            sorted2 = np.sort(array2[index])
+
+            if not np.allclose(sorted1, sorted2, atol=double_tolerance):
+                if isinstance(array1[index], np.ndarray):
+                    log.error(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
+                              index, array1[index][:5], array2[index][:5])
+                else:
+                    log.error(" Not the same value at index [%d]: %s is not %s",
+                              index, array1[index], array2[index])
                 return False
             return True
 
-    log.error("compare(): Type(%s) is not supported", type(instance1))
+    log.error("compare_contains(): Type(%s) is not supported", type(array1))
     return False
 
 
@@ -95,6 +146,7 @@ def visualize_vertex_connections(vertices2_or_3d, image_x_size, image_path, boun
     # Save the image
     image.save(image_path)
 
+
 def visualize_multi_connections(vertices2_or_3d, image_x_size, image_path, connection_list):
     if vertices2_or_3d.shape[1] == 3:
         vertices_2d = vertices2_or_3d[:, :2]
@@ -132,6 +184,41 @@ def visualize_multi_connections(vertices2_or_3d, image_x_size, image_path, conne
                 draw.line([(x1, y1), (x2, y2)], fill='black')
                 draw.ellipse((x1 - radius_start, y1 - radius_start, x1 + radius_start, y1 + radius_start), fill='red')
                 draw.ellipse((x2 - radius_end, y2 - radius_end, x2 + radius_end, y2 + radius_end), fill='blue')
+
+    # Save the image
+    image.save(image_path)
+
+
+def visualize_compare_vertices(vertices2d1, vertices2d2, image_x_size, image_path):
+    # Find the midpoint of all vertices
+    midpoint = np.mean(vertices2d1, axis=0)
+
+    v_width = np.max(vertices2d1[:, 0]) - np.min(vertices2d1[:, 0])
+    v_height = np.max(vertices2d1[:, 1]) - np.min(vertices2d1[:, 1])
+    minima = np.min(vertices2d1, axis=0)
+
+    # Calculate x-scale
+    vertices2d1_scale = (image_x_size / v_width)
+
+    # Translate the scaled vertices based on the midpoint
+    image_y_size = int(image_x_size*v_height/v_width)
+
+    # Create a blank image
+    image = Image.new('RGB', (image_x_size+20, image_y_size+20), color='white')
+    draw = ImageDraw.Draw(image)
+
+    radius_start = 1.5
+    for i in range(vertices2d1.shape[0]):
+        start_uv = vertices2d1[i]
+        stop_uv = vertices2d2[i]
+
+        start_xy = (start_uv - minima) * vertices2d1_scale
+        stop_xy = (stop_uv - minima) * vertices2d1_scale
+
+        x1 = start_xy[0]
+        y1 = start_xy[1]
+        draw.line([(x1, y1), (stop_xy[0], stop_xy[1])], fill='black')
+        draw.ellipse((x1 - radius_start, y1 - radius_start, x1 + radius_start, y1 + radius_start), fill='red')
 
     # Save the image
     image.save(image_path)

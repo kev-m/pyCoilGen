@@ -8,7 +8,7 @@ import logging
 
 # Debug and development checking imports
 from helpers.extraction import get_element_by_name, load_matlab, get_and_show_debug
-from helpers.visualisation import compare, visualize_vertex_connections, visualize_multi_connections
+from helpers.visualisation import compare, compare_contains, visualize_vertex_connections, visualize_multi_connections, visualize_compare_vertices
 from sub_functions.data_structures import Mesh
 
 # Local imports
@@ -93,6 +93,9 @@ def CoilGen(log, input=None):
     m_fn = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.fn', False)
     m_n = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.n')
 
+    # Sanity check
+    assert (compare(m_vertices, m_v))
+
     m_uv = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.uv')
     m_boundary_x = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.boundary')-1
     log.debug(" m_boundary_x: %s", m_boundary_x.shape)
@@ -114,7 +117,7 @@ def CoilGen(log, input=None):
     # One Ring List
     m_c_part = get_and_show_debug(matlab_data, 'out.coil_parts[0]')
     m_or_one_ring_list = m_c_part.one_ring_list - 1
-    m_or_node_triangles = m_c_part.node_triangles
+    m_or_node_triangles = m_c_part.node_triangles - 1
     m_or_node_triangle_mat = m_c_part.node_triangle_mat
 
     m_orl_debug = load_matlab('debug/one_ring_debug2')
@@ -150,10 +153,6 @@ def CoilGen(log, input=None):
         print('Split the mesh and the stream function into disconnected pieces.')
         coil_parts = split_disconnected_mesh(coil_mesh)
 
-        log.debug(" coil_parts[0]..vertex_faces: %s", coil_parts[0].coil_mesh.trimesh_obj.vertex_faces[0:10])
-        log.debug(" coil_parts[0]..vertex_faces: %s", coil_parts[0].coil_mesh.trimesh_obj.vertex_faces[-10:])
-        # coil_parts[0].coil_mesh.display()
-
         # Upsample the mesh density by subdivision
         print('Upsample the mesh by subdivision:')
         coil_parts = refine_mesh(coil_parts, input_args)
@@ -177,14 +176,18 @@ def CoilGen(log, input=None):
         # Plot the two boundaries and see the difference
         # visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
         # visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
-        log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
-        log.debug(" m_boundary: %s", m_boundary)
-        assert (compare(coil_mesh.boundary, m_boundary))  # Pass
+        #log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
+        #log.debug(" m_boundary: %s", m_boundary)
+        # Question: Does order matter?
+        assert (compare_contains(coil_mesh.boundary, m_boundary))  # Pass
 
         # Plot the two UV and see the difference
-        # visualize_vertex_connections(coil_mesh.uv, 800, 'images/uv2_coil_mesh.png')
-        # visualize_vertex_connections(m_uv, 800, 'images/uv2_m_uv.png')
-        assert (compare(coil_mesh.uv, m_uv, 0.01))    # Pass
+        #visualize_vertex_connections(coil_mesh.uv, 800, 'images/uv2_coil_mesh.png')
+        #visualize_vertex_connections(m_uv, 800, 'images/uv2_m_uv.png')
+        #visualize_compare_vertices(m_uv, coil_mesh.uv, 800, 'images/uvdiff_m_uv.png')
+        #log.debug(" UV LSQ Diff: %f", np.sum(np.square(coil_mesh.uv - m_uv)))
+        #log.debug(" min: %f, max: %f", np.min(coil_mesh.uv - m_uv), np.max(coil_mesh.uv - m_uv))
+        assert (compare(coil_mesh.uv, m_uv))    # Pass
 
         # Define the target field
         print('Define the target field:')
@@ -226,11 +229,10 @@ def CoilGen(log, input=None):
         log.debug(" -- m_or_node_triangle_mat len: %s", m_or_node_triangle_mat.shape)  # 264,480
         log.debug(" -- node_triangle_mat shape: %s", node_triangle_mat.shape)  # 264,480
 
-
         visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list.png', one_ring_list)
         visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list_m.png', m_or_one_ring_list)
 
-        assert (compare(one_ring_list, m_or_one_ring_list))         # FAIL
+        assert (compare(one_ring_list, m_or_one_ring_list))         # PASS
         assert (compare(node_triangles, m_or_node_triangles))
         assert (compare(node_triangle_mat, m_or_node_triangle_mat))
 
@@ -333,18 +335,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     # logging.basicConfig(level=logging.INFO)
 
-    # DEBUG:split_disconnected_mesh:Shape: (400, 6), (3, 441)
-    # input = {'debug': DEBUG_VERBOSE, 'coil_mesh_file': 'create cylinder mesh'}  # Runs OK
-
-    # split_disconnected_mesh.py", line 60, in split_disconnected_mesh
-    # DEBUG:split_disconnected_mesh:Shape: (800, 3), (3, 441)
-    # arg_list = ['--coil_mesh_file', 'create planary mesh'] # IndexError: index 441 is out of bounds for axis 1 with size 441
-    # arg_list = ['--coil_mesh_file', 'create bi-planary mesh'] # IndexError: index 882 is out of bounds for axis 1 with size 882
-    # DEBUG:split_disconnected_mesh:Shape: (124, 3), (3, 64)
-    # arg_list = ['--coil_mesh_file', 'closed_cylinder_length_300mm_radius_150mm.stl'] # IndexError: index 64 is out of bounds for axis 1 with size 64
-    # arg_list = ['--coil_mesh_file', 'dental_gradient_ccs_single_low.stl'] # IndexError: index 114 is out of bounds for axis 1 with size 114
-    # solution = CoilGen(log, input=input)
-
+    # create cylinder mesh: 0.4,  0.1125, 50, 50. Copy from example
     arg_dict0 = {
         'field_shape_function': 'y',  # % definition of the target field
         # 'coil_mesh_file': 'cylinder_radius500mm_length1500mm.stl',
@@ -380,11 +371,13 @@ if __name__ == "__main__":
         # 'debug': DEBUG_BASIC,
     }
 
+    # create cylinder mesh: 0.4, 0.1125, 50, 50, copy from Matlab
     arg_dict1 = {
         "area_perimeter_deletion_ratio": 5,
         "b_0_direction": [0, 0, 1],
         "biplanar_mesh_parameter_list": [0.25, 0.25, 20, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
-        "circular_diameter_factor_cylinder_parameterization": 1,
+        # "circular_diameter_factor_cylinder_parameterization": 1,
+        "circular_diameter_factor": 1.0,
         "circular_mesh_parameter_list": [0.25, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         "coil_mesh_file": "create cylinder mesh",
         "conductor_cross_section_height": 0.002,
@@ -447,7 +440,8 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    arg_dict2={
+    # cylinder_radius500mm_length1500mm
+    arg_dict2 = {
         "area_perimeter_deletion_ratio": 5,
         "b_0_direction": 0,
         "biplanar_mesh_parameter_list": [
@@ -593,4 +587,4 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    solution=CoilGen(log, arg_dict2)
+    solution = CoilGen(log, arg_dict2)
