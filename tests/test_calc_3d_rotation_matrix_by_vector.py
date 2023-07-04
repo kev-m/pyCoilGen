@@ -1,17 +1,5 @@
-# TODO: Remove
-# Hack code
-# Set up paths: Add the project root directory to the Python path
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-
 import numpy as np
-import json
 
-# Test support
-from helpers.visualisation import compare
-from sub_functions.data_structures import Mesh
 # Code under test
 from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
 
@@ -80,19 +68,3 @@ def test_calc_3d_rotation_matrix_by_vector_about_y():
     input = vec
     rot = np.dot([input, input, input], rot_mat)
     assert np.allclose(rot[0], input)
-
-def cp():
-    log.debug(" rot: %s", rot)
-    log.debug(" rot_mat: %s", rot_mat)
-    log.debug(" min(rot_mat): %s", np.min(rot_mat))
-
-
-# TODO: Remove
-if __name__ == "__main__":
-    import logging
-    # Set up logging
-    log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.DEBUG)
-
-    test_calc_3d_rotation_matrix_by_vector_basic()
-    test_calc_3d_rotation_matrix_by_vector_about_z()
