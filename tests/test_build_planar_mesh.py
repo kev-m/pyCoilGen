@@ -1,9 +1,3 @@
-# Hack code
-# Set up paths: Add the project root directory to the Python path
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 import numpy as np
 
 # Test support
@@ -177,22 +171,3 @@ def test_build_planar_mesh_translate():
     assert np.min(mesh.vertices[:, 2]) == 0.0 + center_position_z
     # Max z is 0 + z offset
     assert np.max(mesh.vertices[:, 2]) == 0.0 + center_position_z
-
-
-def cp():
-    log.debug(" rot: %s", rot)
-    log.debug(" rot_mat: %s", rot_mat)
-    log.debug(" min(rot_mat): %s", np.min(rot_mat))
-
-
-if __name__ == "__main__":
-    import logging
-    # Set up logging
-    log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.DEBUG)
-
-    test_build_planar_mesh_basic()
-    test_build_planar_mesh_rotate_Z()
-    test_build_planar_mesh_rotate_Y()
-    test_build_planar_mesh_rotate_X()
-    test_build_planar_mesh_translate()
