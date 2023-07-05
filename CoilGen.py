@@ -117,9 +117,9 @@ def CoilGen(log, input=None):
     # One Ring List
     m_c_part = get_and_show_debug(matlab_data, 'out.coil_parts[0]')
     m_or_one_ring_list = m_c_part.one_ring_list - 1
-    # Transpose te entries
-    for entry in m_or_one_ring_list:
-        entry = entry.T
+    # Transpose the entries
+    for index in range(len(m_or_one_ring_list)):
+        m_or_one_ring_list[index] = m_or_one_ring_list[index].T
     m_or_node_triangles = m_c_part.node_triangles - 1
     m_or_node_triangle_mat = m_c_part.node_triangle_mat
 
@@ -209,7 +209,7 @@ def CoilGen(log, input=None):
 
         ###########################################################
         # DEBUG
-        if get_level() > DEBUG_VERBOSE:
+        if get_level() >= DEBUG_VERBOSE:
             print("m_or_one_ring_list[0:3]:")
             print(m_or_one_ring_list[0])
             print(m_or_one_ring_list[1])
@@ -245,7 +245,7 @@ def CoilGen(log, input=None):
         assert (compare_contains(one_ring_list, m_or_one_ring_list))   # PASS - different order!
         assert (compare_contains(node_triangles, m_or_node_triangles)) # PASS - different order!
         assert (compare(node_triangle_mat, m_or_node_triangle_mat)) # PASS
-
+        #
         #####################################################
 
         # Create the basis function container which represents the current density
