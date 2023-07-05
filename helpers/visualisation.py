@@ -55,6 +55,11 @@ def compare(instance1, instance2, double_tolerance=0.001):
 def compare_contains(array1, array2, double_tolerance=0.001):
     """
     Checks if array1 and array2 are the same shape and contain the same elements, row-wise.
+
+    This function is used when the ordering of entries in array1 and array2 are different.
+
+    Returns:
+        bool: True if the instances have matching entries, False otherwise.
     """
     if not type(array1) == type(array2):
         log.error(" Not the same type: %s is not %s", type(array1), type(array2))
@@ -71,18 +76,16 @@ def compare_contains(array1, array2, double_tolerance=0.001):
                           index, np.shape(array1[index]), np.shape(array2[index]))
                 return False
 
-            sorted1 = np.sort(array1[index])
-            sorted2 = np.sort(array2[index])
+            arr1 = array1[index]
+            arr2 = array2[index]
 
-            if not np.allclose(sorted1, sorted2, atol=double_tolerance):
-                if isinstance(array1[index], np.ndarray):
-                    log.error(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
-                              index, array1[index][:5], array2[index][:5])
-                else:
-                    log.error(" Not the same value at index [%d]: %s is not %s",
-                              index, array1[index], array2[index])
-                return False
-            return True
+            for index in range(len(arr1)): #
+                item = arr1[index]
+                if not item in arr2:
+                    log.error(" Can not find value at index [%d]:\n %s ... and \n %s ...",
+                              index, item, arr1[:5], arr2[:5])
+                    return False
+        return True
 
     log.error("compare_contains(): Type(%s) is not supported", type(array1))
     return False
