@@ -283,7 +283,7 @@ def CoilGen(log, input=None):
 
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
-        coil_parts = calculate_sensitivity_matrix(solution, coil_parts, target_field, input_args)
+        coil_parts = calculate_sensitivity_matrix(coil_parts, target_field, input_args)
 
         # WIP
         solution.coil_parts = coil_parts
