@@ -233,17 +233,6 @@ def CoilGen(log, input=None):
         #
         ###########################################################
 
-
-        # DEBUG:__main__: -- m_or_one_ring_list shape: (264,)
-        log.debug(" -- m_or_one_ring_list len: %s", m_or_one_ring_list.shape)
-        log.debug(" -- one_ring_list len: %s", one_ring_list.shape)  # DEBUG:__main__: -- one_ring_list shape: (264,)
-
-        log.debug(" -- m_or_node_triangles len: %s", m_or_node_triangles.shape)  # 264,
-        log.debug(" -- vertex_triangles len: %s", node_triangles.shape)  # 264,
-
-        log.debug(" -- m_or_node_triangle_mat len: %s", m_or_node_triangle_mat.shape)  # 264,480
-        log.debug(" -- node_triangle_mat shape: %s", node_triangle_mat.shape)  # 264,480
-
         visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list.png', one_ring_list[0:25])
         visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list_m.png', m_or_one_ring_list[0:25])
 
@@ -269,12 +258,6 @@ def CoilGen(log, input=None):
         m_face_normal_mat = m_c_part.face_normal_mat
         m_current_density_mat = m_c_part.current_density_mat
 
-        log.debug(" -- m_is_real_triangle_mat shape: %s", m_is_real_triangle_mat.shape)  # 264,
-        log.debug(" -- c_part.is_real_triangle_mat shape: %s", c_part.is_real_triangle_mat.shape)  # 
-        
-        log.debug(" -- m_triangle_corner_coord_mat shape: %s", m_triangle_corner_coord_mat.shape)  # 264,
-        log.debug(" -- c_part.triangle_corner_coord_mat shape: %s", c_part.triangle_corner_coord_mat.shape)  # 
-        
         assert (compare(c_part.is_real_triangle_mat, m_is_real_triangle_mat)) # Pass
         assert (compare_contains(c_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat)) # Pass
         assert (compare_contains(c_part.current_mat, m_current_mat)) # Pass
