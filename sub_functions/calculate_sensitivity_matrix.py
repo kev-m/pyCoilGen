@@ -27,7 +27,6 @@ def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input
     for part_ind in range(len(coil_parts)):
         coil_part = coil_parts[part_ind]
         part_mesh = coil_part.coil_mesh
-        part_vertices = part_mesh.get_vertices()  # Get the vertices for the coil part
 
         target_points = target_field.coords
         gauss_order = input.gauss_order
