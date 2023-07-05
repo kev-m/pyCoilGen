@@ -206,17 +206,6 @@ def CoilGen(log, input=None):
         # print('Evaluate the temp data:')
         # input_args = temp_evaluation(solution, input_args, target_field)
 
-
-        ###########################################################
-        # DEBUG
-        if get_level() >= DEBUG_VERBOSE:
-            print("m_or_one_ring_list[0:3]:")
-            print(m_or_one_ring_list[0])
-            print(m_or_one_ring_list[1])
-            print(m_or_one_ring_list[2])
-        #
-        ###########################################################
-
         # Find indices of mesh nodes for one ring basis functions
         print('Calculate mesh one ring:')
         coil_parts = calculate_one_ring_by_mesh(coil_parts)
@@ -228,6 +217,22 @@ def CoilGen(log, input=None):
         one_ring_list = c_part.one_ring_list
         node_triangles = c_part.node_triangles
         node_triangle_mat = c_part.node_triangle_mat
+
+        ###########################################################
+        # DEBUG
+        if get_level() >= DEBUG_VERBOSE:
+            print("m_or_one_ring_list[0:2]:")
+            print(m_or_one_ring_list[0])
+            print(m_or_one_ring_list[1])
+            print(m_or_one_ring_list[2])
+
+            print("one_ring_list[0:2]")
+            print(one_ring_list[0])
+            print(one_ring_list[1])
+            print(one_ring_list[2])
+        #
+        ###########################################################
+
 
         # DEBUG:__main__: -- m_or_one_ring_list shape: (264,)
         log.debug(" -- m_or_one_ring_list len: %s", m_or_one_ring_list.shape)
@@ -270,7 +275,7 @@ def CoilGen(log, input=None):
         log.debug(" -- m_triangle_corner_coord_mat shape: %s", m_triangle_corner_coord_mat.shape)  # 264,
         log.debug(" -- c_part.triangle_corner_coord_mat shape: %s", c_part.triangle_corner_coord_mat.shape)  # 
         
-        assert (compare(c_part.is_real_triangle_mat, m_is_real_triangle_mat)) # PASS
+        assert (compare(c_part.is_real_triangle_mat, m_is_real_triangle_mat)) # Pass
         assert (compare_contains(c_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat)) # Pass
         assert (compare_contains(c_part.current_mat, m_current_mat)) # Pass
         assert (compare(c_part.area_mat, m_area_mat)) # Pass
@@ -284,6 +289,21 @@ def CoilGen(log, input=None):
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
         coil_parts = calculate_sensitivity_matrix(coil_parts, target_field, input_args)
+
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: sensitivity_matrix
+
+        m_sensitivity_matrix = m_c_part.sensitivity_matrix
+
+        log.debug(" -- m_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  # 264,
+        log.debug(" -- c_part.sensitivity_matrix shape: %s", c_part.sensitivity_matrix.shape)  # 
+
+        assert (compare(c_part.sensitivity_matrix, m_sensitivity_matrix)) # ???
+
+        #
+        #####################################################
 
         # WIP
         solution.coil_parts = coil_parts
