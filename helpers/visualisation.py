@@ -79,12 +79,20 @@ def compare_contains(array1, array2, double_tolerance=0.001):
             arr1 = array1[index]
             arr2 = array2[index]
 
-            for index in range(len(arr1)): #
+            for index in range(len(arr1)):
                 item = arr1[index]
                 if not item in arr2:
-                    log.error(" Can not find value at index [%d]:\n %s ... and \n %s ...",
+                    found = False
+                    # Try harder, this time with tolerance
+                    for subitem in arr2:
+                        if np.allclose(item, subitem):
+                            # log.debug(" Found %s ~= to %s", item, subitem)
+                            found = True
+                            break
+                    if found == False:
+                        log.error(" Can not find value at index [%d] %s:\n %s ... and \n %s ...",
                               index, item, arr1[:5], arr2[:5])
-                    return False
+                        return False
         return True
 
     log.error("compare_contains(): Type(%s) is not supported", type(array1))
