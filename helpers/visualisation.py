@@ -189,6 +189,48 @@ def visualize_multi_connections(vertices2_or_3d, image_x_size, image_path, conne
     image.save(image_path)
 
 
+def visualize_connections(vertices2d, image_x_size, image_path, connection_list):
+    # Find the midpoint of all vertices
+    midpoint = np.mean(vertices2d, axis=0)
+
+    v_width = np.max(vertices2d[:, 0]) - np.min(vertices2d[:, 0])
+    v_height = np.max(vertices2d[:, 1]) - np.min(vertices2d[:, 1])
+    minima = np.min(vertices2d, axis=0)
+
+    # Calculate x-scale
+    vertices2d1_scale = (image_x_size / v_width)
+
+    # Translate the scaled vertices based on the midpoint
+    image_y_size = int(image_x_size*v_height/v_width)
+
+    # Create a blank image
+    image = Image.new('RGB', (image_x_size+20, image_y_size+20), color='white')
+    draw = ImageDraw.Draw(image)
+
+    radius_start = 1.6
+    radius_stop = 1.4
+
+    for connections in connection_list:
+        start_uv = vertices2d[0]
+        start_xy = (start_uv - minima) * vertices2d1_scale
+        x1 = start_xy[0]
+        y1 = start_xy[1]
+        draw.ellipse((x1 - radius_start, y1 - radius_start, x1 + radius_start, y1 + radius_start), fill='red')
+        for i in range(1, len(connections)):
+            stop_uv = vertices2d[i]
+            stop_xy = (stop_uv - minima) * vertices2d1_scale
+            # log.debug(" %s -> %s", start_xy, stop_xy)
+            draw.line([(start_xy[0], start_xy[1]), (stop_xy[0], stop_xy[1])], fill='black')
+            start_xy = stop_xy
+        x1 = stop_xy[0]
+        y1 = stop_xy[1]
+        draw.ellipse((x1 - radius_stop, y1 - radius_stop, x1 + radius_stop, y1 + radius_stop), fill='blue')
+        # log.debug("-")
+
+    # Save the image
+    image.save(image_path)
+
+
 def visualize_compare_vertices(vertices2d1, vertices2d2, image_x_size, image_path):
     # Find the midpoint of all vertices
     midpoint = np.mean(vertices2d1, axis=0)
@@ -222,6 +264,7 @@ def visualize_compare_vertices(vertices2d1, vertices2d2, image_x_size, image_pat
 
     # Save the image
     image.save(image_path)
+
 
 def project_vertex_onto_plane(vertex, pov):
     # Extract the coordinates of the vertex and POV
