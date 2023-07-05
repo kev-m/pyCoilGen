@@ -70,6 +70,7 @@ class Mesh:
         self.normal_rep = None  # Representative normal for the mesh ([x,y,z])
         # Calculated in parameterize_mesh
         self.v = None           # (n,3) : The array of mesh vertices (n, [x,y,z]).
+        self.fn = None          # (n,3) : The face normals (n, [x,y.z]).
         self.n = None           # (n,3) : The vertex normals (n, [x,y.z]).
         self.uv = None          # Vertices, UV texture matrix (n, [x,y,z=0])
         self.boundary = None    # List of 1D lists of vertex indices along mesh boundaries (m,[i])
@@ -185,6 +186,26 @@ class Mesh:
         #    boundary = boundary[0]
 
         return boundary
+
+    def vertex_faces(self):
+        """
+        Get all the vertex face connections.
+
+        For each vertex, fetch the indices of the faces that it is connected to.
+
+        Returns:
+            ndarray: An array of arrays of vertex indices.
+        """
+        num_vertices = self.v.shape[0]
+        node_triangles = np.empty(num_vertices, dtype=object)  # []
+        # NOTE: Not calculated the same as MATLAB
+        # Extract the indices of all the triangles connected to each vertex.
+        node_triangles_tri = self.trimesh_obj.vertex_faces
+        # This creates an n,m array where m is padded with -1's. See
+        # https://trimsh.org/trimesh.base.html#trimesh.base.Trimesh.vertex_faces
+        # Iterate and create reduced numpy arrays
+        node_triangles = np.array([row[row != -1] for row in node_triangles_tri], dtype=object)
+        return node_triangles
 
 @dataclass
 class CoilPart:
