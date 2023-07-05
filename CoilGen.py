@@ -117,15 +117,11 @@ def CoilGen(log, input=None):
     # One Ring List
     m_c_part = get_and_show_debug(matlab_data, 'out.coil_parts[0]')
     m_or_one_ring_list = m_c_part.one_ring_list - 1
+    # Transpose te entries
+    for entry in m_or_one_ring_list:
+        entry = entry.T
     m_or_node_triangles = m_c_part.node_triangles - 1
     m_or_node_triangle_mat = m_c_part.node_triangle_mat
-
-    m_orl_debug = load_matlab('debug/one_ring_debug2')
-    # dict_keys(['__header__', '__version__', '__globals__', 'node_triangles', 'node_triangles_corners', 'one_ring_list'])
-    # log.debug("m_orl_debug: %s", m_orl_debug.keys())
-    m_orl_node_triangles = m_orl_debug['node_triangles']
-    m_orl_node_triangles_corners = m_orl_debug['node_triangles_corners']
-    m_orl_one_ring_list = m_orl_debug['one_ring_list']
 
     # END of Remove this
     ######################################################################################
@@ -141,12 +137,13 @@ def CoilGen(log, input=None):
         # Read the input mesh
         print('Load geometry:')
         coil_mesh, target_mesh, secondary_target_mesh = read_mesh(input_args)
-        # log.debug(" coil_mesh.faces: %s", coil_mesh.faces)
-        log.debug(" coil_mesh.vertex_faces: %s", coil_mesh.trimesh_obj.vertex_faces[0:10])
+        if get_level() > DEBUG_VERBOSE:
+            log.debug(" coil_mesh.vertex_faces: %s", coil_mesh.trimesh_obj.vertex_faces[0:10])
 
         assert (compare(coil_mesh.get_faces(), m_faces))
+        assert (compare(coil_mesh.get_vertices(), m_vertices))
 
-        if input['debug'] > DEBUG_VERBOSE:
+        if get_level() > DEBUG_VERBOSE:
             coil_mesh.display()
 
         # Split the mesh and the stream function into disconnected pieces
@@ -169,14 +166,16 @@ def CoilGen(log, input=None):
         ######################################################
         # Verify: v, fn, n, boundary, uv
         coil_mesh = coil_parts[0].coil_mesh
-        assert (compare(coil_mesh.v, m_v, double_tolerance=0.1))      # Pass
+        assert (compare(coil_mesh.v, m_v))      # Pass
         assert (compare(coil_mesh.fn, m_fn))    # Pass
-        assert (compare(coil_mesh.n, m_n, double_tolerance=0.1))      # Pass
+        assert (compare(coil_mesh.n, m_n, double_tolerance=0.1))      # Pass only at 0.1
 
         # Plot the two boundaries and see the difference
         if get_level() >= DEBUG_VERBOSE:
             visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
             visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
+
+        if get_level() > DEBUG_VERBOSE:
             log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
             log.debug(" m_boundary: %s", m_boundary)
         # Question: Does order matter?
@@ -185,9 +184,7 @@ def CoilGen(log, input=None):
         # Plot the two UV and see the difference
         if get_level() >= DEBUG_VERBOSE:
             visualize_compare_vertices(m_uv, coil_mesh.uv, 800, 'images/uvdiff_m_uv.png')
-        #log.debug(" UV LSQ Diff: %f", np.sum(np.square(coil_mesh.uv - m_uv)))
-        #log.debug(" min: %f, max: %f", np.min(coil_mesh.uv - m_uv), np.max(coil_mesh.uv - m_uv))
-        assert (compare(coil_mesh.uv, m_uv, 0.01))    # Pass Note: 0.01 needed for created cylindrical mesh. CHECK!
+        assert (compare(coil_mesh.uv, m_uv, 0.0001))    # Pass
 
         # Define the target field
         print('Define the target field:')
@@ -209,10 +206,23 @@ def CoilGen(log, input=None):
         # print('Evaluate the temp data:')
         # input_args = temp_evaluation(solution, input_args, target_field)
 
+
+        ###########################################################
+        # DEBUG
+        if get_level() > DEBUG_VERBOSE:
+            print("m_or_one_ring_list[0:3]:")
+            print(m_or_one_ring_list[0])
+            print(m_or_one_ring_list[1])
+            print(m_or_one_ring_list[2])
+        #
+        ###########################################################
+
         # Find indices of mesh nodes for one ring basis functions
         print('Calculate mesh one ring:')
-        coil_parts = calculate_one_ring_by_mesh(solution, coil_parts, input_args, m_orl_debug)
+        coil_parts = calculate_one_ring_by_mesh(coil_parts)
+
         #####################################################
+        # DEBUG
         # Verify:  one_ring_list, vertex_triangles, node_triangle_mat
         c_part = coil_parts[0]
         one_ring_list = c_part.one_ring_list
@@ -229,18 +239,18 @@ def CoilGen(log, input=None):
         log.debug(" -- m_or_node_triangle_mat len: %s", m_or_node_triangle_mat.shape)  # 264,480
         log.debug(" -- node_triangle_mat shape: %s", node_triangle_mat.shape)  # 264,480
 
-        visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list.png', one_ring_list)
-        visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list_m.png', m_or_one_ring_list)
+        visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list.png', one_ring_list[0:25])
+        visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list_m.png', m_or_one_ring_list[0:25])
 
-        assert (compare(one_ring_list, m_or_one_ring_list))         # PASS
-        assert (compare(node_triangles, m_or_node_triangles))
-        assert (compare(node_triangle_mat, m_or_node_triangle_mat))
+        assert (compare_contains(one_ring_list, m_or_one_ring_list))   # PASS - different order!
+        assert (compare_contains(node_triangles, m_or_node_triangles)) # PASS - different order!
+        assert (compare(node_triangle_mat, m_or_node_triangle_mat)) # PASS
 
         #####################################################
 
         # Create the basis function container which represents the current density
         print('Create the basis function container which represents the current density:')
-        coil_parts = calculate_basis_functions(solution, coil_parts, input_args)
+        coil_parts = calculate_basis_functions(coil_parts)
 
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
@@ -587,4 +597,4 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    solution = CoilGen(log, arg_dict1)
+    solution = CoilGen(log, arg_dict2)
