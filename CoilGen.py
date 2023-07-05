@@ -252,6 +252,35 @@ def CoilGen(log, input=None):
         print('Create the basis function container which represents the current density:')
         coil_parts = calculate_basis_functions(coil_parts)
 
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: is_real_triangle_mat, triangle_corner_coord_mat, current_mat, area_mat, face_normal_mat, current_density_mat
+        # Basis functions
+        m_is_real_triangle_mat = m_c_part.is_real_triangle_mat
+        m_triangle_corner_coord_mat = m_c_part.triangle_corner_coord_mat
+        m_current_mat = m_c_part.current_mat
+        m_area_mat = m_c_part.area_mat
+        m_face_normal_mat = m_c_part.face_normal_mat
+        m_current_density_mat = m_c_part.current_density_mat
+
+        log.debug(" -- m_is_real_triangle_mat shape: %s", m_is_real_triangle_mat.shape)  # 264,
+        log.debug(" -- c_part.is_real_triangle_mat shape: %s", c_part.is_real_triangle_mat.shape)  # 
+        
+        log.debug(" -- m_triangle_corner_coord_mat shape: %s", m_triangle_corner_coord_mat.shape)  # 264,
+        log.debug(" -- c_part.triangle_corner_coord_mat shape: %s", c_part.triangle_corner_coord_mat.shape)  # 
+        
+        assert (compare(c_part.is_real_triangle_mat, m_is_real_triangle_mat)) # PASS
+        assert (compare_contains(c_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat)) # Pass
+        assert (compare_contains(c_part.current_mat, m_current_mat)) # Pass
+        assert (compare(c_part.area_mat, m_area_mat)) # Pass
+        assert (compare_contains(c_part.face_normal_mat, m_face_normal_mat)) # Pass
+        assert (compare(c_part.current_density_mat, m_current_density_mat)) # Pass
+
+        #
+        #####################################################
+
+
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
         coil_parts = calculate_sensitivity_matrix(solution, coil_parts, target_field, input_args)
