@@ -207,9 +207,21 @@ class Mesh:
         node_triangles = np.array([row[row != -1] for row in node_triangles_tri], dtype=object)
         return node_triangles
 
+# Generated for calculate_basis_functions
+class BasisElement:
+    stream_function_potential: float
+    triangles: List[int]                # node_triangles x ?
+    one_ring: np.ndarray                # node_triangles x 1
+    area: np.ndarray                    # node_triangles x 1
+    face_normal: np.ndarray             # node_triangles x 3
+    triangle_points_ABC: np.ndarray     # node_triangles x 3
+    current: np.ndarray                 # node_triangles x 3
+
 @dataclass
 class CoilPart:
     coil_mesh: Mesh = None
+    basis_elements: List[BasisElement] = None
+    resistance_matrix: np.ndarray = None # num_vertices x num_vertices
 
 class CoilSolution:
     """
@@ -256,15 +268,6 @@ class OptimisationParameters:
 
 
 
-# Generated for calculate_basis_functions
-class BasisElement:
-    stream_function_potential: float
-    triangles: List[int]
-    one_ring: np.ndarray 
-    area: np.ndarray                    # n x 1
-    face_normal: np.ndarray             # n x 3
-    triangle_points_ABC: np.ndarray     # n x 3
-    current: np.ndarray                 # n x 3
 
 
 #
