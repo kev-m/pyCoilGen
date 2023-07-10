@@ -27,8 +27,8 @@ from sub_functions.define_target_field import define_target_field
 from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 from sub_functions.calculate_basis_functions import calculate_basis_functions
 from sub_functions.calculate_sensitivity_matrix import calculate_sensitivity_matrix
+from sub_functions.calculate_gradient_sensitivity_matrix import calculate_gradient_sensitivity_matrix
 """
-from calculate_gradient_sensitivity_matrix import calculate_gradient_sensitivity_matrix
 from calculate_resistance_matrix import calculate_resistance_matrix
 from stream_function_optimization import stream_function_optimization
 from calc_potential_levels import calc_potential_levels
@@ -81,8 +81,11 @@ def CoilGen(log, input=None):
         matlab_data = mat_contents['x_channel']
     else:
         log.debug(" Loading comparison data from result_y_gradient")
-        mat_contents = load_matlab('debug/result_y_gradient')
+        #mat_contents = load_matlab('debug/result_y_gradient')
+        mat_contents = load_matlab('debug/ygradient_coil')
+        log.debug("mat_contents: %s", mat_contents.keys())
         matlab_data = mat_contents['coil_layouts']
+
     m_faces = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.faces')-1
     m_vertices = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.vertices')
     log.debug(" m_faces shape: %s", m_faces.shape)
@@ -294,13 +297,27 @@ def CoilGen(log, input=None):
         #
         #####################################################
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
-
         # Calculate the gradient sensitivity matrix Gn
         print('Calculate the gradient sensitivity matrix:')
         coil_parts = calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args)
+
+
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: gradient_sensitivity_matrix
+        m_gradient_sensitivity_matrix = m_c_part.gradient_sensitivity_matrix
+
+        log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  # 264,
+        log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.gradient_sensitivity_matrix.shape)  # 
+
+        assert (compare(c_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix)) # Pass
+        #
+        #####################################################
+
+        # WIP
+        solution.coil_parts = coil_parts
+        return solution
 
         # Calculate the resistance matrix Rmn
         print('Calculate the resistance matrix:')
