@@ -157,12 +157,13 @@ if __name__ == "__main__":
 
     # 1. Load Matlab
 
-    if True:
+    if 1 == 0:
         log.debug(" Loading comparison data from generate_halbch_gradient_system")
         mat_contents = load_matlab('debug/generate_halbch_gradient_system')
         x_channel = mat_contents['x_channel']
     else:
-        mat_contents = load_matlab('debug/result_y_gradient')
+        mat_contents = load_matlab('debug/ygradient_coil')
+        #mat_contents = load_matlab('debug/result_y_gradient')
         log.debug("mat_contents: %s", mat_contents.keys())
         x_channel = mat_contents['coil_layouts']
 
