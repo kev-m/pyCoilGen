@@ -44,14 +44,13 @@ def calc_weights_gauss(n):
 
     """
 
-    g_abscissa = np.zeros(n)  # Preallocations.
+    g_abscissa = np.zeros(n)  # Preallocations. 
     g_weights = np.zeros(n)
     m = int((n + 1) / 2)
 
     for ii in range(1, m + 1):
         z = np.cos(np.pi * (ii - 0.25) / (n + 0.5))  # Initial estimate.
-        z1 = z
-        pp = np.nan # Initial value, will be updated below.
+        z1 = z + 1.0
         while abs(z - z1) > np.finfo(float).eps:
             p1 = 1
             p2 = 0
