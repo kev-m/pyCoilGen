@@ -22,11 +22,6 @@ def calculate_gradient_sensitivity_matrix(coil_parts, target_field, input):
 
     # Calculate the sensitivity matrix for each coil part
     for part_ind in range(len(coil_parts)):
-        # Extract the intermediate variables
-        coil_part = coil_parts[part_ind]
-        part_mesh = coil_part.coil_mesh  # Get the Mesh instance
-        part_vertices = part_mesh.get_vertices()  # Get the vertices for the coil part.
-
         biot_savart_coeff = 10 ** (-7)
         plate_thickness = 0.001
         num_nodes = len(coil_parts[part_ind].basis_elements)

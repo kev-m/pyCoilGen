@@ -59,7 +59,7 @@ def calculate_basis_functions(coil_parts: List[CoilPart]):
             for tri_ind in range(node_triangles):
                 point_b = part_vertices[coil_part.one_ring_list[vertex_index][tri_ind][0]]
                 point_c = part_vertices[coil_part.one_ring_list[vertex_index][tri_ind][1]]
-                node_basis_element.one_ring = coil_part.one_ring_list[vertex_index]  # ???.T
+                node_basis_element.one_ring = coil_part.one_ring_list[vertex_index]
                 # Calculate the area of the triangle
                 node_basis_element.area[tri_ind] = np.linalg.norm(
                     np.cross(point_c - node_point, point_b - node_point)) / 2
