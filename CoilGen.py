@@ -176,8 +176,8 @@ def CoilGen(log, input=None):
             visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
 
         if get_level() > DEBUG_VERBOSE:
-            log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
             log.debug(" m_boundary: %s", m_boundary)
+            log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
         # Question: Does order matter?
         assert (compare_contains(coil_mesh.boundary, m_boundary))  # Pass
 
@@ -283,7 +283,7 @@ def CoilGen(log, input=None):
         log.debug(" -- m_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  # 264,
         log.debug(" -- c_part.sensitivity_matrix shape: %s", c_part.sensitivity_matrix.shape)  # 
 
-        assert (compare(c_part.sensitivity_matrix, m_sensitivity_matrix)) # ???
+        assert (compare(c_part.sensitivity_matrix, m_sensitivity_matrix)) # Pass
 
         #
         #####################################################
