@@ -258,8 +258,14 @@ def CoilGen(log, input=None):
         m_face_normal_mat = m_c_part.face_normal_mat
         m_current_density_mat = m_c_part.current_density_mat
 
+        # Transpose MATLAB matrix
+        for top in m_triangle_corner_coord_mat:
+            for index in range(top.shape[0]):
+                matrix = top[index]
+                top[index] = matrix.T
+
         assert (compare(c_part.is_real_triangle_mat, m_is_real_triangle_mat)) # Pass
-        assert (compare_contains(c_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat)) # Pass / Fail for arg_dict1
+        assert (compare_contains(c_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat)) # Pass
         assert (compare_contains(c_part.current_mat, m_current_mat)) # Pass
         assert (compare(c_part.area_mat, m_area_mat)) # Pass
         assert (compare_contains(c_part.face_normal_mat, m_face_normal_mat)) # Pass
@@ -629,4 +635,4 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    solution = CoilGen(log, arg_dict1)
+    solution = CoilGen(log, arg_dict2)
