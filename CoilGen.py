@@ -196,6 +196,12 @@ def CoilGen(log, input=None):
         solution.target_field = target_field
         solution.is_suppressed_point = is_suppressed_point
 
+        if get_level() >= DEBUG_VERBOSE:
+            log.debug(" -- target_field.b shape: %s", target_field.b.shape)  # (3, 257)
+            log.debug(" -- target_field.coords shape: %s", target_field.coords.shape)  # (3, 257)
+            log.debug(" -- target_field.weights shape: %s", target_field.weights.shape)  # (257,)
+
+
         #####################################################
         # Verify:  b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
         assert (compare(target_field.b, m_tf_b))               # Pass
@@ -223,6 +229,7 @@ def CoilGen(log, input=None):
 
         ###########################################################
         # DEBUG
+        """
         if get_level() >= DEBUG_VERBOSE:
             print("m_or_one_ring_list[0:2]:")
             print(m_or_one_ring_list[0])
@@ -233,6 +240,7 @@ def CoilGen(log, input=None):
             print(one_ring_list[0])
             print(one_ring_list[1])
             print(one_ring_list[2])
+        """
         #
         ###########################################################
 
@@ -289,8 +297,10 @@ def CoilGen(log, input=None):
 
         m_sensitivity_matrix = m_c_part.sensitivity_matrix
 
-        log.debug(" -- m_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  # 264,
-        log.debug(" -- c_part.sensitivity_matrix shape: %s", c_part.sensitivity_matrix.shape)  # 
+        # TODO: Consider Python-like structure: 264 (num vertices) x 257 (target_field) x  3 (x,y,z)
+        if get_level() >= DEBUG_VERBOSE:
+            log.debug(" -- m_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  # (3, 257, 264)
+            log.debug(" -- c_part.sensitivity_matrix shape: %s", c_part.sensitivity_matrix.shape)  # (3, 257, 264)
 
         assert (compare(c_part.sensitivity_matrix, m_sensitivity_matrix)) # Pass
 
@@ -308,8 +318,9 @@ def CoilGen(log, input=None):
         # Verify: gradient_sensitivity_matrix
         m_gradient_sensitivity_matrix = m_c_part.gradient_sensitivity_matrix
 
-        log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  # 264,
-        log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.gradient_sensitivity_matrix.shape)  # 
+        # Consider Python-like structure: 257 () x 264 (num vertices) x 3 (x,y,z)
+        log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  #  (3, 257, 264)
+        log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.gradient_sensitivity_matrix.shape)  # (3, 257, 264)
 
         assert (compare(c_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix)) # Pass
         #
