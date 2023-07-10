@@ -8,7 +8,6 @@ import logging
 # Local imports
 # Add the sub_functions directory to the Python module search path
 sub_functions_path = Path(__file__).resolve().parent / '..'
-print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 
 from CoilGen import CoilGen
