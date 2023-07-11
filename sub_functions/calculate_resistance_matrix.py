@@ -31,30 +31,30 @@ def calculate_resistance_matrix(coil_parts: List[CoilPart], input) -> List[CoilP
         # Setup variables
         coil_part = coil_parts[part_ind]
         part_mesh = coil_part.coil_mesh
-        part_vertices = part_mesh.get_vertices()  # Get the vertices for the coil part
-        part_faces = part_mesh.get_faces()
+        part_faces = part_mesh.get_faces() # Get the faces for this mesh
+        num_faces = part_faces.shape[0]
 
-        num_nodes = len(coil_part.basis_elements)
+        num_nodes = len(coil_part.basis_elements) # Same as number of vertices
 
         # Calculate node adjacency matrix
         node_adjacency_mat = np.zeros((num_nodes, num_nodes), dtype=bool)
-        for tri_ind in range(part_faces.shape[1]):
-            node_adjacency_mat[part_faces[0, tri_ind], part_faces[1, tri_ind]] = True
-            node_adjacency_mat[part_faces[1, tri_ind], part_faces[2, tri_ind]] = True
-            node_adjacency_mat[part_faces[2, tri_ind], part_faces[0, tri_ind]] = True
+        for tri_ind in range(num_faces): # Number of faces
+            node_adjacency_mat[part_faces[tri_ind, 0], part_faces[tri_ind, 1]] = True
+            node_adjacency_mat[part_faces[tri_ind, 1], part_faces[tri_ind, 2]] = True
+            node_adjacency_mat[part_faces[tri_ind, 2], part_faces[tri_ind, 0]] = True
 
-        vert1, vert2 = np.where(node_adjacency_mat)
-        mesh_edges = np.column_stack((vert1, vert2))
-        mesh_edges_non_unique = np.column_stack((np.arange(num_nodes), mesh_edges[:, 0]))
-        mesh_edges_non_unique = np.vstack(
-            (mesh_edges_non_unique, np.column_stack((np.arange(num_nodes), mesh_edges[:, 1]))))
+        nonzero_rows, nonzero_cols = np.where(node_adjacency_mat)
+        mesh_edges = np.column_stack((nonzero_rows, nonzero_cols)) # Create a 2-column matrix (2 x num_nodes)
+
+        mesh_edges_non_unique = np.concatenate((np.column_stack((np.arange(num_faces), mesh_edges[:num_faces, 0])),
+                                        np.column_stack((np.arange(num_faces), mesh_edges[:num_faces, 1]))))
 
         node_adjacency_mat = np.logical_or(node_adjacency_mat, node_adjacency_mat.T)
         coil_part.node_adjacency_mat = node_adjacency_mat
 
         # Calculate resistance matrix
         resistance_matrix = np.zeros((num_nodes, num_nodes))
-        basis_elements = coil_part.basis_elements
+        basis_elements = coil_part.basis_elements # Num vertices
         for edge_ind in range(mesh_edges_non_unique.shape[0]):
             node_ind1 = mesh_edges_non_unique[edge_ind, 0]
             node_ind2 = mesh_edges_non_unique[edge_ind, 1]
@@ -71,7 +71,7 @@ def calculate_resistance_matrix(coil_parts: List[CoilPart], input) -> List[CoilP
                     triangle_area = basis_elements[node_ind1].area[first_node_triangle_positon]
                     primary_current = basis_elements[node_ind1].current[first_node_triangle_positon]
                     secondary_current = basis_elements[node_ind2].current[second_node_triangle_positon]
-                    resistance_sum += np.dot(primary_current, secondary_current) * (triangle_area)**2
+                    resistance_sum += np.dot(primary_current, secondary_current.T) * (triangle_area)**2
 
                 resistance_matrix[node_ind1, node_ind2] = resistance_sum
 
