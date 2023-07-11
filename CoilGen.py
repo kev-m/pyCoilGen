@@ -141,6 +141,12 @@ def CoilGen(log, input=None):
         # Read the input mesh
         print('Load geometry:')
         coil_mesh, target_mesh, secondary_target_mesh = read_mesh(input_args)
+
+        if get_level() >= DEBUG_VERBOSE:
+            log.debug(" -- vertices shape: %s", coil_mesh.get_vertices().shape)  # (264,3)
+            log.debug(" -- faces shape: %s", coil_mesh.get_faces().shape)  # (480,3)
+
+
         if get_level() > DEBUG_VERBOSE:
             log.debug(" coil_mesh.vertex_faces: %s", coil_mesh.trimesh_obj.vertex_faces[0:10])
 
@@ -283,6 +289,24 @@ def CoilGen(log, input=None):
         assert (compare_contains(c_part.face_normal_mat, m_face_normal_mat)) # Pass
         assert (compare(c_part.current_density_mat, m_current_density_mat)) # Pass
 
+        # Verify basis_elements
+        m_basis_elements = m_c_part.basis_elements
+        assert len(c_part.basis_elements) == len(m_basis_elements)
+        for index in range(len(c_part.basis_elements)):
+            if get_level() >= DEBUG_VERBOSE:
+                log.debug(" -- Index: %d", index)
+
+
+            cg_element = c_part.basis_elements[index]
+            m_element = m_basis_elements[index]
+
+            # Verify: triangles, stream_function_potential, area, face_normal, triangle_points_ABC, current
+
+            assert (compare_contains(cg_element.triangles, m_element.triangles-1)) # Pass
+            assert (cg_element.stream_function_potential == m_element.stream_function_potential) # Pass
+            assert (compare(cg_element.area, m_element.area)) # Pass
+            assert (compare_contains(cg_element.face_normal, m_element.face_normal)) # Pass
+
         #
         #####################################################
 
@@ -330,6 +354,20 @@ def CoilGen(log, input=None):
         # Calculate the resistance matrix Rmn
         print('Calculate the resistance matrix:')
         coil_parts = calculate_resistance_matrix(coil_parts, input_args)
+
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: resistance_matrix
+        m_resistance_matrix = m_c_part.resistance_matrix
+
+        # Consider Python-like structure: 257 () x 264 (num vertices) x 3 (x,y,z)
+        log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_resistance_matrix.shape)  #  (??)
+        log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.resistance_matrix.shape)  # (??)
+
+        assert (compare(c_part.resistance_matrix, m_resistance_matrix)) # Pass
+        #
+        #####################################################
 
         # WIP
         solution.coil_parts = coil_parts
