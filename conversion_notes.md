@@ -14,6 +14,13 @@ Note: Also need BLAS and gfortran to install scipy:
  Confirm: Are mesh normals computed according to the right-hand rule? i.e. defined using the "counter-clockwise" or "anti-clockwise"
  vertex ordering, where the vertices of the face are specified in a counter-clockwise direction when viewed from the outside of the mesh.
 
+ ## Other Weirdnesses
+ In calculate_resistance_matrix, line 104, I have to swap y and z coords to match MATLAB:
+```python
+target_points = np.vstack((target_grid_x.ravel(), target_grid_z.ravel(), target_grid_y.ravel()))
+```
+
+
  ## Data Structures
  ```python
 from dataclasses import dataclass
