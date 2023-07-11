@@ -79,13 +79,22 @@ def compare_contains(array1, array2, double_tolerance=0.001):
             arr1 = array1[index]
             arr2 = array2[index]
 
+            # Handle if array1 / array2 are simple arrays
+            if not isinstance(arr1, np.ndarray):
+                for value in array1:
+                    if value not in array2:
+                        log.error("Can not find value %s in %s", value, array2)
+                        return False
+                return True
+
+
             for index in range(len(arr1)):
                 item = arr1[index]
                 if not item in arr2:
                     found = False
                     # Try harder, this time with tolerance
                     for subitem in arr2:
-                        if np.allclose(item, subitem):
+                        if np.allclose(item, subitem, atol=double_tolerance):
                             # log.debug(" Found %s ~= to %s", item, subitem)
                             found = True
                             break
