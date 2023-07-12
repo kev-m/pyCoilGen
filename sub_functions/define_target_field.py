@@ -100,12 +100,12 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
             target_grid_x, target_grid_y, target_grid_z = np.meshgrid(target_x_coords, target_y_coords, target_z_coords)
 
             # For some unknown reason I need to swap y and z coords to match MATLAB
-            # target_points = np.vstack((target_grid_x.ravel(), target_grid_y.ravel(), target_grid_z.ravel()))
+            #target_points = np.vstack((target_grid_x.ravel(), target_grid_y.ravel(), target_grid_z.ravel()))
             target_points = np.vstack((target_grid_x.ravel(), target_grid_z.ravel(), target_grid_y.ravel()))
 
             # Select points inside a sphere
             # Calculate the Euclidean distance for each point
-            distances = np.sqrt(np.sum(target_points[:3, :] ** 2, axis=0))
+            distances = np.sqrt(np.sum(target_points ** 2, axis=0))
 
             # Filter out points outside the target region radius
             target_points2 = target_points[:, distances <= input.target_region_radius]
