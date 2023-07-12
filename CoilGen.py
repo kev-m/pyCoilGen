@@ -283,7 +283,7 @@ def CoilGen(log, input=None):
                 top[index] = matrix.T
 
         assert (compare(c_part.is_real_triangle_mat, m_is_real_triangle_mat)) # Pass
-        assert (compare_contains(c_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat, strict=False)) # Pass
+        assert (compare_contains(c_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat, strict=False)) # Pass, Transposed
         assert (compare_contains(c_part.current_mat, m_current_mat, strict=False)) # Pass
         assert (compare(c_part.area_mat, m_area_mat)) # Pass
         assert (compare_contains(c_part.face_normal_mat, m_face_normal_mat, strict=False)) # Pass
@@ -293,20 +293,20 @@ def CoilGen(log, input=None):
         m_basis_elements = m_c_part.basis_elements
         assert len(c_part.basis_elements) == len(m_basis_elements)
         for index in range(len(c_part.basis_elements)):
-            if get_level() >= DEBUG_VERBOSE:
-                log.debug(" -- Index: %d", index)
-
-
             cg_element = c_part.basis_elements[index]
             m_element = m_basis_elements[index]
 
-            # Verify: triangles, stream_function_potential, area, face_normal, triangle_points_ABC, current
+            # Tranpose MATLAB matrix
+            for index2 in range(len(m_element.triangle_points_ABC)):
+                m_element.triangle_points_ABC[index2] = m_element.triangle_points_ABC[index2].T
 
+            # Verify: triangles, stream_function_potential, area, face_normal, triangle_points_ABC, current
             assert (compare_contains(cg_element.triangles, m_element.triangles-1)) # Pass
             assert (cg_element.stream_function_potential == m_element.stream_function_potential) # Pass
             assert (compare(cg_element.area, m_element.area)) # Pass
             assert (compare_contains(cg_element.face_normal, m_element.face_normal)) # Pass
-
+            assert (compare_contains(cg_element.triangle_points_ABC, m_element.triangle_points_ABC)) # Pass, transposed
+            assert (compare_contains(cg_element.current, m_element.current)) # Pass
         #
         #####################################################
 
