@@ -359,9 +359,8 @@ def CoilGen(log, input=None):
         m_node_adjacency_mat = m_c_part.node_adjacency_mat
         m_resistance_matrix = m_c_part.resistance_matrix
 
-        # Consider Python-like structure: 257 () x 264 (num vertices) x 3 (x,y,z)
-        log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_resistance_matrix.shape)  #  (??)
-        log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.resistance_matrix.shape)  # (??)
+        log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_resistance_matrix.shape)  #  (264, 264)
+        log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.resistance_matrix.shape)  # (264, 264)
 
         assert (compare(c_part.node_adjacency_mat, m_node_adjacency_mat)) # Pass
         assert (compare(c_part.resistance_matrix, m_resistance_matrix)) # Pass
@@ -371,6 +370,24 @@ def CoilGen(log, input=None):
         # Optimize the stream function toward target field and further constraints
         print('Optimize the stream function toward target field and secondary constraints:')
         coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)
+
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: c_part.current_density, b_field_opt_sf, 
+        m_current_density = m_c_part.current_density
+        m_combined_mesh = get_and_show_debug(matlab_data, 'combined_mesh')
+        m_sf_b_field = get_and_show_debug(matlab_data, 'out.b_field_opt_sf')
+
+
+        log.debug(" -- m_current_density shape: %s", m_current_density.shape)  #  (??)
+        log.debug(" -- c_part.current_density shape: %s", c_part.current_density.shape)  # (??)
+
+        assert (compare(c_part.current_density, m_current_density)) # ??
+        assert (compare(sf_b_field, m_sf_b_field)) # ??
+        #
+        #####################################################
+
 
         # WIP
         solution.coil_parts = coil_parts

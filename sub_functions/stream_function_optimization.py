@@ -1,11 +1,22 @@
 import numpy as np
 
-def stream_function_optimization(coil_parts, target_field, input):
+from typing import List
+
+# Logging
+import logging
+
+# Local imports
+from sub_functions.data_structures import DataStructure, CoilPart
+
+log = logging.getLogger(__name__)
+
+
+def stream_function_optimization(coil_parts: List[CoilPart], target_field, input):
     """
     Performs stream function optimization on coil parts.
 
     Args:
-        coil_parts (list): List of coil parts.
+        coil_parts (List[CoilPart]): List of coil parts.
         target_field: Target field.
         input: Input parameters.
 
@@ -18,15 +29,26 @@ def stream_function_optimization(coil_parts, target_field, input):
     tikonov_reg_factor = input.tikonov_reg_factor
 
     # Combine the matrices from the different mesh parts
-    sensitivity_matrix = []
-    gradient_sensitivity_matrix = []
-    resistance_matrix = []
-    current_density_mat = []
+    sensitivity_matrix = np.empty(len(coil_parts), dtype=object)            # MATLAB shape: ???
+    gradient_sensitivity_matrix = np.empty(len(coil_parts), dtype=object)   # MATLAB shape: ???
+    resistance_matrix = None             # MATLAB shape: ???
+    current_density_mat = None           # MATLAB shape: ???
 
     for part_ind in range(len(coil_parts)):
         if part_ind == 0:
-            current_density_mat = coil_parts[part_ind].current_density_mat
+            resistance_matrix = coil_parts[part_ind].resistance_matrix
+            current_density_mat = coil_parts[part_ind].current_density_mat  # 264 x 480 x 3
+            # 3 (xyz) x 257 (target field) x 264 (num vertices)
+            sensitivity_matrix = coil_parts[part_ind].sensitivity_matrix
+            gradient_sensitivity_matrix = sensitivity_matrix
         else:
+            # Untested
+            resistance_matrix = np.block(
+                [
+                    [resistance_matrix],
+                    [coil_parts[part_ind].resistance_matrix],
+                ]
+            )
             current_density_mat = np.concatenate(
                 [
                     np.block(
@@ -50,21 +72,16 @@ def stream_function_optimization(coil_parts, target_field, input):
                 ],
                 axis=2,
             )
-
-        sensitivity_matrix.append(coil_parts[part_ind].sensitivity_matrix)
-        gradient_sensitivity_matrix.append(coil_parts[part_ind].sensitivity_matrix)
-        resistance_matrix = np.block(
-            [
-                [resistance_matrix],
-                [coil_parts[part_ind].resistance_matrix],
-            ]
-        )
+            sensitivity_matrix.append(coil_parts[part_ind].sensitivity_matrix)
+            gradient_sensitivity_matrix.append(coil_parts[part_ind].sensitivity_matrix)
 
     # Generate a combined mesh container
-    combined_mesh = coil_parts[0].coil_mesh
+    c_mesh = coil_parts[0].coil_mesh
+    combined_mesh = DataStructure(vertices=c_mesh.get_vertices(), faces=c_mesh.get_faces())
     combined_mesh.mesh_part_vertex_ind = np.ones(
-        (1, combined_mesh.vertices.shape[1])
+        (1, combined_mesh.vertices.shape[0])
     )
+    combined_mesh.boundary = c_mesh.boundary
 
     for part_ind in range(1, len(coil_parts)):
         combined_mesh.faces = np.concatenate(
@@ -80,7 +97,7 @@ def stream_function_optimization(coil_parts, target_field, input):
             [
                 combined_mesh.mesh_part_vertex_ind,
                 np.ones(
-                    (1, coil_parts[part_ind].coil_mesh.vertices.shape[1])
+                    (1, coil_parts[part_ind].coil_mesh.vertices.shape[0])
                 ) * part_ind,
             ],
             axis=1,
@@ -230,6 +247,7 @@ def stream_function_optimization(coil_parts, target_field, input):
 
     return coil_parts, combined_mesh, b_field_opt_sf
 
+
 def reduce_matrices_for_boundary_nodes(full_mat, coil_mesh, set_zero_flag):
     """
     Reduce the sensitivity matrix in order to limit the degrees of freedom on
@@ -287,32 +305,37 @@ def reduce_matrices_for_boundary_nodes(full_mat, coil_mesh, set_zero_flag):
 
     return reduced_mat, boundary_nodes, is_not_boundary_node
 
-def reexpand_stream_function_for_boundary_nodes(
-    reduced_sf, boundary_nodes, is_not_boundary_node, set_zero_flag
-):
+
+def reexpand_stream_function_for_boundary_nodes(reduced_sf, boundary_nodes, is_not_boundary_node, set_zero_flag):
     """
-    Reexpand the stream function to all nodes including the boundary nodes.
+    Reexpands the stream function to all nodes including the boundary nodes.
 
     Args:
-        reduced_sf: Reduced stream function.
-        boundary_nodes: Boundary nodes.
-        is_not_boundary_node: Non-boundary nodes.
-        set_zero_flag: Flag to force the potential on the boundary nodes to zero.
+        reduced_sf (numpy.ndarray): Reduced stream function.
+        boundary_nodes (list): List of boundary nodes.
+        is_not_boundary_node (numpy.ndarray): Array of non-boundary nodes.
+        set_zero_flag (bool): Flag to force the potential on the boundary nodes to zero.
 
     Returns:
-        sf: Expanded stream function.
+        sf (numpy.ndarray): Expanded stream function.
     """
 
+    # Initialize the expanded stream function with zeros
     sf = np.zeros(
-        (len(is_not_boundary_node) + sum(len(boundary_nodes[x]) for x in range(len(boundary_nodes)))), 1
+        len(is_not_boundary_node) + sum(len(boundary_nodes[x]) for x in range(len(boundary_nodes))),
+        dtype=reduced_sf.dtype,
     )
 
+    # Assign the stream function values for the boundary nodes
     for boundary_ind in range(len(boundary_nodes)):
         if set_zero_flag:
             sf[boundary_nodes[boundary_ind]] = 0
         else:
             sf[boundary_nodes[boundary_ind]] = reduced_sf[boundary_ind]
 
+    # Assign the stream function values for the non-boundary nodes
+    # TODO: Here! Fails here...
+    # shape mismatch: value array of shape (262,) could not be broadcast to indexing result of shape (216,)
     sf[is_not_boundary_node] = reduced_sf[len(boundary_nodes):]
 
     return sf
