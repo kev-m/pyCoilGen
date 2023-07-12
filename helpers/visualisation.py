@@ -52,12 +52,18 @@ def compare(instance1, instance2, double_tolerance=0.001):
     return False
 
 
-def compare_contains(array1, array2, double_tolerance=0.001):
+def compare_contains(array1, array2, double_tolerance=0.001, strict=True):
     """
     Checks if array1 and array2 are the same shape and contain the same elements, row-wise.
 
-    This function is used when the ordering of entries in array1 and array2 are different.
+    The "strict" parameter determines if element order is important for the array elements.
 
+    Args:
+        array1: The first array to compare.
+        array2: The second array to compare.
+        double_tolerance (float): Tolerance for comparing floating-point values.
+        strict (bool): Whether order matters in the sub-elements.
+    
     Returns:
         bool: True if the instances have matching entries, False otherwise.
     """
@@ -69,6 +75,19 @@ def compare_contains(array1, array2, double_tolerance=0.001):
         if not array1.shape == array2.shape:
             log.error(" Not the same shape: %s is not %s", np.shape(array1), np.shape(array2))
             return False
+       
+        # Handle if array1 / array2 are simple arrays
+        # e.g. [0.1, 0.2, 0.3] and [0.3, 0.2, 0.1]
+        if not isinstance(array1[0], np.ndarray):
+            for value in array1:
+                if np.isclose(array2, value, atol=double_tolerance).any() == False:
+                    log.error("Can not find value %s in %s", value, array2)
+                    return False
+            return True
+
+        # Handle if array1 and array2 are arrays of arrays
+        # e.g. [[0.2, 0.3], [0.1, 0.2]] and [[0.1, 0.2], [0.2, 0.3]] are "equal"
+        # e.g. [[0.21, 0.3], [0.11, 0.2]] and [[0.1, 0.2], [0.2, 0.3]] are "equal" within tolerance.
         for index in range(array1.shape[0]):
             # log.debug(" %d -> %s", index, instance1[index])
             if not np.shape(array1[index]) == np.shape(array2[index]):
@@ -76,32 +95,29 @@ def compare_contains(array1, array2, double_tolerance=0.001):
                           index, np.shape(array1[index]), np.shape(array2[index]))
                 return False
 
-            arr1 = array1[index]
-            arr2 = array2[index]
+            if strict:
+                found = False
+                item = array1[index]
+                for index2 in range(array2.shape[0]):
+                    if np.allclose(item, array2[index2], atol=double_tolerance):
+                        found = True
+                        break
+                if found == False:
+                    log.error(" Can not find value at index [%d] %s:\n %s ... and \n %s ...",
+                            index, item, array1[:5], array2[:5])
+                    return False
+            else:
+                # Check that every item in arr1 is in arr2
+                found = True
+                for subitem in array1[index]:
+                    if np.isclose(subitem, array2[index], atol=double_tolerance).any() == False:
+                        found = False
+                        break
+                if found == False:
+                    log.error(" Can not find value at index [%d] %s:\n %s ... and \n %s ...",
+                            index, array1[index], array1[:5], array2[:5])
+                    return False
 
-            # Handle if array1 / array2 are simple arrays
-            if not isinstance(arr1, np.ndarray):
-                for value in array1:
-                    if value not in array2:
-                        log.error("Can not find value %s in %s", value, array2)
-                        return False
-                return True
-
-
-            for index in range(len(arr1)):
-                item = arr1[index]
-                if not item in arr2:
-                    found = False
-                    # Try harder, this time with tolerance
-                    for subitem in arr2:
-                        if np.allclose(item, subitem, atol=double_tolerance):
-                            # log.debug(" Found %s ~= to %s", item, subitem)
-                            found = True
-                            break
-                    if found == False:
-                        log.error(" Can not find value at index [%d] %s:\n %s ... and \n %s ...",
-                              index, item, arr1[:5], arr2[:5])
-                        return False
         return True
 
     log.error("compare_contains(): Type(%s) is not supported", type(array1))

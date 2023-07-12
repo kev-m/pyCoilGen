@@ -189,7 +189,7 @@ def CoilGen(log, input=None):
             log.debug(" m_boundary: %s", m_boundary)
             log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
         # Question: Does order matter?
-        assert (compare_contains(coil_mesh.boundary, m_boundary))  # Pass
+        assert (compare_contains(coil_mesh.boundary, m_boundary, strict=False))  # Pass
 
         # Plot the two UV and see the difference
         if get_level() >= DEBUG_VERBOSE:
@@ -254,8 +254,8 @@ def CoilGen(log, input=None):
         visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list.png', one_ring_list[0:25])
         visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list_m.png', m_or_one_ring_list[0:25])
 
-        assert (compare_contains(one_ring_list, m_or_one_ring_list))   # PASS - different order!
-        assert (compare_contains(node_triangles, m_or_node_triangles)) # PASS - different order!
+        assert (compare_contains(one_ring_list, m_or_one_ring_list, strict=False))   # PASS - different order!
+        assert (compare_contains(node_triangles, m_or_node_triangles, strict=False)) # PASS - different order!
         assert (compare(node_triangle_mat, m_or_node_triangle_mat)) # PASS
         #
         #####################################################
@@ -283,10 +283,10 @@ def CoilGen(log, input=None):
                 top[index] = matrix.T
 
         assert (compare(c_part.is_real_triangle_mat, m_is_real_triangle_mat)) # Pass
-        assert (compare_contains(c_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat)) # Pass
-        assert (compare_contains(c_part.current_mat, m_current_mat)) # Pass
+        assert (compare_contains(c_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat, strict=False)) # Pass
+        assert (compare_contains(c_part.current_mat, m_current_mat, strict=False)) # Pass
         assert (compare(c_part.area_mat, m_area_mat)) # Pass
-        assert (compare_contains(c_part.face_normal_mat, m_face_normal_mat)) # Pass
+        assert (compare_contains(c_part.face_normal_mat, m_face_normal_mat, strict=False)) # Pass
         assert (compare(c_part.current_density_mat, m_current_density_mat)) # Pass
 
         # Verify basis_elements
