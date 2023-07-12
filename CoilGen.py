@@ -29,9 +29,8 @@ from sub_functions.calculate_basis_functions import calculate_basis_functions
 from sub_functions.calculate_sensitivity_matrix import calculate_sensitivity_matrix
 from sub_functions.calculate_gradient_sensitivity_matrix import calculate_gradient_sensitivity_matrix
 from sub_functions.calculate_resistance_matrix import calculate_resistance_matrix
+from sub_functions.stream_function_optimization import stream_function_optimization
 """
-from calculate_resistance_matrix import calculate_resistance_matrix
-from stream_function_optimization import stream_function_optimization
 from calc_potential_levels import calc_potential_levels
 from calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 from process_raw_loops import process_raw_loops
@@ -236,8 +235,7 @@ def CoilGen(log, input=None):
 
         ###########################################################
         # DEBUG
-        """
-        if get_level() >= DEBUG_VERBOSE:
+        if get_level() > DEBUG_VERBOSE:
             print("m_or_one_ring_list[0:2]:")
             print(m_or_one_ring_list[0])
             print(m_or_one_ring_list[1])
@@ -247,7 +245,6 @@ def CoilGen(log, input=None):
             print(one_ring_list[0])
             print(one_ring_list[1])
             print(one_ring_list[2])
-        """
         #
         ###########################################################
 
@@ -371,13 +368,13 @@ def CoilGen(log, input=None):
         #
         #####################################################
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
-
         # Optimize the stream function toward target field and further constraints
         print('Optimize the stream function toward target field and secondary constraints:')
         coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)
+
+        # WIP
+        solution.coil_parts = coil_parts
+        return solution
 
     else:
         # Load the preoptimized data
