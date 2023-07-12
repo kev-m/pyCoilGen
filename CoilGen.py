@@ -358,13 +358,15 @@ def CoilGen(log, input=None):
         #####################################################
         # DEVELOPMENT: Remove this
         # DEBUG
-        # Verify: resistance_matrix
+        # Verify: node_adjacency_mat, resistance_matrix
+        m_node_adjacency_mat = m_c_part.node_adjacency_mat
         m_resistance_matrix = m_c_part.resistance_matrix
 
         # Consider Python-like structure: 257 () x 264 (num vertices) x 3 (x,y,z)
         log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_resistance_matrix.shape)  #  (??)
         log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.resistance_matrix.shape)  # (??)
 
+        assert (compare(c_part.node_adjacency_mat, m_node_adjacency_mat)) # Pass
         assert (compare(c_part.resistance_matrix, m_resistance_matrix)) # Pass
         #
         #####################################################
