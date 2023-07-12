@@ -15,7 +15,13 @@ Note: Also need BLAS and gfortran to install scipy:
  vertex ordering, where the vertices of the face are specified in a counter-clockwise direction when viewed from the outside of the mesh.
 
  ## Other Weirdnesses
- In calculate_resistance_matrix, line 104, I have to swap y and z coords to match MATLAB:
+ ### build_cylinder_mesh.py
+ I think there may be a fence-post bug in the original MATLAB code. The height of the resulting
+ cylinder does not match the cylinder_height parameter. This is especially noticable for small
+ values of num_longitudinal_divisions. See test_build_cylinder_mesh.py.
+
+ ### define_target_field.py
+ In define_target_field, line 104, I have to swap y and z coords to match MATLAB:
 ```python
 target_points = np.vstack((target_grid_x.ravel(), target_grid_z.ravel(), target_grid_y.ravel()))
 ```
