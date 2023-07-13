@@ -52,7 +52,7 @@ def compare(instance1, instance2, double_tolerance=1e-10):
     return False
 
 
-def compare_contains(array1, array2, double_tolerance=0.001, strict=True):
+def compare_contains(array1, array2, double_tolerance=1e-10, strict=True):
     """
     Checks if array1 and array2 are the same shape and contain the same elements, row-wise.
 
