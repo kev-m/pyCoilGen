@@ -7,7 +7,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def compare(instance1, instance2, double_tolerance=0.001):
+def compare(instance1, instance2, double_tolerance=1e-10):
     """
     Compare two instances for equality with optional double tolerance.
 

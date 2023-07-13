@@ -321,7 +321,7 @@ def CoilGen(log, input=None):
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- m_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  # (3, 257, 264)
             log.debug(" -- c_part.sensitivity_matrix shape: %s", c_part.sensitivity_matrix.shape)  # (3, 257, 264)
-        assert (compare(c_part.sensitivity_matrix, m_sensitivity_matrix, double_tolerance=1e-10)) # Pass
+        assert (compare(c_part.sensitivity_matrix, m_sensitivity_matrix)) # Pass
         #
         #####################################################
 
@@ -340,7 +340,7 @@ def CoilGen(log, input=None):
         log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  #  (3, 257, 264)
         log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.gradient_sensitivity_matrix.shape)  # (3, 257, 264)
 
-        assert (compare(c_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix, double_tolerance=1e-10)) # ???
+        assert (compare(c_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix)) # ???
         #
         #####################################################
 
@@ -359,7 +359,7 @@ def CoilGen(log, input=None):
         log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.resistance_matrix.shape)  # (264, 264)
 
         assert (compare(c_part.node_adjacency_mat, m_node_adjacency_mat)) # Pass
-        assert (compare(c_part.resistance_matrix, m_resistance_matrix)) # Pass
+        assert (compare(c_part.resistance_matrix, m_resistance_matrix)) # Fail
         #
         #####################################################
 
