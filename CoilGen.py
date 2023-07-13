@@ -316,16 +316,12 @@ def CoilGen(log, input=None):
         # DEVELOPMENT: Remove this
         # DEBUG
         # Verify: sensitivity_matrix
-
         m_sensitivity_matrix = m_c_part.sensitivity_matrix
-
         # TODO: Consider Python-like structure: 264 (num vertices) x 257 (target_field) x  3 (x,y,z)
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- m_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  # (3, 257, 264)
             log.debug(" -- c_part.sensitivity_matrix shape: %s", c_part.sensitivity_matrix.shape)  # (3, 257, 264)
-
-        assert (compare(c_part.sensitivity_matrix, m_sensitivity_matrix)) # Pass
-
+        assert (compare(c_part.sensitivity_matrix, m_sensitivity_matrix, double_tolerance=1e-10)) # Pass
         #
         #####################################################
 
@@ -344,7 +340,7 @@ def CoilGen(log, input=None):
         log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  #  (3, 257, 264)
         log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.gradient_sensitivity_matrix.shape)  # (3, 257, 264)
 
-        assert (compare(c_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix)) # Pass
+        assert (compare(c_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix, double_tolerance=1e-10)) # ???
         #
         #####################################################
 
@@ -367,9 +363,23 @@ def CoilGen(log, input=None):
         #
         #####################################################
 
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG: Load MATLAB data for comparison
+        mat_contents1 = load_matlab('debug/ygradient_coil_reduce')
+        log.debug(" keys: %s", mat_contents1.keys())
+        matlab_data1 = mat_contents1['values']
+        mat_contents2 = load_matlab('debug/ygradient_coil_reexpand')
+        log.debug(" keys: %s", mat_contents2.keys())
+        matlab_data2 = mat_contents2['values']
+        debug_data = DataStructure(reduce=matlab_data1, expand=matlab_data2)
+        #
+        #####################################################
+
+
         # Optimize the stream function toward target field and further constraints
         print('Optimize the stream function toward target field and secondary constraints:')
-        coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)
+        coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args, debug_data)
 
         #####################################################
         # DEVELOPMENT: Remove this
