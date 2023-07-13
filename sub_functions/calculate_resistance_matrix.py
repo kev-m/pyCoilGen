@@ -39,18 +39,17 @@ def calculate_resistance_matrix(coil_parts: List[CoilPart], input) -> List[CoilP
         part_faces = part_mesh.get_faces()  # Get the faces for this mesh
         num_faces = part_faces.shape[0]
 
-        # MATLAB shape: 264
         num_nodes = len(coil_part.basis_elements)  # Same as number of vertices
 
         # Calculate node adjacency matrix
         node_adjacency_mat = np.zeros((num_nodes, num_nodes), dtype=bool)
         for tri_ind in range(num_faces):  # Number of faces
-            node_adjacency_mat[part_faces[tri_ind, 0], part_faces[tri_ind, 1]] = True
-            node_adjacency_mat[part_faces[tri_ind, 1], part_faces[tri_ind, 2]] = True
-            node_adjacency_mat[part_faces[tri_ind, 2], part_faces[tri_ind, 0]] = True
+            node_adjacency_mat[part_faces[tri_ind, 1], part_faces[tri_ind, 0]] = True
+            node_adjacency_mat[part_faces[tri_ind, 2], part_faces[tri_ind, 1]] = True
+            node_adjacency_mat[part_faces[tri_ind, 0], part_faces[tri_ind, 2]] = True
 
         nonzero_rows, nonzero_cols = np.where(node_adjacency_mat)
-        mesh_edges = np.column_stack((nonzero_rows, nonzero_cols))  # Create a 2-column matrix (2 x num_nodes)
+        mesh_edges = np.column_stack((nonzero_cols, nonzero_rows))  # Create a 2-column matrix (2 x num_nodes)
 
         face_0 = np.hstack((np.arange(num_nodes), mesh_edges[:, 0]))
         face_1 = np.hstack((np.arange(num_nodes), mesh_edges[:, 1]))
@@ -58,16 +57,15 @@ def calculate_resistance_matrix(coil_parts: List[CoilPart], input) -> List[CoilP
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" mesh_edges_non_unique shape: %s", mesh_edges_non_unique.shape)
 
-        # MATLAB shape: 264x264
         node_adjacency_mat = np.logical_or(node_adjacency_mat, node_adjacency_mat.T)
         coil_part.node_adjacency_mat = node_adjacency_mat
 
         # Calculate resistance matrix
         resistance_matrix = np.zeros((num_nodes, num_nodes))
         basis_elements = coil_part.basis_elements  # Num vertices
-        for edge_ind in range(mesh_edges_non_unique.shape[0]):
-            node_ind1 = mesh_edges_non_unique[edge_ind, 0]
-            node_ind2 = mesh_edges_non_unique[edge_ind, 1]
+        for edge_ind in range(mesh_edges_non_unique.shape[1]):
+            node_ind1 = mesh_edges_non_unique[0, edge_ind]
+            node_ind2 = mesh_edges_non_unique[1, edge_ind]
             overlapping_triangles = np.intersect1d(
                 basis_elements[node_ind1].triangles, basis_elements[node_ind2].triangles)
             resistance_sum = 0
@@ -84,7 +82,8 @@ def calculate_resistance_matrix(coil_parts: List[CoilPart], input) -> List[CoilP
                     resistance_sum += np.dot(primary_current, secondary_current.T) * (triangle_area)**2
 
                 resistance_matrix[node_ind1, node_ind2] = resistance_sum
-
+                if get_level() > DEBUG_VERBOSE:
+                    log.debug(" resistance_matrix[%d:%d] = %s", node_ind1, node_ind2, resistance_sum)
         resistance_matrix += resistance_matrix.T
         resistance_matrix *= material_factor
 
