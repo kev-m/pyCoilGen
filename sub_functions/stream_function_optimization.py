@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import minimize
 
 from typing import List
 
@@ -8,10 +9,14 @@ import logging
 # Local imports
 from sub_functions.data_structures import DataStructure, CoilPart
 
+# TODO: DEBUGGING: Remove this!
+from helpers.visualisation import compare, compare_contains
+
+
 log = logging.getLogger(__name__)
 
 
-def stream_function_optimization(coil_parts: List[CoilPart], target_field, input):
+def stream_function_optimization(coil_parts: List[CoilPart], target_field, input, debug_data):
     """
     Performs stream function optimization on coil parts.
 
@@ -29,8 +34,8 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     tikonov_reg_factor = input.tikonov_reg_factor
 
     # Combine the matrices from the different mesh parts
-    sensitivity_matrix = np.empty(len(coil_parts), dtype=object)            # MATLAB shape: ???
-    gradient_sensitivity_matrix = np.empty(len(coil_parts), dtype=object)   # MATLAB shape: ???
+    sensitivity_matrix = None            # MATLAB shape: ???
+    gradient_sensitivity_matrix = None   # MATLAB shape: ???
     resistance_matrix = None             # MATLAB shape: ???
     current_density_mat = None           # MATLAB shape: ???
 
@@ -115,30 +120,37 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
 
     combined_mesh.bounding_box = np.array(
         [
-            [np.min(combined_mesh.vertices[0, :]), np.max(combined_mesh.vertices[0, :])],
-            [np.min(combined_mesh.vertices[1, :]), np.max(combined_mesh.vertices[1, :])],
-            [np.min(combined_mesh.vertices[2, :]), np.max(combined_mesh.vertices[2, :])],
+            [np.min(combined_mesh.vertices[:, 0]), np.max(combined_mesh.vertices[:, 0])],
+            [np.min(combined_mesh.vertices[:, 1]), np.max(combined_mesh.vertices[:, 1])],
+            [np.min(combined_mesh.vertices[:, 2]), np.max(combined_mesh.vertices[:, 2])],
         ]
     )
+    log.debug(" - combined_mesh.bounding_box: %s", combined_mesh.bounding_box)
     set_zero_flag = False  # Flag to force the potential on the boundary nodes to zero
 
     # Reduce target field only to z component
+    # MATLAB: sensitivity_matrix_single: 257x264
     sensitivity_matrix_single = sensitivity_matrix[2]
+    # MATLAB: target_field_single: 1x257
     target_field_single = target_field.b[2]
 
     # Reduce the Resistance matrix for boundary nodes
     reduced_res_matrix, _, _ = reduce_matrices_for_boundary_nodes(
         resistance_matrix, combined_mesh, set_zero_flag
     )
+    # MATLAB: 218x218
+    log.debug(" - reduced_res_matrix shape: %s", reduced_res_matrix.shape)
 
     # Reduce the sensitivity matrix for boundary nodes
+    # MATLAB: 
+    #   reduced_sensitivity_matrix: 257 x 218
+    #   is_not_boundary_node: 1x216 (2,4,5,7,9,...)
     reduced_sensitivity_matrix, boundary_nodes, is_not_boundary_node = reduce_matrices_for_boundary_nodes(
         sensitivity_matrix_single, combined_mesh, set_zero_flag
     )
 
     reduced_gradient_sensitivity_matrix_x, _, _ = reduce_matrices_for_boundary_nodes(
-        gradient_sensitivity_matrix[0], combined_mesh, set_zero_flag
-    )
+        gradient_sensitivity_matrix[0], combined_mesh, set_zero_flag)
     reduced_gradient_sensitivity_matrix_y, _, _ = reduce_matrices_for_boundary_nodes(
         gradient_sensitivity_matrix[1], combined_mesh, set_zero_flag
     )
@@ -158,6 +170,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     )
 
     # Scale the tikonov regularization factor with the number of target points and mesh vertices
+    # MATLAB: tikonov_reg_factor = 100 -> 117.8899
     tikonov_reg_factor = tikonov_reg_factor * (
         reduced_sensitivity_matrix.shape[0] / reduced_sensitivity_matrix.shape[1]
     )
@@ -165,6 +178,8 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     if input.sf_opt_method == "tikkonov":
         # Calculate the stream function by the tikonov optimization approach
         tik_reg_mat = tikonov_reg_factor * reduced_res_matrix
+        # MATLAB: 218 x 218
+        log.debug(" -- tik_reg_mat shape: %s", tik_reg_mat.shape)
         reduced_sf = np.linalg.pinv(
             reduced_sensitivity_matrix.T
             @ reduced_sensitivity_matrix
@@ -172,6 +187,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
             @ tik_reg_mat
         ) @ reduced_sensitivity_matrix.T @ target_field_single
     else:
+        # NOTE: Untested
         # For initialization, calculate the tikkonov solution; then do an iterative optimization
         tik_reg_mat = tikonov_reg_factor * reduced_res_matrix
         reduced_sf = np.linalg.pinv(
@@ -191,24 +207,37 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
                 (reduced_sensitivity_matrix @ x - target_field_single) ** 2
             ) + tikonov_reg_factor * (x.T @ reduced_res_matrix @ x)
 
-        options = {"disp": True, "algorithm": "sqp"}
-        options["MaxIterations"] = input.fmincon_parameter[0]
-        options["MaxFunctionEvaluations"] = input.fmincon_parameter[1]
-        options["OptimalityTolerance"] = input.fmincon_parameter[2]
-        options["ConstraintTolerance"] = input.fmincon_parameter[3]
-        options["StepTolerance"] = input.fmincon_parameter[4]
-        reduced_sf = fmincon(
-            cost_function,
-            reduced_sf,
-            [],
-            [],
-            [],
-            [],
-            lb,
-            ub,
-            [],
-            options=options,
-        )
+        # Define the bounds
+        bounds = [(lb[i], ub[i]) for i in range(len(lb))]
+
+        # Define the options
+        options = {'disp': True, 'maxiter': input.fmincon_parameter[0], 'maxfev': input.fmincon_parameter[1],
+                   'gtol': input.fmincon_parameter[2], 'tol': input.fmincon_parameter[3]}
+
+        # Perform the optimization
+        result = minimize(cost_function, reduced_sf, method='SLSQP', bounds=bounds, options=options)
+        reduced_sf = result.x
+
+
+    #####################################################
+    # DEVELOPMENT: Remove this
+    # DEBUG: Load MATLAB data for comparison
+    # Examine values in debug_data.expand
+    #   values.reduced_sf = reduced_sf;
+    #   values.boundary_nodes = boundary_nodes;
+    #   values.is_not_boundary_node = is_not_boundary_node;
+    #   values.sf1 = sf;
+    #   values.sf2 = sf;
+
+    m_reduced_sf = debug_data.expand.reduced_sf
+    log.debug(" -- m_reduced_sf shape: %s", m_reduced_sf.shape)
+    log.debug(" -- reduced_sf shape: %s", reduced_sf.shape)
+
+    assert compare(reduced_sf, m_reduced_sf) # Pass
+
+    #
+    #####################################################
+
 
     # Reexpand the stream potential to the boundary nodes
     opt_stream_func = reexpand_stream_function_for_boundary_nodes(
@@ -223,7 +252,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
             sensitivity_matrix[1] @ opt_stream_func,
             sensitivity_matrix[2] @ opt_stream_func,
         ],
-        axis=1,
+        axis=0,
     )
 
     # Separate the optimized stream function again onto the different mesh parts
@@ -264,8 +293,9 @@ def reduce_matrices_for_boundary_nodes(full_mat, coil_mesh, set_zero_flag):
         is_not_boundary_node: Non-boundary nodes.
     """
 
-    num_nodes = coil_mesh.vertices.shape[1]
-    dim_to_reduce = full_mat.shape == (num_nodes, num_nodes)
+    num_nodes = coil_mesh.vertices.shape[0]
+    # MATLAB: 1, 1
+    dim_to_reduce = [ x == num_nodes for x in full_mat.shape]
     num_boundaries = len(coil_mesh.boundary)
     num_nodes_per_boundary = np.array(
         [len(np.unique(coil_mesh.boundary[x])) for x in range(num_boundaries)]
@@ -279,29 +309,51 @@ def reduce_matrices_for_boundary_nodes(full_mat, coil_mesh, set_zero_flag):
     ]
     reduced_mat = full_mat.copy()
 
-    if np.sum(dim_to_reduce == 1) != 0:
+    if np.any(dim_to_reduce):
         for dim_to_reduce_ind in np.where(dim_to_reduce)[0]:
             for boundary_ind in range(num_boundaries):
                 if set_zero_flag:
                     reduced_mat[boundary_nodes[boundary_ind], :] = 0
                 else:
-                    reduced_mat[boundary_nodes[boundary_ind][0], :] = np.sum(
-                        reduced_mat[boundary_nodes[boundary_ind][:], :], axis=dim_to_reduce_ind
-                    )
+                    Index1 = [slice(None)] * np.ndim(full_mat)
+                    Index1[dim_to_reduce_ind] = boundary_nodes[boundary_ind][0]
+                    Index2 = [slice(None)] * np.ndim(full_mat)
+                    Index2[dim_to_reduce_ind] = boundary_nodes[boundary_ind]#[:-1]
+                    # index 220 is out of bounds for axis 1 with size 218
+                    # index 255 is out of bounds for axis 1 with size 218
+                    reduced_mat[Index1] = np.sum(tuple(reduced_mat[Index2]), axis=dim_to_reduce_ind)
 
-            boundary_nodes_first_inds = [
-                boundary_nodes[x][0] for x in range(num_boundaries)
-            ]
+        # MATLAB: 1, 67
+        boundary_nodes_first_inds = [
+            boundary_nodes[x][0] for x in range(num_boundaries)
+        ]
 
-            for dim_to_reduce_ind in np.where(dim_to_reduce)[0]:
-                prev_reduced_mat = reduced_mat.copy()
-                reduced_mat[:num_boundaries, dim_to_reduce_ind] = prev_reduced_mat[
-                    boundary_nodes_first_inds, dim_to_reduce_ind
-                ]
-                reduced_mat[num_boundaries:, dim_to_reduce_ind] = prev_reduced_mat[
-                    is_not_boundary_node, dim_to_reduce_ind
-                ]
-                reduced_mat = np.delete(reduced_mat, is_not_boundary_node, axis=0)
+        # MATLAB: for dim_to_reduce_ind=find(dim_to_reduce)
+        # [1,2]
+        for dim_to_reduce_ind in np.where(dim_to_reduce)[0]:
+            prev_reduced_mat = reduced_mat.copy()
+            Index1 = [slice(None)] * np.ndim(full_mat) # MATLAB [1 2], [1 2]
+            Index1[dim_to_reduce_ind] = slice(0, num_boundaries)  # The first entries are substitutes for the boundaries
+            Index2 = [slice(None)] * np.ndim(full_mat) # MATLAB [1 67], [1 67]
+            Index2[dim_to_reduce_ind] = boundary_nodes_first_inds  # Indices of the first nodes of the boundaries
+            Index3 = [slice(None)] * np.ndim(full_mat) # MATLAB 1x216: [3	4	5	6	7   8 ... 218], [ 3 .. 218]
+            Index3[dim_to_reduce_ind] = slice(num_boundaries, len(is_not_boundary_node) + num_boundaries)  # Indices of the non-boundary nodes
+            Index4 = [slice(None)] * np.ndim(full_mat) # MATLAB 1x216: [2	4	5	7	9	10 ... 261], [2 .. 261]
+            Index4[dim_to_reduce_ind] = is_not_boundary_node  # Old non-boundary nodes
+            Index5 = [slice(None)] * np.ndim(full_mat) # MATLAB: 1x46: [219	220	221	222	223 ... 264], [219 .. 264]
+            Index5[dim_to_reduce_ind] = slice(num_nodes - (sum(num_nodes_per_boundary) - num_boundaries), num_nodes)  # Entries to be deleted
+            reduced_mat[tuple(Index1)] = prev_reduced_mat[tuple(Index2)]
+            reduced_mat[tuple(Index3)] = prev_reduced_mat[tuple(Index4)] # could not broadcast input array from shape (216,264) into shape (215,264)
+            reduced_mat = np.delete(reduced_mat, Index5[dim_to_reduce_ind], axis=dim_to_reduce_ind)
+        
+            # MATLAB: 218, 264 -> 218x218
+            log.debug( " -- %d reduced_mat.shape: %s", dim_to_reduce_ind, reduced_mat.shape)
+
+    #######################################
+    # MATLAB
+    #
+    #
+    #######################################
 
     return reduced_mat, boundary_nodes, is_not_boundary_node
 
@@ -325,6 +377,12 @@ def reexpand_stream_function_for_boundary_nodes(reduced_sf, boundary_nodes, is_n
         len(is_not_boundary_node) + sum(len(boundary_nodes[x]) for x in range(len(boundary_nodes))),
         dtype=reduced_sf.dtype,
     )
+
+    #######################################
+    # MATLAB
+    #
+    #
+    #######################################
 
     # Assign the stream function values for the boundary nodes
     for boundary_ind in range(len(boundary_nodes)):
