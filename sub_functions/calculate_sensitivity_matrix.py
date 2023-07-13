@@ -39,20 +39,22 @@ def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input
         sensitivity_matrix = np.zeros((3, num_target_points, num_nodes))
 
         for node_ind in range(num_nodes):
+            basis_element = coil_part.basis_elements[node_ind]
+
             dCx = np.zeros(num_target_points)
             dCy = np.zeros(num_target_points)
             dCz = np.zeros(num_target_points)
 
-            for tri_ind in range(len(coil_part.basis_elements[node_ind].area)):
-                node_point = coil_part.basis_elements[node_ind].triangle_points_ABC[tri_ind, :, 0]
-                point_b = coil_part.basis_elements[node_ind].triangle_points_ABC[tri_ind, :, 1]
-                point_c = coil_part.basis_elements[node_ind].triangle_points_ABC[tri_ind, :, 2]
+            for tri_ind in range(len(basis_element.area)):
+                node_point = basis_element.triangle_points_ABC[tri_ind, 0, :]
+                point_b = basis_element.triangle_points_ABC[tri_ind, 1, :]
+                point_c = basis_element.triangle_points_ABC[tri_ind, 2, :]
 
                 x1, y1, z1 = node_point
                 x2, y2, z2 = point_b
                 x3, y3, z3 = point_c
 
-                vx, vy, vz = coil_part.basis_elements[node_ind].current[tri_ind]
+                vx, vy, vz = basis_element.current[tri_ind]
 
                 for gauss_ind in range(num_gauss_points):
                     xgauss_in_uv = x1 * u_coord[gauss_ind] + x2 * v_coord[gauss_ind] + x3 * (1 - u_coord[gauss_ind] - v_coord[gauss_ind])
@@ -61,9 +63,9 @@ def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input
 
                     distance_norm = ((xgauss_in_uv - target_points[0])**2 + (ygauss_in_uv - target_points[1])**2 + (zgauss_in_uv - target_points[2])**2)**(-3/2)
 
-                    dCx += ((-1) * vz * (target_points[1] - ygauss_in_uv) + vy * (target_points[2] - zgauss_in_uv)) * distance_norm * 2 * coil_part.basis_elements[node_ind].area[tri_ind] * gauss_weight[gauss_ind]
-                    dCy += ((-1) * vx * (target_points[2] - zgauss_in_uv) + vz * (target_points[0] - xgauss_in_uv)) * distance_norm * 2 * coil_part.basis_elements[node_ind].area[tri_ind] * gauss_weight[gauss_ind]
-                    dCz += ((-1) * vy * (target_points[0] - xgauss_in_uv) + vx * (target_points[1] - ygauss_in_uv)) * distance_norm * 2 * coil_part.basis_elements[node_ind].area[tri_ind] * gauss_weight[gauss_ind]
+                    dCx += ((-1) * vz * (target_points[1] - ygauss_in_uv) + vy * (target_points[2] - zgauss_in_uv)) * distance_norm * 2 * basis_element.area[tri_ind] * gauss_weight[gauss_ind]
+                    dCy += ((-1) * vx * (target_points[2] - zgauss_in_uv) + vz * (target_points[0] - xgauss_in_uv)) * distance_norm * 2 * basis_element.area[tri_ind] * gauss_weight[gauss_ind]
+                    dCz += ((-1) * vy * (target_points[0] - xgauss_in_uv) + vx * (target_points[1] - ygauss_in_uv)) * distance_norm * 2 * basis_element.area[tri_ind] * gauss_weight[gauss_ind]
 
             sensitivity_matrix[:, :, node_ind] = np.array([dCx, dCy, dCz]) * biot_savart_coeff
 
