@@ -8,6 +8,7 @@ import logging
 
 # Local imports
 from sub_functions.data_structures import DataStructure, CoilPart
+from sub_functions.constants import get_level, DEBUG_VERBOSE
 
 # TODO: DEBUGGING: Remove this!
 from helpers.visualisation import compare, compare_contains
@@ -40,18 +41,19 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     current_density_mat = None           # MATLAB shape: ???
 
     for part_ind in range(len(coil_parts)):
+        coil_part = coil_parts[part_ind]
         if part_ind == 0:
-            resistance_matrix = coil_parts[part_ind].resistance_matrix
-            current_density_mat = coil_parts[part_ind].current_density_mat  # 264 x 480 x 3
+            resistance_matrix = coil_part.resistance_matrix
+            current_density_mat = coil_part.current_density_mat  # 264 x 480 x 3
             # 3 (xyz) x 257 (target field) x 264 (num vertices)
-            sensitivity_matrix = coil_parts[part_ind].sensitivity_matrix
+            sensitivity_matrix = coil_part.sensitivity_matrix
             gradient_sensitivity_matrix = sensitivity_matrix
         else:
             # Untested
             resistance_matrix = np.block(
                 [
                     [resistance_matrix],
-                    [coil_parts[part_ind].resistance_matrix],
+                    [coil_part.resistance_matrix],
                 ]
             )
             current_density_mat = np.concatenate(
@@ -59,26 +61,26 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
                     np.block(
                         [
                             current_density_mat[:, :, 0],
-                            coil_parts[part_ind].current_density_mat[:, :, 0],
+                            coil_part.current_density_mat[:, :, 0],
                         ]
                     ),
                     np.block(
                         [
                             current_density_mat[:, :, 1],
-                            coil_parts[part_ind].current_density_mat[:, :, 1],
+                            coil_part.current_density_mat[:, :, 1],
                         ]
                     ),
                     np.block(
                         [
                             current_density_mat[:, :, 2],
-                            coil_parts[part_ind].current_density_mat[:, :, 2],
+                            coil_part.current_density_mat[:, :, 2],
                         ]
                     ),
                 ],
                 axis=2,
             )
-            sensitivity_matrix.append(coil_parts[part_ind].sensitivity_matrix)
-            gradient_sensitivity_matrix.append(coil_parts[part_ind].sensitivity_matrix)
+            sensitivity_matrix.append(coil_part.sensitivity_matrix)
+            gradient_sensitivity_matrix.append(coil_part.sensitivity_matrix)
 
     # Generate a combined mesh container
     c_mesh = coil_parts[0].coil_mesh
@@ -89,33 +91,34 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     combined_mesh.boundary = c_mesh.boundary
 
     for part_ind in range(1, len(coil_parts)):
+        coil_part = coil_parts[part_ind]
         combined_mesh.faces = np.concatenate(
-            [combined_mesh.faces, coil_parts[part_ind].coil_mesh.faces + combined_mesh.vertices.shape[1]], axis=1
+            [combined_mesh.faces, coil_part.coil_mesh.faces + combined_mesh.vertices.shape[1]], axis=1
         )
         combined_mesh.n = np.concatenate(
-            [combined_mesh.n, coil_parts[part_ind].coil_mesh.n], axis=1
+            [combined_mesh.n, coil_part.coil_mesh.n], axis=1
         )
         combined_mesh.uv = np.concatenate(
-            [combined_mesh.uv, coil_parts[part_ind].coil_mesh.uv], axis=1
+            [combined_mesh.uv, coil_part.coil_mesh.uv], axis=1
         )
         combined_mesh.mesh_part_vertex_ind = np.concatenate(
             [
                 combined_mesh.mesh_part_vertex_ind,
                 np.ones(
-                    (1, coil_parts[part_ind].coil_mesh.vertices.shape[0])
+                    (1, coil_part.coil_mesh.vertices.shape[0])
                 ) * part_ind,
             ],
             axis=1,
         )
 
-        for boundary_ind in range(len(coil_parts[part_ind].coil_mesh.boundary)):
+        for boundary_ind in range(len(coil_part.coil_mesh.boundary)):
             combined_mesh.boundary.append(
-                coil_parts[part_ind].coil_mesh.boundary[boundary_ind]
+                coil_part.coil_mesh.boundary[boundary_ind]
                 + combined_mesh.vertices.shape[1]
             )
 
         combined_mesh.vertices = np.concatenate(
-            [combined_mesh.vertices, coil_parts[part_ind].coil_mesh.vertices], axis=1
+            [combined_mesh.vertices, coil_part.coil_mesh.vertices], axis=1
         )
 
     combined_mesh.bounding_box = np.array(
@@ -125,26 +128,22 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
             [np.min(combined_mesh.vertices[:, 2]), np.max(combined_mesh.vertices[:, 2])],
         ]
     )
-    log.debug(" - combined_mesh.bounding_box: %s", combined_mesh.bounding_box)
+    if get_level() >= DEBUG_VERBOSE:
+        log.debug(" - combined_mesh.bounding_box: %s", combined_mesh.bounding_box)
     set_zero_flag = False  # Flag to force the potential on the boundary nodes to zero
 
     # Reduce target field only to z component
-    # MATLAB: sensitivity_matrix_single: 257x264
     sensitivity_matrix_single = sensitivity_matrix[2]
-    # MATLAB: target_field_single: 1x257
     target_field_single = target_field.b[2]
 
     # Reduce the Resistance matrix for boundary nodes
     reduced_res_matrix, _, _ = reduce_matrices_for_boundary_nodes(
         resistance_matrix, combined_mesh, set_zero_flag
     )
-    # MATLAB: 218x218
-    log.debug(" - reduced_res_matrix shape: %s", reduced_res_matrix.shape)
+    if get_level() >= DEBUG_VERBOSE:
+        log.debug(" - reduced_res_matrix shape: %s", reduced_res_matrix.shape)
 
     # Reduce the sensitivity matrix for boundary nodes
-    # MATLAB: 
-    #   reduced_sensitivity_matrix: 257 x 218
-    #   is_not_boundary_node: 1x216 (2,4,5,7,9,...)
     reduced_sensitivity_matrix, boundary_nodes, is_not_boundary_node = reduce_matrices_for_boundary_nodes(
         sensitivity_matrix_single, combined_mesh, set_zero_flag
     )
@@ -232,9 +231,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     m_reduced_sf = debug_data.expand.reduced_sf
     log.debug(" -- m_reduced_sf shape: %s", m_reduced_sf.shape)
     log.debug(" -- reduced_sf shape: %s", reduced_sf.shape)
-
     assert compare(reduced_sf, m_reduced_sf) # Pass
-
     #
     #####################################################
 
@@ -244,6 +241,16 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         reduced_sf, boundary_nodes, is_not_boundary_node, set_zero_flag
     )
     combined_mesh.stream_function = opt_stream_func
+
+    #####################################################
+    # DEVELOPMENT: Remove this
+    # DEBUG: Load MATLAB data for comparison
+    # Examine values in debug_data.expand
+    m_opt_stream_func = debug_data.expand.sf2
+    assert compare(opt_stream_func, m_opt_stream_func) # Pass
+    #
+    #####################################################
+
 
     # Calculate the magnetic field generated by the optimized stream function
     b_field_opt_sf = np.concatenate(
@@ -257,20 +264,21 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
 
     # Separate the optimized stream function again onto the different mesh parts
     for part_ind in range(len(coil_parts)):
-        coil_parts[part_ind].stream_function = opt_stream_func[
+        coil_part = coil_part
+        coil_part.stream_function = opt_stream_func[
             combined_mesh.mesh_part_vertex_ind == (part_ind + 1)
         ]
-        jx = coil_parts[part_ind].stream_function @ coil_parts[
+        jx = coil_part.stream_function @ coil_parts[
             part_ind
         ].current_density_mat[:, :, 0]
-        jy = coil_parts[part_ind].stream_function @ coil_parts[
+        jy = coil_part.stream_function @ coil_parts[
             part_ind
         ].current_density_mat[:, :, 1]
-        jz = coil_parts[part_ind].stream_function @ coil_parts[
+        jz = coil_part.stream_function @ coil_parts[
             part_ind
         ].current_density_mat[:, :, 2]
 
-        coil_parts[part_ind].current_density = np.concatenate(
+        coil_part.current_density = np.concatenate(
             [jx, jy, jz], axis=1
         )
 
@@ -347,13 +355,8 @@ def reduce_matrices_for_boundary_nodes(full_mat, coil_mesh, set_zero_flag):
             reduced_mat = np.delete(reduced_mat, Index5[dim_to_reduce_ind], axis=dim_to_reduce_ind)
         
             # MATLAB: 218, 264 -> 218x218
-            log.debug( " -- %d reduced_mat.shape: %s", dim_to_reduce_ind, reduced_mat.shape)
-
-    #######################################
-    # MATLAB
-    #
-    #
-    #######################################
+            if get_level() > DEBUG_VERBOSE:
+                log.debug( " -- %d reduced_mat.shape: %s", dim_to_reduce_ind, reduced_mat.shape)
 
     return reduced_mat, boundary_nodes, is_not_boundary_node
 
