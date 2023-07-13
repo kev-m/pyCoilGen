@@ -340,7 +340,7 @@ def CoilGen(log, input=None):
         log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  #  (3, 257, 264)
         log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.gradient_sensitivity_matrix.shape)  # (3, 257, 264)
 
-        assert (compare(c_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix)) # ???
+        assert (compare(c_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix)) # Pass
         #
         #####################################################
 
@@ -359,7 +359,7 @@ def CoilGen(log, input=None):
         log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.resistance_matrix.shape)  # (264, 264)
 
         assert (compare(c_part.node_adjacency_mat, m_node_adjacency_mat)) # Pass
-        assert (compare(c_part.resistance_matrix, m_resistance_matrix)) # Fail
+        assert (compare(c_part.resistance_matrix, m_resistance_matrix)) # Pass
         #
         #####################################################
 
@@ -367,10 +367,8 @@ def CoilGen(log, input=None):
         # DEVELOPMENT: Remove this
         # DEBUG: Load MATLAB data for comparison
         mat_contents1 = load_matlab('debug/ygradient_coil_reduce')
-        log.debug(" keys: %s", mat_contents1.keys())
         matlab_data1 = mat_contents1['values']
         mat_contents2 = load_matlab('debug/ygradient_coil_reexpand')
-        log.debug(" keys: %s", mat_contents2.keys())
         matlab_data2 = mat_contents2['values']
         debug_data = DataStructure(reduce=matlab_data1, expand=matlab_data2)
         #
