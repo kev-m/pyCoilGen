@@ -382,17 +382,28 @@ def CoilGen(log, input=None):
         #####################################################
         # DEVELOPMENT: Remove this
         # DEBUG
-        # Verify: c_part.current_density, b_field_opt_sf, 
+        # Verify: combined_mesh.stream_function, c_part.current_density, c_part.stream_function, b_field_opt_sf, 
         m_current_density = m_c_part.current_density
-        m_combined_mesh = get_and_show_debug(matlab_data, 'combined_mesh')
+        m_combined_mesh = get_and_show_debug(matlab_data, 'out.combined_mesh')
         m_sf_b_field = get_and_show_debug(matlab_data, 'out.b_field_opt_sf')
+        m_cm_stream_function = m_combined_mesh.stream_function
+        m_cp_stream_function = m_c_part.stream_function
+
+        log.debug(" -- m_current_density shape: %s", m_current_density.shape)  #  (3 x 480)
+        log.debug(" -- m_sf_b_field shape: %s", m_sf_b_field.shape)  #  (257 x 3)
+        log.debug(" -- m_cm_stream_function shape: %s", m_cm_stream_function.shape)  #  (264,)
+        log.debug(" -- m_cp_stream_function shape: %s", m_cp_stream_function.shape)  #  (264,)
 
 
-        log.debug(" -- m_current_density shape: %s", m_current_density.shape)  #  (??)
-        log.debug(" -- c_part.current_density shape: %s", c_part.current_density.shape)  # (??)
+        log.debug(" -- c_part.current_density shape: %s", c_part.current_density.shape)  # (3 x 480)
+        log.debug(" -- sf_b_field shape: %s", sf_b_field.shape)  #  (771,) !!!
+        log.debug(" -- combined_mesh.stream_function shape: %s", combined_mesh.stream_function.shape)  #  (264,)
+        log.debug(" -- c_part.stream_function shape: %s", c_part.stream_function.shape)  #  (264,)
 
         assert (compare(c_part.current_density, m_current_density)) # ??
         assert (compare(sf_b_field, m_sf_b_field)) # ??
+        assert (compare(combined_mesh.stream_function, m_cm_stream_function)) # ??
+        assert (compare(c_part.stream_function, m_cp_stream_function)) # ??
         #
         #####################################################
 
