@@ -30,8 +30,8 @@ from sub_functions.calculate_sensitivity_matrix import calculate_sensitivity_mat
 from sub_functions.calculate_gradient_sensitivity_matrix import calculate_gradient_sensitivity_matrix
 from sub_functions.calculate_resistance_matrix import calculate_resistance_matrix
 from sub_functions.stream_function_optimization import stream_function_optimization
+from sub_functions.calc_potential_levels import calc_potential_levels
 """
-from calc_potential_levels import calc_potential_levels
 from calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 from process_raw_loops import process_raw_loops
 from find_minimal_contour_distance import find_minimal_contour_distance
@@ -86,6 +86,7 @@ def CoilGen(log, input=None):
         log.debug("mat_contents: %s", mat_contents.keys())
         matlab_data = mat_contents['coil_layouts']
 
+    m_out = get_element_by_name(matlab_data, 'out')
     m_faces = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.faces')-1
     m_vertices = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.vertices')
     log.debug(" m_faces shape: %s", m_faces.shape)
@@ -384,21 +385,18 @@ def CoilGen(log, input=None):
 
 
         log.debug(" -- c_part.current_density shape: %s", c_part.current_density.shape)  # (3 x 480)
-        log.debug(" -- sf_b_field shape: %s", sf_b_field.shape)  #  (771,) !!!
+        log.debug(" -- sf_b_field shape: %s", sf_b_field.shape)  #  (257 x 3) !!!
         log.debug(" -- combined_mesh.stream_function shape: %s", combined_mesh.stream_function.shape)  #  (264,)
         log.debug(" -- c_part.stream_function shape: %s", c_part.stream_function.shape)  #  (264,)
 
-        assert (compare(c_part.current_density, m_current_density)) # ??
-        assert (compare(sf_b_field, m_sf_b_field)) # ??
-        assert (compare(combined_mesh.stream_function, m_cm_stream_function)) # ??
-        assert (compare(c_part.stream_function, m_cp_stream_function)) # ??
+        assert (compare(c_part.current_density, m_current_density)) # Pass
+        assert (compare(sf_b_field, m_sf_b_field)) # Pass
+        assert (compare(combined_mesh.stream_function, m_cm_stream_function)) # Pass
+        assert (compare(c_part.stream_function, m_cp_stream_function)) # Pass
         #
         #####################################################
 
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
 
     else:
         # Load the preoptimized data
@@ -412,6 +410,29 @@ def CoilGen(log, input=None):
     # Calculate the potential levels for the discretization
     print('Calculate the potential levels for the discretization:')
     coil_parts, primary_surface_ind = calc_potential_levels(coil_parts, combined_mesh, input_args)
+
+
+    #####################################################
+    # DEVELOPMENT: Remove this
+    # DEBUG
+    # Verify: primary_surface_ind, c_part.potential_level_list
+    m_primary_surface_ind = m_out.primary_surface - 1 # -1 because MATLAB uses 1-based indexing
+    m_cp_potential_level_list = m_c_part.potential_level_list
+
+    log.debug(" -- m_primary_surface_ind: %d", m_primary_surface_ind)  #  (1)
+    log.debug(" -- m_cp_potential_level_list shape: %s", m_cp_potential_level_list.shape)  #  (20,)
+
+    log.debug(" -- primary_surface_ind: %d", primary_surface_ind)  #  (1)
+    log.debug(" -- c_part.potential_level_list shape: %s", c_part.potential_level_list.shape)  #  (20)
+
+    assert (primary_surface_ind == m_primary_surface_ind) # Pass
+    assert (compare(c_part.potential_level_list, m_cp_potential_level_list)) # Pass
+    #
+    #####################################################
+
+    # WIP
+    solution.coil_parts = coil_parts
+    return solution
 
     # Generate the contours
     print('Generate the contours:')
