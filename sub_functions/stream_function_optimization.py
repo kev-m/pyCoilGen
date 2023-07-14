@@ -245,9 +245,8 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
             part_ind
         ].current_density_mat[:, :, 2]
 
-        # MATLAB:  (xyz) x (num faces)
-        # TODO: Should this be transposed, for Python, or left in MATLAB shape? Depends on later usage...
-        coil_part.current_density = np.vstack((jx, jy, jz))
+        # MATLAB:  (xyz) x (num faces) -> Transposing to match Python
+        coil_part.current_density = np.vstack((jx, jy, jz)).T
 
     return coil_parts, combined_mesh, b_field_opt_sf
 
