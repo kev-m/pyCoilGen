@@ -199,6 +199,6 @@ if __name__ == "__main__":
     #log.debug(" -- b: %s", b)
 
     # 2. Extract input parameters structure
-    print_config(x_channel)
+    ## print_config(x_channel)
 
     # 3. Call CoilGen code with equivalent input parameters
