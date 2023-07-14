@@ -1,8 +1,17 @@
 import numpy as np
-from scipy.spatial import Delaunay
+
+from typing import List
+
+# Logging
+import logging
+
+# Local imports
+from sub_functions.data_structures import CoilPart
+
+log = logging.getLogger(__name__)
 
 
-def calc_contours_by_triangular_potential_cuts(coil_parts):
+def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
     """
     Center the stream function potential around zero and add zeros around the periphery.
 
