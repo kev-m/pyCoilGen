@@ -1,6 +1,16 @@
 import numpy as np
 
-def calc_potential_levels(coil_parts, combined_mesh, input):
+from typing import List
+
+# Logging
+import logging
+
+# Local imports
+from sub_functions.data_structures import CoilPart
+
+log = logging.getLogger(__name__)
+
+def calc_potential_levels(coil_parts: List[CoilPart], combined_mesh, input):
     """
     Calculate the potential levels for different coil parts based on the stream function values.
     
