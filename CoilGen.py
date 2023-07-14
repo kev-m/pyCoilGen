@@ -31,8 +31,8 @@ from sub_functions.calculate_gradient_sensitivity_matrix import calculate_gradie
 from sub_functions.calculate_resistance_matrix import calculate_resistance_matrix
 from sub_functions.stream_function_optimization import stream_function_optimization
 from sub_functions.calc_potential_levels import calc_potential_levels
+from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 """
-from calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 from process_raw_loops import process_raw_loops
 from find_minimal_contour_distance import find_minimal_contour_distance
 from topological_loop_grouping import topological_loop_grouping
@@ -372,7 +372,7 @@ def CoilGen(log, input=None):
         # DEVELOPMENT: Remove this
         # DEBUG
         # Verify: combined_mesh.stream_function, c_part.current_density, c_part.stream_function, b_field_opt_sf, 
-        m_current_density = m_c_part.current_density
+        m_current_density = m_c_part.current_density.T
         m_combined_mesh = get_and_show_debug(matlab_data, 'out.combined_mesh')
         m_sf_b_field = get_and_show_debug(matlab_data, 'out.b_field_opt_sf')
         m_cm_stream_function = m_combined_mesh.stream_function
