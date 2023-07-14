@@ -363,21 +363,9 @@ def CoilGen(log, input=None):
         #
         #####################################################
 
-        #####################################################
-        # DEVELOPMENT: Remove this
-        # DEBUG: Load MATLAB data for comparison
-        mat_contents1 = load_matlab('debug/ygradient_coil_reduce')
-        matlab_data1 = mat_contents1['values']
-        mat_contents2 = load_matlab('debug/ygradient_coil_reexpand')
-        matlab_data2 = mat_contents2['values']
-        debug_data = DataStructure(reduce=matlab_data1, expand=matlab_data2)
-        #
-        #####################################################
-
-
         # Optimize the stream function toward target field and further constraints
         print('Optimize the stream function toward target field and secondary constraints:')
-        coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args, debug_data)
+        coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)
 
         #####################################################
         # DEVELOPMENT: Remove this

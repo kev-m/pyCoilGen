@@ -14,7 +14,7 @@ from sub_functions.constants import get_level, DEBUG_VERBOSE
 log = logging.getLogger(__name__)
 
 
-def stream_function_optimization(coil_parts: List[CoilPart], target_field, input, debug_data):
+def stream_function_optimization(coil_parts: List[CoilPart], target_field, input):
     """
     Performs stream function optimization on coil parts.
 
