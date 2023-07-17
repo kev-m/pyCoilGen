@@ -37,7 +37,7 @@ if __name__ == "__main__":
         'interconnection_cut_width': 0.05,
         # the length for which overlapping return paths will be shifted along the surface normals; in meter
         'normal_shift_length': 0.01,
-        'iteration_num_mesh_refinement': 1,  # the number of refinements for the mesh;
+        'iteration_num_mesh_refinement': 0,  # the number of refinements for the mesh;
         'set_roi_into_mesh_center': True,
         'force_cut_selection': ['high'],
         # Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
