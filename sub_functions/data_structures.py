@@ -1,6 +1,7 @@
 # System imports
 from typing import List, Tuple
 import numpy as np
+from dataclasses import dataclass
 
 # Mesh implementation
 import trimesh
@@ -9,7 +10,6 @@ import trimesh
 import logging
 
 # Local imports
-from dataclasses import dataclass
 from sub_functions.constants import *
 
 log = logging.getLogger(__name__)
