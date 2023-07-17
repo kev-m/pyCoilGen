@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import List
 import numpy as np
 
@@ -15,20 +16,26 @@ log = logging.getLogger(__name__)
 ###########################################################
 # TODO: DEVELOPMENT: Move these to DataStructures
 
-from dataclasses import dataclass
 
+@dataclass
+class Loop:
+    loop = None
+
+
+@dataclass
 # Define the structure for unarranged loops
-@dataclass
 class UnarrangedLoop:
-        edge_inds = None
-        uv = None
+    edge_inds = None
+    uv = None
 
-# Define the structure for unsorted points
+
 @dataclass
+# Define the structure for unsorted points
 class UnsortedPoints:
-        potential = None
-        edge_ind = None
-        uv = None
+    potential = None
+    edge_ind = None
+    uv = None
+
 
 @dataclass
 class RawPart:
@@ -37,8 +44,11 @@ class RawPart:
 #
 ##########################################################
 
+
+# ChatGPT error, create this function
 def numel(x):
     return len(x)
+
 
 def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
     """
@@ -91,6 +101,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # [4,2,10]	[4,3,2]
         # [7,2,8]	[2,7,9]
         # [1,8,2]	[7,2,8]
+        # NOTE: Vertix arrays order is reversed compared to MATLAB: [0,1,2] [0,7,1]	vs [1,8,2]	[1,2,3]
         edge_attached_triangles = np.empty((num_edges, 2, 3), dtype=int)
         for index, edges in enumerate(edge_faces):
             edge_attached_triangles[index] = np.array((part_faces[edges[0]], part_faces[edges[1]]))
@@ -108,13 +119,13 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # 1	7
         # 7	10
         # . .
+        # NOTE: Index order is reversed compared to MATLAB
         edge_opposed_nodes = np.zeros_like(edge_nodes)
         for x_ind in range(edge_nodes.shape[0]):
             edge_opposed_nodes[x_ind, 0] = np.setdiff1d(edge_attached_triangles[x_ind, 0], edge_nodes[x_ind])
             edge_opposed_nodes[x_ind, 1] = np.setdiff1d(edge_attached_triangles[x_ind, 1], edge_nodes[x_ind])
 
         log.debug(" -- edge_opposed_nodes shape: %s, max(%d)", edge_opposed_nodes.shape, np.max(edge_opposed_nodes))
-        log.debug(" ---- here ---")
 
         # Test for all edges whether they cut one of the potential levels
         rep_contour_level_list = np.tile(part.potential_level_list, (edge_nodes.shape[0], 1))
@@ -162,11 +173,19 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
         # End of Part 1
 
+        ###############################################################################
+        # TODO: Verify: potential_cut_criteria, potential_sorted_cut_points
+
+        #
+        ###############################################################################
+
         # Start of Part 2
         # Create the unsorted points structure
         empty_potential_groups = [potential_sorted_cut_points[i] == [] for i in range(len(potential_sorted_cut_points))]
-        part.raw.unsorted_points = [UnsortedPoints() for _ in range(sum(~empty_potential_groups))]
-        part.raw.unarranged_loops = [UnarrangedLoop() for _ in range(sum(~empty_potential_groups))]
+        part.raw = RawPart()
+        num_false = len(empty_potential_groups) - sum(empty_potential_groups)
+        part.raw.unsorted_points = [UnsortedPoints() for _ in range(num_false)]
+        part.raw.unarranged_loops = [UnarrangedLoop() for _ in range(num_false)]
         running_ind = 0
 
         for struct_ind in range(len(empty_potential_groups)):
@@ -176,9 +195,10 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 part.raw.unsorted_points[running_ind].uv = potential_sorted_cut_points[struct_ind][:, :2]
                 running_ind += 1
 
+        log.debug(" ---- here ---")
         # Separate loops within potential groups
-        part.raw.unarranged_loops.loop.edge_inds = []
-        part.raw.unarranged_loops.loop.uv = []
+        # part.raw.unarranged_loops.loop.edge_inds = []
+        # part.raw.unarranged_loops.loop.uv = []
 
         # Create loops
         for potential_group in range(len(part.raw.unsorted_points)):
@@ -190,14 +210,16 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             num_build_loops = 0
             edge_already_used = np.zeros(all_current_edges.shape[0], dtype=int)
 
+            group_unarranged_loop = part.raw.unarranged_loops[potential_group]
+
             while not np.all(edge_already_used):
                 if set_new_start:
                     num_build_loops += 1
                     starting_edge = np.min(np.where(edge_already_used == 0)[0])
-                    part.raw.unarranged_loops[potential_group].loop[num_build_loops -
-                                                                    1].uv = [all_current_uv_coords[starting_edge]]
-                    part.raw.unarranged_loops[potential_group].loop[num_build_loops -
-                                                                    1].edge_inds = [all_current_edges[starting_edge]]
+                    loop = UnarrangedLoop()
+                    loop.uv = [all_current_uv_coords[starting_edge]]
+                    loop.edge_inds = [all_current_edges[starting_edge]]
+                    group_unarranged_loop.loop.append(loop)
                     edge_already_used[starting_edge] = 1
                     current_edge = starting_edge
 
@@ -225,10 +247,8 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
                 while next_edge != starting_edge:
                     edge_already_used[next_edge] = 1
-                    part.raw.unarranged_loops[potential_group].loop[num_build_loops -
-                                                                    1].uv.append(all_current_uv_coords[next_edge])
-                    part.raw.unarranged_loops[potential_group].loop[num_build_loops -
-                                                                    1].edge_inds.append(all_current_edges[next_edge])
+                    group_unarranged_loop.loop[num_build_loops - 1].uv.append(all_current_uv_coords[next_edge])
+                    group_unarranged_loop.loop[num_build_loops - 1].edge_inds.append(all_current_edges[next_edge])
                     current_edge = next_edge
 
                     current_edge_nodes = all_current_edges[current_edge]
