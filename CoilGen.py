@@ -1,6 +1,4 @@
 # System imports
-import sys
-from pathlib import Path
 import numpy as np
 
 # Logging
@@ -430,13 +428,13 @@ def CoilGen(log, input=None):
     #
     #####################################################
 
-    # WIP
-    solution.coil_parts = coil_parts
-    return solution
-
     # Generate the contours
     print('Generate the contours:')
     coil_parts = calc_contours_by_triangular_potential_cuts(coil_parts)
+
+    # WIP
+    solution.coil_parts = coil_parts
+    return solution
 
     # Process contours
     print('Process contours: Evaluate loop significance')
