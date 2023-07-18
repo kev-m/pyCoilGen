@@ -31,11 +31,14 @@ class Loop:
     loop = None
 
 
-@dataclass
 # Define the structure for unarranged loops
 class UnarrangedLoop:
-    edge_inds = None
-    uv = None
+    def __init__(self):
+        self.edge_inds = np.size((1,2), dtype=int)
+        self.uv = []
+    
+    def add_edge(self, edge):
+        ....
 
 class UnarrangedLoopContainer:
     loop: List[UnarrangedLoop] = []
@@ -312,9 +315,10 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 if set_new_start:
                     num_build_loops += 1
                     starting_edge = np.min(np.where(edge_already_used == 0)[0])
+
                     loop = UnarrangedLoop()
                     loop.uv = [all_current_uv_coords[starting_edge]]
-                    loop.edge_inds = [all_current_edges[starting_edge]]
+                    loop.edge_inds.append(all_current_edges[starting_edge])
                     group_unarranged_loop.loop.append(loop)
                     edge_already_used[starting_edge] = 1
                     current_edge = starting_edge
@@ -343,8 +347,9 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
                 while next_edge != starting_edge:
                     edge_already_used[next_edge] = 1
-                    group_unarranged_loop.loop[num_build_loops - 1].uv.append(all_current_uv_coords[next_edge])
-                    group_unarranged_loop.loop[num_build_loops - 1].edge_inds.append(all_current_edges[next_edge])
+                    loop_item = group_unarranged_loop.loop[num_build_loops - 1]
+                    loop_item.uv.append(all_current_uv_coords[next_edge])
+                    loop_item.edge_inds.append(all_current_edges[next_edge])
                     current_edge = next_edge
 
                     current_edge_nodes = all_current_edges[current_edge]
@@ -373,6 +378,8 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
         # End of Part 2
 
+        # TODO: Create edge_inds as np.array, not a list.
+
         # Start of Part 3
         # Evaluate current orientation for each loop
         log.debug(" ---- here ---")
@@ -386,6 +393,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             for loop_ind in range(numel(potential_loop.loop)):
                 potential_loop_item = potential_loop.loop[loop_ind]
                 if numel(potential_loop_item.edge_inds) > 2:
+                    # 'list' object has no attribute 'shape'
                     test_edge = int(np.floor(potential_loop_item.edge_inds.shape[0] / 2))
                     first_edge = potential_loop_item.edge_inds[test_edge, :]
                     second_edge = potential_loop_item.edge_inds[test_edge + 1, :]
