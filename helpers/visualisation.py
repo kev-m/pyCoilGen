@@ -7,7 +7,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def compare(instance1, instance2, double_tolerance=1e-10):
+def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True):
     """
     Compare two instances for equality with optional double tolerance.
 
@@ -38,7 +38,7 @@ def compare(instance1, instance2, double_tolerance=1e-10):
                           index, np.shape(instance1[index]), np.shape(instance2[index]))
                 return False
 
-            if not np.allclose(instance1[index], instance2[index], atol=double_tolerance):
+            if not np.allclose(instance1[index], instance2[index], atol=double_tolerance, equal_nan=equal_nan):
                 if isinstance(instance1[index], np.ndarray):
                     log.error(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
                               index, instance1[index][:5], instance2[index][:5])
@@ -52,7 +52,7 @@ def compare(instance1, instance2, double_tolerance=1e-10):
     return False
 
 
-def compare_contains(array1, array2, double_tolerance=1e-10, strict=True):
+def compare_contains(array1, array2, double_tolerance=1e-10, strict=True, equal_nan=True):
     """
     Checks if array1 and array2 are the same shape and contain the same elements, row-wise.
 
@@ -80,7 +80,7 @@ def compare_contains(array1, array2, double_tolerance=1e-10, strict=True):
         # e.g. [0.1, 0.2, 0.3] and [0.3, 0.2, 0.1]
         if not isinstance(array1[0], np.ndarray):
             for value in array1:
-                if np.isclose(array2, value, atol=double_tolerance).any() == False:
+                if np.isclose(array2, value, atol=double_tolerance, equal_nan=equal_nan).any() == False:
                     log.error("Can not find value %s in %s", value, array2)
                     return False
             return True
@@ -95,12 +95,14 @@ def compare_contains(array1, array2, double_tolerance=1e-10, strict=True):
                           index, np.shape(array1[index]), np.shape(array2[index]))
                 return False
 
+        for index in range(array1.shape[0]):
             if strict:
                 found = False
                 item = array1[index]
                 for index2 in range(array2.shape[0]):
-                    if np.allclose(item, array2[index2], atol=double_tolerance):
+                    if np.allclose(item, array2[index2], atol=double_tolerance, equal_nan=equal_nan):
                         found = True
+                        array2 = np.delete(array2, index2, axis=0)
                         break
                 if found == False:
                     log.error(" Can not find value at index [%d] %s:\n %s ... and \n %s ...",
@@ -110,7 +112,7 @@ def compare_contains(array1, array2, double_tolerance=1e-10, strict=True):
                 # Check that every item in arr1 is in arr2
                 found = True
                 for subitem in array1[index]:
-                    if np.isclose(subitem, array2[index], atol=double_tolerance).any() == False:
+                    if np.isclose(subitem, array2[index], atol=double_tolerance, equal_nan=equal_nan).any() == False:
                         found = False
                         break
                 if found == False:
