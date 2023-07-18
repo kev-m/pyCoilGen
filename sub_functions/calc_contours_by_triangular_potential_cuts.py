@@ -14,6 +14,14 @@ import trimesh
 log = logging.getLogger(__name__)
 
 ###########################################################
+# TODO: Debugging - remove this when verified
+from helpers.extraction import load_matlab, print_structure
+from helpers.visualisation import compare, compare_contains
+#
+###########################################################
+
+
+###########################################################
 # TODO: DEVELOPMENT: Move these to DataStructures
 
 
@@ -61,6 +69,43 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         coil_parts (list): Updated list of coil parts.
     """
 
+
+    ###############################################################################
+    # MATLAB comparison data
+    # TODO: Remove this
+    matlab_data = load_matlab('debug/ygradient_coil_calc_contours')
+    data = matlab_data['data']
+    print_structure(data)
+
+    m_edge_nodes1 = data.edge_nodes1 - 1 # Fix base 1 indexing offsets
+    m_edge_nodes2 = data.edge_nodes2 - 1 # Fix base 1 indexing offsets
+    m_edge_attached_triangles_inds = data.edge_attached_triangles_inds
+    m_edge_attached_triangles = data.edge_attached_triangles - 1 # Fix base 1 indexing offsets
+    m_edge_opposed_nodes = data.edge_opposed_nodes - 1 # Fix base 1 indexing offsets
+    m_min_edge_potentials1 = data.min_edge_potentials1
+    m_min_edge_potentials2 = data.min_edge_potentials2
+    m_max_edge_potentials1 = data.max_edge_potentials1
+    m_max_edge_potentials2 = data.max_edge_potentials2
+    m_rep_contour_level_list = data.rep_contour_level_list
+    m_edge_node_potentials = data.edge_node_potentials
+    m_potential_cut_criteria1 = data.potential_cut_criteria1
+    m_potential_cut_criteria2 = data.potential_cut_criteria2
+    m_potential_cut_criteria3 = data.potential_cut_criteria3
+    m_tri_below_pot_step = data.tri_below_pot_step
+    m_tri_above_pot_step = data.tri_above_pot_step
+    m_u_cut_point = data.u_cut_point
+    m_v_cut_point = data.v_cut_point
+    m_u_component_edge_vectors = data.u_component_edge_vectors2
+    m_v_component_edge_vectors = data.v_component_edge_vectors2
+    m_potential_sorted_cut_points = data.potential_sorted_cut_points2
+    log.debug(" -- m_potential_sorted_cut_points.shape: %s", m_potential_sorted_cut_points.shape)
+    #m_unsorted_points = data.unsorted_points # ???
+    #m_unarranged_loops = data.unarranged_loops # ???
+    m_raw = data.raw
+    #
+    ###############################################################################
+
+
     for part_ind in range(len(coil_parts)):
         part = coil_parts[part_ind]
         part_mesh = part.coil_mesh
@@ -104,7 +149,9 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # NOTE: Vertix arrays order is reversed compared to MATLAB: [0,1,2] [0,7,1]	vs [1,8,2]	[1,2,3]
         edge_attached_triangles = np.empty((num_edges, 2, 3), dtype=int)
         for index, edges in enumerate(edge_faces):
-            edge_attached_triangles[index] = np.array((part_faces[edges[0]], part_faces[edges[1]]))
+            # Must swap node indices, to correct index order
+            #edge_attached_triangles[index] = np.array((part_faces[edges[0]], part_faces[edges[1]]))
+            edge_attached_triangles[index] = np.array((part_faces[edges[1]], part_faces[edges[0]]))
 
         # 696,2,3: Max: 263
         log.debug(" -- edge_attached_triangles shape: %s, max(%d)",
@@ -119,7 +166,6 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # 1	7
         # 7	10
         # . .
-        # NOTE: Index order is reversed compared to MATLAB
         edge_opposed_nodes = np.zeros_like(edge_nodes)
         for x_ind in range(edge_nodes.shape[0]):
             edge_opposed_nodes[x_ind, 0] = np.setdiff1d(edge_attached_triangles[x_ind, 0], edge_nodes[x_ind])
@@ -127,13 +173,35 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
         log.debug(" -- edge_opposed_nodes shape: %s, max(%d)", edge_opposed_nodes.shape, np.max(edge_opposed_nodes))
 
+        ###############################################################################
+        # TODO: Verify: edge_nodes, edge_opposed_nodes
+        assert compare_contains(edge_nodes, m_edge_nodes2) # PASS
+        # assert compare_contains(edge_opposed_nodes, m_edge_opposed_nodes) # FAIL: Index 3 is reversed compared to MATLAB index 7
+        #
+        ###############################################################################
+
+
         # Test for all edges whether they cut one of the potential levels
+        num_potentials = len(part.potential_level_list)
         rep_contour_level_list = np.tile(part.potential_level_list, (edge_nodes.shape[0], 1))
         edge_node_potentials = part.stream_function[edge_nodes]
         min_edge_potentials = np.min(edge_node_potentials, axis=1)
         max_edge_potentials = np.max(edge_node_potentials, axis=1)
-        min_edge_potentials = np.tile(min_edge_potentials[:, np.newaxis], (1, len(part.potential_level_list)))
-        max_edge_potentials = np.tile(max_edge_potentials[:, np.newaxis], (1, len(part.potential_level_list)))
+        ###############################################################################
+        # TODO: Verify: min_edge_potentials, max_edge_potentials Part 1
+        assert compare_contains(min_edge_potentials, m_min_edge_potentials1) # PASS
+        assert compare_contains(max_edge_potentials, m_max_edge_potentials1) # PASS
+        #
+        ###############################################################################
+        min_edge_potentials = np.tile(min_edge_potentials[:, np.newaxis], (1, num_potentials))
+        max_edge_potentials = np.tile(max_edge_potentials[:, np.newaxis], (1, num_potentials))
+        ###############################################################################
+        # TODO: Verify: min_edge_potentials, max_edge_potentials Part 2
+        assert compare_contains(min_edge_potentials, m_min_edge_potentials2) # PASS
+        assert compare_contains(max_edge_potentials, m_max_edge_potentials2) # PASS
+        #
+        ###############################################################################
+
 
         tri_below_pot_step = max_edge_potentials > rep_contour_level_list
         tri_above_pot_step = min_edge_potentials < rep_contour_level_list
@@ -143,46 +211,57 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
         # Calculate for each edge which cuts a potential the uv coordinates
         edge_lengths = np.linalg.norm(part_uv[edge_nodes[:, 1]] - part_uv[edge_nodes[:, 0]], axis=1)
-        edge_lengths = np.tile(edge_lengths[:, np.newaxis], (1, len(part.potential_level_list)))
+        edge_lengths = np.tile(edge_lengths[:, np.newaxis], (1, num_potentials))
         edge_potential_span = edge_node_potentials[:, 1] - edge_node_potentials[:, 0]
-        edge_potential_span = np.tile(edge_potential_span[:, np.newaxis], (1, len(part.potential_level_list)))
+        edge_potential_span = np.tile(edge_potential_span[:, np.newaxis], (1, num_potentials))
 
         pot_dist_to_step = rep_contour_level_list - np.tile(edge_node_potentials[:, 0][:, np.newaxis],
-                                                            (1, len(part.potential_level_list)))
+                                                            (1, num_potentials))
         cut_point_distance_to_edge_node_1 = np.abs(pot_dist_to_step / edge_potential_span * edge_lengths)
 
         u_component_edge_vectors = part_uv[edge_nodes[:, 1], 0] - part_uv[edge_nodes[:, 0], 0]
-        u_component_edge_vectors = np.tile(u_component_edge_vectors[:, np.newaxis], (1, len(part.potential_level_list)))
+        u_component_edge_vectors = np.tile(u_component_edge_vectors[:, np.newaxis], (1, num_potentials))
         v_component_edge_vectors = part_uv[edge_nodes[:, 1], 1] - part_uv[edge_nodes[:, 0], 1]
-        v_component_edge_vectors = np.tile(v_component_edge_vectors[:, np.newaxis], (1, len(part.potential_level_list)))
+        v_component_edge_vectors = np.tile(v_component_edge_vectors[:, np.newaxis], (1, num_potentials))
 
-        first_edge_node_u = np.tile(part_uv[edge_nodes[:, 0], 0][:, np.newaxis], (1, len(part.potential_level_list)))
-        first_edge_node_v = np.tile(part_uv[edge_nodes[:, 0], 1][:, np.newaxis], (1, len(part.potential_level_list)))
+        first_edge_node_u = np.tile(part_uv[edge_nodes[:, 0], 0][:, np.newaxis], (1, num_potentials))
+        first_edge_node_v = np.tile(part_uv[edge_nodes[:, 0], 1][:, np.newaxis], (1, num_potentials))
         u_cut_point = potential_cut_criteria * (
             first_edge_node_u + u_component_edge_vectors * cut_point_distance_to_edge_node_1 / edge_lengths)
         v_cut_point = potential_cut_criteria * (
             first_edge_node_v + v_component_edge_vectors * cut_point_distance_to_edge_node_1 / edge_lengths)
 
         # Create cell by sorting the cut points to the corresponding potential levels
-        potential_sorted_cut_points = []
-        for pot_ind in range(len(part.potential_level_list)):
+        # potential_sorted_cut_points = []
+        potential_sorted_cut_points = np.zeros((num_potentials), dtype=object) # 20 x M x 3
+        for pot_ind in range(num_potentials):
             cut_points = np.column_stack(
                 (u_cut_point[:, pot_ind], v_cut_point[:, pot_ind], np.arange(edge_nodes.shape[0])))
             cut_points = cut_points[~np.isnan(cut_points[:, 0])]
-            potential_sorted_cut_points.append(cut_points)
+            #potential_sorted_cut_points.append(cut_points)
+            potential_sorted_cut_points[pot_ind] = cut_points
 
         # End of Part 1
 
         ###############################################################################
         # TODO: Verify: potential_cut_criteria, potential_sorted_cut_points
 
+        assert compare(rep_contour_level_list, m_rep_contour_level_list) # PASS
+        assert compare_contains(min_edge_potentials, m_min_edge_potentials2) # PASS
+        assert compare_contains(max_edge_potentials, m_max_edge_potentials2) # PASS
+
+        assert compare_contains(potential_cut_criteria, m_potential_cut_criteria3)  # PASS
+        # assert compare_contains(edge_opposed_nodes, m_edge_opposed_nodes) # FAIL: Index 3 is reversed compared to MATLAB index 7
+        assert compare(potential_sorted_cut_points, m_potential_sorted_cut_points) # FAIL: z-axis is slightly different
+
+        log.debug(" ---- here ---")
         #
         ###############################################################################
 
         # Start of Part 2
         # Create the unsorted points structure
-        empty_potential_groups = [potential_sorted_cut_points[i] == [] for i in range(len(potential_sorted_cut_points))]
         part.raw = RawPart()
+        empty_potential_groups = [potential_sorted_cut_points[i] == [] for i in range(len(potential_sorted_cut_points))]
         num_false = len(empty_potential_groups) - sum(empty_potential_groups)
         part.raw.unsorted_points = [UnsortedPoints() for _ in range(num_false)]
         part.raw.unarranged_loops = [UnarrangedLoop() for _ in range(num_false)]
@@ -195,7 +274,6 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 part.raw.unsorted_points[running_ind].uv = potential_sorted_cut_points[struct_ind][:, :2]
                 running_ind += 1
 
-        log.debug(" ---- here ---")
         # Separate loops within potential groups
         # part.raw.unarranged_loops.loop.edge_inds = []
         # part.raw.unarranged_loops.loop.uv = []
