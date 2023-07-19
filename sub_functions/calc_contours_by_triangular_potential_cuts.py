@@ -34,11 +34,16 @@ class Loop:
 # Define the structure for unarranged loops
 class UnarrangedLoop:
     def __init__(self):
-        self.edge_inds = np.size((1,2), dtype=int)
+        self.edge_inds = None
         self.uv = []
     
     def add_edge(self, edge):
-        ....
+        if self.edge_inds is None:
+            self.edge_inds = np.zeros((1,2), dtype=int)
+            self.edge_inds[0] = edge
+            return
+        self.edge_inds = np.vstack((self.edge_inds, [edge]))
+        
 
 class UnarrangedLoopContainer:
     loop: List[UnarrangedLoop] = []
@@ -318,7 +323,8 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
                     loop = UnarrangedLoop()
                     loop.uv = [all_current_uv_coords[starting_edge]]
-                    loop.edge_inds.append(all_current_edges[starting_edge])
+                    #loop.edge_inds.append(all_current_edges[starting_edge])
+                    loop.add_edge(all_current_edges[starting_edge])
                     group_unarranged_loop.loop.append(loop)
                     edge_already_used[starting_edge] = 1
                     current_edge = starting_edge
@@ -349,7 +355,9 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     edge_already_used[next_edge] = 1
                     loop_item = group_unarranged_loop.loop[num_build_loops - 1]
                     loop_item.uv.append(all_current_uv_coords[next_edge])
-                    loop_item.edge_inds.append(all_current_edges[next_edge])
+                    #loop_item.edge_inds.append(all_current_edges[next_edge])
+                    loop_item.add_edge(all_current_edges[next_edge])
+
                     current_edge = next_edge
 
                     current_edge_nodes = all_current_edges[current_edge]
@@ -377,8 +385,6 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 set_new_start = True
 
         # End of Part 2
-
-        # TODO: Create edge_inds as np.array, not a list.
 
         # Start of Part 3
         # Evaluate current orientation for each loop
