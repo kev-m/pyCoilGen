@@ -403,16 +403,15 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     node_1 = np.intersect1d(first_edge, second_edge)
                     node_2 = np.setdiff1d(first_edge, node_1)
                     node_3 = np.setdiff1d(second_edge, node_1)
-                    node_1_uv = coil_parts[part_ind].coil_mesh.uv[node_1, :]
-                    node_2_uv = coil_parts[part_ind].coil_mesh.uv[node_2, :]
-                    node_3_uv = coil_parts[part_ind].coil_mesh.uv[node_3, :]
+                    node_1_uv = coil_parts[part_ind].coil_mesh.uv[node_1, :][0] # Change shape from (1,2) to (2,)
+                    node_2_uv = coil_parts[part_ind].coil_mesh.uv[node_2, :][0] # Change shape from (1,2) to (2,)
+                    node_3_uv = coil_parts[part_ind].coil_mesh.uv[node_3, :][0] # Change shape from (1,2) to (2,)
                     node_1_pot = coil_parts[part_ind].stream_function[node_1]
                     node_2_pot = coil_parts[part_ind].stream_function[node_2]
                     node_3_pot = coil_parts[part_ind].stream_function[node_3]
 
                     # Calculate the 2D gradient of the triangle
                     # list indices must be integers or slices, not tuple
-                    log.debug(" ---- here ---")
                     center_segment_position = (potential_loop_item.uv[test_edge] +
                                                potential_loop_item.uv[test_edge + 1]) / 2
 
@@ -443,6 +442,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                         potential_loop_item.edge_inds = np.flipud(
                             potential_loop_item.edge_inds)
                 else:
+                    log.debug(" ---- here ---")
                     raise ValueError('Some loops are too small and contain only 2 points, therefore ill-defined')
         # End of Part 3
 
