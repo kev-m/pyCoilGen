@@ -35,14 +35,14 @@ class Loop:
 class UnarrangedLoop:
     def __init__(self):
         self.edge_inds = []
-        self.uv = []
+        self.uv = np.zeros((1,2), dtype=float)
         self.current_orientation : float = None
     
     def add_edge(self, edge):
         self.edge_inds.append(edge)
         
     def add_uv(self, uv):
-        self.uv.append(uv)
+        self.uv = np.vstack((self.uv, [uv]))
 
 class UnarrangedLoopContainer:
     def __init__(self):
