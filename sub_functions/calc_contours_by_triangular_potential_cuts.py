@@ -36,6 +36,7 @@ class UnarrangedLoop:
     def __init__(self):
         self.edge_inds = []
         self.uv = []
+        self.current_orientation : float = None
     
     def add_edge(self, edge):
         self.edge_inds.append(edge)
@@ -48,9 +49,15 @@ class UnarrangedLoopContainer:
         self.loop: List[UnarrangedLoop] = []
 
 @dataclass
+class ContourLine:
+    uv = None
+    potential : float = None
+    current_orientation : List[float] = None
+
+@dataclass
 # Define the structure for unsorted points
 class UnsortedPoints:
-    potential = None
+    potential : float = None
     edge_ind = None
     uv = None
 
@@ -300,8 +307,6 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 running_ind += 1
 
         # Separate loops within potential groups
-        # part.raw.unarranged_loops.loop.edge_inds = []
-        # part.raw.unarranged_loops.loop.uv = []
 
         # Create loops
         for potential_group in range(len(part.raw.unsorted_points)):
@@ -385,7 +390,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
         # Start of Part 3
         # Evaluate current orientation for each loop
-        part.raw.unarranged_loops[numel(part.raw.unsorted_points)-1].loop[0].current_orientation = []
+        ## part.raw.unarranged_loops[numel(part.raw.unsorted_points)-1].loop[0].current_orientation = []
 
         for pot_ind in range(numel(part.raw.unsorted_points)):
             center_segment_potential = part.raw.unsorted_points[pot_ind].potential
@@ -439,15 +444,13 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                         potential_loop_item.edge_inds = np.flipud(
                             potential_loop_item.edge_inds)
                 else:
-                    log.debug(" ---- here ---")
                     raise ValueError('Some loops are too small and contain only 2 points, therefore ill-defined')
         # End of Part 3
 
+                    log.debug(" ---- here ---")
         # Start of Part 4
         # Build the contour lines
-        part.contour_lines.uv = []
-        part.contour_lines.potential = []
-        part.contour_lines.current_orientation = []
+        part.contour_lines = ContourLine()
         build_ind = 1
 
         for pot_ind in range(numel(part.raw.unsorted_points)):
