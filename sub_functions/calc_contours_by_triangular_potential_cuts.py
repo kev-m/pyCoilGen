@@ -321,11 +321,11 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     num_build_loops += 1
                     starting_edge = np.min(np.where(edge_already_used == 0)[0])
 
-                    loop = UnarrangedLoop()
-                    loop.uv = [all_current_uv_coords[starting_edge]]
+                    loop_item = UnarrangedLoop()
+                    loop_item.uv = [all_current_uv_coords[starting_edge]]
                     #loop.edge_inds.append(all_current_edges[starting_edge])
-                    loop.add_edge(all_current_edges[starting_edge])
-                    group_unarranged_loop.loop.append(loop)
+                    loop_item.add_edge(all_current_edges[starting_edge])
+                    group_unarranged_loop.loop.append(loop_item)
                     edge_already_used[starting_edge] = 1
                     current_edge = starting_edge
 
@@ -414,6 +414,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     node_3_pot = coil_parts[part_ind].stream_function[node_3]
 
                     # Calculate the 2D gradient of the triangle
+                    # list indices must be integers or slices, not tuple
                     center_segment_position = (potential_loop_item.uv[test_edge, :] +
                                                potential_loop_item.uv[test_edge + 1, :]) / 2
 
