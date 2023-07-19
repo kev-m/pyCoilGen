@@ -256,15 +256,12 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             first_edge_node_v + v_component_edge_vectors * cut_point_distance_to_edge_node_1 / edge_lengths)
 
         # Create cell by sorting the cut points to the corresponding potential levels
-        # potential_sorted_cut_points = []
         potential_sorted_cut_points = np.zeros((num_potentials), dtype=object) # 20 x M x 3
-        log.debug("edge_nodes.shape: %s", edge_nodes.shape) # 696
-        value3 = np.arange(edge_nodes.shape[0], dtype=int) # MATLAB 1 ... 696
+        value3 = np.arange(edge_nodes.shape[0], dtype=int)
         for pot_ind in range(num_potentials):
             cut_points = np.column_stack(
                 (u_cut_point[:, pot_ind], v_cut_point[:, pot_ind], value3))
             cut_points = cut_points[~np.isnan(cut_points[:, 0])]
-            #potential_sorted_cut_points.append(cut_points)
             potential_sorted_cut_points[pot_ind] = cut_points
 
         # End of Part 1
@@ -280,12 +277,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # assert compare_contains(edge_opposed_nodes, m_edge_opposed_nodes) # FAIL: Index 3 is reversed compared to MATLAB index 7
 
         # FAIL: The edge nodes indices are different?
-        # 9.61401591e-01  9.13789958e-03  152 versus  9.61401591e-01  9.13789958e-03  158
-        log.debug("edge_nodes[152]: %s", edge_nodes[152]) # 
-        log.debug("vertices: edge_nodes[152]: %s", part_vertices[edge_nodes[152]]) # 
-        log.debug("m_edge_nodes2[158]: %s", m_edge_nodes2[158]) #
-        #log.debug("vertices: edge_nodes[158]: %s", m_part_vertices[m_edge_nodes2[158]]) # 
-        #assert compare(potential_sorted_cut_points, m_potential_sorted_cut_points)
+        # assert compare(potential_sorted_cut_points, m_potential_sorted_cut_points)
 
         #
         ###############################################################################
@@ -451,7 +443,9 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # Build the contour lines
         part.contour_lines = []
         for pot_ind in range(numel(part.raw.unsorted_points)):
+            potential_loop = part.raw.unarranged_loops[pot_ind]
             for loop_ind in range(numel(potential_loop.loop)):
+                potential_loop_item = potential_loop.loop[loop_ind]
                 contour_line = ContourLine()
                 # MATLAB: 7x2
                 #     0.9614    0.0091
@@ -461,7 +455,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 #     0.8945   -0.0122
                 #     0.9078    0.0432
                 #     0.9322    0.1542
-                contour_line.uv = potential_loop_item.uv.T # uv: (2,6) | M: 7x2 -> 2x7
+                contour_line.uv = potential_loop_item.uv.T # uv: (2,8) | M: 7x2 -> 2x7
                 # MATLAB: -5.4430e+03
                 contour_line.potential = part.raw.unsorted_points[pot_ind].potential
 
@@ -488,8 +482,8 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 # 0	0	0	0	0	0
                 # 0	0	0	0	0	0
                 # -0.0006	-0.0006	-0.0051	-0.0079	-0.0022	-0.0043
-                rot_vecs = np.cross(uv_to_center_vecs, uv_vecs) # (3,5) x (3,5) | M: (3x6) x (3x6)
-                track_orientation = np.sign(np.sum(rot_vecs[2, :])) # MATLAB: -1
+                rot_vecs = np.cross(uv_to_center_vecs.T, uv_vecs.T) # (3,5) x (3,5) | M: (3x6) x (3x6)
+                track_orientation = np.sign(np.sum(rot_vecs[:,2])) # MATLAB: -1
                 contour_line.current_orientation = track_orientation
 
                 part.contour_lines.append(contour_line)
