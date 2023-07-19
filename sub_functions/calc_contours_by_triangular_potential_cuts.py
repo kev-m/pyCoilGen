@@ -388,8 +388,6 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
         # Start of Part 3
         # Evaluate current orientation for each loop
-        log.debug(" ---- here ---")
-        # list index out of range
         part.raw.unarranged_loops[numel(part.raw.unsorted_points)-1].loop[0].current_orientation = []
 
         for pot_ind in range(numel(part.raw.unsorted_points)):
@@ -399,7 +397,6 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             for loop_ind in range(numel(potential_loop.loop)):
                 potential_loop_item = potential_loop.loop[loop_ind]
                 if numel(potential_loop_item.edge_inds) > 2:
-                    # 'list' object has no attribute 'shape'
                     test_edge = int(np.floor(potential_loop_item.edge_inds.shape[0] / 2))
                     first_edge = potential_loop_item.edge_inds[test_edge, :]
                     second_edge = potential_loop_item.edge_inds[test_edge + 1, :]
@@ -415,8 +412,9 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
                     # Calculate the 2D gradient of the triangle
                     # list indices must be integers or slices, not tuple
-                    center_segment_position = (potential_loop_item.uv[test_edge, :] +
-                                               potential_loop_item.uv[test_edge + 1, :]) / 2
+                    log.debug(" ---- here ---")
+                    center_segment_position = (potential_loop_item.uv[test_edge] +
+                                               potential_loop_item.uv[test_edge + 1]) / 2
 
                     vec_center_node_1 = node_1_uv - center_segment_position
                     vec_center_node_2 = node_2_uv - center_segment_position
@@ -431,8 +429,8 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                         vec_center_node_3 * pot_diff_center_node_3
 
                     # Test the chirality of the segment on the potential gradient on that segment
-                    segment_vec = potential_loop_item.uv[test_edge + 1, :] - \
-                        potential_loop_item.uv[test_edge, :]
+                    segment_vec = potential_loop_item.uv[test_edge + 1] - \
+                        potential_loop_item.uv[test_edge]
 
                     cross_vec = np.cross([segment_vec[0], segment_vec[1], 0], [
                                          pot_gradient_vec[0], pot_gradient_vec[1], 0])
