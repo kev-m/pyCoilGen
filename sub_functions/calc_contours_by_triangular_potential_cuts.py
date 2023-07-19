@@ -34,16 +34,14 @@ class Loop:
 # Define the structure for unarranged loops
 class UnarrangedLoop:
     def __init__(self):
-        self.edge_inds = None
+        self.edge_inds = []
         self.uv = []
     
     def add_edge(self, edge):
-        if self.edge_inds is None:
-            self.edge_inds = np.zeros((1,2), dtype=int)
-            self.edge_inds[0] = edge
-            return
-        self.edge_inds = np.vstack((self.edge_inds, [edge]))
+        self.edge_inds.append(edge)
         
+    def add_uv(self, uv):
+        self.uv.append(uv)
 
 class UnarrangedLoopContainer:
     loop: List[UnarrangedLoop] = []
@@ -322,8 +320,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     starting_edge = np.min(np.where(edge_already_used == 0)[0])
 
                     loop_item = UnarrangedLoop()
-                    loop_item.uv = [all_current_uv_coords[starting_edge]]
-                    #loop.edge_inds.append(all_current_edges[starting_edge])
+                    loop_item.add_uv(all_current_uv_coords[starting_edge])
                     loop_item.add_edge(all_current_edges[starting_edge])
                     group_unarranged_loop.loop.append(loop_item)
                     edge_already_used[starting_edge] = 1
@@ -354,8 +351,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 while next_edge != starting_edge:
                     edge_already_used[next_edge] = 1
                     loop_item = group_unarranged_loop.loop[num_build_loops - 1]
-                    loop_item.uv.append(all_current_uv_coords[next_edge])
-                    #loop_item.edge_inds.append(all_current_edges[next_edge])
+                    loop_item.add_uv(all_current_uv_coords[next_edge])
                     loop_item.add_edge(all_current_edges[next_edge])
 
                     current_edge = next_edge
@@ -397,9 +393,9 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             for loop_ind in range(numel(potential_loop.loop)):
                 potential_loop_item = potential_loop.loop[loop_ind]
                 if numel(potential_loop_item.edge_inds) > 2:
-                    test_edge = int(np.floor(potential_loop_item.edge_inds.shape[0] / 2))
-                    first_edge = potential_loop_item.edge_inds[test_edge, :]
-                    second_edge = potential_loop_item.edge_inds[test_edge + 1, :]
+                    test_edge = int(np.floor(len(potential_loop_item.edge_inds) / 2))
+                    first_edge = potential_loop_item.edge_inds[test_edge]
+                    second_edge = potential_loop_item.edge_inds[test_edge + 1]
                     node_1 = np.intersect1d(first_edge, second_edge)
                     node_2 = np.setdiff1d(first_edge, node_1)
                     node_3 = np.setdiff1d(second_edge, node_1)
