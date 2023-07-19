@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def smooth_track_by_folding(track_in, smoothing_length):
     """
     Smooth a track by folding its data.
