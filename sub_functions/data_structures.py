@@ -317,6 +317,20 @@ class TargetField:
     def __str__(self):
         return as_string(self)
 
+# Used by process_raw_loops
+@dataclass
+class WirePart:
+    """
+    To be defined.
+    """
+    coord: List[np.ndarray] = None
+    seg_coords: List[np.ndarray] = None
+    currents : List[np.ndarray] = None
+
+    def __str__(self):
+        return as_string(self)
+
+
 
 # Used by temp_evaluation
 @dataclass
