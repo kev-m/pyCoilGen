@@ -373,6 +373,7 @@ class Cuts():
 class Polygon():              # Placeholder class (generate_cylindrical_pcb_print) (2,n)
     data: np.ndarray = None
 
+
 @dataclass
 class PCBPart(Shape2D):
     ind1: np.ndarray = None             # (generate_cylindrical_pcb_print) (2,n)
@@ -416,7 +417,7 @@ class CoilPart:
     level_positions: np.ndarray = None      # ??? (topological_loop_grouping)
     groups: List[TopoGroup] = None          # Topological groups (topological_loop_grouping)
     group_centers: List[Shape3D] = None     # The centre of each group (calculate_group_centers)
-    connected_group: List[TopoGroup] = None # Connected topological groups (interconnect_within_groups)
+    connected_group: List[TopoGroup] = None  # Connected topological groups (interconnect_within_groups)
     opening_cuts_among_groups: List[Cuts] = None  # ??? (interconnect_among_groups)
     wire_path: Shape3D = None               # The shape of the wire track (interconnect_among_groups)
     shift_array: np.ndarray = None          # ??? (shift_return_paths) (,)
@@ -457,9 +458,8 @@ class TargetField:
     def __str__(self):
         return as_string(self)
 
+
 # Used in calculate_gradient
-
-
 @dataclass
 class LayoutGradient:
     dBxdxyz: np.ndarray
