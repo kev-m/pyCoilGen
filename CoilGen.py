@@ -432,6 +432,25 @@ def CoilGen(log, input=None):
     print('Generate the contours:')
     coil_parts = calc_contours_by_triangular_potential_cuts(coil_parts)
 
+    #####################################################
+    # DEVELOPMENT: Remove this
+    # DEBUG
+    # Verify: part.contour_lines items current_orientation, potential, uv
+    m_contour_lines = m_c_part.contour_lines
+
+
+    assert len(c_part.contour_lines) == len(m_contour_lines)
+    for index in range(len(c_part.contour_lines)):
+        log.debug(" Checking contour %d", index)
+        m_contour = m_contour_lines[index]
+        c_contour = c_part.contour_lines[index]
+        assert c_contour.current_orientation == m_contour.current_orientation # Pass
+        assert np.isclose(c_contour.potential, m_contour.potential) # Pass
+        assert compare(c_contour.uv, m_contour.uv) # Index 0: Fail: Not the same shape: (2, 7) is not (2, 8)
+
+    #
+    #####################################################
+
     # WIP
     solution.coil_parts = coil_parts
     return solution
