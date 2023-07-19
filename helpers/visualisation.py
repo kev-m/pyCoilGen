@@ -127,6 +127,8 @@ def compare_contains(array1, array2, double_tolerance=1e-10, strict=True, equal_
 
 
 def visualize_vertex_connections(vertices2_or_3d, image_x_size, image_path, boundaries=None):
+    """ Blah..
+    """
     if boundaries is not None:
         shape_edges = np.shape(boundaries)
         log.debug(" faces shape: %s", shape_edges)
@@ -270,6 +272,18 @@ def visualize_connections(vertices2d, image_x_size, image_path, connection_list)
 
 
 def visualize_compare_vertices(vertices2d1, vertices2d2, image_x_size, image_path):
+    """
+    Draw both the vertex arrays onto an image and write the image to file.
+
+    The function draws vectors from vertices2d1[n] to vertices2d2[n] for each vertex.
+    The vectors will be visible only as dots if the vertex arrays are identical.
+
+    Args:
+        vertices2d1 (ndarray): A 2D array of the vertices projected onto a 2D plance.
+        vertices2d2 (ndarray): A 2D array of the vertices projected onto a 2D plance.
+        image_x_size (int): The desired width of the output image.
+        image_path (string): The desired output path where to write the image.
+    """
     # Find the midpoint of all vertices
     midpoint = np.mean(vertices2d1, axis=0)
 
@@ -303,6 +317,61 @@ def visualize_compare_vertices(vertices2d1, vertices2d2, image_x_size, image_pat
     # Save the image
     image.save(image_path)
 
+def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_list):
+    """
+    Draw the given contour_list onto an image of the specified size and save the image to a file.
+
+    The starting point is drawn with a red circle and the ending point is drawn with a blue circle.
+
+    The vertices2d parameter is only used to compute the image scaling factors.
+
+    Args:
+        vertices2d (ndarray): A 2D array of the vertices projected onto a 2D plance.
+        image_x_size (int): The desired width of the output image.
+        image_path (string): The desired output path where to write the image.
+        contour_list (list[ContourLine]): The list of contour lines.
+    """
+    # Find the midpoint of all vertices
+    midpoint = np.mean(vertices2d, axis=0)
+
+    v_width = np.max(vertices2d[:, 0]) - np.min(vertices2d[:, 0])
+    v_height = np.max(vertices2d[:, 1]) - np.min(vertices2d[:, 1])
+    minima = np.min(vertices2d, axis=0)
+
+    # Calculate x-scale
+    vertices2d1_scale = (image_x_size / v_width)
+
+    # Translate the scaled vertices based on the midpoint
+    image_y_size = int(image_x_size*v_height/v_width)
+
+    # Create a blank image
+    image = Image.new('RGB', (image_x_size+20, image_y_size+20), color='white')
+    draw = ImageDraw.Draw(image)
+
+    radius_start = 1.6
+    radius_stop = 1.4
+
+    for contour in contour_list:
+        uv = contour.uv.T # Array of [x,y] pairs
+        num_contours = len(uv)
+        start_uv = uv[0]
+        start_xy = (start_uv - minima) * vertices2d1_scale
+        x1 = start_xy[0]
+        y1 = start_xy[1]
+        draw.ellipse((x1 - radius_start, y1 - radius_start, x1 + radius_start, y1 + radius_start), fill='red')
+        for i in range(1, num_contours):
+            stop_uv = uv[i]
+            stop_xy = (stop_uv - minima) * vertices2d1_scale
+            # log.debug(" %s -> %s", start_xy, stop_xy)
+            draw.line([(start_xy[0], start_xy[1]), (stop_xy[0], stop_xy[1])], fill='black')
+            start_xy = stop_xy
+        x1 = stop_xy[0]
+        y1 = stop_xy[1]
+        draw.ellipse((x1 - radius_stop, y1 - radius_stop, x1 + radius_stop, y1 + radius_stop), fill='blue')
+        # log.debug("-")
+
+    # Save the image
+    image.save(image_path)
 
 def project_vertex_onto_plane(vertex, pov):
     # Extract the coordinates of the vertex and POV
