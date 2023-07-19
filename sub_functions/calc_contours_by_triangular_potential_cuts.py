@@ -8,6 +8,7 @@ import logging
 # Local imports
 from sub_functions.data_structures import CoilPart
 from sub_functions.constants import get_level, DEBUG_VERBOSE
+from sub_functions.data_structures import ContourLine, UnarrangedLoop, UnarrangedLoopContainer, UnsortedPoints, RawPart
 
 # Testing:
 import trimesh
@@ -20,58 +21,6 @@ from helpers.extraction import load_matlab, print_structure
 from helpers.visualisation import compare, compare_contains, visualize_connections, visualize_vertex_connections
 #
 ###########################################################
-
-
-###########################################################
-# TODO: DEVELOPMENT: Move these to DataStructures
-
-
-@dataclass
-class Loop:
-    loop = None
-
-
-# Define the structure for unarranged loops
-class UnarrangedLoop:
-    def __init__(self):
-        self.edge_inds = []
-        self.uv = None
-        self.current_orientation : float = None
-    
-    def add_edge(self, edge):
-        self.edge_inds.append(edge)
-        
-    def add_uv(self, uv):
-        if self.uv is None:
-            self.uv = np.zeros((1,2), dtype=float)
-            self.uv[0] = uv
-            return
-        self.uv = np.vstack((self.uv, [uv]))
-
-class UnarrangedLoopContainer:
-    def __init__(self):
-        self.loop: List[UnarrangedLoop] = []
-
-@dataclass
-class ContourLine:
-    uv = None
-    potential : float = None
-    current_orientation : List[float] = None
-
-@dataclass
-# Define the structure for unsorted points
-class UnsortedPoints:
-    potential : float = None
-    edge_ind = None
-    uv = None
-
-
-@dataclass
-class RawPart:
-    unsorted_points: List[UnsortedPoints] = None
-    unarranged_loops: List[UnarrangedLoop] = None
-#
-##########################################################
 
 
 # ChatGPT error, create this function

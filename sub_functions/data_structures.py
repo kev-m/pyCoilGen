@@ -217,11 +217,73 @@ class BasisElement:
     triangle_points_ABC: np.ndarray     # node_triangles x 3
     current: np.ndarray                 # node_triangles x 3
 
+class UnarrangedLoop:
+    """
+    Represents an unarranged loop in the coil mesh.
+
+    Used by calc_contours_by_triangular_potential_cuts
+    """
+    def __init__(self):
+        self.edge_inds = []
+        self.uv = None
+        self.current_orientation : float = None
+    
+    def add_edge(self, edge):
+        self.edge_inds.append(edge)
+        
+    def add_uv(self, uv):
+        if self.uv is None:
+            self.uv = np.zeros((1,2), dtype=float)
+            self.uv[0] = uv
+            return
+        self.uv = np.vstack((self.uv, [uv]))
+
+class UnarrangedLoopContainer:
+    def __init__(self):
+        self.loop: List[UnarrangedLoop] = []
+
+
+@dataclass
+class UnsortedPoints:
+    """
+    Represents unsorted contours in the coil mesh.
+
+    Used by calc_contours_by_triangular_potential_cuts
+    """
+    potential : float = None
+    edge_ind = None
+    uv = None
+
+
+@dataclass
+class RawPart:
+    """
+    Represents the unprocessed collection of points.
+
+    Used by calc_contours_by_triangular_potential_cuts
+    """
+    unsorted_points: List[UnsortedPoints] = None
+    unarranged_loops: List[UnarrangedLoop] = None
+
+@dataclass
+class ContourLine:
+    """
+    Represents a contour line
+
+    Used by calc_contours_by_triangular_potential_cuts
+    """
+    uv : np.ndarray = None
+    potential : float = None
+    current_orientation : float = None
+
+
 @dataclass
 class CoilPart:
     coil_mesh: Mesh = None
     basis_elements: List[BasisElement] = None
     resistance_matrix: np.ndarray = None # num_vertices x num_vertices
+    raw: RawPart = None
+    contour_lines: List[ContourLine] = None
 
 class CoilSolution:
     """
@@ -254,8 +316,6 @@ class TargetField:
 
     def __str__(self):
         return as_string(self)
-
-
 
 
 # Used by temp_evaluation
@@ -295,32 +355,6 @@ class Loop:
     current_orientation: int
 
 
-@dataclass
-class UnarrangedLoop:
-    """
-    Represents an unarranged loop in the coil mesh.
-    """
-    loop: List[Loop]
-
-
-@dataclass
-class RawPart:
-    """
-    Represents a raw part in the coil mesh.
-    """
-    unsorted_points: List[UnsortedPoint]
-    unarranged_loops: List[UnarrangedLoop]
-
-
-@dataclass
-class ContourLine:
-    """
-    Unknown
-    TODO: find usage.
-    """
-    uv: np.ndarray
-    potential: float
-    current_orientation: int
 
 
 @dataclass
@@ -340,7 +374,6 @@ class CoilParts:
     """
     Represents the coil parts.
     """
-    raw: RawPart
     contour_lines: List[ContourLine]
     coil_mesh: CoilMesh
 
