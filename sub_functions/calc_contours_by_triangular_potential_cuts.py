@@ -447,27 +447,49 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     raise ValueError('Some loops are too small and contain only 2 points, therefore ill-defined')
         # End of Part 3
 
-                    log.debug(" ---- here ---")
         # Start of Part 4
         # Build the contour lines
         part.contour_lines = []
         for pot_ind in range(numel(part.raw.unsorted_points)):
             for loop_ind in range(numel(potential_loop.loop)):
                 contour_line = ContourLine()
-                contour_line.uv = potential_loop_item.uv.T
+                # MATLAB: 7x2
+                #     0.9614    0.0091
+                #     0.9648   -0.0107
+                #     0.9616   -0.0310
+                #     0.9287   -0.1977
+                #     0.8945   -0.0122
+                #     0.9078    0.0432
+                #     0.9322    0.1542
+                contour_line.uv = potential_loop_item.uv.T # uv: (2,6) | M: 7x2 -> 2x7
+                # MATLAB: -5.4430e+03
                 contour_line.potential = part.raw.unsorted_points[pot_ind].potential
 
                 # Find the current orientation (for comparison with other loops)
-                uv_center = np.mean(contour_line.uv, axis=1)
-                uv_to_center_vecs = contour_line.uv[:, :-1] - np.expand_dims(uv_center, axis=1)
+                # MATLAB: 0.939, -0.0065
+                uv_center = np.mean(contour_line.uv, axis=1) # (2,)
+                # MATLAB: (3x6)
+                # 0.0255	0.029	0.0258	-0.0071	-0.0414	-0.0281
+                # 0.0156	-0.0043	-0.0245	-0.1913	-0.0058	0.0496
+                # 0	0	0	0	0	0
+                uv_to_center_vecs = contour_line.uv[:, :-1] - np.expand_dims(uv_center, axis=1) # (2,5) | M: 2x6
                 uv_to_center_vecs = np.concatenate(
-                    (uv_to_center_vecs, np.zeros((1, uv_to_center_vecs.shape[1]))), axis=0)
-                uv_vecs = contour_line.uv[:, 1:] - contour_line.uv[:, :-1]
-                uv_vecs = np.concatenate((uv_vecs, np.zeros((1, uv_vecs.shape[1]))), axis=0)
+                    (uv_to_center_vecs, np.zeros((1, uv_to_center_vecs.shape[1]))), axis=0) # (3,5) | M: 3x6
+                # MATLAB: (3x6)
+                # 0.0034	-0.0032	-0.0329	-0.0342	0.0133	0.0244
+                # -0.0199	-0.0203	-0.1667	0.1855	0.0554	0.111
+                # 0	0	0	0	0	0
+                uv_vecs = contour_line.uv[:, 1:] - contour_line.uv[:, :-1] # (2,5)
+                uv_vecs = np.concatenate((uv_vecs, np.zeros((1, uv_vecs.shape[1]))), axis=0) # (3,5)
+                log.debug(" ---- here ---")
                 # incompatible dimensions for cross product
                 # (dimension must be 2 or 3)
-                rot_vecs = np.cross(uv_to_center_vecs, uv_vecs)
-                track_orientation = np.sign(np.sum(rot_vecs[2, :]))
+                # MATLAB: (3,6) x (3,6) = (3x6)
+                # 0	0	0	0	0	0
+                # 0	0	0	0	0	0
+                # -0.0006	-0.0006	-0.0051	-0.0079	-0.0022	-0.0043
+                rot_vecs = np.cross(uv_to_center_vecs, uv_vecs) # (3,5) x (3,5) | M: (3x6) x (3x6)
+                track_orientation = np.sign(np.sum(rot_vecs[2, :])) # MATLAB: -1
                 contour_line.current_orientation = track_orientation
 
                 part.contour_lines.append(contour_line)
