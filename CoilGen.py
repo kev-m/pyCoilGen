@@ -30,8 +30,8 @@ from sub_functions.calculate_resistance_matrix import calculate_resistance_matri
 from sub_functions.stream_function_optimization import stream_function_optimization
 from sub_functions.calc_potential_levels import calc_potential_levels
 from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
+from sub_functions.process_raw_loops import process_raw_loops
 """
-from process_raw_loops import process_raw_loops
 from find_minimal_contour_distance import find_minimal_contour_distance
 from topological_loop_grouping import topological_loop_grouping
 from calculate_group_centers import calculate_group_centers
@@ -459,13 +459,13 @@ def CoilGen(log, input=None):
     #
     #####################################################
 
-    # WIP
-    solution.coil_parts = coil_parts
-    return solution
-
     # Process contours
     print('Process contours: Evaluate loop significance')
     coil_parts = process_raw_loops(coil_parts, input_args, target_field)
+
+    # WIP
+    solution.coil_parts = coil_parts
+    return solution
 
     if not input_args['skip_postprocessing']:
         # Find the minimal distance between the contour lines

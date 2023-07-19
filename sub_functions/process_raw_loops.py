@@ -76,6 +76,8 @@ def evaluate_loop_significance(coil_parts, target_field):
         loop_significance = np.zeros(len(coil_part.contour_lines))
 
         for i, loop in enumerate(coil_part.contour_lines):
+            log.debug(" -- here -- ")
+            # 'ContourLine' object has no attribute 'v'
             coil_part.field_by_loops[:, :, i] = biot_savart_calc_b(loop.v, target_field) * coil_part.contour_step
             combined_loop_field += coil_part.field_by_loops[:, :, i]
 
