@@ -72,6 +72,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
     #m_unsorted_points = data.unsorted_points # ???
     #m_unarranged_loops = data.unarranged_loops # ???
     m_raw = data.raw
+    m_contour_lines = data.contour_lines
     #
     ###############################################################################
 
@@ -440,6 +441,23 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 part.contour_lines.append(contour_line)
         # End of Part 4
 
+        #######################################################
+        # Debugging
+
+        for index in range(len(part.contour_lines)):
+            log.debug(" Checking contour %d", index)
+            m_contour = m_contour_lines[index]
+            c_contour = part.contour_lines[index]
+            assert c_contour.current_orientation == m_contour.current_orientation # Pass
+            assert np.isclose(c_contour.potential, m_contour.potential) # Pass
+            #assert compare(c_contour.uv, m_contour.uv) # Index 0: Fail: Not the same shape: (2, 7) is not (2, 8)
+            log.debug(" -- Potential: %s, compare uv: %s", m_contour.potential, compare(c_contour.uv, m_contour.uv))  # Fail at indices: 4, 13, 14, 15, 18, 19, 25, 28, 37.
+            # 4, -4299.632127033972
+            # 
+            # 14, -1441.2789145744955
+
+        #
+        #######################################################
     return coil_parts
 
 
