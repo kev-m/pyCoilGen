@@ -44,7 +44,8 @@ class UnarrangedLoop:
         self.uv.append(uv)
 
 class UnarrangedLoopContainer:
-    loop: List[UnarrangedLoop] = []
+    def __init__(self):
+        self.loop: List[UnarrangedLoop] = []
 
 @dataclass
 # Define the structure for unsorted points
