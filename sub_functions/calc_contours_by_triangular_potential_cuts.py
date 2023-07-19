@@ -35,13 +35,17 @@ class Loop:
 class UnarrangedLoop:
     def __init__(self):
         self.edge_inds = []
-        self.uv = np.zeros((1,2), dtype=float)
+        self.uv = None
         self.current_orientation : float = None
     
     def add_edge(self, edge):
         self.edge_inds.append(edge)
         
     def add_uv(self, uv):
+        if self.uv is None:
+            self.uv = np.zeros((1,2), dtype=float)
+            self.uv[0] = uv
+            return
         self.uv = np.vstack((self.uv, [uv]))
 
 class UnarrangedLoopContainer:
@@ -383,11 +387,9 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # Start of Part 3
         # Evaluate current orientation for each loop
         ## part.raw.unarranged_loops[numel(part.raw.unsorted_points)-1].loop[0].current_orientation = []
-
         for pot_ind in range(numel(part.raw.unsorted_points)):
             center_segment_potential = part.raw.unsorted_points[pot_ind].potential
             potential_loop = part.raw.unarranged_loops[pot_ind]
-
             for loop_ind in range(numel(potential_loop.loop)):
                 potential_loop_item = potential_loop.loop[loop_ind]
                 if numel(potential_loop_item.edge_inds) > 2:
@@ -475,7 +477,6 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 # 0	0	0	0	0	0
                 uv_vecs = contour_line.uv[:, 1:] - contour_line.uv[:, :-1] # (2,5)
                 uv_vecs = np.concatenate((uv_vecs, np.zeros((1, uv_vecs.shape[1]))), axis=0) # (3,5)
-                log.debug(" ---- here ---")
                 # incompatible dimensions for cross product
                 # (dimension must be 2 or 3)
                 # MATLAB: (3,6) x (3,6) = (3x6)
@@ -483,6 +484,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 # 0	0	0	0	0	0
                 # -0.0006	-0.0006	-0.0051	-0.0079	-0.0022	-0.0043
                 rot_vecs = np.cross(uv_to_center_vecs.T, uv_vecs.T) # (3,5) x (3,5) | M: (3x6) x (3x6)
+                # P: -0.02068, M: ??
                 track_orientation = np.sign(np.sum(rot_vecs[:,2])) # MATLAB: -1
                 contour_line.current_orientation = track_orientation
 
