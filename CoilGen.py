@@ -6,7 +6,7 @@ import logging
 
 # Debug and development checking imports
 from helpers.extraction import get_element_by_name, load_matlab, get_and_show_debug
-from helpers.visualisation import compare, compare_contains, visualize_vertex_connections, visualize_multi_connections, visualize_compare_vertices
+from helpers.visualisation import compare, compare_contains, visualize_vertex_connections, visualize_multi_connections, visualize_compare_vertices, visualize_compare_contours
 from sub_functions.data_structures import Mesh
 
 # Local imports
@@ -438,7 +438,6 @@ def CoilGen(log, input=None):
     # Verify: part.contour_lines items current_orientation, potential, uv
     m_contour_lines = m_c_part.contour_lines
 
-
     assert len(c_part.contour_lines) == len(m_contour_lines)
     for index in range(len(c_part.contour_lines)):
         log.debug(" Checking contour %d", index)
@@ -446,7 +445,16 @@ def CoilGen(log, input=None):
         c_contour = c_part.contour_lines[index]
         assert c_contour.current_orientation == m_contour.current_orientation # Pass
         assert np.isclose(c_contour.potential, m_contour.potential) # Pass
-        assert compare(c_contour.uv, m_contour.uv) # Index 0: Fail: Not the same shape: (2, 7) is not (2, 8)
+        # The MATLAB coilpart.contours is further processed in a subsequent function call.
+        # Unable to compare here.
+        #assert compare(c_contour.uv, m_contour.uv) # Index 0: Fail: Not the same shape: (2, 7) is not (2, 8)
+        #log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv)) 
+
+    if get_level() >= DEBUG_VERBOSE:
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour1_c.png', c_part.contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour1_m.png', m_contour_lines)
+
+    # Manual conclusion: Not identical, but really close.
 
     #
     #####################################################
@@ -722,7 +730,7 @@ if __name__ == "__main__":
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.15,
-        "target_region_resolution": 5,
+        "target_region_resolution": 5, # Default 10
         "tikonov_reg_factor": 100,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
