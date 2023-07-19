@@ -450,26 +450,27 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     log.debug(" ---- here ---")
         # Start of Part 4
         # Build the contour lines
-        part.contour_lines = ContourLine()
-        build_ind = 1
-
+        part.contour_lines = []
         for pot_ind in range(numel(part.raw.unsorted_points)):
             for loop_ind in range(numel(potential_loop.loop)):
-                part.contour_lines[build_ind].uv = potential_loop_item.uv.T
-                part.contour_lines[build_ind].potential = part.raw.unsorted_points[pot_ind].potential
+                contour_line = ContourLine()
+                contour_line.uv = potential_loop_item.uv.T
+                contour_line.potential = part.raw.unsorted_points[pot_ind].potential
 
                 # Find the current orientation (for comparison with other loops)
-                uv_center = np.mean(part.contour_lines[build_ind].uv, axis=1)
-                uv_to_center_vecs = part.contour_lines[build_ind].uv[:, :-1] - np.expand_dims(uv_center, axis=1)
+                uv_center = np.mean(contour_line.uv, axis=1)
+                uv_to_center_vecs = contour_line.uv[:, :-1] - np.expand_dims(uv_center, axis=1)
                 uv_to_center_vecs = np.concatenate(
                     (uv_to_center_vecs, np.zeros((1, uv_to_center_vecs.shape[1]))), axis=0)
-                uv_vecs = part.contour_lines[build_ind].uv[:, 1:] - part.contour_lines[build_ind].uv[:, :-1]
+                uv_vecs = contour_line.uv[:, 1:] - contour_line.uv[:, :-1]
                 uv_vecs = np.concatenate((uv_vecs, np.zeros((1, uv_vecs.shape[1]))), axis=0)
+                # incompatible dimensions for cross product
+                # (dimension must be 2 or 3)
                 rot_vecs = np.cross(uv_to_center_vecs, uv_vecs)
                 track_orientation = np.sign(np.sum(rot_vecs[2, :]))
-                part.contour_lines[build_ind].current_orientation = track_orientation
+                contour_line.current_orientation = track_orientation
 
-                build_ind += 1
+                part.contour_lines.append(contour_line)
         # End of Part 4
 
     return coil_parts
