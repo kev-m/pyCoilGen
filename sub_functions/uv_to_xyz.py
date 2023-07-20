@@ -17,8 +17,8 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv : np.ndarray, curved_mesh:
         curved_mesh (Trimesh): A curved mesh instance.
 
     Returns:
-        ndarray: The 3D xyz coordinates of the points with shape (N, 3).
-        ndarray: The updated 2D points after removing points that could not be assigned to a triangle, with shape (M, 2).
+        points_out_3d (ndarray): The 3D xyz coordinates of the points with shape (3,n).
+        points_in_2d (ndarray): The updated 2D points after removing points that could not be assigned to a triangle, with shape (2,n).
     """
     # Use Trimesh and helpers
     planary_uv_3d = np.empty((planary_uv.shape[0],3))
@@ -30,13 +30,23 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv : np.ndarray, curved_mesh:
     diameters = np.linalg.norm(planar_vertices - mean_pos, axis=1)
     avg_mesh_diameter = np.mean(diameters)
 
-    points_out_3d = np.zeros((points_in_2d_in.shape[1], 3))
-
+    # Create 3D array from 2D array [x,y] -> [x,y,0]
     points_in_3d = np.vstack((points_in_2d_in, np.zeros(points_in_2d_in.shape[1])))  # Create 3D equivalent (2,n -> 3,n)
     points_in_3d = points_in_3d.T # n,3
+
+    points_out_3d = np.zeros((points_in_2d_in.shape[1], 3))
     num_deleted_points = 0
     for point_ind in range(points_in_3d.shape[0]):
         point = points_in_3d[point_ind - num_deleted_points]
+        ############################
+        # DEBUG
+        # DEBUG:sub_functions.uv_to_xyz: Unable to match point [-1.61478303  0.02161017  0.        ] to face: 2 matches
+        # DEBUG:sub_functions.uv_to_xyz: point: 0 at [-1.61478303  0.02161017  0.        ], possible_triangles: [ 67 160]        
+        if np.allclose(point, [-1.61478303,  0.02161017,  0.]):
+            log.debug(" Here! this point!")
+            # target_triangles = [373]
+        #
+        ############################
         # Find the target triangle and barycentric coordinates of the point on the planar mesh
         closest, bary_centric_coord, target_triangles = planary_mesh.nearest.on_surface([point])
         if (len(target_triangles) == 1):
@@ -75,4 +85,7 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv : np.ndarray, curved_mesh:
             points_out_3d = np.delete(points_out_3d, point_ind - num_deleted_points, axis=0)
             num_deleted_points += 1
 
-    return points_out_3d, points_in_3d.T
+    # Recover 2D array from 3D array [x,y,0] -> [x,y]
+    points_in_2d = points_in_3d[:,:2]
+
+    return points_out_3d.T, points_in_2d.T
