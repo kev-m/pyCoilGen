@@ -1,5 +1,4 @@
 import numpy as np
-
 from trimesh import Trimesh
 from trimesh.proximity import ProximityQuery
 
