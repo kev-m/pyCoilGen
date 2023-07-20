@@ -7,12 +7,13 @@ import logging
 
 # Local imports
 from sub_functions.constants import *
-from sub_functions.data_structures import CoilPart, WirePart
+from sub_functions.data_structures import CoilPart, WirePart, TargetField
 from sub_functions.smooth_track_by_folding import smooth_track_by_folding
+from sub_functions.uv_to_xyz import uv_to_xyz
 
 log = logging.getLogger(__name__)
 
-def process_raw_loops(coil_parts: List[CoilPart], input, target_field):
+def process_raw_loops(coil_parts: List[CoilPart], input, target_field : TargetField):
     """
     Process raw loops in the coil mesh.
 
@@ -32,11 +33,11 @@ def process_raw_loops(coil_parts: List[CoilPart], input, target_field):
                 contour.uv = smooth_track_by_folding(contour.uv, input.smooth_factor)
 
     # Generate the curved coordinates
-    #for coil_part in coil_parts:
-    #    planar_mesh = triangulation(coil_part.coil_mesh.faces, coil_part.coil_mesh.uv)
-    #    curved_mesh = triangulation(coil_part.coil_mesh.faces, coil_part.coil_mesh.v)
-    #    for loop in coil_part.contour_lines:
-    #        loop.v, loop.uv = uv_to_xyz(loop.uv, planar_mesh, curved_mesh)
+    for coil_part in coil_parts:
+        curved_mesh = coil_part.coil_mesh.trimesh_obj
+        for loop in coil_part.contour_lines:
+            # log.debug(" - Loop: %s", loop.potential)
+            loop.v, loop.uv = uv_to_xyz(loop.uv, coil_part.coil_mesh.uv, curved_mesh)
 
     # Evaluate loop significance and remove loops that do not contribute enough to the target field
     coil_parts = evaluate_loop_significance(coil_parts, target_field)
@@ -59,13 +60,13 @@ def process_raw_loops(coil_parts: List[CoilPart], input, target_field):
 
     return coil_parts
 
-def evaluate_loop_significance(coil_parts, target_field):
+def evaluate_loop_significance(coil_parts: List[CoilPart], target_field : TargetField):
     """
     Calculate the relative errors between the different input and output fields and evaluate loop significance.
 
     Args:
         coil_parts (List[CoilPart]): A list of CoilPart structures.
-        target_field: The target field associated with the CoilSolution.
+        target_field (TargetField): The target field associated with the CoilSolution.
 
     Returns:
         List[CoilPart]: The updated list of CoilPart structures after evaluating loop significance.
@@ -76,8 +77,6 @@ def evaluate_loop_significance(coil_parts, target_field):
         loop_significance = np.zeros(len(coil_part.contour_lines))
 
         for i, loop in enumerate(coil_part.contour_lines):
-            log.debug(" -- here -- ")
-            # 'ContourLine' object has no attribute 'v'
             coil_part.field_by_loops[:, :, i] = biot_savart_calc_b(loop.v, target_field) * coil_part.contour_step
             combined_loop_field += coil_part.field_by_loops[:, :, i]
 
@@ -89,18 +88,18 @@ def evaluate_loop_significance(coil_parts, target_field):
 
     return coil_parts
 
-def biot_savart_calc_b(wire_elements, target_f):
+def biot_savart_calc_b(wire_elements : np.ndarray, target_f : TargetField):
     """
     Calculate the magnetic field using Biot-Savart law for wire elements given as a sequence of coordinate points.
 
     Args:
-        wire_elements (ndarray): A sequence of coordinate points representing wire elements.
+        wire_elements (ndarray): A sequence of coordinate points representing wire elements (m,3).
         target_f: The target field.
 
     Returns:
         ndarray: The magnetic field calculated using Biot-Savart law with shape (3, num_tp).
     """
-    num_tp = target_f.b.shape[1]
+    num_tp = target_f.b.shape[1] # (3,n)
     track_part_length = 1000
 
     if wire_elements.shape[1] > track_part_length:
@@ -134,6 +133,61 @@ def biot_savart_calc_b(wire_elements, target_f):
         target_p = np.tile(target_f.coords[:, :, np.newaxis], [1, 1, wire_part.seg_coords.shape[1]])  # copies target point coordinates
         cur_pos = np.tile(wire_part.seg_coords[:, :, np.newaxis], [1, 1, num_tp])  # copies vector of current position
         cur_dir = np.tile(wire_part.currents[:, :, np.newaxis], [1, 1, num_tp])  # copies vector of current direction
+        log.debug(" -- here -- ")
+        # Exception: operands could not be broadcast together with shapes (3,257,6) (3,6,257)
+        len_R = (1 / np.linalg.norm(R, axis=0)) ** 3  # distance factor of Biot-Savart law
+        len_R = np.tile(len_R, (3, 1, 1))
+        dB = 10 ** (-7) * np.cross(cur_dir, R, axis=0) * len_R
+        b_field += np.sum(dB, axis=1)
+
+    return b_field
+
+def biot_savart_calc_b_XXXX(wire_elements: np.ndarray, target_f: TargetField):
+    """
+    Calculate the magnetic field using Biot-Savart law for wire elements given as a sequence of coordinate points.
+
+    Args:
+        wire_elements (ndarray): A sequence of coordinate points representing wire elements (m, 3).
+        target_f: The target field.
+
+    Returns:
+        ndarray: The magnetic field calculated using Biot-Savart law with shape (num_tp, 3).
+    """
+    num_tp = target_f.b.shape[1]  # (3, n)
+    track_part_length = 1000
+
+    if wire_elements.shape[0] > track_part_length:
+        track_part_inds = np.arange(0, wire_elements.shape[0], track_part_length)
+        track_part_inds = np.append(track_part_inds, wire_elements.shape[0])
+
+        if track_part_inds[-2] == track_part_inds[-1]:
+            track_part_inds = track_part_inds[:-1]
+
+        wire_parts = []
+
+        for i in range(len(track_part_inds) - 1):
+            part_ind_start = track_part_inds[i]
+            part_ind_end = track_part_inds[i + 1]
+            coord = wire_elements[part_ind_start:part_ind_end, :]
+            seg_coords = (wire_elements[part_ind_start:(part_ind_end - 1), :] + wire_elements[(part_ind_start + 1):part_ind_end, :]) / 2
+            currents = wire_elements[(part_ind_start + 1):part_ind_end, :] - wire_elements[part_ind_start:(part_ind_end - 1), :]
+            wire_part = WirePart(coord=coord, seg_coords=seg_coords, currents=currents)
+            wire_parts.append(wire_part)
+
+    else:
+        coord = wire_elements
+        seg_coords = (wire_elements[:-1, :] + wire_elements[1:, :]) / 2
+        currents = wire_elements[1:, :] - wire_elements[:-1, :]
+        wire_part = WirePart(coord=coord, seg_coords=seg_coords, currents=currents)
+        wire_parts = [wire_part]
+
+    b_field = np.zeros((num_tp, 3))
+
+    for wire_part in wire_parts:
+        target_p = np.tile(target_f.coords[:, :, np.newaxis], [1, 1, wire_part.seg_coords.shape[0]])  # copies target point coordinates
+        cur_pos = np.tile(wire_part.seg_coords[:, :, np.newaxis], [1, 1, num_tp])  # copies vector of current position
+        cur_dir = np.tile(wire_part.currents[:, :, np.newaxis], [1, 1, num_tp])  # copies vector of current direction
+        #  operands could not be broadcast together with shapes (3,257,6) (6,3,257)
         R = target_p - cur_pos  # distance from current path to each point
         len_R = (1 / np.linalg.norm(R, axis=0)) ** 3  # distance factor of Biot-Savart law
         len_R = np.tile(len_R, (3, 1, 1))
