@@ -440,7 +440,8 @@ def CoilGen(log, input=None):
 
     assert len(c_part.contour_lines) == len(m_contour_lines)
     for index in range(len(c_part.contour_lines)):
-        log.debug(" Checking contour %d", index)
+        if get_level() > DEBUG_VERBOSE:
+            log.debug(" Checking contour %d", index)
         m_contour = m_contour_lines[index]
         c_contour = c_part.contour_lines[index]
         assert c_contour.current_orientation == m_contour.current_orientation # Pass
@@ -448,7 +449,7 @@ def CoilGen(log, input=None):
         # The MATLAB coilpart.contours is further processed in a subsequent function call.
         # Unable to compare here.
         #assert compare(c_contour.uv, m_contour.uv) # Index 0: Fail: Not the same shape: (2, 7) is not (2, 8)
-        log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv)) 
+        # log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv)) 
 
     if get_level() >= DEBUG_VERBOSE:
         visualize_compare_contours(coil_mesh.uv, 800, 'images/countour1_c.png', c_part.contour_lines)
