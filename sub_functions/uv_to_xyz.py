@@ -26,7 +26,8 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: 
     planary_uv_3d[:, 0:2] = planary_uv
     planary_uv_3d[:, 2] = 0
     planary_mesh = Trimesh(faces=curved_mesh.faces, vertices=planary_uv_3d)
-    planar_vertices = planary_mesh.vertices
+    planar_vertices = planary_mesh.vertices.view(np.ndarray)
+    planar_faces = planary_mesh.faces.view(np.ndarray)
     mean_pos = np.mean(planar_vertices, axis=0)
     diameters = np.linalg.norm(planar_vertices - mean_pos, axis=1)
     avg_mesh_diameter = np.mean(diameters)
@@ -41,14 +42,14 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: 
     for point_ind in range(points_in_3d.shape[0]):
         point = points_in_3d[point_ind - num_deleted_points]
         # Find the target triangle and barycentric coordinates of the point on the planar mesh
-        target_triangle, barycentric = get_target_triangle(point, planary_mesh, proximity)
+        target_triangle = get_target_triangle(point, planary_mesh, proximity)
 
         attempts = 0
         while target_triangle is None:
             # If the point is not directly on a triangle, perturb the point slightly and try again
             rand = (0.5 - np.random.rand(2))
             perturbed_point = point + avg_mesh_diameter * np.array([rand[0], rand[1], 0.0]) / 100
-            target_triangle, barycentric = get_target_triangle(perturbed_point, planary_mesh, proximity)
+            target_triangle = get_target_triangle(perturbed_point, planary_mesh, proximity)
             attempts += 1
             if attempts > 1000:
                 print('Warning: Points cannot be assigned to a triangle')
@@ -56,8 +57,12 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: 
                 break
 
         if target_triangle is not None:
+            if attempts > 0:
+                point = perturbed_point
             # Convert the 2D barycentric coordinates to 3D Cartesian coordinates
-            face_vertices_3d = curved_mesh.vertices[target_triangle]
+            face_vertices = planar_vertices[planar_faces[target_triangle]]
+            barycentric = barycentric_coordinates(point[:2], face_vertices[:,:2])
+            face_vertices_3d = curved_mesh.vertices[curved_mesh.faces[target_triangle]]
             points_out_3d[point_ind - num_deleted_points, :] = barycentric_to_cartesian(barycentric, face_vertices_3d)
         else:
             # Remove the point if it cannot be assigned to a triangle
@@ -82,13 +87,19 @@ def point_inside_triangle(point, triangle_vertices):
     Returns:
         bool: True if the point is inside or on the triangle, False otherwise.
     """
+    x, y = point
+    x1, y1 = triangle_vertices[0]
+    x2, y2 = triangle_vertices[1]
+    x3, y3 = triangle_vertices[2]
 
-    [alpha, beta, gamma] = barycentric_coordinates(point, triangle_vertices)
+    # Calculate the barycentric coordinates
+    denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)
+    alpha = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / denominator
+    beta = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / denominator
+    gamma = 1 - alpha - beta
 
     # Check if the point is inside the triangle
-    result = 0 <= alpha <= 1 and 0 <= beta <= 1 and 0 <= gamma <= 1
-    barycentric = [alpha, beta, gamma]
-    return [result, barycentric]
+    return 0 <= alpha <= 1 and 0 <= beta <= 1 and 0 <= gamma <= 1
 
 
 def which_face(point, face_indices, face_vertices):
@@ -102,15 +113,13 @@ def which_face(point, face_indices, face_vertices):
 
     Returns:
         index (int): The index of the possible face or None if the point intersects multiple faces.
-        barycentric (ndarray): The 3 element array of barycentric coordinates of the point with respect to the triangle.
     """
-    combined_results = [point_inside_triangle(point[:2], face_vertex[:, :2]) for face_vertex in face_vertices]
-    results = [result[0] for result in combined_results]
+    results = [point_inside_triangle(point[:2], face_vertex[:, :2]) for face_vertex in face_vertices]
     if np.sum(results) != 1:
         log.debug(" Unable to match point %s to face: %d matches <- %s", point, np.sum(results), face_indices)
         return None, None
-    result_index = np.where(results)[0][0]
-    return face_indices[result_index], combined_results[result_index][1]
+    result_index = np.where(results)[0]
+    return face_indices[result_index[0]]
 
 
 def get_target_triangle(point, planary_mesh: Trimesh, proximity: ProximityQuery):
@@ -123,7 +132,6 @@ def get_target_triangle(point, planary_mesh: Trimesh, proximity: ProximityQuery)
 
     Returns:
         face (int): The index of the triangle that contains the point else None.
-        barycentric (ndarray): The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
 
     """
     distance, vertex_id = proximity.vertex(point)
@@ -132,10 +140,10 @@ def get_target_triangle(point, planary_mesh: Trimesh, proximity: ProximityQuery)
     if len(refined_triangles) > 0:
         planar_vertices = planary_mesh.vertices.view(np.ndarray)
         face_indices = planary_mesh.faces[refined_triangles]
-        target_triangle, barycentric = which_face(point, refined_triangles, planar_vertices[face_indices])
-        return target_triangle, barycentric
+        target_triangle = which_face(point, refined_triangles, planar_vertices[face_indices])
+        return target_triangle
     log.debug("Unable to find any face for point %s", point)
-    return None, None
+    return None
 
 
 def barycentric_coordinates(point, triangle_vertices):
@@ -180,5 +188,4 @@ def barycentric_to_cartesian(bary_coords, triangle_vertices):
 
     # Calculate the Cartesian coordinates using the Barycentric coordinates
     cartesian_coords = np.dot(bary_coords, triangle_vertices)
-
     return cartesian_coords
