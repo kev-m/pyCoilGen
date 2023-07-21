@@ -46,7 +46,7 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: 
     for point_ind in range(points_in_3d.shape[0]):
         point = points_in_3d[point_ind - num_deleted_points]
         # Find the target triangle and barycentric coordinates of the point on the planar mesh
-        target_triangle, barycentric = get_target_triangle(point, planary_mesh, proximity)
+        target_triangle = get_target_triangle(point, planary_mesh, proximity)
 
         attempts = 0
         np.random.seed(3) # Setting the seed to improve testing robustness
@@ -91,8 +91,16 @@ def point_inside_triangle(point, triangle_vertices):
         bool: True if the point is inside or on the triangle, False otherwise.
         barycentric (list): The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
     """
+    x, y = point
+    x1, y1 = triangle_vertices[0]
+    x2, y2 = triangle_vertices[1]
+    x3, y3 = triangle_vertices[2]
 
-    [alpha, beta, gamma] = barycentric_coordinates(point, triangle_vertices)
+    # Calculate the barycentric coordinates
+    denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)
+    alpha = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / denominator
+    beta = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / denominator
+    gamma = 1 - alpha - beta
 
     # Check if the point is inside the triangle
     return [0 <= alpha <= 1 and 0 <= beta <= 1 and 0 <= gamma <= 1, [alpha, beta, gamma]]
@@ -156,7 +164,6 @@ def get_target_triangle_def(point, planary_mesh: Trimesh):
 
     Returns:
         face (int): The index of the triangle that contains the point else None.
-        barycentric (ndarray): The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
 
     """
     return get_target_triangle(point, planary_mesh, ProximityQuery(planary_mesh))
@@ -181,10 +188,10 @@ def get_target_triangle(point, planary_mesh: Trimesh, proximity: ProximityQuery)
     if len(refined_triangles) > 0:
         planar_vertices = planary_mesh.vertices.view(np.ndarray)
         face_indices = planary_mesh.faces[refined_triangles]
-        target_triangle, barycentric = which_face(point, refined_triangles, planar_vertices[face_indices])
-        return target_triangle, barycentric
+        target_triangle = which_face(point, refined_triangles, planar_vertices[face_indices])
+        return target_triangle
     log.debug("Unable to find any face for point %s", point)
-    return None, None
+    return None
 
 
 def barycentric_coordinates(point, triangle_vertices):
