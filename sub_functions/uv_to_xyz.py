@@ -1,13 +1,14 @@
 import numpy as np
-from trimesh.points import point_plane_distance
+
 from trimesh import Trimesh
+from trimesh.proximity import ProximityQuery
 
 # Logging
 import logging
 log = logging.getLogger(__name__)
 
 
-def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv : np.ndarray, curved_mesh: Trimesh):
+def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: Trimesh):
     """
     Convert 2D surface coordinates to 3D xyz coordinates of the 3D coil surface.
 
@@ -21,9 +22,9 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv : np.ndarray, curved_mesh:
         points_in_2d (ndarray): The updated 2D points after removing points that could not be assigned to a triangle, with shape (2,n).
     """
     # Use Trimesh and helpers
-    planary_uv_3d = np.empty((planary_uv.shape[0],3))
-    planary_uv_3d[:,0:2] = planary_uv
-    planary_uv_3d[:,2] = 0
+    planary_uv_3d = np.empty((planary_uv.shape[0], 3))
+    planary_uv_3d[:, 0:2] = planary_uv
+    planary_uv_3d[:, 2] = 0
     planary_mesh = Trimesh(faces=curved_mesh.faces, vertices=planary_uv_3d)
     planar_vertices = planary_mesh.vertices
     mean_pos = np.mean(planar_vertices, axis=0)
@@ -32,53 +33,32 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv : np.ndarray, curved_mesh:
 
     # Create 3D array from 2D array [x,y] -> [x,y,0]
     points_in_3d = np.vstack((points_in_2d_in, np.zeros(points_in_2d_in.shape[1])))  # Create 3D equivalent (2,n -> 3,n)
-    points_in_3d = points_in_3d.T # n,3
+    points_in_3d = points_in_3d.T  # n,3
 
+    proximity = ProximityQuery(planary_mesh)
     points_out_3d = np.zeros((points_in_2d_in.shape[1], 3))
     num_deleted_points = 0
     for point_ind in range(points_in_3d.shape[0]):
         point = points_in_3d[point_ind - num_deleted_points]
-        ############################
-        # DEBUG
-        # DEBUG:sub_functions.uv_to_xyz: Unable to match point [-1.61478303  0.02161017  0.        ] to face: 2 matches
-        # DEBUG:sub_functions.uv_to_xyz: point: 0 at [-1.61478303  0.02161017  0.        ], possible_triangles: [ 67 160]        
-        if np.allclose(point, [-1.61478303,  0.02161017,  0.]):
-            log.debug(" Here! this point!")
-            # target_triangles = [373]
-        #
-        ############################
         # Find the target triangle and barycentric coordinates of the point on the planar mesh
-        closest, bary_centric_coord, target_triangles = planary_mesh.nearest.on_surface([point])
-        if (len(target_triangles) == 1):
-            target_triangle = target_triangles[0]
-        else:
-            target_triangle = None
+        target_triangle, barycentric = get_target_triangle(point, planary_mesh, proximity)
 
-        tri_inds = 0
+        attempts = 0
         while target_triangle is None:
             # If the point is not directly on a triangle, perturb the point slightly and try again
             rand = (0.5 - np.random.rand(2))
-            perturbed_point = point + avg_mesh_diameter * np.array([ rand[0], rand[1], 0.0]) / 100
-            closest, bary_centric_coord, target_triangles = planary_mesh.nearest.on_surface([perturbed_point])
-            if (len(target_triangles) == 1):
-                target_triangle = target_triangles[0]
-            else:
-                target_triangle = None
-
-            tri_inds += 1
-
-            if tri_inds > 1000:
+            perturbed_point = point + avg_mesh_diameter * np.array([rand[0], rand[1], 0.0]) / 100
+            target_triangle, barycentric = get_target_triangle(perturbed_point, planary_mesh, proximity)
+            attempts += 1
+            if attempts > 1000:
                 print('Warning: Points cannot be assigned to a triangle')
                 log.warning('point %s at index %d can not be assigned to any triangle.', point, point_ind)
                 break
 
         if target_triangle is not None:
             # Convert the 2D barycentric coordinates to 3D Cartesian coordinates
-            points_out_3d[point_ind - num_deleted_points, :] = point_plane_distance(
-                curved_mesh.vertices[curved_mesh.faces[target_triangle]],
-                curved_mesh.face_normals[target_triangle],
-                points_in_3d[point_ind - num_deleted_points, :]
-            )
+            face_vertices_3d = curved_mesh.vertices[target_triangle]
+            points_out_3d[point_ind - num_deleted_points, :] = barycentric_to_cartesian(barycentric, face_vertices_3d)
         else:
             # Remove the point if it cannot be assigned to a triangle
             points_in_3d = np.delete(points_in_3d, point_ind - num_deleted_points, axis=0)
@@ -86,6 +66,119 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv : np.ndarray, curved_mesh:
             num_deleted_points += 1
 
     # Recover 2D array from 3D array [x,y,0] -> [x,y]
-    points_in_2d = points_in_3d[:,:2]
+    points_in_2d = points_in_3d[:, :2]
 
     return points_out_3d.T, points_in_2d.T
+
+
+def point_inside_triangle(point, triangle_vertices):
+    """
+    Check if a 2D point is contained on or in a triangle.
+
+    Args:
+        point (ndarray): 2D point as a 2-element array [x, y].
+        triangle_vertices (ndarray): Triangle vertices as a 3x2 array [[x1, y1], [x2, y2], [x3, y3]].
+
+    Returns:
+        bool: True if the point is inside or on the triangle, False otherwise.
+    """
+
+    [alpha, beta, gamma] = barycentric_coordinates(point, triangle_vertices)
+
+    # Check if the point is inside the triangle
+    result = 0 <= alpha <= 1 and 0 <= beta <= 1 and 0 <= gamma <= 1
+    barycentric = [alpha, beta, gamma]
+    return [result, barycentric]
+
+
+def which_face(point, face_indices, face_vertices):
+    """
+    Determine which face contains the point.
+
+    Args:
+        point (xyz): The input 2D points with shape (2,n).
+        face_indices (ndarray): The indices of the possible faces.
+        face_vertices (Trimesh): The vertices of the possible faces.
+
+    Returns:
+        index (int): The index of the possible face or None if the point intersects multiple faces.
+        barycentric (ndarray): The 3 element array of barycentric coordinates of the point with respect to the triangle.
+    """
+    combined_results = [point_inside_triangle(point[:2], face_vertex[:, :2]) for face_vertex in face_vertices]
+    results = [result[0] for result in combined_results]
+    if np.sum(results) != 1:
+        log.debug(" Unable to match point %s to face: %d matches <- %s", point, np.sum(results), face_indices)
+        return None, None
+    result_index = np.where(results)[0][0]
+    return face_indices[result_index], combined_results[result_index][1]
+
+
+def get_target_triangle(point, planary_mesh: Trimesh, proximity: ProximityQuery):
+    """
+    Get the face that contains the given point.
+
+    Args:
+        point (ndarray): The input 2D point (x,y,0)
+        planary_mesh (Trimesh): The 3D Trimesh representation of the 2D mesh (x,y,0)
+
+    Returns:
+        face (int): The index of the triangle that contains the point else None.
+        barycentric (ndarray): The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
+
+    """
+    distance, vertex_id = proximity.vertex(point)
+    possible_triangles = planary_mesh.vertex_faces[vertex_id]
+    refined_triangles = possible_triangles[np.where(possible_triangles >= 0)]
+    if len(refined_triangles) > 0:
+        planar_vertices = planary_mesh.vertices.view(np.ndarray)
+        face_indices = planary_mesh.faces[refined_triangles]
+        target_triangle, barycentric = which_face(point, refined_triangles, planar_vertices[face_indices])
+        return target_triangle, barycentric
+    log.debug("Unable to find any face for point %s", point)
+    return None, None
+
+
+def barycentric_coordinates(point, triangle_vertices):
+    """
+    Calculate the barycentric coordinates of a 2D point inside a triangle.
+
+    Args:
+        point (ndarray): The 2D point as a 1x2 array [x, y].
+        triangle_vertices (ndarray): The vertices of the triangle as a 3x2 array.
+
+    Returns:
+        ndarray: The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
+    """
+    # Extract the coordinates of the point and triangle vertices
+    x, y = point
+    x1, y1 = triangle_vertices[0]
+    x2, y2 = triangle_vertices[1]
+    x3, y3 = triangle_vertices[2]
+
+    # Calculate the areas of sub-triangles
+    triangle_area = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)
+    alpha = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / triangle_area
+    beta = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / triangle_area
+    gamma = 1 - alpha - beta
+
+    return np.array([alpha, beta, gamma])
+
+def barycentric_to_cartesian(bary_coords, triangle_vertices):
+    """
+    Convert Barycentric coordinates to 3D Cartesian coordinates.
+
+    Args:
+        bary_coords (ndarray): 3-element array representing the Barycentric coordinates.
+        triangle_vertices (ndarray): 3x3 array representing the 3D coordinates of the triangle vertices.
+
+    Returns:
+        ndarray: 3-element array representing the 3D Cartesian coordinates.
+    """
+    # Ensure that the input arrays are NumPy arrays
+    bary_coords = np.array(bary_coords)
+    triangle_vertices = np.array(triangle_vertices)
+
+    # Calculate the Cartesian coordinates using the Barycentric coordinates
+    cartesian_coords = np.dot(bary_coords, triangle_vertices)
+
+    return cartesian_coords

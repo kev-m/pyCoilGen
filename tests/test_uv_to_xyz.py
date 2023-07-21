@@ -107,10 +107,10 @@ def barycentric_coordinates(point, triangle_vertices):
     x3, y3 = triangle_vertices[2]
 
     # Calculate the areas of sub-triangles
-    area_triangle = 0.5 * (-y2 * x3 + y1 * (-x2 + x3) + x1 * (y2 - y3) + x2 * y3)
-    alpha = (0.5 * (-y2 * x3 + y * (-x2 + x3) + x * (y2 - y3) + x2 * y3)) / area_triangle
-    beta = (0.5 * (y1 * x3 - x1 * y3 + x * (-y1 + y3) + x1 * y)) / area_triangle
-    gamma = 1.0 - alpha - beta
+    triangle_area = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)
+    alpha = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / triangle_area
+    beta = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / triangle_area
+    gamma = 1 - alpha - beta
 
     return np.array([alpha, beta, gamma])
 
@@ -160,9 +160,8 @@ def which_face(point, face_indices, face_vertices):
     if np.sum(results) != 1:
         log.debug(" Unable to match point %s to face: %d matches <- %s", point, np.sum(results), face_indices)
         return None, None
-    result_index = np.where(results)[0]
-    barycentric = combined_results[result_index,1]
-    return face_indices[result_index], barycentric
+    result_index = np.where(results)[0][0]
+    return face_indices[result_index], combined_results[result_index][1]
 ################################################
 
 
@@ -203,7 +202,7 @@ def test_get_face_planar():
     points_3d_in = np.zeros((len(points_2d_in),3))
     points_3d_in[:,:2] = points_2d_in
     for index, point in enumerate(points_3d_in):
-        face = get_face(point, planar_mesh)
+        face, barycentric = get_face(point, planar_mesh)
         # log.debug("face for %s: %s", point, face)
         assert face == test_faces[index]
 
@@ -218,4 +217,4 @@ if __name__ == "__main__":
 
     test_get_face_planar()
     #test_which_face_planar()
-    #test_uv_to_xyz_planar()
+    test_uv_to_xyz_planar()
