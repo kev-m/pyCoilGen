@@ -45,15 +45,6 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: 
     num_deleted_points = 0
     for point_ind in range(points_in_3d.shape[0]):
         point = points_in_3d[point_ind - num_deleted_points]
-        ############################
-        # DEBUG
-        # DEBUG:sub_functions.uv_to_xyz: Unable to match point [-1.61478303  0.02161017  0.        ] to face: 2 matches
-        # DEBUG:sub_functions.uv_to_xyz: point: 0 at [-1.61478303  0.02161017  0.        ], possible_triangles: [ 67 160]        
-        if np.allclose(point, [-1.61478303,  0.02161017,  0.]):
-            log.debug(" Here! this point!")
-            # target_triangles = [373]
-        #
-        ############################
         # Find the target triangle and barycentric coordinates of the point on the planar mesh
         target_triangle, barycentric = get_target_triangle(point, planary_mesh, proximity)
 
