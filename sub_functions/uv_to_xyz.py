@@ -3,6 +3,9 @@ import numpy as np
 from trimesh import Trimesh
 from trimesh.proximity import ProximityQuery
 
+# Local imports
+from sub_functions.constants import get_level, DEBUG_VERBOSE
+
 # Logging
 import logging
 log = logging.getLogger(__name__)
@@ -111,7 +114,8 @@ def which_face(point, face_indices, face_vertices):
     combined_results = [point_inside_triangle(point[:2], face_vertex[:, :2]) for face_vertex in face_vertices]
     results = [sublist[0] for sublist in combined_results]
     if np.sum(results) != 1:
-        log.debug(" Unable to match point %s to face: %d matches <- %s", point, np.sum(results), face_indices)
+        if get_level() > DEBUG_VERBOSE:
+            log.debug(" Unable to match point %s to face: %d matches <- %s", point, np.sum(results), face_indices)
         return None, None
     result_index = np.where(results)[0][0]
     coords = [sublist[1] for sublist in combined_results]
