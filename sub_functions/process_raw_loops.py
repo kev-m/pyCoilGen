@@ -160,6 +160,7 @@ def biot_savart_calc_b(wire_elements: np.ndarray, target_f: TargetField):
         # 0.009	    0.0091	0.0877	-0.0968	-0.0336	-0.052
         # -0.0012	0.0012	0.0115	-0.0127	0.0044	0.0068
         # -0.0007	0.0006	0.0106	0.0592	-0.0202	-0.0389
+        #   ~       ~       y       y       y       y
         #################################
         w_currents_T = wire_part.currents.T  # -> 6,3
         # copies vector of current direction (3,6,257)     M: 3x6x257
@@ -179,17 +180,17 @@ def biot_savart_calc_b(wire_elements: np.ndarray, target_f: TargetField):
         # 3.399	3.3999	3.384	3.0449	2.8529	3.1418
         # 3.399	3.3999	3.384	3.0449	2.8529	3.1418
         #################################
-        len_R = (1 / np.linalg.norm(R, axis=1)) ** 3  # distance factor of Biot-Savart law
-        len_R = np.tile(len_R, (3, 1, 1))# (3,6,257)
-        # incompatible dimensions for cross product
-        # (dimension must be 2 or 3)  
-        log.debug(" -- here -- ")
+        len_Rx = (1 / np.linalg.norm(R, axis=1)) ** 3  # distance factor of Biot-Savart law (6,257)
+        len_R = np.tile(len_Rx, (3, 1, 1))# (3,6,257)
         #################################
         # MATLAB 3x6x257
         # 3.0352e-10	-2.7825e-10	-3.4998e-9	-7.032e-9	2.2414e-9	5.0127e-9
         # 1.3379e-9	1.3596e-9	1.3009e-8	-1.501e-8	-4.8813e-9	-8.4003e-9
         # 1.5244e-9	1.5491e-9	1.4839e-8	-1.474e-8	-4.7934e-9	-8.1696e-9
         #################################
+        # (6,3,257) * (3,6,257)
+        log.debug(" -- here -- ")
+        # operands could not be broadcast together with shapes (6,3,257) (3,6,257) 
         dB = 10 ** (-7) * np.cross(cur_dir, R, axis=1) * len_R
         #################################
         # MATLAB 3x257
