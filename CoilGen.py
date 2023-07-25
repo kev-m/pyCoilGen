@@ -464,6 +464,53 @@ def CoilGen(log, input=None):
     print('Process contours: Evaluate loop significance')
     coil_parts = process_raw_loops(coil_parts, input_args, target_field)
 
+    #####################################################
+    # DEVELOPMENT: Remove this
+    # DEBUG
+    # Verify: Coil Part values: field_by_loops, loop_significance, combined_loop_field, combined_loop_length
+    m_field_by_loops = m_c_part.field_by_loops
+    m_loop_significance = m_c_part.loop_signficance
+    m_combined_loop_field = m_c_part.combined_loop_field
+    m_combined_loop_length = m_c_part.combined_loop_length
+
+    ## assert c_part.combined_loop_length == m_combined_loop_length # Fail 97.776... != 97.673...
+    #log.debug("c_part.combined_loop_length == m_combined_loop_length:\n%s == %s", 
+    #          c_part.combined_loop_length, m_combined_loop_length)
+
+    # Fail:  -1.85932732e-06  7.72842169e-06 -5.85194154e-06  1.63341836e-07
+    # is not -1.85931361e-06  7.72842169e-06 -5.84366084e-06  1.14979947e-07      
+    ## assert compare(c_part.field_by_loops, m_field_by_loops)
+
+    # Fail: [0]: 1.3485584551763914 is not 1.3459361474796019
+    ## assert compare(c_part.loop_significance, m_loop_significance) # FAIL: 3.87...
+    log.debug(" Abs diff: %s", np.max(np.abs(c_part.loop_significance - m_loop_significance)))
+
+    # Fail[0]:  3.18446247e-05 4.07537749e-05 2.68691780e-05 1.25697419e-05 3.19949827e-05
+    # is not    4.49879032e-05 5.86350389e-05 4.54653304e-05 3.18269683e-05 4.68614511e-05
+    ## assert compare(c_part.combined_loop_field, m_combined_loop_field, 1e-5)
+
+    # Compare updated contour lines
+    for index in range(len(c_part.contour_lines)):
+        if get_level() >= DEBUG_VERBOSE:
+            log.debug(" Checking contour %d", index)
+        m_contour = m_contour_lines[index]
+        c_contour = c_part.contour_lines[index]
+        assert c_contour.current_orientation == m_contour.current_orientation # Pass
+        assert np.isclose(c_contour.potential, m_contour.potential) # Pass
+        # assert compare(c_contour.uv, m_contour.uv) # Pass [0], Fail [4]
+        log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv)) 
+        # assert compare(c_contour.v, m_contour.v) # Fail: 2nd position 1.15644483e-03 != -9.12899313e-17
+        log.debug(" -- compare v: %s", compare(c_contour.v, m_contour.v)) 
+
+    if get_level() >= DEBUG_VERBOSE:
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour2_c.png', c_part.contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour2_m.png', m_contour_lines)
+
+    # Manual conclusion: Not identical, but close.
+
+    #
+    #####################################################
+
     # WIP
     solution.coil_parts = coil_parts
     return solution
