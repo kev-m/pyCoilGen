@@ -289,6 +289,7 @@ class CoilPart:
     combined_loop_field: np.ndarray = None # Placeholder (evaluate_loop_significance in process_raw_loops) (3,m)
     loop_significance: np.ndarray = None # Per contour line (evaluate_loop_significance in process_raw_loops) (n)
     combined_loop_length: float = 0.0 # Length of contour lines (process_raw_loops)
+    pcb_track_width: float = 0.0 # PCB track width (find_minimal_contour_distance)
 
 class CoilSolution:
     """
