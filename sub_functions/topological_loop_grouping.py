@@ -3,7 +3,7 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart
+from sub_functions.data_structures import CoilPart, ContourLine
 from sub_functions.check_mutual_loop_inclusion import check_mutual_loop_inclusion
 
 log = logging.getLogger(__name__)
@@ -149,6 +149,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
             level_positions[level_index] = sorted(level_positions[level_index], key=lambda x: rank_of_group[x])
 
         # Build the group container
+        coil_part.groups = np.empty((len(loop_groups)), dtype=object)
         for group_index in range(len(loop_groups)):
             # Sort the loops in each group according to the rank
             sorted_loops = sorted(
@@ -159,18 +160,8 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
 
             group = []
             for loop_index in sorted_loops:
-                loop_data = coil_part.contour_lines[loop_index]
-                loop_entry = {
-                    # "number_points": loop_data.uv.shape[1],# Unused
-                    "v": loop_data.v,
-                    "uv": loop_data.uv,
-                    "potential": loop_data.potential,
-                    "current_orientation": loop_data.current_orientation
-                }
-                group.append(loop_entry)
+                group.append(coil_part.contour_lines[loop_index])
 
-            log.debug(" --- here ---")
-            # 'NoneType' object has no attribute 'append'
-            coil_part.groups.append(group)
+            coil_part.groups[group_index] = group
 
     return coil_parts
