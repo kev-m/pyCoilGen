@@ -50,7 +50,7 @@ def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only
             #    -0.3000   -0.3000   -0.3000   -0.3000   -0.3000   -0.3000   -0.3000   -0.3000
             all_near_points_b = x1 + (diff) * np.tile(t, (3, 1))
             # M: 1.1538    1.1549    1.1547    1.1594    1.1923    1.1761    1.1493    1.1538
-            all_dists = np.linalg.norm(all_near_points_b - loop_a.v, axis=0)
+            all_dists = np.linalg.norm(all_near_points_b - loop_a.v, axis=0) # (3,8) - (3,8)
             # 7
             min_ind_b = np.argmin(all_dists)
             near_dists[test_point_ind] = all_dists[min_ind_b]
@@ -94,17 +94,21 @@ def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only
         #  0.0752    0.0662    0.0571   -0.0306    0.0662    0.0998    0.1518
         #  0.9901    0.9913    0.9901    0.9785    0.9913    0.9869    0.9800
         # -0.5896   -0.5889   -0.5894   -0.6000   -0.6592   -0.6389   -0.6000
-        #p2 = near_points_b_v - x1
-        p2 = np.array([near_points_b_v - x1[:,i] for i in range(x1.shape[1])]).T # (3,7)
-        t2dot = [np.dot(p2[:, i], diff[:, 1]) for i in range(diff.shape[1])]
+        # MATLAB performs (vector - matrix) by decomposition.
+        delta_npbv_x1 = np.array([near_points_b_v - x1[:,i] for i in range(x1.shape[1])]).T # (3,7)
+        t2dot = [np.dot(delta_npbv_x1[:, i], diff[:, 1]) for i in range(diff.shape[1])]
         # t = np.dot(p2, diff) / np.sum((diff) ** 2, axis=0)
         t = t2dot/np.sum((diff) ** 2, axis=0)
         t[t < 0] = 0
         t[t > 1] = 1
+        #all_near_points_b = x1 + (diff) * np.tile(t, (3, 1))
         all_near_points_a = x1 + (diff) * np.tile(t, (3, 1))
 
         # Exception: operands could not be broadcast together with shapes (3,7) (3,) 
-        all_dists = np.linalg.norm(all_near_points_a - near_points_b_v, axis=0)
+        # all_dists = np.linalg.norm(all_near_points_a - near_points_b_v, axis=0) # (3,7) - (3,)
+        # MATLAB performs (vector - matrix) by decomposition.
+        delta_anpa_npbv = np.array([all_near_points_a[:,i] - near_points_b_v for i in range(all_near_points_a.shape[1])]).T
+        all_dists = np.linalg.norm(delta_anpa_npbv, axis=0)
         min_ind_a = np.argmin(all_dists)
         near_points_a_v = all_near_points_a[:, min_ind_a]
         near_points_a_uv = loop_a.uv[:, min_ind_a] + \
