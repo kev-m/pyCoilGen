@@ -290,6 +290,7 @@ class CoilPart:
     loop_significance: np.ndarray = None # Per contour line (evaluate_loop_significance in process_raw_loops) (n)
     combined_loop_length: float = 0.0 # Length of contour lines (process_raw_loops)
     pcb_track_width: float = 0.0 # PCB track width (find_minimal_contour_distance)
+    groups: List[ContourLine] = None # Topological groups (topological_loop_grouping)
 
 class CoilSolution:
     """
