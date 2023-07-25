@@ -60,15 +60,14 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         is_global_top_loop = [len(higher_loops[loop_num]) == num_total_loops - 1 for loop_num in range(num_total_loops)]
 
         # Delete the repetition in the parallel levels and the singular levels
-        group_levels = sorted(list(set(tuple(level)
-                              for level in group_levels if len(level) > 1 or is_global_top_loop[level[0]])))
+        group_levels = sorted(level
+                              for level in group_levels if len(level) > 1 or is_global_top_loop[level[0]])
 
         # Creating the loop groups (containing still the loops of the inner groups)
         overlapping_loop_groups = [group_level for group_level in group_levels]
         overlapping_loop_groups_num = [loop_num for group_level in group_levels for loop_num in group_level]
 
         for overlap_index in range(len(overlapping_loop_groups)):
-            # can only concatenate tuple (not "list") to tuple
             overlapping_loop_groups[overlap_index] += higher_loops[overlapping_loop_groups_num[overlap_index]]
 
         # Build the group topology by checking the loop content of a certain group
@@ -170,6 +169,8 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
                 }
                 group.append(loop_entry)
 
+            log.debug(" --- here ---")
+            # 'NoneType' object has no attribute 'append'
             coil_part.groups.append(group)
 
     return coil_parts
