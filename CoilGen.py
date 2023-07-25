@@ -32,8 +32,8 @@ from sub_functions.calc_potential_levels import calc_potential_levels
 from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 from sub_functions.process_raw_loops import process_raw_loops
 from sub_functions.find_minimal_contour_distance import find_minimal_contour_distance
+from sub_functions.topological_loop_grouping import topological_loop_grouping
 """
-from topological_loop_grouping import topological_loop_grouping
 from calculate_group_centers import calculate_group_centers
 from interconnect_within_groups import interconnect_within_groups
 from interconnect_among_groups import interconnect_among_groups
@@ -526,13 +526,13 @@ def CoilGen(log, input=None):
         #
         #####################################################
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
-
         # Group the contour loops in topological order
         print('Group the contour loops in topological order:')
         coil_parts = topological_loop_grouping(coil_parts, input_args)
+
+        # WIP
+        solution.coil_parts = coil_parts
+        return solution
 
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
