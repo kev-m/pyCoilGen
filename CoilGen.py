@@ -452,7 +452,7 @@ def CoilGen(log, input=None):
         # log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv)) 
 
     if get_level() >= DEBUG_VERBOSE:
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour1_c.png', c_part.contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour1_p.png', c_part.contour_lines)
         visualize_compare_contours(coil_mesh.uv, 800, 'images/countour1_m.png', m_contour_lines)
 
     # Manual conclusion: Not identical, but really close.
@@ -491,19 +491,20 @@ def CoilGen(log, input=None):
 
     # Compare updated contour lines
     for index in range(len(c_part.contour_lines)):
-        if get_level() >= DEBUG_VERBOSE:
+        if get_level() > DEBUG_VERBOSE:
             log.debug(" Checking contour %d", index)
         m_contour = m_contour_lines[index]
         c_contour = c_part.contour_lines[index]
         assert c_contour.current_orientation == m_contour.current_orientation # Pass
         assert np.isclose(c_contour.potential, m_contour.potential) # Pass
         # assert compare(c_contour.uv, m_contour.uv) # Pass [0], Fail [4]
-        log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv)) 
         # assert compare(c_contour.v, m_contour.v) # Fail: 2nd position 1.15644483e-03 != -9.12899313e-17
-        log.debug(" -- compare v: %s", compare(c_contour.v, m_contour.v)) 
+        if get_level() > DEBUG_VERBOSE:
+            log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv)) 
+            log.debug(" -- compare v: %s", compare(c_contour.v, m_contour.v)) 
 
     if get_level() >= DEBUG_VERBOSE:
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour2_c.png', c_part.contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour2_p.png', c_part.contour_lines)
         visualize_compare_contours(coil_mesh.uv, 800, 'images/countour2_m.png', m_contour_lines)
 
     # Manual conclusion: Not identical, but close.
