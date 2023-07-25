@@ -87,9 +87,23 @@ def evaluate_loop_significance(coil_parts: List[CoilPart], target_field: TargetF
             coil_part.field_by_loops[:, :, i] = biot_savart_calc_b(loop.v, target_field) * coil_part.contour_step
             combined_loop_field += coil_part.field_by_loops[:, :, i]
 
+        # m_loop_significance:
+        # [ 1.34593615  1.62143367  3.80367083  5.51235912  8.70629707 10.19729513
+        # 14.95497389 15.54991185 20.36798658 20.7265047  24.25017066 24.89707883
+        # 26.91013823 29.37214945 31.69043339 33.49193955 37.65678613 34.6964905
+        # 41.38672178 37.28003881 41.47468123 39.13587836 37.71582329 37.04649163
+        # 33.61313262 33.56445718 29.33302299 27.70678568 24.99136537 24.86053276
+        # 20.79811683 20.17647036 15.58078537 14.74010873 10.24845291  8.97181639
+        # 5.5658354   3.06258821  1.26640602  1.60080372]
+
         for i, loop in enumerate(coil_part.contour_lines):
-            loop_significance[i] = np.max(np.abs(coil_part.field_by_loops[2, :, i])) / \
-                (np.mean(np.abs(combined_loop_field[2, :])) / len(coil_part.contour_lines)) * 100
+            # M: 0	0.0007	0	0.0007	0.0014	0.0007	0
+            loop_z_abs = np.abs(coil_part.field_by_loops[2, :, i])
+            # M: 0.0000055966	0.0000064286	0.0000062354	0.0000060079	0.0000066226	0.000006479	0.000006284
+            field_z_abs = np.abs(combined_loop_field[2, :])
+            #loop_significance[i] = np.max(field_z_abs) / (np.mean(loop_z_abs) / loop_length) * 100
+            loop_significance[i] = np.max(loop_z_abs) / (np.mean(field_z_abs)) * 100
+
 
         coil_part.combined_loop_field = combined_loop_field
         coil_part.loop_significance = loop_significance
