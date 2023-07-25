@@ -31,8 +31,8 @@ from sub_functions.stream_function_optimization import stream_function_optimizat
 from sub_functions.calc_potential_levels import calc_potential_levels
 from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 from sub_functions.process_raw_loops import process_raw_loops
+from sub_functions.find_minimal_contour_distance import find_minimal_contour_distance
 """
-from find_minimal_contour_distance import find_minimal_contour_distance
 from topological_loop_grouping import topological_loop_grouping
 from calculate_group_centers import calculate_group_centers
 from interconnect_within_groups import interconnect_within_groups
@@ -512,14 +512,23 @@ def CoilGen(log, input=None):
     #
     #####################################################
 
-    # WIP
-    solution.coil_parts = coil_parts
-    return solution
-
-    if not input_args['skip_postprocessing']:
+    if not input_args.skip_postprocessing:
         # Find the minimal distance between the contour lines
         print('Find the minimal distance between the contour lines:')
         coil_parts = find_minimal_contour_distance(coil_parts, input_args)
+
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: Coil Part values: pcb_track_width
+        m_pcb_track_width = m_c_part.pcb_track_width
+        assert c_part.pcb_track_width == m_pcb_track_width # ???
+        #
+        #####################################################
+
+        # WIP
+        solution.coil_parts = coil_parts
+        return solution
 
         # Group the contour loops in topological order
         print('Group the contour loops in topological order:')
@@ -765,7 +774,7 @@ if __name__ == "__main__":
         "set_roi_into_mesh_center": 1,
         "sf_opt_method": "tikkonov",
         "sf_source_file": "none",
-        "skip_calculation_min_winding_distance": 1,
+        "skip_calculation_min_winding_distance": 1, # Was 1
         "skip_inductance_calculation": 0,
         "skip_normal_shift": 0,
         "skip_postprocessing": 0,
