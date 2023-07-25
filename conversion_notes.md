@@ -6,6 +6,15 @@ Note: Also need BLAS and gfortran to install scipy:
  $ sudo apt install gfortran
  ```
 
+ ## Trimesh Dependencies
+ Need to manually install Trimesh dependencies.
+ 1. rtree (for nearest.on_surface)
+
+I needed to manually install libspatialindex library (for rtree).
+ ```bash
+ $ sudo apt-get install libspatialindex-dev
+ ```
+
  # Conversion Notes
  ## Indexing
  Note that Matlab uses base index of 1 for arrays, whereas Numpy uses 0. Adjust all functions that create `faces` arrays accordingly.

@@ -272,9 +272,10 @@ class ContourLine:
 
     Used by calc_contours_by_triangular_potential_cuts
     """
-    uv : np.ndarray = None
-    potential : float = None
-    current_orientation : float = None
+    v : np.ndarray = None   # 3D co-ordinates of the contour (process_raw_loops) (3,m)
+    uv : np.ndarray = None  # 2D co-ordinates of the contour (process_raw_loops) (2,2)
+    potential : float = None # Potential value of the contour
+    current_orientation : int = None
 
 
 @dataclass
@@ -284,6 +285,10 @@ class CoilPart:
     resistance_matrix: np.ndarray = None # num_vertices x num_vertices
     raw: RawPart = None
     contour_lines: List[ContourLine] = None
+    field_by_loops: np.ndarray = None # Placeholder (evaluate_loop_significance in process_raw_loops)
+    combined_loop_field: np.ndarray = None # Placeholder (evaluate_loop_significance in process_raw_loops) (3,m)
+    loop_significance: np.ndarray = None # Per contour line (evaluate_loop_significance in process_raw_loops) (n)
+    combined_loop_length: float = 0.0 # Length of contour lines (process_raw_loops)
 
 class CoilSolution:
     """
@@ -309,13 +314,28 @@ class TargetField:
     """
     To be defined.
     """
-    b = None
-    coords = None
-    weights = None
-    target_field_group_inds = None
+    b : np.ndarray = None       # (3,num vertices)
+    coords : np.ndarray = None  # (3,num vertices)
+    weights = None              # (num vertices)
+    target_field_group_inds = None # (num vertices)
+    target_gradient_dbdxyz = None # (3,num vertices)
 
     def __str__(self):
         return as_string(self)
+
+# Used by process_raw_loops
+@dataclass
+class WirePart:
+    """
+    To be defined.
+    """
+    coord: List[np.ndarray] = None
+    seg_coords: List[np.ndarray] = None
+    currents : List[np.ndarray] = None
+
+    def __str__(self):
+        return as_string(self)
+
 
 
 # Used by temp_evaluation
