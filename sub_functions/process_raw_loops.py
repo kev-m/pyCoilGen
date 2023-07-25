@@ -76,8 +76,12 @@ def evaluate_loop_significance(coil_parts: List[CoilPart], target_field: TargetF
     """
 
     for coil_part in coil_parts:
+        num_contours = len(coil_part.contour_lines)
         combined_loop_field = np.zeros((3, target_field.b.shape[1]))
-        loop_significance = np.zeros(len(coil_part.contour_lines))
+        loop_significance = np.zeros(num_contours)
+        # Create field_by_loops
+        field_shape = target_field.coords.shape
+        coil_part.field_by_loops = np.empty((field_shape[0], field_shape[1], num_contours), dtype=float)
 
         for i, loop in enumerate(coil_part.contour_lines):
             coil_part.field_by_loops[:, :, i] = biot_savart_calc_b(loop.v, target_field) * coil_part.contour_step
