@@ -3,7 +3,7 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart, ContourLine
+from sub_functions.data_structures import CoilPart, TopoGroup
 from sub_functions.check_mutual_loop_inclusion import check_mutual_loop_inclusion
 
 log = logging.getLogger(__name__)
@@ -37,11 +37,39 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         # Clear the diagonals from the loop_in_loop_mat
         mask = np.ones((num_total_loops, num_total_loops), dtype=int) - np.eye(num_total_loops, dtype=int)
         loop_in_loop_mat = loop_in_loop_mat * mask
-
+        # M: lower_loops =
+        #   1x40 cell array
+        #   Columns 1 through 12
+        #     {9x1 double}    {9x1 double}    {8x1 double}    {8x1 double}    {7x1 double}    {7x1 double}    {6x1 double}    {6x1 double}    {5x1 double}    {5x1 double}    {4x1 double}    {4x1 double}
+        #   Columns 13 through 27
+        #     {3x1 double}    {3x1 double}    {2x1 double}    {2x1 double}    {[19]}    {[20]}    {[0]}    {[0]}    {[0]}    {[0]}    {[21]}    {[22]}    {2x1 double}    {2x1 double}    {3x1 double}
+        #   Columns 28 through 39
+        #     {3x1 double}    {4x1 double}    {4x1 double}    {5x1 double}    {5x1 double}    {6x1 double}    {6x1 double}    {7x1 double}    {7x1 double}    {8x1 double}    {8x1 double}    {9x1 double}
+        #   Column 40
+        #     {9x1 double}
         lower_loops = [list(np.nonzero(loop_in_loop_mat[:, loop_to_test])[0])
                        for loop_to_test in range(num_total_loops)]
+        # [3;5;7;9;11;13;15;18;20]	[4;6;8;10;12;14;16;17;19]	[5;7;9;11;13;15;18;20]	[6;8;10;12;14;16;17;19]	[7;9;11;13;15;18;20]	[8;10;12;14;16;17;19]	[9;11;13;15;18;20]	[10;12;14;16;17;19]	[11;13;15;18;20]	[12;14;16;17;19]	[13;15;18;20]	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined
+
+        # M: higher_loops =
+        #   1x40 cell array
+        #   Columns 1 through 13
+        #     {1x0 double}    {1x0 double}    {[1]}    {[2]}    {[1 3]}    {[2 4]}    {[1 3 5]}    {[2 4 6]}    {[1 3 5 7]}    {[2 4 6 8]}    {[1 3 5 7 9]}    {[2 4 6 8 10]}    {[1 3 5 7 9 11]}
+        #   Columns 14 through 21
+        #     {[2 4 6 8 10 12]}    {[1 3 5 7 9 11 13]}    {[2 4 6 8 10 12 14]}    {[2 4 6 8 10 ... ]}    {[1 3 5 7 9 11 ... ]}    {[2 4 6 8 10 ... ]}    {[1 3 5 7 9 11 ... ]}    {[23 25 27 29 ... ]}
+        #   Columns 22 through 29
+        #     {[24 26 28 30 ... ]}    {[25 27 29 31 ... ]}    {[26 28 30 32 ... ]}    {[27 29 31 33 ... ]}    {[28 30 32 34 ... ]}    {[29 31 33 35 37 39]}    {[30 32 34 36 38 40]}    {[31 33 35 37 39]}
+        #   Columns 30 through 40
+        #     {[32 34 36 38 40]}    {[33 35 37 39]}    {[34 36 38 40]}    {[35 37 39]}    {[36 38 40]}    {[37 39]}    {[38 40]}    {[39]}    {[40]}    {1x0 double}    {1x0 double}        
         higher_loops = [list(np.nonzero(loop_in_loop_mat[loop_to_test, :])[0])
                         for loop_to_test in range(num_total_loops)]
+        # []	[]	1	2	[1,3]	[2,4]	[1,3,5]	[2,4,6]	[1,3,5,7]	[2,4,6,8]	[1,3,5,7,9]	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined	undefined        
+
+        # Check the possibility of the top level being composed out of a single group
+        # M: is_global_top_loop
+        #   1x40 logical array
+        #    0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+        is_global_top_loop = [len(higher_loops[loop_num]) == num_total_loops - 1 for loop_num in range(num_total_loops)]
 
         # Assign '0' to loops that have no lower loops
         empty_cells = [ind for ind, lower_loop in enumerate(lower_loops) if not lower_loop]
@@ -52,24 +80,65 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         # Convert the list of lower loops into parallel levels
         group_levels = [None] * num_total_loops
 
+        # M: group_levels [y]
+        #   1x40 cell array
+        #   Columns 1 through 19
+        #     {[1]}    {[2]}    {[3]}    {[4]}    {[5]}    {[6]}    {[7]}    {[8]}    {[9]}    {[10]}    {[11]}    {[12]}    {[13]}    {[14]}    {[15]}    {[16]}    {[17]}    {[18]}    {[19 20 21 22]}
+        #   Columns 20 through 35
+        #     {[19 20 21 22]}    {[19 20 21 22]}    {[19 20 21 22]}    {[23]}    {[24]}    {[25]}    {[26]}    {[27]}    {[28]}    {[29]}    {[30]}    {[31]}    {[32]}    {[33]}    {[34]}    {[35]}
+        #   Columns 36 through 40
+        #     {[36]}    {[37]}    {[38]}    {[39]}    {[40]}
+        # 42: coil_parts(part_ind).group_levels{aaaa}=find(cellfun(@(x) isequal(lower_loops{aaaa},x),lower_loops));
         for loop_to_test in range(num_total_loops):
             group_levels[loop_to_test] = [ind for ind, lower_loop in enumerate(
                 lower_loops) if lower_loop == lower_loops[loop_to_test]]
 
-        # Check the possibility of the top level being composed out of a single group
-        is_global_top_loop = [len(higher_loops[loop_num]) == num_total_loops - 1 for loop_num in range(num_total_loops)]
-
         # Delete the repetition in the parallel levels and the singular levels
-        group_levels = sorted(level
-                              for level in group_levels if len(level) > 1 or is_global_top_loop[level[0]])
+        # M: group_levels
+        #   1x37 cell array
+        #   Columns 1 through 18
+        #     {[1]}    {[10]}    {[11]}    {[12]}    {[13]}    {[14]}    {[15]}    {[16]}    {[17]}    {[18]}    {[19 20 21 22]}    {[2]}    {[23]}    {[24]}    {[25]}    {[26]}    {[27]}    {[28]}
+        #   Columns 19 through 37
+        #     {[29]}    {[3]}    {[30]}    {[31]}    {[32]}    {[33]}    {[34]}    {[35]}    {[36]}    {[37]}    {[38]}    {[39]}    {[4]}    {[40]}    {[5]}    {[6]}    {[7]}    {[8]}    {[9]}
+        ## % remove levels with only one member except it is the singular top level        
+        multi_element_indices = [index for index, cell in enumerate(group_levels) if len(cell) != 1]
+        new_group_levels = []
+        for i in multi_element_indices:
+            if not group_levels[i] in new_group_levels:
+                new_group_levels.append(group_levels[i])
+        top_level_indices = [index for index, cell in enumerate(group_levels) if len(cell) == 1 and is_global_top_loop[cell[0]]]
+        for i in top_level_indices:
+            if not group_levels[i] in new_group_levels:
+                new_group_levels.append(group_levels[i])
+
+        # M: group_levels
+        #   1x1 cell array
+        #     {[19 20 21 22]}
+        # 49: coil_parts(part_ind).group_levels=coil_parts(part_ind).group_levels(cellfun(@numel,coil_parts(part_ind).group_levels)~=1 | arrayfun(@(x) is_global_top_loop(coil_parts(part_ind).group_levels{x}(1)),1:numel(coil_parts(part_ind).group_levels))==1); % remove levels with only one member except it is the singular top level
+        group_levels = new_group_levels
 
         # Creating the loop groups (containing still the loops of the inner groups)
-        overlapping_loop_groups = [group_level for group_level in group_levels]
-        overlapping_loop_groups_num = [loop_num for group_level in group_levels for loop_num in group_level]
+        # M: overlapping_loop_groups_num [y]
+        # 19	20	21	22
+        # L91: overlapping_loop_groups_num = horzcat(coil_parts(part_ind).group_levels{:});
+        overlapping_loop_groups_num = [loop_num for loop_num in group_levels[0]]
+        # M: overlapping_loop_groups [y]
+        #   1x4 cell array
+        #     {[19]}    {[20]}    {[21]}    {[22]}        
+        # Horizontally concatenate the cell array elements
+        overlapping_loop_groups = [[item] for item in group_levels[0]]
+        # M: overlapping_loop_groups
+        #   1x4 cell array
+        #     {[19 2 4 6 8 10 12 14 16 17]}    {[20 1 3 5 7 9 11 13 15 18]}    {[21 23 25 27 29 31 33 35 37 39]}    {[22 24 26 28 30 32 34 36 38 40]}
+        # Horizontally concatenate the cell array elements and convert to a list of individual elements (cells)
+        yyy = []
+        for index1, group in enumerate(overlapping_loop_groups):
+            xxx = [group[0]]
+            xxx += higher_loops[overlapping_loop_groups_num[index1]]
+            yyy.append(xxx)
+        overlapping_loop_groups = yyy
 
-        for overlap_index in range(len(overlapping_loop_groups)):
-            overlapping_loop_groups[overlap_index] += higher_loops[overlapping_loop_groups_num[overlap_index]]
-
+        # MATLAB cell indexing is confusing!!
         # Build the group topology by checking the loop content of a certain group
         # to see if it is a superset of the loop content of another group
         group_in_group_mat = np.zeros((len(overlapping_loop_groups), len(overlapping_loop_groups)))
@@ -89,22 +158,33 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         # Remove loops from group if they also belong to a respective subgroup
         loop_groups = [group.copy() for group in overlapping_loop_groups]
 
-        for group_index in range(len(overlapping_loop_groups)):
-            loops_to_remove = [loop for subgroup_index in group_contains_following_group[group_index]
+        for iiii in range(len(overlapping_loop_groups)):
+            loops_to_remove = [loop for subgroup_index in group_contains_following_group[iiii]
                                for loop in overlapping_loop_groups[subgroup_index]]
-            loop_groups[group_index] = list(set(loop_groups[group_index]) - set(loops_to_remove))
+            diff = set(loop_groups[iiii]) - set(loops_to_remove)
+            loop_groups[iiii] = list(diff)
 
+        # Order the loop_groups
+        # TODO: Check the MATLAB if the group sub-lists are sorted too.
+        for index, sub_loop in enumerate(loop_groups):
+            loop_groups[index] = sorted(sub_loop)
+        coil_part.loop_groups = loop_groups
         # Order the groups based on the number of loops
-        renamed_group_levels = group_levels.copy()
-        group_levels = [group_levels[group_index]
-                        for group_index in np.argsort([len(group) for group in loop_groups])[::-1]]
+        # M: sort_ind =
+        #      1     2     3     4        
+        sort_indices = np.argsort([len(group) for group in loop_groups])[::-1]
+        # Sort each group level
+        for group_index, group_level in enumerate(group_levels):
+            group_levels[group_index] = [group_level[sort_idex] for sort_idex in sort_indices]
+        log.debug("-- here --")
 
         # Renumber (=rename) the groups (also in the levels)
-        for group_index in range(len(group_levels)):
-            for level_index in range(len(group_levels[group_index])):
+        renamed_group_levels = group_levels.copy()
+        for iiii in range(len(group_levels)):
+            for level_index in range(len(group_levels[iiii])):
                 for renamed_index in range(len(loop_groups)):
-                    if group_levels[group_index][level_index] in loop_groups[renamed_index]:
-                        renamed_group_levels[group_index][level_index] = renamed_index
+                    if group_levels[iiii][level_index] in loop_groups[renamed_index]:
+                        renamed_group_levels[iiii][level_index] = renamed_index
 
         # Resort parallel_levels to new group names
         renamed_group_levels = sorted(list(set(tuple(level) for level in renamed_group_levels)))
@@ -131,9 +211,9 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
 
         for level_index in range(len(level_enclosed_by_loop)):
             level_positions.append([])
-            for group_index in range(len(loop_groups)):
-                if any(loop in level_enclosed_by_loop[level_index] for loop in loop_groups[group_index]):
-                    level_positions[-1].append(group_index)
+            for iiii in range(len(loop_groups)):
+                if any(loop in level_enclosed_by_loop[level_index] for loop in loop_groups[iiii]):
+                    level_positions[-1].append(iiii)
 
         for level_index in range(len(level_positions)):
             level_positions[level_index] = [group for group in level_positions[level_index]
@@ -142,26 +222,43 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         # Sort the level_positions according to their rank
         rank_of_group = [0] * len(loop_groups)
 
-        for group_index in range(len(loop_groups)):
-            rank_of_group[group_index] = len([level for level in level_positions if group_index in level])
+        for iiii in range(len(loop_groups)):
+            rank_of_group[iiii] = len([level for level in level_positions if iiii in level])
 
         for level_index in range(len(group_levels)):
             level_positions[level_index] = sorted(level_positions[level_index], key=lambda x: rank_of_group[x])
 
+        coil_part.level_positions = level_positions
         # Build the group container
         coil_part.groups = np.empty((len(loop_groups)), dtype=object)
-        for group_index in range(len(loop_groups)):
+        # M: coil_parts(part_ind).loop_groups
+        # ans =
+        #   1x4 cell array
+        #     {[2 4 6 8 10 12 14 16 17 19]}    {[1 3 5 7 9 11 13 15 18 20]}    {[21 23 25 27 29 31 33 35 37 39]}    {[22 24 26 28 30 32 34 36 38 40]}
+        for iiii, loop_group in enumerate(loop_groups):
             # Sort the loops in each group according to the rank
-            sorted_loops = sorted(
-                loop_groups[group_index],
-                key=lambda x: len(higher_loops[x]),
-                reverse=True
-            )
 
-            group = []
-            for loop_index in sorted_loops:
-                group.append(coil_part.contour_lines[loop_index])
+            # Sort the loop groups based on the number of elements in higher_loops for each group
+            unsorted = [len(higher_loops[x]) for x in loop_group]
+            # M: sort_ind_loops =
+            #     10     9     8     7     6     5     4     3     2     1
+            sort_ind_loops = sorted(unsorted, reverse=True)
 
-            coil_part.groups[group_index] = group
+            this_group = TopoGroup()    # Create Topopological group container
+            this_group.loops = []       # Assign loops member
+            #kkkk = 0
+            for jjjj in sort_ind_loops:
+                loop_group_index = coil_part.loop_groups[iiii][jjjj]
+                this_contour = coil_part.contour_lines[loop_group_index]
+                #this_group.loops(kkkk).number_points = size(this_contour.uv, 2);
+                #this_group.loops(kkkk).v = this_contour.v
+                #this_group.loops(kkkk).uv = this_contour.uv
+                #this_group.loops(kkkk).potential = this_contour.potential
+                #this_group.loops(kkkk).current_orientation = this_contour.current_orientation
+                this_group.loops.append(this_contour)
+                #kkkk += 1
+
+
+            coil_part.groups[iiii] = this_group
 
     return coil_parts
