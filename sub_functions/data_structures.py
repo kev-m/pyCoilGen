@@ -79,14 +79,13 @@ class Mesh:
         self.trimesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
         self.cleanup()
 
-    def  cleanup(self):
+    def cleanup(self):
         """
         Clean up the mesh by removing duplicate and unused vertices.
         """
         # Perform simplification operations
         self.trimesh_obj.remove_duplicate_faces()
         self.trimesh_obj.remove_unreferenced_vertices()
-
 
     def __str__(self):
         return as_string(self)
@@ -208,6 +207,8 @@ class Mesh:
         return node_triangles
 
 # Generated for calculate_basis_functions
+
+
 class BasisElement:
     stream_function_potential: float
     triangles: List[int]                # node_triangles x ?
@@ -217,26 +218,29 @@ class BasisElement:
     triangle_points_ABC: np.ndarray     # node_triangles x 3
     current: np.ndarray                 # node_triangles x 3
 
+
 class UnarrangedLoop:
     """
     Represents an unarranged loop in the coil mesh.
 
     Used by calc_contours_by_triangular_potential_cuts
     """
+
     def __init__(self):
         self.edge_inds = []
         self.uv = None
-        self.current_orientation : float = None
-    
+        self.current_orientation: float = None
+
     def add_edge(self, edge):
         self.edge_inds.append(edge)
-        
+
     def add_uv(self, uv):
         if self.uv is None:
-            self.uv = np.zeros((1,2), dtype=float)
+            self.uv = np.zeros((1, 2), dtype=float)
             self.uv[0] = uv
             return
         self.uv = np.vstack((self.uv, [uv]))
+
 
 class UnarrangedLoopContainer:
     def __init__(self):
@@ -250,7 +254,7 @@ class UnsortedPoints:
 
     Used by calc_contours_by_triangular_potential_cuts
     """
-    potential : float = None
+    potential: float = None
     edge_ind = None
     uv = None
 
@@ -265,6 +269,7 @@ class RawPart:
     unsorted_points: List[UnsortedPoints] = None
     unarranged_loops: List[UnarrangedLoop] = None
 
+
 @dataclass
 class ContourLine:
     """
@@ -272,25 +277,29 @@ class ContourLine:
 
     Used by calc_contours_by_triangular_potential_cuts
     """
-    v : np.ndarray = None   # 3D co-ordinates of the contour (process_raw_loops) (3,m)
-    uv : np.ndarray = None  # 2D co-ordinates of the contour (process_raw_loops) (2,2)
-    potential : float = None # Potential value of the contour
-    current_orientation : int = None
+    v: np.ndarray = None   # 3D co-ordinates of the contour (process_raw_loops) (3,m)
+    uv: np.ndarray = None  # 2D co-ordinates of the contour (process_raw_loops) (2,2)
+    potential: float = None  # Potential value of the contour
+    current_orientation: int = None
 
 
 @dataclass
 class CoilPart:
     coil_mesh: Mesh = None
     basis_elements: List[BasisElement] = None
-    resistance_matrix: np.ndarray = None # num_vertices x num_vertices
+    resistance_matrix: np.ndarray = None    # num_vertices x num_vertices
     raw: RawPart = None
     contour_lines: List[ContourLine] = None
-    field_by_loops: np.ndarray = None # Placeholder (evaluate_loop_significance in process_raw_loops)
-    combined_loop_field: np.ndarray = None # Placeholder (evaluate_loop_significance in process_raw_loops) (3,m)
-    loop_significance: np.ndarray = None # Per contour line (evaluate_loop_significance in process_raw_loops) (n)
-    combined_loop_length: float = 0.0 # Length of contour lines (process_raw_loops)
-    pcb_track_width: float = 0.0 # PCB track width (find_minimal_contour_distance)
-    groups: List[ContourLine] = None # Topological groups (topological_loop_grouping)
+    field_by_loops: np.ndarray = None       # Placeholder (evaluate_loop_significance in process_raw_loops)
+    combined_loop_field: np.ndarray = None  # Placeholder (evaluate_loop_significance in process_raw_loops) (3,m)
+    loop_significance: np.ndarray = None    # Per contour line (evaluate_loop_significance in process_raw_loops) (n)
+    combined_loop_length: float = 0.0       # Length of contour lines (process_raw_loops)
+    pcb_track_width: float = 0.0            # PCB track width (find_minimal_contour_distance)
+    loop_groups: List[int] = None           # Topological groups (topological_loop_grouping)
+    group_levels: np.ndarray = None         # ??? (topological_loop_grouping)
+    level_positions: np.ndarray = None      # ??? (topological_loop_grouping)
+    groups: List[ContourLine] = None        # Topological groups (topological_loop_grouping)
+
 
 class CoilSolution:
     """
@@ -316,16 +325,30 @@ class TargetField:
     """
     To be defined.
     """
-    b : np.ndarray = None       # (3,num vertices)
-    coords : np.ndarray = None  # (3,num vertices)
+    b: np.ndarray = None       # (3,num vertices)
+    coords: np.ndarray = None  # (3,num vertices)
     weights = None              # (num vertices)
-    target_field_group_inds = None # (num vertices)
-    target_gradient_dbdxyz = None # (3,num vertices)
+    target_field_group_inds = None  # (num vertices)
+    target_gradient_dbdxyz = None  # (3,num vertices)
 
     def __str__(self):
         return as_string(self)
 
+# Used in calculate_gradient
+
+
+@dataclass
+class LayoutGradient:
+    dBxdxyz: np.ndarray
+    dBydxyz: np.ndarray
+    dBzdxyz: np.ndarray
+    gradient_in_target_direction: np.ndarray = None
+    mean_gradient_in_target_direction: float = None
+    std_gradient_in_target_direction: float = None
+
 # Used by process_raw_loops
+
+
 @dataclass
 class WirePart:
     """
@@ -333,23 +356,29 @@ class WirePart:
     """
     coord: List[np.ndarray] = None
     seg_coords: List[np.ndarray] = None
-    currents : List[np.ndarray] = None
+    currents: List[np.ndarray] = None
 
     def __str__(self):
         return as_string(self)
 
 
-
-# Used by temp_evaluation
+# Used in topological_loop_grouping
 @dataclass
-class OptimisationParameters:
-    preoptimization_hash = None
-    optimized_hash = None
-    use_preoptimization_temp = False
-    use_optimized_temp = False
+class Shape2D:  # Used in topological_loop_grouping
+    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
 
 
+@dataclass
+class Shape3D:  # Used in topological_loop_grouping
+    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
+    v: np.ndarray = None  # 3D co-ordinates of the shape (3,n)
 
+
+@dataclass
+class TopoGroup:
+    loops: List[ContourLine] = None  # Assigned in topological_loop_grouping
+    cutshape: List[Shape2D] = None
+    opened_loop: List[Shape3D] = None
 
 
 #
@@ -357,6 +386,13 @@ class OptimisationParameters:
 #  Generated data classes that are not (yet) used.
 #
 #
+
+@dataclass
+class OptimisationParameters:
+    preoptimization_hash = None
+    optimized_hash = None
+    use_preoptimization_temp = False
+    use_optimized_temp = False
 
 
 @dataclass
@@ -375,29 +411,6 @@ class Loop:
     uv: np.ndarray
     edge_inds: np.ndarray
     current_orientation: int
-
-
-
-
-@dataclass
-class CoilMesh:
-    """
-    Represents the coil mesh.
-    """
-    vertices: np.ndarray
-    uv: np.ndarray
-    faces: np.ndarray
-    # boundary ??
-    # normals ??
-
-
-@dataclass
-class CoilParts:
-    """
-    Represents the coil parts.
-    """
-    contour_lines: List[ContourLine]
-    coil_mesh: CoilMesh
 
 
 @dataclass
@@ -500,25 +513,7 @@ class CalcGradientAlongVectorInput:
     target_endcoding_function: str
 
 
-@dataclass
-class Calc3DRotationMatrixInput:
-    """
-    Unknown
-    TODO: find usage.
-    """
-    rot_vec: np.ndarray
-    rot_angle: float
-
 # Generated for calc_potential_levels
-
-
-@dataclass
-class CoilPartX2:
-    stream_function: List[float]
-    contour_step: float
-    potential_level_list: List[float]
-
-
 @dataclass
 class CombinedMesh:
     stream_function: List[float]
@@ -529,26 +524,3 @@ class InputParameters:
     levels: int
     pot_offset_factor: float
     level_set_method: str
-
-
-@dataclass
-class CoilPartX:
-    is_real_triangle_mat: np.ndarray
-    triangle_corner_coord_mat: np.ndarray
-    current_mat: np.ndarray
-    area_mat: np.ndarray
-    face_normal_mat: np.ndarray
-    basis_elements: List[BasisElement]
-    current_density_mat: np.ndarray
-
-# Generated for calculate_gradient
-
-
-@dataclass
-class LayoutGradient:
-    dBxdxyz: np.ndarray
-    dBydxyz: np.ndarray
-    dBzdxyz: np.ndarray
-    gradient_in_target_direction: np.ndarray = None
-    mean_gradient_in_target_direction: float = None
-    std_gradient_in_target_direction: float = None
