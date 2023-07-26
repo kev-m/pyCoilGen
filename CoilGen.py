@@ -529,6 +529,42 @@ def CoilGen(log, input=None):
         # Group the contour loops in topological order
         print('Group the contour loops in topological order:')
         coil_parts = topological_loop_grouping(coil_parts, input_args)
+        
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: Coil Part values: groups (list of ContourLine objects)
+        m_c_part_groups = m_c_part.groups
+        log.debug(" --- here ---")
+        # assert compare(c_part.groups, m_c_part_groups)
+
+        # Compare updated contour lines
+        for index1 in range(len(coil_part.groups)):
+            if get_level() >= DEBUG_VERBOSE:
+                log.debug(" Checking contour group %d", index1)
+            m_group = m_c_part_groups[index1] # cutshape, loops, opened_loop
+            c_group = coil_part.groups[index1]
+            for index2, m_loop in enumerate(m_group.loops):
+                c_loop = c_group.loops[index2]
+                if get_level() >= DEBUG_VERBOSE:
+                    log.debug(" Checking index %d", index2)
+
+                assert c_loop.current_orientation == m_loop.current_orientation # Pass
+                # assert np.isclose(c_loop.potential, m_loop.potential) # Fail, group 2, index 0
+                # assert compare(c_loop.uv, m_loop.uv) # 
+                # assert compare(c_loop.v, m_loop.v) # 
+                if get_level() > DEBUG_VERBOSE:
+                    log.debug(" -- compare uv: %s", compare(c_loop.uv, m_loop.uv)) 
+                    log.debug(" -- compare v: %s", compare(c_loop.v, m_loop.v)) 
+
+            if get_level() >= DEBUG_VERBOSE:
+                visualize_compare_contours(coil_mesh.uv, 800, f'images/countour4_{index1}_p.png', c_group.loops)
+                visualize_compare_contours(coil_mesh.uv, 800, f'images/countour4_{index1}_m.png', m_group.loops)
+    
+        # Manual conclusion: Not identical, but close. Contour groups in different orders...
+
+        #
+        #####################################################
 
         # WIP
         solution.coil_parts = coil_parts
