@@ -121,14 +121,31 @@ def which_face(point, face_indices, face_vertices):
     coords = [sublist[1] for sublist in combined_results]
     return face_indices[result_index], combined_results[result_index][1]
 
-
-def get_target_triangle(point, planary_mesh: Trimesh, proximity: ProximityQuery):
+def get_target_triangle_def(point, planary_mesh: Trimesh):
     """
     Get the face that contains the given point.
+
+    This function is a helper that creates the required ProximityQuery using the given mesh.
 
     Args:
         point (ndarray): The input 2D point (x,y,0)
         planary_mesh (Trimesh): The 3D Trimesh representation of the 2D mesh (x,y,0)
+
+    Returns:
+        face (int): The index of the triangle that contains the point else None.
+        barycentric (ndarray): The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
+
+    """
+    return get_target_triangle(point, planary_mesh, ProximityQuery(planary_mesh))
+
+def get_target_triangle(point, planary_mesh: Trimesh, proximity: ProximityQuery):
+    """
+    Get the face that contains the given point using the provided ProximityQuery.
+
+    Args:
+        point (ndarray): The input 2D point (x,y,0)
+        planary_mesh (Trimesh): The 3D Trimesh representation of the 2D mesh (x,y,0)
+        proximity (ProximityQuery): The ProximityQuery helper to use.
 
     Returns:
         face (int): The index of the triangle that contains the point else None.

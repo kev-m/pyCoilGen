@@ -317,7 +317,8 @@ class CoilPart:
     loop_groups: List[int] = None           # Topological groups (topological_loop_grouping)
     group_levels: np.ndarray = None         # ??? (topological_loop_grouping)
     level_positions: np.ndarray = None      # ??? (topological_loop_grouping)
-    groups: List[TopoGroup] = None        # Topological groups (topological_loop_grouping)
+    groups: List[TopoGroup] = None          # Topological groups (topological_loop_grouping)
+    group_centers: List[Shape3D] = None     # The centre of each group (calculate_group_ceners)
 
 
 class CoilSolution:
