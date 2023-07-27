@@ -44,20 +44,37 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
         total_group_center_v = np.zeros((3, len(coil_part.groups)))
 
         for group_ind in range(len(coil_part.groups)):
-            point_sum_uv = []
-            point_sum_v = []
+            coil_group = coil_part.groups[group_ind]
+            # M: point_sum_uv	2x387 double	2x387	double
+            point_sum_uv = coil_group.loops[0].uv
+            # M: point_sum_v	3x387 double	3x387	double
+            point_sum_v = coil_group.loops[0].v
 
-            for loop_ind in range(len(coil_part.groups[group_ind].loops)):
-                point_sum_uv.append(coil_part.groups[group_ind].loops[loop_ind].uv)
-                point_sum_v.append(coil_part.groups[group_ind].loops[loop_ind].v)
+            for loop_ind in range(1, len(coil_group.loops)):
+                loop = coil_group.loops[loop_ind]
+                point_sum_uv = np.hstack((point_sum_uv, loop.uv))
+                point_sum_v = np.hstack((point_sum_v, loop.v))
 
+            # could not broadcast input array from shape (2,58) into shape (2,)
+            log.debug(" -- here -- ")
+            # M: ans =
+            #    -1.1346
+            #     0.0226
             total_group_center_uv[:, group_ind] = np.mean(point_sum_uv, axis=1)
+            # M: ans =
+            #    -0.0026
+            #     0.3506
+            #    -0.3617
             total_group_center_v[:, group_ind] = np.mean(point_sum_v, axis=1)
-            inner_center = np.mean(coil_part.groups[group_ind].loops[-1].uv, axis=1)
+            # M: ans =
+            #    -1.5743
+            #     0.0161
+            inner_center = np.mean(coil_group.loops[-1].uv, axis=1)
 
             # Check if the total group center is within the most inner loop of the group
-            inner_test_loop = (coil_part.groups[group_ind].loops[-1].uv - np.mean(
-                coil_part.groups[group_ind].loops[-1].uv, axis=1)) * 0.9 + np.mean(coil_part.groups[group_ind].loops[-1].uv, axis=1)
+            inner_test_loop = (coil_group.loops[-1].uv - np.mean(
+                # operands could not be broadcast together with shapes (2,8) (2,)
+                coil_group.loops[-1].uv, axis=1)) * 0.9 + np.mean(coil_group.loops[-1].uv, axis=1)
             total_group_center_is_in = check_mutual_loop_inclusion(total_group_center_uv[:, group_ind], inner_test_loop)
 
             if total_group_center_is_in == 1:
@@ -70,7 +87,7 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
                 cut_line_y = np.array([inner_center[1] + (total_center[1] - inner_center[1]) *
                                       scale_ind, inner_center[1] - (total_center[1] - inner_center[1]) * scale_ind])
                 intersection_points = find_segment_intersections(
-                    coil_part.groups[group_ind].loops[-1].uv, np.array([cut_line_x, cut_line_y]))
+                    coil_group.loops[-1].uv, np.array([cut_line_x, cut_line_y]))
 
                 line_cut_inner_total_x = intersection_points.uv[0, :]
                 line_cut_inner_total_y = intersection_points.uv[1, :]
@@ -86,6 +103,9 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
                         np.array([line_cut_inner_total_x[min_ind[0]], line_cut_inner_total_y[min_ind[0]]]), axis=1)
                     group_centers_2d[:, group_ind] = inner_cut_point
 
+        # M: group_centers_2d	[-1.5890,0.9301,1.5624,-0.9478;0.0162,-0.0045,0.0646,-0.0042]	2x4	double
+        #    -1.5890    0.9301    1.5624   -0.9478
+        #     0.0162   -0.0045    0.0646   -0.0042        
         # Set the centers, considering the possibility of non-mesh points
         group_centers_3d = np.zeros((3, group_centers_2d.shape[1]))
 
