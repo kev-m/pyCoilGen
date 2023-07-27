@@ -95,12 +95,12 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
                     group_centers_2d[:, group_ind] = inner_center
                 else:
                     # Sort the cut points for their distance to the inner center
-                    log.debug(" -- here -- ")
                     arr1 = np.array([line_cut_inner_total_x, line_cut_inner_total_y]) - total_center[:, None]
                     dist_to_inner_center = np.linalg.norm(arr1, axis=0)  # axis=0 == along rows. 0 = x-axis, 1 = y-axis
                     min_ind = np.argsort(dist_to_inner_center)
-                    inner_cut_point = np.mean(
-                        np.array([line_cut_inner_total_x[min_ind[0]], line_cut_inner_total_y[min_ind[0]]]), axis=1)
+                    arr1 = line_cut_inner_total_x[min_ind]
+                    arr2 = line_cut_inner_total_y[min_ind]
+                    inner_cut_point = np.mean(np.array([arr1, arr2]), axis=1)
                     group_centers_2d[:, group_ind] = inner_cut_point
 
         # M: group_centers_2d	[-1.5890,0.9301,1.5624,-0.9478;0.0162,-0.0045,0.0646,-0.0042]	2x4	double
