@@ -283,6 +283,25 @@ class ContourLine:
     current_orientation: int = None
 
 
+# Used in topological_loop_grouping
+@dataclass
+class Shape2D:  # Used in topological_loop_grouping
+    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
+
+
+@dataclass
+class Shape3D:  # Used in topological_loop_grouping
+    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
+    v: np.ndarray = None  # 3D co-ordinates of the shape (3,n)
+
+
+@dataclass
+class TopoGroup:
+    loops: List[ContourLine] = None  # Assigned in topological_loop_grouping
+    cutshape: List[Shape2D] = None
+    opened_loop: List[Shape3D] = None
+
+
 @dataclass
 class CoilPart:
     coil_mesh: Mesh = None
@@ -298,7 +317,7 @@ class CoilPart:
     loop_groups: List[int] = None           # Topological groups (topological_loop_grouping)
     group_levels: np.ndarray = None         # ??? (topological_loop_grouping)
     level_positions: np.ndarray = None      # ??? (topological_loop_grouping)
-    groups: List[ContourLine] = None        # Topological groups (topological_loop_grouping)
+    groups: List[TopoGroup] = None        # Topological groups (topological_loop_grouping)
 
 
 class CoilSolution:
@@ -360,25 +379,6 @@ class WirePart:
 
     def __str__(self):
         return as_string(self)
-
-
-# Used in topological_loop_grouping
-@dataclass
-class Shape2D:  # Used in topological_loop_grouping
-    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
-
-
-@dataclass
-class Shape3D:  # Used in topological_loop_grouping
-    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
-    v: np.ndarray = None  # 3D co-ordinates of the shape (3,n)
-
-
-@dataclass
-class TopoGroup:
-    loops: List[ContourLine] = None  # Assigned in topological_loop_grouping
-    cutshape: List[Shape2D] = None
-    opened_loop: List[Shape3D] = None
 
 
 #
