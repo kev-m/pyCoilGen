@@ -529,24 +529,34 @@ def CoilGen(log, input=None):
         # Group the contour loops in topological order
         print('Group the contour loops in topological order:')
         coil_parts = topological_loop_grouping(coil_parts, input_args)
-        
+
         #####################################################
         # DEVELOPMENT: Remove this
         # DEBUG
-        # Verify: Coil Part values: groups (list of ContourLine objects)
-        m_c_part_groups = m_c_part.groups
-        log.debug(" --- here ---")
-        # assert compare(c_part.groups, m_c_part_groups)
+        # Verify: Coil Part values: groups (list of ContourLine objects), level_positions, group_levels, loop_groups
+        m_level_positions = m_c_part.level_positions
+        m_group_levels = m_c_part.group_levels - 1 # MATLAB indexing is 1-based
+        m_loop_groups = m_c_part.loop_groups
+        for index, loop_group in enumerate(m_loop_groups):
+            m_loop_groups[index] = loop_group - 1 # MATLAB indexing is 1-based
 
-        # Compare updated contour lines
+        c_level_positions = coil_part.level_positions
+        c_group_levels = np.array(coil_part.group_levels)
+        c_loop_groups = coil_part.loop_groups
+
+        assert compare_contains(c_group_levels, m_group_levels)
+        # assert compare_contains(c_loop_groups, m_loop_groups) # Fail: They don't match up exactly
+        
+        # Compare updated groups and their loops
+        m_groups = m_c_part.groups
         for index1 in range(len(coil_part.groups)):
-            if get_level() >= DEBUG_VERBOSE:
+            if get_level() > DEBUG_VERBOSE:
                 log.debug(" Checking contour group %d", index1)
-            m_group = m_c_part_groups[index1] # cutshape, loops, opened_loop
+            m_group = m_groups[index1] # cutshape, loops, opened_loop
             c_group = coil_part.groups[index1]
             for index2, m_loop in enumerate(m_group.loops):
                 c_loop = c_group.loops[index2]
-                if get_level() >= DEBUG_VERBOSE:
+                if get_level() > DEBUG_VERBOSE:
                     log.debug(" Checking index %d", index2)
 
                 assert c_loop.current_orientation == m_loop.current_orientation # Pass
