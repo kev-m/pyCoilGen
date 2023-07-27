@@ -157,6 +157,8 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
 
         # Remove loops from group if they also belong to a respective subgroup
         loop_groups = [group.copy() for group in overlapping_loop_groups]
+        for index, loop_group in enumerate(overlapping_loop_groups):
+            loop_groups[index] = np.array(loop_group, copy=True)
 
         for iiii in range(len(overlapping_loop_groups)):
             loops_to_remove = [loop for subgroup_index in group_contains_following_group[iiii]
@@ -166,9 +168,11 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
 
         # Order the loop_groups
         # TODO: Check the MATLAB if the group sub-lists are sorted too.
+        coil_part.loop_groups = np.empty((len(overlapping_loop_groups)), dtype=object)
         for index, sub_loop in enumerate(loop_groups):
-            loop_groups[index] = sorted(sub_loop)
-        coil_part.loop_groups = loop_groups
+            coil_part.loop_groups[index] = np.array(sorted(sub_loop))
+        loop_groups = coil_part.loop_groups # Use the np.array from here on.
+
         # Order the groups based on the number of loops
         # M: sort_ind =
         #      1     2     3     4        
@@ -176,7 +180,6 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         # Sort each group level
         for group_index, group_level in enumerate(group_levels):
             group_levels[group_index] = [group_level[sort_idex] for sort_idex in sort_indices]
-        log.debug("-- here --")
 
         # Renumber (=rename) the groups (also in the levels)
         renamed_group_levels = group_levels.copy()
@@ -190,13 +193,16 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         renamed_group_levels = sorted(list(set(tuple(level) for level in renamed_group_levels)))
         group_levels = [list(level) for level in renamed_group_levels]
 
+        assert len(group_levels) == 1 # MATLAB cell is always has 1 element
+        coil_part.group_levels = group_levels[0]
+
         # Find for each parallel level the groups that contain that level
         loops_per_level = []
 
         for level_index in range(len(group_levels)):
             loops_per_level.append([])
             for level_loop in group_levels[level_index]:
-                loops_per_level[-1] += loop_groups[level_loop]
+                loops_per_level[-1] += loop_groups[level_loop].tolist()
 
         level_enclosed_by_loop = []
 
