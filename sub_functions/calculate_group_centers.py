@@ -55,18 +55,8 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
                 point_sum_uv[:, loop_ind] = np.mean(loop.uv, axis=1)
                 point_sum_v[:, loop_ind] = np.mean(loop.v, axis=1)
 
-            # M: ans =
-            #    -1.1346
-            #     0.0226
             total_group_center_uv[:, group_ind] = np.mean(point_sum_uv, axis=1)
-            # M: ans =
-            #    -0.0026
-            #     0.3506
-            #    -0.3617
             total_group_center_v[:, group_ind] = np.mean(point_sum_v, axis=1)
-            # M: ans =
-            #    -1.5743
-            #     0.0161
             inner_center = np.mean(coil_group.loops[-1].uv, axis=1)
 
             # Check if the total group center is within the most inner loop of the group
@@ -104,9 +94,6 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
                     inner_cut_point = np.mean(np.array([arr1, arr2]), axis=1)
                     group_centers_2d[:, group_ind] = inner_cut_point
 
-        # M: group_centers_2d	[-1.5890,0.9301,1.5624,-0.9478;0.0162,-0.0045,0.0646,-0.0042]	2x4	double
-        #    -1.5890    0.9301    1.5624   -0.9478
-        #     0.0162   -0.0045    0.0646   -0.0042
         # Set the centers, considering the possibility of non-mesh points
         group_centers_3d = np.zeros((3, group_centers_2d.shape[1]))
 
@@ -117,12 +104,10 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
             # Set centers outside the 2D mesh in the center of the 3D volume
             point = [group_centers_2d[0, rrrr], group_centers_2d[1, rrrr]]
             target_triangle, bary_centric_coord = get_target_triangle_def(point, planar_mesh)
-            # pointLocation(planar_mesh, group_centers_2d[0, rrrr], group_centers_2d[1, rrrr])
 
             if not np.isnan(target_triangle):
                 vertices = curved_mesh.vertices[curved_mesh.faces[target_triangle]]
                 group_centers_3d[:, rrrr] = barycentric_to_cartesian(bary_centric_coord, vertices)
-                # barycentricToCartesian(curved_mesh, target_triangle, bary_centric_coord)
             else:
                 group_centers_3d[:, rrrr] = total_group_center_v[:, rrrr]
 
