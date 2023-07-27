@@ -561,8 +561,8 @@ def CoilGen(log, input=None):
 
                 assert c_loop.current_orientation == m_loop.current_orientation # Pass
                 # assert np.isclose(c_loop.potential, m_loop.potential) # Fail, group 2, index 0
-                # assert compare(c_loop.uv, m_loop.uv) # 
-                # assert compare(c_loop.v, m_loop.v) # 
+                # assert compare(c_loop.uv, m_loop.uv) # Fail, different path through mesh
+                # assert compare(c_loop.v, m_loop.v) # Fail, different path through mesh
                 if get_level() > DEBUG_VERBOSE:
                     log.debug(" -- compare uv: %s", compare(c_loop.uv, m_loop.uv)) 
                     log.debug(" -- compare v: %s", compare(c_loop.v, m_loop.v)) 
@@ -579,6 +579,21 @@ def CoilGen(log, input=None):
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
         coil_parts = calculate_group_centers(coil_parts)
+
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: Coil Part values: group_centers
+        m_group_centers = m_c_part.group_centers
+        c_group_centers = coil_part.group_centers
+
+        # assert compare(c_group_centers.uv, m_group_centers.uv) # Fail, different group layout
+        # assert compare(c_group_centers.v, m_group_centers.v) # Fail, different group layout
+
+        # Manual conclusion: Not identical, but close. Different paths, different group layouts.
+
+        #
+        #####################################################
 
         # WIP
         solution.coil_parts = coil_parts
