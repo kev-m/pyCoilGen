@@ -23,7 +23,6 @@ def check_mutual_loop_inclusion(test_poly: np.ndarray, target_poly: np.ndarray) 
         inside_flag = check_mutual_loop_inclusion(test_poly, target_poly)
     """
 
-    # tuple index out of range (2,)
     if len(test_poly.shape) == 1:
         test_poly = test_poly.reshape((2,1))
     num_entries = test_poly.shape[1]
