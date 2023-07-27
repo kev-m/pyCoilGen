@@ -51,8 +51,8 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
             point_sum_v = np.empty((3, len(coil_group.loops)))
             for loop_ind in range(len(coil_group.loops)):
                 loop = coil_group.loops[loop_ind]
-                point_sum_uv[:, loop_ind] = np.mean(loop.uv, axis=1)
-                point_sum_v[:, loop_ind] = np.mean(loop.v, axis=1)
+                point_sum_uv[:,loop_ind] = np.mean(loop.uv, axis=1)
+                point_sum_v[:,loop_ind] = np.mean(loop.v, axis=1)
 
             # M: ans =
             #    -1.1346
@@ -69,7 +69,7 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
             inner_center = np.mean(coil_group.loops[-1].uv, axis=1)
 
             # Check if the total group center is within the most inner loop of the group
-            mean1 = np.mean(coil_group.loops[-1].uv, axis=1, keepdims=True)
+            mean1 = np.mean(coil_group.loops[-1].uv, axis=1, keepdims =True)
             inner_test_loop = (coil_group.loops[-1].uv - mean1) * 0.9 + mean1
             total_group_center_is_in = check_mutual_loop_inclusion(total_group_center_uv[:, group_ind], inner_test_loop)
 
@@ -82,13 +82,14 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
                                       scale_ind, inner_center[0] - (total_center[0] - inner_center[0]) * scale_ind])
                 cut_line_y = np.array([inner_center[1] + (total_center[1] - inner_center[1]) *
                                       scale_ind, inner_center[1] - (total_center[1] - inner_center[1]) * scale_ind])
+                # M: intersection_points	1x1 struct	1x1	struct
                 intersection_points = find_segment_intersections(
                     coil_group.loops[-1].uv, np.array([cut_line_x, cut_line_y]))
 
-                # 'list' object has no attribute 'uv'
-                log.debug(" -- here -- ")
-                line_cut_inner_total_x = intersection_points[0, :]
-                line_cut_inner_total_y = intersection_points[1, :]
+                # M: line_cut_inner_total_x	[-1.5648;-1.6132]	2x1	double
+                line_cut_inner_total_x = intersection_points[0].uv[0, :]
+                # M: line_cut_inner_total_y	[0.0160;0.0165]	2x1	double
+                line_cut_inner_total_y = intersection_points[0].uv[1, :]
 
                 if line_cut_inner_total_x.size == 0:
                     group_centers_2d[:, group_ind] = inner_center
