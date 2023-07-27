@@ -36,8 +36,6 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
     for part_ind in range(len(coil_parts)):
         coil_part = coil_parts[part_ind]
         part_mesh = coil_part.coil_mesh
-        part_vertices = part_mesh.get_vertices()  # Get the vertices for the coil part.
-        part_faces = part_mesh.get_faces()
 
         # Calculate the total center of the coil part
         total_center = np.mean(part_mesh.uv, axis=0)
