@@ -32,8 +32,8 @@ from sub_functions.calc_potential_levels import calc_potential_levels
 from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 from sub_functions.process_raw_loops import process_raw_loops
 from sub_functions.find_minimal_contour_distance import find_minimal_contour_distance
+from sub_functions.topological_loop_grouping import topological_loop_grouping
 """
-from topological_loop_grouping import topological_loop_grouping
 from calculate_group_centers import calculate_group_centers
 from interconnect_within_groups import interconnect_within_groups
 from interconnect_among_groups import interconnect_among_groups
@@ -120,8 +120,8 @@ def CoilGen(log, input=None):
     m_c_part = get_and_show_debug(matlab_data, 'out.coil_parts[0]')
     m_or_one_ring_list = m_c_part.one_ring_list - 1
     # Transpose the entries
-    for index in range(len(m_or_one_ring_list)):
-        m_or_one_ring_list[index] = m_or_one_ring_list[index].T
+    for index1 in range(len(m_or_one_ring_list)):
+        m_or_one_ring_list[index1] = m_or_one_ring_list[index1].T
     m_or_node_triangles = m_c_part.node_triangles - 1
     m_or_node_triangle_mat = m_c_part.node_triangle_mat
 
@@ -227,10 +227,10 @@ def CoilGen(log, input=None):
         #####################################################
         # DEBUG
         # Verify:  one_ring_list, vertex_triangles, node_triangle_mat
-        c_part = coil_parts[0]
-        one_ring_list = c_part.one_ring_list
-        node_triangles = c_part.node_triangles
-        node_triangle_mat = c_part.node_triangle_mat
+        coil_part = coil_parts[0]
+        one_ring_list = coil_part.one_ring_list
+        node_triangles = coil_part.node_triangles
+        node_triangle_mat = coil_part.node_triangle_mat
 
         ###########################################################
         # DEBUG
@@ -274,23 +274,23 @@ def CoilGen(log, input=None):
 
         # Transpose MATLAB matrix
         for top in m_triangle_corner_coord_mat:
-            for index in range(top.shape[0]):
-                matrix = top[index]
-                top[index] = matrix.T
+            for index1 in range(top.shape[0]):
+                matrix = top[index1]
+                top[index1] = matrix.T
 
-        assert (compare(c_part.is_real_triangle_mat, m_is_real_triangle_mat)) # Pass
-        assert (compare_contains(c_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat, strict=False)) # Pass, Transposed
-        assert (compare_contains(c_part.current_mat, m_current_mat, strict=False)) # Pass
-        assert (compare(c_part.area_mat, m_area_mat)) # Pass
-        assert (compare_contains(c_part.face_normal_mat, m_face_normal_mat, strict=False)) # Pass
-        assert (compare(c_part.current_density_mat, m_current_density_mat)) # Pass
+        assert (compare(coil_part.is_real_triangle_mat, m_is_real_triangle_mat)) # Pass
+        assert (compare_contains(coil_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat, strict=False)) # Pass, Transposed
+        assert (compare_contains(coil_part.current_mat, m_current_mat, strict=False)) # Pass
+        assert (compare(coil_part.area_mat, m_area_mat)) # Pass
+        assert (compare_contains(coil_part.face_normal_mat, m_face_normal_mat, strict=False)) # Pass
+        assert (compare(coil_part.current_density_mat, m_current_density_mat)) # Pass
 
         # Verify basis_elements
         m_basis_elements = m_c_part.basis_elements
-        assert len(c_part.basis_elements) == len(m_basis_elements)
-        for index in range(len(c_part.basis_elements)):
-            cg_element = c_part.basis_elements[index]
-            m_element = m_basis_elements[index]
+        assert len(coil_part.basis_elements) == len(m_basis_elements)
+        for index1 in range(len(coil_part.basis_elements)):
+            cg_element = coil_part.basis_elements[index1]
+            m_element = m_basis_elements[index1]
 
             # Tranpose MATLAB matrix
             for index2 in range(len(m_element.triangle_points_ABC)):
@@ -319,8 +319,8 @@ def CoilGen(log, input=None):
         # TODO: Consider Python-like structure: 264 (num vertices) x 257 (target_field) x  3 (x,y,z)
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- m_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  # (3, 257, 264)
-            log.debug(" -- c_part.sensitivity_matrix shape: %s", c_part.sensitivity_matrix.shape)  # (3, 257, 264)
-        assert (compare(c_part.sensitivity_matrix, m_sensitivity_matrix)) # Pass
+            log.debug(" -- c_part.sensitivity_matrix shape: %s", coil_part.sensitivity_matrix.shape)  # (3, 257, 264)
+        assert (compare(coil_part.sensitivity_matrix, m_sensitivity_matrix)) # Pass
         #
         #####################################################
 
@@ -337,9 +337,9 @@ def CoilGen(log, input=None):
 
         # Consider Python-like structure: 257 () x 264 (num vertices) x 3 (x,y,z)
         log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  #  (3, 257, 264)
-        log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.gradient_sensitivity_matrix.shape)  # (3, 257, 264)
+        log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", coil_part.gradient_sensitivity_matrix.shape)  # (3, 257, 264)
 
-        assert (compare(c_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix)) # Pass
+        assert (compare(coil_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix)) # Pass
         #
         #####################################################
 
@@ -355,10 +355,10 @@ def CoilGen(log, input=None):
         m_resistance_matrix = m_c_part.resistance_matrix
 
         log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_resistance_matrix.shape)  #  (264, 264)
-        log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", c_part.resistance_matrix.shape)  # (264, 264)
+        log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", coil_part.resistance_matrix.shape)  # (264, 264)
 
-        assert (compare(c_part.node_adjacency_mat, m_node_adjacency_mat)) # Pass
-        assert (compare(c_part.resistance_matrix, m_resistance_matrix)) # Pass
+        assert (compare(coil_part.node_adjacency_mat, m_node_adjacency_mat)) # Pass
+        assert (compare(coil_part.resistance_matrix, m_resistance_matrix)) # Pass
         #
         #####################################################
 
@@ -382,15 +382,15 @@ def CoilGen(log, input=None):
         log.debug(" -- m_cp_stream_function shape: %s", m_cp_stream_function.shape)  #  (264,)
 
 
-        log.debug(" -- c_part.current_density shape: %s", c_part.current_density.shape)  # (3 x 480)
+        log.debug(" -- c_part.current_density shape: %s", coil_part.current_density.shape)  # (3 x 480)
         log.debug(" -- sf_b_field shape: %s", sf_b_field.shape)  #  (257 x 3) !!!
         log.debug(" -- combined_mesh.stream_function shape: %s", combined_mesh.stream_function.shape)  #  (264,)
-        log.debug(" -- c_part.stream_function shape: %s", c_part.stream_function.shape)  #  (264,)
+        log.debug(" -- c_part.stream_function shape: %s", coil_part.stream_function.shape)  #  (264,)
 
-        assert (compare(c_part.current_density, m_current_density)) # Pass
+        assert (compare(coil_part.current_density, m_current_density)) # Pass
         assert (compare(sf_b_field, m_sf_b_field)) # Pass
         assert (compare(combined_mesh.stream_function, m_cm_stream_function)) # Pass
-        assert (compare(c_part.stream_function, m_cp_stream_function)) # Pass
+        assert (compare(coil_part.stream_function, m_cp_stream_function)) # Pass
         #
         #####################################################
 
@@ -421,10 +421,10 @@ def CoilGen(log, input=None):
     log.debug(" -- m_cp_potential_level_list shape: %s", m_cp_potential_level_list.shape)  #  (20,)
 
     log.debug(" -- primary_surface_ind: %d", primary_surface_ind)  #  (1)
-    log.debug(" -- c_part.potential_level_list shape: %s", c_part.potential_level_list.shape)  #  (20)
+    log.debug(" -- c_part.potential_level_list shape: %s", coil_part.potential_level_list.shape)  #  (20)
 
     assert (primary_surface_ind == m_primary_surface_ind) # Pass
-    assert (compare(c_part.potential_level_list, m_cp_potential_level_list)) # Pass
+    assert (compare(coil_part.potential_level_list, m_cp_potential_level_list)) # Pass
     #
     #####################################################
 
@@ -438,12 +438,12 @@ def CoilGen(log, input=None):
     # Verify: part.contour_lines items current_orientation, potential, uv
     m_contour_lines = m_c_part.contour_lines
 
-    assert len(c_part.contour_lines) == len(m_contour_lines)
-    for index in range(len(c_part.contour_lines)):
+    assert len(coil_part.contour_lines) == len(m_contour_lines)
+    for index1 in range(len(coil_part.contour_lines)):
         if get_level() > DEBUG_VERBOSE:
-            log.debug(" Checking contour %d", index)
-        m_contour = m_contour_lines[index]
-        c_contour = c_part.contour_lines[index]
+            log.debug(" Checking contour %d", index1)
+        m_contour = m_contour_lines[index1]
+        c_contour = coil_part.contour_lines[index1]
         assert c_contour.current_orientation == m_contour.current_orientation # Pass
         assert np.isclose(c_contour.potential, m_contour.potential) # Pass
         # The MATLAB coilpart.contours is further processed in a subsequent function call.
@@ -452,7 +452,7 @@ def CoilGen(log, input=None):
         # log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv)) 
 
     if get_level() >= DEBUG_VERBOSE:
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour1_p.png', c_part.contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour1_p.png', coil_part.contour_lines)
         visualize_compare_contours(coil_mesh.uv, 800, 'images/countour1_m.png', m_contour_lines)
 
     # Manual conclusion: Not identical, but really close.
@@ -483,18 +483,18 @@ def CoilGen(log, input=None):
 
     # Fail: [0]: 1.3485584551763914 is not 1.3459361474796019
     ## assert compare(c_part.loop_significance, m_loop_significance) # FAIL: 3.87...
-    log.debug(" Abs diff: %s", np.max(np.abs(c_part.loop_significance - m_loop_significance)))
+    log.debug(" Abs diff: %s", np.max(np.abs(coil_part.loop_significance - m_loop_significance)))
 
     # Fail[0]:  3.18446247e-05 4.07537749e-05 2.68691780e-05 1.25697419e-05 3.19949827e-05
     # is not    4.49879032e-05 5.86350389e-05 4.54653304e-05 3.18269683e-05 4.68614511e-05
     ## assert compare(c_part.combined_loop_field, m_combined_loop_field, 1e-5)
 
     # Compare updated contour lines
-    for index in range(len(c_part.contour_lines)):
+    for index1 in range(len(coil_part.contour_lines)):
         if get_level() > DEBUG_VERBOSE:
-            log.debug(" Checking contour %d", index)
-        m_contour = m_contour_lines[index]
-        c_contour = c_part.contour_lines[index]
+            log.debug(" Checking contour %d", index1)
+        m_contour = m_contour_lines[index1]
+        c_contour = coil_part.contour_lines[index1]
         assert c_contour.current_orientation == m_contour.current_orientation # Pass
         assert np.isclose(c_contour.potential, m_contour.potential) # Pass
         # assert compare(c_contour.uv, m_contour.uv) # Pass [0], Fail [4]
@@ -504,7 +504,7 @@ def CoilGen(log, input=None):
             log.debug(" -- compare v: %s", compare(c_contour.v, m_contour.v)) 
 
     if get_level() >= DEBUG_VERBOSE:
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour2_p.png', c_part.contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour2_p.png', coil_part.contour_lines)
         visualize_compare_contours(coil_mesh.uv, 800, 'images/countour2_m.png', m_contour_lines)
 
     # Manual conclusion: Not identical, but close.
@@ -522,17 +522,63 @@ def CoilGen(log, input=None):
         # DEBUG
         # Verify: Coil Part values: pcb_track_width
         m_pcb_track_width = m_c_part.pcb_track_width
-        assert c_part.pcb_track_width == m_pcb_track_width # ???
+        assert coil_part.pcb_track_width == m_pcb_track_width # Pass
+        #
+        #####################################################
+
+        # Group the contour loops in topological order
+        print('Group the contour loops in topological order:')
+        coil_parts = topological_loop_grouping(coil_parts, input_args)
+
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: Coil Part values: groups (list of ContourLine objects), level_positions, group_levels, loop_groups
+        m_level_positions = m_c_part.level_positions
+        m_group_levels = m_c_part.group_levels - 1 # MATLAB indexing is 1-based
+        m_loop_groups = m_c_part.loop_groups
+        for index, loop_group in enumerate(m_loop_groups):
+            m_loop_groups[index] = loop_group - 1 # MATLAB indexing is 1-based
+
+        c_level_positions = coil_part.level_positions
+        c_group_levels = np.array(coil_part.group_levels)
+        c_loop_groups = coil_part.loop_groups
+
+        assert compare_contains(c_group_levels, m_group_levels)
+        # assert compare_contains(c_loop_groups, m_loop_groups) # Fail: They don't match up exactly
+        
+        # Compare updated groups and their loops
+        m_groups = m_c_part.groups
+        for index1 in range(len(coil_part.groups)):
+            if get_level() > DEBUG_VERBOSE:
+                log.debug(" Checking contour group %d", index1)
+            m_group = m_groups[index1] # cutshape, loops, opened_loop
+            c_group = coil_part.groups[index1]
+            for index2, m_loop in enumerate(m_group.loops):
+                c_loop = c_group.loops[index2]
+                if get_level() > DEBUG_VERBOSE:
+                    log.debug(" Checking index %d", index2)
+
+                assert c_loop.current_orientation == m_loop.current_orientation # Pass
+                # assert np.isclose(c_loop.potential, m_loop.potential) # Fail, group 2, index 0
+                # assert compare(c_loop.uv, m_loop.uv) # 
+                # assert compare(c_loop.v, m_loop.v) # 
+                if get_level() > DEBUG_VERBOSE:
+                    log.debug(" -- compare uv: %s", compare(c_loop.uv, m_loop.uv)) 
+                    log.debug(" -- compare v: %s", compare(c_loop.v, m_loop.v)) 
+
+            if get_level() >= DEBUG_VERBOSE:
+                visualize_compare_contours(coil_mesh.uv, 800, f'images/countour4_{index1}_p.png', c_group.loops)
+                visualize_compare_contours(coil_mesh.uv, 800, f'images/countour4_{index1}_m.png', m_group.loops)
+    
+        # Manual conclusion: Not identical, but close. Contour groups in different orders...
+
         #
         #####################################################
 
         # WIP
         solution.coil_parts = coil_parts
         return solution
-
-        # Group the contour loops in topological order
-        print('Group the contour loops in topological order:')
-        coil_parts = topological_loop_grouping(coil_parts, input_args)
 
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
