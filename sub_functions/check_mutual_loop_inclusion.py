@@ -23,9 +23,12 @@ def check_mutual_loop_inclusion(test_poly: np.ndarray, target_poly: np.ndarray) 
         inside_flag = check_mutual_loop_inclusion(test_poly, target_poly)
     """
 
-    winding_numbers = np.zeros(test_poly.shape[1])
-
-    for point_ind in range(test_poly.shape[1]):
+    # tuple index out of range (2,)
+    if len(test_poly.shape) == 1:
+        test_poly = test_poly.reshape((2,1))
+    num_entries = test_poly.shape[1]
+    winding_numbers = np.zeros(num_entries)
+    for point_ind in range(num_entries):
         A = np.tile(test_poly[:, point_ind, np.newaxis], (1, target_poly.shape[1] - 1))
         B = target_poly[:, 1:]
         C = target_poly[:, :-1]
