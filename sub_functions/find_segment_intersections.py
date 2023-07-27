@@ -1,6 +1,8 @@
 import numpy as np
 from typing import List
 
+# local imports
+from sub_functions.data_structures import DataStructure
 
 def find_segment_intersections(loop: np.ndarray, test_polygon: np.ndarray):
     """
@@ -52,15 +54,10 @@ def find_segment_intersections(loop: np.ndarray, test_polygon: np.ndarray):
             x_out = x1[intersection_segment_inds] + (t[intersection_segment_inds] * d1x[intersection_segment_inds])
             y_out = y1[intersection_segment_inds] + (t[intersection_segment_inds] * d1y[intersection_segment_inds])
 
-            intersection_points.append({
-                'segment_inds': intersection_segment_inds.tolist(),
-                'uv': np.vstack((x_out, y_out))
-            })
+            new_intersection = DataStructure(segment_inds=intersection_segment_inds, uv=np.vstack((x_out, y_out)))
         else:
-            intersection_points.append({
-                'segment_inds': np.nan,
-                'uv': np.vstack((np.nan, np.nan))
-            })
+            new_intersection = DataStructure(segment_inds=np.nan, uv=np.vstack((np.nan, np.nan)))
+        intersection_points.append(new_intersection)
 
     return intersection_points
 
