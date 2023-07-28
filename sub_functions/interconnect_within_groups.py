@@ -100,6 +100,8 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                 for loop_ind in range(len(part_groups.loops)):
 
                     if force_cut_selection[group_ind] == 'high':
+                        # Exception has occurred: AttributeError: 'list' object has no attribute 'group'
+                        log.debug(" -- here --")
                         cut_position_used = cut_position[group_ind].group[loop_ind].high_cut.v
                     elif force_cut_selection[group_ind] == 'low':
                         cut_position_used = cut_position[group_ind].group[loop_ind].low_cut.v
