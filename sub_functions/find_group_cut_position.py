@@ -76,15 +76,16 @@ def find_group_cut_position(loop_group, group_center, mesh, b_0_direction, cut_p
                 point_a_uv = loop_group.loops[loop_ind].uv[:, point_ind - 1]
                 point_b_uv = loop_group.loops[loop_ind].uv[:, point_ind]
                 cut_point_uv = point_a_uv + (point_b_uv - point_a_uv) * cut_point_ratio
-                cut_position.cut_point.uv.append(cut_point_uv)
+                cut_position.cut_point.add_uv(cut_point_uv)
 
         # Delete repeating degenerate cut points
-        is_repeating_cutpoint = np.all(
-            # all the input array dimensions for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 2 and the array at index 1 has size 1
-            np.abs(np.vstack(([1, 1], np.diff(cut_position.cut_point.uv, axis=1))))) < 10**(-10)
+        arr_true = [[1], [1]]
+        arr_abs = np.abs(np.hstack((arr_true, np.diff(cut_position.cut_point.uv, axis=1))))
+        is_repeating_cutpoint = np.all(arr_abs) < 10**(-10)
         cut_position.cut_point.v = np.delete(cut_position.cut_point.v, np.where(is_repeating_cutpoint), axis=1)
         cut_position.cut_point.uv = np.delete(cut_position.cut_point.uv, np.where(is_repeating_cutpoint), axis=1)
-        cut_position.cut_point.segment_ind = np.delete(cut_position.cut_point.segment_ind, np.where(is_repeating_cutpoint))
+        cut_position.cut_point.segment_ind = np.delete(
+            cut_position.cut_point.segment_ind, np.where(is_repeating_cutpoint))
 
         # Separated into higher and lower cut points:
         # First: use the 2D representation of the loop
