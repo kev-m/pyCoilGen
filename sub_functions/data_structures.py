@@ -206,9 +206,25 @@ class Mesh:
         node_triangles = np.array([row[row != -1] for row in node_triangles_tri], dtype=object)
         return node_triangles
 
+
+# Helper functions
+def append_uv(uv_container, uv_value):
+    if uv_container.uv is None:
+        uv_container.uv = np.zeros((1, 2), dtype=float)
+        uv_container.uv[0] = uv_value
+        return
+    uv_container.uv = np.vstack((uv_container.uv, [uv_value]))
+
+
+def append_v(v_container, v_value):
+    if v_container.v is None:
+        v_container.v = np.zeros((1, 3), dtype=float)
+        v_container.v[0] = v_value
+        return
+    v_container.v = np.vstack((v_container.v, [v_value]))
+
+
 # Generated for calculate_basis_functions
-
-
 class BasisElement:
     stream_function_potential: float
     triangles: List[int]                # node_triangles x ?
@@ -235,11 +251,7 @@ class UnarrangedLoop:
         self.edge_inds.append(edge)
 
     def add_uv(self, uv):
-        if self.uv is None:
-            self.uv = np.zeros((1, 2), dtype=float)
-            self.uv[0] = uv
-            return
-        self.uv = np.vstack((self.uv, [uv]))
+        append_uv(self, uv)
 
 
 class UnarrangedLoopContainer:
@@ -319,7 +331,7 @@ class CoilPart:
     level_positions: np.ndarray = None      # ??? (topological_loop_grouping)
     groups: List[TopoGroup] = None          # Topological groups (topological_loop_grouping)
     group_centers: List[Shape3D] = None     # The centre of each group (calculate_group_centers)
-    connected_group: List[TopoGroup] = None # Connected topological groups (interconnect_within_groups)
+    connected_group: List[TopoGroup] = None  # Connected topological groups (interconnect_within_groups)
 
 
 class CoilSolution:
@@ -381,6 +393,36 @@ class WirePart:
 
     def __str__(self):
         return as_string(self)
+
+
+@dataclass
+class CutPoint:
+    """
+    Defines .....
+
+    Assigned in find_group_cut_position
+    """
+    uv: np.ndarray = None   # 2D co-ordinates of the shape (2,n)
+    v: np.ndarray = None    # 3D co-ordinates of the shape (3,n)
+    segment_ind: List[int] = None  # ???
+
+    def add_uv(self, uv):
+        append_uv(self, uv)
+
+    def add_v(self, v):
+        append_v(self, v)
+
+
+@dataclass
+class CutPosition:
+    """
+    Defines .....
+
+    Assigned in find_group_cut_position
+    """
+    cut_point: CutPoint = None   # ????
+    high_cut: CutPoint = None   # ????
+    low_cut: CutPoint = None    # ???
 
 
 #
