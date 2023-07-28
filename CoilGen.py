@@ -578,7 +578,7 @@ def CoilGen(log, input=None):
 
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
-        coil_parts = calculate_group_centers(coil_parts)
+        calculate_group_centers(coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
