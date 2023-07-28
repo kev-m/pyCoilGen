@@ -57,10 +57,11 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
 
         for group_ind in range(num_part_groups):
             part_groups = coil_part.groups[group_ind]
-            all_points = []
-            for loop_ind in range(len(part_groups.loops)):
+            all_points = part_groups.loops[0].v.copy()
+            for loop_ind in range(1, len(part_groups.loops)):
                 all_points = np.hstack((all_points, part_groups.loops[loop_ind].v))
-            avg_z_value[group_ind] = np.sum(all_points * np.array([0.05, 0, 1]).reshape(-1, 1)) / all_points.shape[1]
+            # Why multiply all_points by [0.05, 0, 1] ?
+            avg_z_value[group_ind] = np.sum(all_points * np.array([[0.05], [0], [1]])) / all_points.shape[0]
 
         new_group_inds = np.argsort(avg_z_value)
 
@@ -89,7 +90,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                     part_groups,
                     coil_part.group_centers.v[:, group_ind],
                     coil_part.coil_mesh,
-                    input.b_0_direction,
+                    input_args.b_0_direction,
                     cut_plane_definition
                 )
 
@@ -109,7 +110,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                     opened_loop, part_groups.cutshape[loop_ind].uv, _ = open_loop_with_3d_sphere(
                         part_groups.loops[loop_ind],
                         cut_position_used,
-                        input.interconnection_cut_width
+                        input_args.interconnection_cut_width
                     )
 
                     part_groups.opened_loop[loop_ind].uv = opened_loop.uv
