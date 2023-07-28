@@ -34,8 +34,8 @@ from sub_functions.process_raw_loops import process_raw_loops
 from sub_functions.find_minimal_contour_distance import find_minimal_contour_distance
 from sub_functions.topological_loop_grouping import topological_loop_grouping
 from sub_functions.calculate_group_centers import calculate_group_centers
+from sub_functions.interconnect_within_groups import interconnect_within_groups
 """
-from interconnect_within_groups import interconnect_within_groups
 from interconnect_among_groups import interconnect_among_groups
 from shift_return_paths import shift_return_paths
 from generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
@@ -595,13 +595,13 @@ def CoilGen(log, input=None):
         #
         #####################################################
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
-
         # Interconnect the single groups
         print('Interconnect the single groups:')
         coil_parts = interconnect_within_groups(coil_parts, input_args)
+
+        # WIP
+        solution.coil_parts = coil_parts
+        return solution
 
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
