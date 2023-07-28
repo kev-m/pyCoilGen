@@ -402,8 +402,8 @@ class CutPoint:
 
     Assigned in find_group_cut_position
     """
-    uv: np.ndarray = None   # 2D co-ordinates of the shape (2,n)
-    v: np.ndarray = None    # 3D co-ordinates of the shape (3,n)
+    uv: np.ndarray = None   # 2D co-ordinates of the shape (n,2)
+    v: np.ndarray = None    # 3D co-ordinates of the shape (n,3)
     segment_ind: List[int] = None  # ???
 
     def add_uv(self, uv):
