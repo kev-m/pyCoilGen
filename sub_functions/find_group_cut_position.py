@@ -6,6 +6,7 @@ import logging
 # Local imports
 from sub_functions.plane_line_intersect import plane_line_intersect
 from sub_functions.calc_mean_loop_normal import calc_mean_loop_normal
+from sub_functions.data_structures import CutPoint, CutPosition
 
 log = logging.getLogger(__name__)
 
@@ -57,14 +58,10 @@ def find_group_cut_position(loop_group, group_center, mesh, b_0_direction, cut_p
         cut_plane_direction = cut_plane_direction / np.linalg.norm(cut_plane_direction)
 
     # Calculate the cut shapes
-    cut_position = []
+    cut_positions = []
     for loop_ind in range(len(loop_group.loops)):
-        cut_position.append({
-            'cut_point': {'v': [], 'uv': [], 'segment_ind': []},
-            'high_cut': {}, 'low_cut': {},
-            'high_cutshape': [], 'low_cutshape': [],
-            'cut_widh_high': [], 'cut_widh_low': []
-        })
+        cut_position = CutPosition(cut_point=CutPoint(segment_ind=[]), high_cut=CutPoint(), low_cut=CutPoint())
+        cut_positions.append(cut_position)
 
         for point_ind in range(1, loop_group.loops[loop_ind].v.shape[1]):
             point_a = loop_group.loops[loop_ind].v[:, point_ind - 1]
@@ -72,24 +69,22 @@ def find_group_cut_position(loop_group, group_center, mesh, b_0_direction, cut_p
             cut_p, cut_flag = plane_line_intersect(cut_plane_direction, group_center, point_a, point_b)
 
             if cut_flag == 1:  # Test if there is a cut between the line points
-                cut_position[loop_ind]['cut_point']['v'].append(cut_p)
-                cut_position[loop_ind]['cut_point']['segment_ind'].append(point_ind - 1)
+                cut_position.cut_point.add_v(cut_p)
+                cut_position.cut_point.segment_ind.append(point_ind - 1)
                 # Build the corresponding uv point
                 cut_point_ratio = np.linalg.norm(point_a - cut_p) / np.linalg.norm(point_a - point_b)
                 point_a_uv = loop_group.loops[loop_ind].uv[:, point_ind - 1]
                 point_b_uv = loop_group.loops[loop_ind].uv[:, point_ind]
                 cut_point_uv = point_a_uv + (point_b_uv - point_a_uv) * cut_point_ratio
-                cut_position[loop_ind]['cut_point']['uv'].append(cut_point_uv)
+                cut_position.cut_point.uv.append(cut_point_uv)
 
         # Delete repeating degenerate cut points
         is_repeating_cutpoint = np.all(
-            np.abs(np.vstack(([1, 1], np.diff(cut_position[loop_ind]['cut_point']['uv'], axis=1))))) < 10**(-10)
-        cut_position[loop_ind]['cut_point']['v'] = np.delete(
-            cut_position[loop_ind]['cut_point']['v'], np.where(is_repeating_cutpoint), axis=1)
-        cut_position[loop_ind]['cut_point']['uv'] = np.delete(
-            cut_position[loop_ind]['cut_point']['uv'], np.where(is_repeating_cutpoint), axis=1)
-        cut_position[loop_ind]['cut_point']['segment_ind'] = np.delete(
-            cut_position[loop_ind]['cut_point']['segment_ind'], np.where(is_repeating_cutpoint))
+            # all the input array dimensions for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 2 and the array at index 1 has size 1
+            np.abs(np.vstack(([1, 1], np.diff(cut_position.cut_point.uv, axis=1))))) < 10**(-10)
+        cut_position.cut_point.v = np.delete(cut_position.cut_point.v, np.where(is_repeating_cutpoint), axis=1)
+        cut_position.cut_point.uv = np.delete(cut_position.cut_point.uv, np.where(is_repeating_cutpoint), axis=1)
+        cut_position.cut_point.segment_ind = np.delete(cut_position.cut_point.segment_ind, np.where(is_repeating_cutpoint))
 
         # Separated into higher and lower cut points:
         # First: use the 2D representation of the loop
@@ -98,49 +93,49 @@ def find_group_cut_position(loop_group, group_center, mesh, b_0_direction, cut_p
         # (seen from the orientation of the cut plane);
         if loop_ind == 0:
             # Select the first pair of the cuts, the cuts with the largest distance to group center
-            cut_sort_ind = np.argsort(np.linalg.norm(cut_position[loop_ind]['cut_point']['v'] - group_center, axis=0))
+            cut_sort_ind = np.argsort(np.linalg.norm(cut_position.cut_point.v - group_center, axis=0))
             first_pair = [cut_sort_ind[0], cut_sort_ind[1]]
 
             # Find the direction for which high and low cuts are separated
-            cut_direction = cut_position[loop_ind]['cut_point']['v'][:, first_pair[1]] - \
-                cut_position[loop_ind]['cut_point']['v'][:, first_pair[0]]
+            cut_direction = cut_position.cut_point.v[:, first_pair[1]] - \
+                cut_position.cut_point.v[:, first_pair[0]]
             cut_direction = cut_direction / np.linalg.norm(cut_direction)
 
             if np.sum(b_0_direction * cut_direction) < 0:
                 cut_direction = cut_direction * (-1)
 
             # Project the coordinates of the cut pairs
-            min_ind = np.argmin(np.sum(cut_position[loop_ind]['cut_point']['v']
+            min_ind = np.argmin(np.sum(cut_position.cut_point.v
                                 [:, first_pair] * cut_direction[:, np.newaxis], axis=0))
             high_ind = first_pair[min_ind]
             low_ind = first_pair[1 - min_ind]
 
-            high_cut_primer = cut_position[loop_ind]['cut_point']['v'][:, high_ind]
-            low_cut_primer = cut_position[loop_ind]['cut_point']['v'][:, low_ind]
+            high_cut_primer = cut_position.cut_point.v[:, high_ind]
+            low_cut_primer = cut_position.cut_point.v[:, low_ind]
 
-            cut_position[loop_ind]['high_cut']['segment_ind'] = cut_position[loop_ind]['cut_point']['segment_ind'][high_ind]
-            cut_position[loop_ind]['low_cut']['segment_ind'] = cut_position[loop_ind]['cut_point']['segment_ind'][low_ind]
-            cut_position[loop_ind]['high_cut']['v'] = cut_position[loop_ind]['cut_point']['v'][:, high_ind]
-            cut_position[loop_ind]['low_cut']['v'] = cut_position[loop_ind]['cut_point']['v'][:, low_ind]
-            cut_position[loop_ind]['high_cut']['uv'] = cut_position[loop_ind]['cut_point']['uv'][:, high_ind]
-            cut_position[loop_ind]['low_cut']['uv'] = cut_position[loop_ind]['cut_point']['uv'][:, low_ind]
-            center_first_cut = (cut_position[loop_ind]['high_cut']['v'] + cut_position[loop_ind]['low_cut']['v']) / 2
+            cut_position.high_cut.segment_ind = cut_position.cut_point.segment_ind[high_ind]
+            cut_position.high_cut.v = cut_position.cut_point.v[:, high_ind]
+            cut_position.high_cut.uv = cut_position.cut_point.uv[:, high_ind]
+            cut_position.low_cut.segment_ind = cut_position.cut_point.segment_ind[low_ind]
+            cut_position.low_cut.v = cut_position.cut_point.v[:, low_ind]
+            cut_position.low_cut.uv = cut_position.cut_point.uv[:, low_ind]
+            # center_first_cut = (cut_position.high_cut.v + cut_position.low_cut.v) / 2
 
         else:  # Now for the following inner loops
 
             # Choose the following cut pairs regarding their distance to the high and low cut of the first loop
-            high_dists = np.linalg.norm(cut_position[loop_ind]['cut_point']
-                                        ['v'] - high_cut_primer[:, np.newaxis], axis=0)
-            low_dists = np.linalg.norm(cut_position[loop_ind]['cut_point']['v'] - low_cut_primer[:, np.newaxis], axis=0)
+            high_dists = np.linalg.norm(cut_position.cut_point
+                                        .v - high_cut_primer[:, np.newaxis], axis=0)
+            low_dists = np.linalg.norm(cut_position.cut_point.v - low_cut_primer[:, np.newaxis], axis=0)
 
             high_min_ind = np.argmin(high_dists)
             low_min_ind = np.argmin(low_dists)
 
-            cut_position[loop_ind]['high_cut']['segment_ind'] = cut_position[loop_ind]['cut_point']['segment_ind'][high_min_ind]
-            cut_position[loop_ind]['low_cut']['segment_ind'] = cut_position[loop_ind]['cut_point']['segment_ind'][low_min_ind]
-            cut_position[loop_ind]['high_cut']['v'] = cut_position[loop_ind]['cut_point']['v'][:, high_min_ind]
-            cut_position[loop_ind]['low_cut']['v'] = cut_position[loop_ind]['cut_point']['v'][:, low_min_ind]
-            cut_position[loop_ind]['high_cut']['uv'] = cut_position[loop_ind]['cut_point']['uv'][:, high_min_ind]
-            cut_position[loop_ind]['low_cut']['uv'] = cut_position[loop_ind]['cut_point']['uv'][:, low_min_ind]
+            cut_position.high_cut.segment_ind = cut_position.cut_point.segment_ind[high_min_ind]
+            cut_position.high_cut.v = cut_position.cut_point.v[:, high_min_ind]
+            cut_position.high_cut.uv = cut_position.cut_point.uv[:, high_min_ind]
+            cut_position.low_cut.segment_ind = cut_position.cut_point.segment_ind[low_min_ind]
+            cut_position.low_cut.v = cut_position.cut_point.v[:, low_min_ind]
+            cut_position.low_cut.uv = cut_position.cut_point.uv[:, low_min_ind]
 
-    return cut_position
+    return cut_positions
