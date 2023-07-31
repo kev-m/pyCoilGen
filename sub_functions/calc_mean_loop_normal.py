@@ -1,6 +1,11 @@
 import numpy as np
 
-def calc_mean_loop_normal(group, coil_mesh):
+from typing import List
+
+from sub_functions.data_structures import TopoGroup, Mesh
+
+
+def calc_mean_loop_normal(group: TopoGroup, coil_mesh: Mesh):
     """
     Calculate the mean loop normal for the given group.
 
