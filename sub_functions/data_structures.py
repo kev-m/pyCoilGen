@@ -290,7 +290,7 @@ class ContourLine:
     Used by calc_contours_by_triangular_potential_cuts
     """
     v: np.ndarray = None   # 3D co-ordinates of the contour (process_raw_loops) (3,m)
-    uv: np.ndarray = None  # 2D co-ordinates of the contour (process_raw_loops) (2,2)
+    uv: np.ndarray = None  # 2D co-ordinates of the contour (process_raw_loops) (2,m)
     potential: float = None  # Potential value of the contour
     current_orientation: int = None
 
