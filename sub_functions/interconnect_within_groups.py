@@ -51,7 +51,6 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
             force_cut_selection = input_args.force_cut_selection
 
         # Generate cutshapes, open, and interconnect the loops within each group
-        cut_position = [[]] * num_part_groups # A list of List[CutPosition]
 
         # Sort the force cut selection within their level according to their average z-position
         avg_z_value = np.zeros(len(coil_part.loop_groups))
@@ -88,7 +87,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
 
                 # Generate the cutshapes for all the loops within the group
                 # M: cut_position(group_ind).group = ...
-                cut_position[group_ind] = find_group_cut_position(
+                cut_positions = find_group_cut_position(
                     part_groups,
                     coil_part.group_centers.v[:, group_ind],
                     coil_part.coil_mesh,
@@ -103,12 +102,11 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
 
                     if force_cut_selection[group_ind] == 'high':
                         # Exception has occurred: AttributeError: 'list' object has no attribute 'group'
-                        log.debug(" -- here --")
-                        cut_position_used = cut_position[group_ind].group[loop_ind].high_cut.v
+                        cut_position_used = cut_positions[loop_ind].high_cut.v
                     elif force_cut_selection[group_ind] == 'low':
-                        cut_position_used = cut_position[group_ind].group[loop_ind].low_cut.v
+                        cut_position_used = cut_positions[loop_ind].low_cut.v
                     else:
-                        cut_position_used = cut_position[group_ind].group[loop_ind].high_cut.v
+                        cut_position_used = cut_positions[loop_ind].high_cut.v
 
                     # Open the loop
                     opened_loop, part_groups.cutshape[loop_ind].uv, _ = open_loop_with_3d_sphere(
