@@ -8,6 +8,7 @@ import logging
 # Local imports
 from sub_functions.data_structures import CoilPart
 from sub_functions.find_group_cut_position import find_group_cut_position
+from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
 
 log = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
             force_cut_selection = input_args.force_cut_selection
 
         # Generate cutshapes, open, and interconnect the loops within each group
-        cut_position = [None] * num_part_groups
+        cut_position = [[]] * num_part_groups # A list of List[CutPosition]
 
         # Sort the force cut selection within their level according to their average z-position
         avg_z_value = np.zeros(len(coil_part.loop_groups))
@@ -86,6 +87,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                 part_groups.cutshape = [None] * len(part_groups.loops)
 
                 # Generate the cutshapes for all the loops within the group
+                # M: cut_position(group_ind).group = ...
                 cut_position[group_ind] = find_group_cut_position(
                     part_groups,
                     coil_part.group_centers.v[:, group_ind],
