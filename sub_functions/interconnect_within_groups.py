@@ -148,4 +148,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                 # Close the connected group
                 part_connected_group.add_uv(part_connected_group.uv[:, [0]])
                 part_connected_group.add_v(part_connected_group.v[:, [0]])
+
+                coil_part.connected_group[group_ind] = part_connected_group
+
     return coil_parts
