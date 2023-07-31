@@ -1,17 +1,19 @@
 import numpy as np
 
+from typing import List
+
 # Logging
 import logging
 
 # Local imports
 from sub_functions.plane_line_intersect import plane_line_intersect
 from sub_functions.calc_mean_loop_normal import calc_mean_loop_normal
-from sub_functions.data_structures import CutPoint, CutPosition
+from sub_functions.data_structures import TopoGroup, Mesh, CutPoint, CutPosition
 
 log = logging.getLogger(__name__)
 
 
-def find_group_cut_position(loop_group, group_center, mesh, b_0_direction, cut_plane_definition):
+def find_group_cut_position(loop_group: TopoGroup, group_center, mesh : Mesh, b_0_direction, cut_plane_definition) -> List[CutPosition]:
     """
     Define the cut plane orientation for the group.
     Find the opening shapes and cut points, separated into higher and lower cut points.
@@ -26,7 +28,7 @@ def find_group_cut_position(loop_group, group_center, mesh, b_0_direction, cut_p
         cut_plane_definition (str): Definition of the cut plane orientation.
 
     Returns:
-        List: List containing cut positions and related information for each loop in the loop group.
+        cut_positions(List[CutPosition]): List of cut positions for each loop in the loop group.
     """
     loop_normal = calc_mean_loop_normal(loop_group, mesh)
 
