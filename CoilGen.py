@@ -590,6 +590,34 @@ def CoilGen(log, input=None):
         print('Interconnect the single groups:')
         coil_parts = interconnect_within_groups(coil_parts, input_args)
 
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: Coil Part connected_group values: return_path, uv, v, spiral_in (uv,v), spiral_out(uv, v)
+        m_connected_groups = m_c_part.connected_group
+        c_connected_groups = coil_part.connected_group
+
+        assert len(m_connected_groups) == len(c_connected_groups)
+
+        log.debug("--- here ---")
+
+        for index, m_connected_group in enumerate(m_connected_groups):
+            c_connected_group = c_connected_groups[index]
+
+            #log.debug(" compare uv: %s", compare(c_connected_group.uv, m_connected_group.uv)) # Fail, different group layout
+            #log.debug(" compare v: %s", compare(c_connected_group.v, m_connected_group.v)) # Fail, different group layout
+
+            if get_level() >= DEBUG_VERBOSE:
+                # MATLAB shape
+                visualize_vertex_connections(c_connected_group.uv.T, 800, f'images/connected_group_uv_{index}_p.png')
+                visualize_vertex_connections(m_connected_group.uv.T, 800, f'images/connected_group_uv_{index}_m.png')
+
+        # Manual conclusion: Fail - the Python connections look pretty different to the MATLAB ones in a few places
+
+        #
+        #####################################################
+
+
         # WIP
         solution.coil_parts = coil_parts
         return solution
