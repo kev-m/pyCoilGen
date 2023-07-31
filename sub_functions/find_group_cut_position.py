@@ -126,15 +126,11 @@ def find_group_cut_position(loop_group: TopoGroup, group_center, mesh : Mesh, b_
             # Find the direction for which high and low cuts are separated
             cut_direction = cut_position.cut_point.v[first_pair[1], :] - cut_position.cut_point.v[first_pair[0], :]
             cut_direction = cut_direction / np.linalg.norm(cut_direction)
-
-            # ValueError: operands could not be broadcast together with shapes (3,) (2,)
-            # M: cut_direction	[-0;-0;-1]	3x1	double
-            # M: b_0_direction	[0;0;1]	3x1	double
             if np.sum(b_0_direction * cut_direction) < 0:
                 cut_direction = cut_direction * (-1)
 
             # Project the coordinates of the cut pairs
-            arr_sum = np.sum(cut_position.cut_point.v[first_pair, :] * cut_direction, axis=0)
+            arr_sum = np.sum(cut_position.cut_point.v[first_pair, :] * cut_direction, axis=1) # Result (2,)
             min_ind = np.argmin(arr_sum)
             high_ind = first_pair[min_ind]
             low_ind = first_pair[1 - min_ind]
