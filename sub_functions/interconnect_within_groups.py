@@ -6,7 +6,7 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart, Shape2D, Shape3D
+from sub_functions.data_structures import CoilPart, Shape2D, Shape3D, TopoGroup
 from sub_functions.find_group_cut_position import find_group_cut_position
 from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
 
@@ -122,68 +122,30 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                     part_groups.opened_loop[loop_ind] = Shape3D(uv=opened_loop.uv, v=opened_loop.v)
 
                 # Build the interconnected group by adding the opened loops
-                part_connected_group.spiral_in.uv = []
-                part_connected_group.spiral_in.v = []
-                part_connected_group.spiral_out.uv = []
-                part_connected_group.spiral_out.v = []
-                part_connected_group.uv = []
-                part_connected_group.v = []
-                part_connected_group.return_path.uv = []
-                part_connected_group.return_path.v = []
-
-                for loop_ind in range(len(part_groups.loops)):
-                    part_connected_group.uv = np.hstack(
-                        (part_connected_group.uv,
-                         part_groups.opened_loop[loop_ind].uv)
-                    )
-                    part_connected_group.v = np.hstack(
-                        (part_connected_group.v,
-                         part_groups.opened_loop[loop_ind].v)
-                    )
-                    part_connected_group.spiral_in.uv = np.hstack(
-                        (part_connected_group.spiral_in.uv,
-                         part_groups.opened_loop[loop_ind].uv)
-                    )
-                    part_connected_group.spiral_in.v = np.hstack(
-                        (part_connected_group.spiral_in.v,
-                         part_groups.opened_loop[loop_ind].v)
-                    )
-                    part_connected_group.spiral_out.uv = np.hstack(
-                        (part_connected_group.spiral_out.uv,
-                         part_groups.opened_loop[len(part_groups.loops) + 1 - loop_ind].uv)
-                    )
-                    part_connected_group.spiral_out.v = np.hstack(
-                        (part_connected_group.spiral_out.v,
-                         part_groups.opened_loop[len(part_groups.loops) + 1 - loop_ind].v)
-                    )
+                part_connected_group = TopoGroup()
+                part_connected_group.spiral_in = Shape3D()
+                part_connected_group.spiral_out = Shape3D()
+                for loop_ind in range(0, len(part_groups.loops)):
+                    loop_item = part_groups.opened_loop[loop_ind]
+                    part_connected_group.add_uv(loop_item.uv)
+                    part_connected_group.add_v(loop_item.v)
+                    part_connected_group.spiral_in.add_uv(loop_item.uv)
+                    part_connected_group.spiral_in.add_v(loop_item.v)
+                    other_item = part_groups.opened_loop[len(part_groups.loops) - loop_ind - 1]
+                    part_connected_group.spiral_out.add_uv(other_item.uv)
+                    part_connected_group.spiral_out.add_v(other_item.v)
 
                 # Add the return path
+                part_connected_group.return_path = Shape3D()
                 for loop_ind in range(len(part_groups.loops)-1, -1, -1):
-                    part_connected_group.return_path.uv = np.hstack(
-                        (part_connected_group.return_path.uv,
-                         np.mean(part_groups.opened_loop[loop_ind].uv[:, [0, -1]], axis=1).reshape(-1, 1))
-                    )
-                    part_connected_group.return_path.v = np.hstack(
-                        (part_connected_group.return_path.v,
-                         np.mean(part_groups.opened_loop[loop_ind].v[:, [0, -1]], axis=1).reshape(-1, 1))
-                    )
+                    loop_item = part_groups.opened_loop[loop_ind]
+                    part_connected_group.return_path.add_uv(np.mean(loop_item.uv[:, [0, -1]], axis=1).reshape(-1, 1))
+                    part_connected_group.return_path.add_v(np.mean(loop_item.v[:, [0, -1]], axis=1).reshape(-1, 1))
 
-                part_connected_group.uv = np.hstack(
-                    (part_connected_group.uv,
-                     part_connected_group.return_path.uv)
-                )
-                part_connected_group.v = np.hstack(
-                    (part_connected_group.v,
-                     part_connected_group.return_path.v)
-                )
+                part_connected_group.add_uv(part_connected_group.return_path.uv)
+                part_connected_group.add_v(part_connected_group.return_path.v)
 
                 # Close the connected group
-                part_connected_group.uv = np.hstack(
-                    (part_connected_group.uv,
-                     part_connected_group.uv[:, [0]])
-                )
-                part_connected_group.v = np.hstack(
-                    (part_connected_group.v,
-                     part_connected_group.v[:, [0]])
-                )
+                part_connected_group.add_uv(part_connected_group.uv[:, [0]])
+                part_connected_group.add_v(part_connected_group.v[:, [0]])
     return coil_parts
