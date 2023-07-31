@@ -224,6 +224,38 @@ def append_v(v_container, v_value):
     v_container.v = np.vstack((v_container.v, [v_value]))
 
 
+def append_uv_matlab(uv_container, uv_value: np.ndarray):
+    """
+    Append a (2,n) array or item to the uv_container's uv member.
+    """
+    if uv_container.uv is None:
+        uv_container.uv = uv_value.copy()
+        # if uv_value.shape[1] == 1:
+        #    uv_container.uv = np.zeros((2, 1), dtype=float)
+        #    uv_container.uv[:,0] = uv_value[:,0]
+        # else:
+        #    uv_container.uv = uv_value
+        return
+    # uv_container.uv = np.hstack((uv_container.uv, [uv_value]))
+    uv_container.uv = np.hstack((uv_container.uv, uv_value))
+
+
+def append_v_matlab(v_container, v_value: np.ndarray):
+    """
+    Append a (3,n) array or item to the v_container's v member.
+    """
+    if v_container.v is None:
+        v_container.v = v_value.copy()
+        # if v_value.shape[1] == 1:
+        #    v_container.v = np.zeros((3, 1), dtype=float)
+        #    v_container.v[:,0] = v_value[:,0]
+        # else:
+        #    v_container.v = v_value
+        return
+    # v_container.v = np.hstack((v_container.v, [v_value]))
+    v_container.v = np.hstack((v_container.v, v_value))
+
+
 # Generated for calculate_basis_functions
 class BasisElement:
     stream_function_potential: float
@@ -282,39 +314,46 @@ class RawPart:
     unarranged_loops: List[UnarrangedLoop] = None
 
 
-@dataclass
-class ContourLine:
-    """
-    Represents a contour line
-
-    Used by calc_contours_by_triangular_potential_cuts
-    """
-    v: np.ndarray = None   # 3D co-ordinates of the contour (process_raw_loops) (3,m)
-    uv: np.ndarray = None  # 2D co-ordinates of the contour (process_raw_loops) (2,m)
-    potential: float = None  # Potential value of the contour
-    current_orientation: int = None
-
-
 # Used in topological_loop_grouping
 @dataclass
 class Shape2D:  # Used in topological_loop_grouping
     uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
 
+    def add_uv(self, uv):
+        append_uv_matlab(self, uv)
+
 
 @dataclass
-class Shape3D:  # Used in topological_loop_grouping
-    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
+class Shape3D(Shape2D):  # Used in topological_loop_grouping
     v: np.ndarray = None  # 3D co-ordinates of the shape (3,n)
 
+    def add_v(self, v):
+        append_v_matlab(self, v)
+
 
 @dataclass
-class TopoGroup:
-    loops: List[ContourLine] = None  # Assigned in topological_loop_grouping
+class ContourLine(Shape3D):
+    """
+    Represents a contour line
+
+    Used by calc_contours_by_triangular_potential_cuts
+    """
+    # v: np.ndarray = None   # 3D co-ordinates of the contour (process_raw_loops) (3,m)
+    # uv: np.ndarray = None  # 2D co-ordinates of the contour (process_raw_loops) (2,m)
+    potential: float = None  # Potential value of the contour
+    current_orientation: int = None
+
+
+@dataclass
+class TopoGroup(Shape3D):
+    loops: List[ContourLine] = None     # Assigned in topological_loop_grouping
     cutshape: List[Shape2D] = None
     opened_loop: List[Shape3D] = None
-    return_path : Shape2D = None    # Assigned in interconnect_within_groups
-    spiral_in: Shape3D = None       # Assigned in interconnect_within_groups
-    spiral_out: Shape3D = None      # Assigned in interconnect_within_groups
+    return_path: Shape3D = None         # Assigned in interconnect_within_groups
+    spiral_in: Shape3D = None           # Assigned in interconnect_within_groups
+    spiral_out: Shape3D = None          # Assigned in interconnect_within_groups
+    # uv: np.ndarray = None             # 2D shape (2,n) Assigned in interconnect_within_groups
+    # v: np.ndarray = None              # 3D shape (3,n) Assigned in interconnect_within_groups
 
 
 @dataclass
