@@ -312,6 +312,9 @@ class TopoGroup:
     loops: List[ContourLine] = None  # Assigned in topological_loop_grouping
     cutshape: List[Shape2D] = None
     opened_loop: List[Shape3D] = None
+    return_path : Shape2D = None    # Assigned in interconnect_within_groups
+    spiral_in: Shape3D = None       # Assigned in interconnect_within_groups
+    spiral_out: Shape3D = None      # Assigned in interconnect_within_groups
 
 
 @dataclass
