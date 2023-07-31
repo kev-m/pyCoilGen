@@ -400,6 +400,8 @@ class CutPoint:
     """
     Defines .....
 
+    See Shape3D (which is identical, except that uv and v are (2,n) & (3,n)).
+
     Assigned in find_group_cut_position
     """
     uv: np.ndarray = None   # 2D co-ordinates of the shape (n,2)
