@@ -47,18 +47,18 @@ def open_loop_with_3d_sphere(curve_points_in: ContourLine, sphere_center: np.nda
         raise ValueError("Opening of loop not possible, no overlap between cut sphere and loop")
 
     inside_sphere_ind = np.linalg.norm(curve_points.v - sphere_center, axis=0) < sphere_diameter / 2
-
+    ind_diff_array = np.diff(inside_sphere_ind.astype(int))
     # In case of multiple cuts with the sphere, select the part of the curve which is closer to the sphere center
-    if np.sum(np.abs(np.diff(inside_sphere_ind))) > 2:
-        parts_start = np.where(np.diff(inside_sphere_ind) == 1)[0] + 1
-        parts_end = np.where(np.diff(inside_sphere_ind) == -1)[0]
+    if np.sum(np.abs(ind_diff_array)) > 2:
+        parts_start = np.where(ind_diff_array == 1)[0] + 1
+        parts_end = np.where(ind_diff_array == -1)[0]
         parts_avg_dist = np.zeros(len(parts_start))
 
         for part_ind in range(len(parts_start)):
             parts_avg_dist[part_ind] = np.mean(np.linalg.norm(
                 curve_points.v[:, parts_start[part_ind]:parts_end[part_ind]] - sphere_center, axis=0))
 
-        nearest_part = np.argmin(parts_avg_dist)
+        nearest_part = np.nanargmin(parts_avg_dist)
         inside_sphere_ind_unique = np.zeros(inside_sphere_ind.shape, dtype=bool)
         inside_sphere_ind_unique[parts_start[nearest_part]:parts_end[nearest_part] + 1] = True
     else:
