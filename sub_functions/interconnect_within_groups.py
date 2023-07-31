@@ -6,7 +6,7 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart
+from sub_functions.data_structures import CoilPart, Shape2D, Shape3D
 from sub_functions.find_group_cut_position import find_group_cut_position
 from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
 
@@ -106,17 +106,20 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                     elif force_cut_selection[group_ind] == 'low':
                         cut_position_used = cut_positions[loop_ind].low_cut.v
                     else:
-                        cut_position_used = cut_positions[loop_ind].high_cut.v
+                        cut_position_used = cut_positions[loop_ind].high_cut.add_v
+
+                    # NOTE: high_cut/low_cut.v are (n,3) whereas part_group.loops[] etc are (3,n)
+                    # Temporary hack until all v and uv are changed from MATLAB (2,m) to Python (m,2)
+                    cut_position_used = [[cut_position_used[0]], [cut_position_used[1]], [cut_position_used[2]]]
 
                     # Open the loop
-                    opened_loop, part_groups.cutshape[loop_ind].uv, _ = open_loop_with_3d_sphere(
+                    opened_loop, uv, _ = open_loop_with_3d_sphere(
                         part_groups.loops[loop_ind],
                         cut_position_used,
                         input_args.interconnection_cut_width
                     )
-
-                    part_groups.opened_loop[loop_ind].uv = opened_loop.uv
-                    part_groups.opened_loop[loop_ind].v = opened_loop.v
+                    part_groups.cutshape[loop_ind] = Shape2D(uv=uv)
+                    part_groups.opened_loop[loop_ind] = Shape3D(uv=opened_loop.uv, v=opened_loop.v)
 
                 # Build the interconnected group by adding the opened loops
                 part_connected_group.spiral_in.uv = []
