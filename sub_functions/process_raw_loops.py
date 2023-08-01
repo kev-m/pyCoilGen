@@ -14,7 +14,7 @@ from sub_functions.uv_to_xyz import uv_to_xyz
 log = logging.getLogger(__name__)
 
 
-def process_raw_loops(coil_parts: List[CoilPart], input, target_field: TargetField):
+def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: TargetField):
     """
     Process raw loops in the coil mesh.
 
@@ -28,10 +28,12 @@ def process_raw_loops(coil_parts: List[CoilPart], input, target_field: TargetFie
     """
 
     # Smooth the contours if smooth_flag is True
-    if input.smooth_flag:
+    if input_args.smooth_flag and input_args.smooth_factor > 1:
         for coil_part in coil_parts:
             for index, contour in enumerate(coil_part.contour_lines):
-                contour.uv = smooth_track_by_folding(contour.uv, input.smooth_factor)
+                smoothed = smooth_track_by_folding(contour.uv, input_args.smooth_factor)
+                log.debug(" smoothed difference: %f", np.sum(np.abs(contour.uv - smoothed)))
+                contour.uv = smoothed
 
     # Generate the curved coordinates
     for coil_part in coil_parts:
@@ -43,15 +45,15 @@ def process_raw_loops(coil_parts: List[CoilPart], input, target_field: TargetFie
     # Evaluate loop significance and remove loops that do not contribute enough to the target field
     coil_parts = evaluate_loop_significance(coil_parts, target_field)
     for coil_part in coil_parts:
-        loops_to_delete = coil_part.loop_significance < input.min_loop_significance
+        loops_to_delete = coil_part.loop_significance < input_args.min_loop_significance
         coil_part.contour_lines = [loop for i, loop in enumerate(coil_part.contour_lines) if not loops_to_delete[i]]
 
     # Close the loops
     for coil_part in coil_parts:
         for loop in coil_part.contour_lines:
             if not np.allclose(loop.uv[:, 0], loop.uv[:, -1]) or not np.allclose(loop.uv[:, 1], loop.uv[:, -1]):
-                loop.uv = np.hstack((loop.uv, loop.uv[:, 0][:, None]))  # Close the loops
-                loop.v = np.hstack((loop.v, loop.v[:, 0][:, None]))  # Close the loops
+                loop.add_uv(loop.uv[:, 0][:, None])# Close the loops
+                loop.add_v(loop.v[:, 0][:, None])  # Close the loops
 
     # Calculate the combined wire length for the unconnected loops
     coil_parts[-1].combined_loop_length = 0
