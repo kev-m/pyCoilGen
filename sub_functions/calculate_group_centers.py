@@ -38,6 +38,7 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
         part_mesh = coil_part.coil_mesh
 
         # Calculate the total center of the coil part
+        # M: 
         total_center = np.mean(part_mesh.uv, axis=0)
 
         group_centers_2d = np.zeros((2, len(coil_part.groups)))
@@ -98,7 +99,7 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
         group_centers_3d = np.zeros((3, group_centers_2d.shape[1]))
 
         planar_mesh = Trimesh(faces=part_mesh.get_faces(), vertices=part_mesh.uv)
-        curved_mesh = Trimesh(faces=part_mesh.get_faces(), vertices=part_mesh.get_vertices())
+        curved_mesh = part_mesh.trimesh_obj # Trimesh(faces=part_mesh.get_faces(), vertices=part_mesh.get_vertices())
 
         for rrrr in range(len(coil_part.groups)):
             # Set centers outside the 2D mesh in the center of the 3D volume

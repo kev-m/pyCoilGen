@@ -12,6 +12,8 @@ from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
 
 log = logging.getLogger(__name__)
 
+# Debugging
+from helpers.visualisation import get_linenumber
 
 def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
     """
@@ -54,7 +56,6 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
 
         # Sort the force cut selection within their level according to their average z-position
         avg_z_value = np.zeros(len(coil_part.loop_groups))
-
         for group_ind in range(num_part_groups):
             part_groups = coil_part.groups[group_ind]
             all_points = part_groups.loops[0].v.copy()
@@ -81,13 +82,16 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                 part_connected_group.spiral_in.v = part_groups.loops.v
                 part_connected_group.spiral_out.uv = part_groups.loops.uv
                 part_connected_group.spiral_out.v = part_groups.loops.v
-
             else:
                 part_groups.opened_loop = [None] * len(part_groups.loops)
                 part_groups.cutshape = [None] * len(part_groups.loops)
 
                 # Generate the cutshapes for all the loops within the group
-                # M: cut_position(group_ind).group = ...
+                log.debug("--- here ---: %s, line %d", __file__, get_linenumber())
+                # M: cut_position(1).group(1).cut_point
+                # v	[0.0011,0.0011;0.4999,0.4999;-0.0138,-0.7357]	3x2	double
+                # uv	[-1.2860,-2.0066;-0.0017,0.0533]	2x2	double
+                # segment_ind	[19,46]	1x2	double                
                 cut_positions = find_group_cut_position(
                     part_groups,
                     coil_part.group_centers.v[:, group_ind],
@@ -123,7 +127,6 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                     part_groups.opened_loop[loop_ind] = Shape3D(uv=opened_loop.uv, v=opened_loop.v)
 
                 # Build the interconnected group by adding the opened loops
-                part_connected_group = TopoGroup()
                 part_connected_group.spiral_in = Shape3D()
                 part_connected_group.spiral_out = Shape3D()
                 for loop_ind in range(0, len(part_groups.loops)):
