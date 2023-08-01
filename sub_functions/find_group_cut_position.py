@@ -30,6 +30,7 @@ def find_group_cut_position(loop_group: TopoGroup, group_center, mesh : Mesh, b_
     Returns:
         cut_positions(List[CutPosition]): List of cut positions for each loop in the loop group.
     """
+    # M: loop_normal	[0.0061;1;-0]	3x1	double [~y]
     loop_normal = calc_mean_loop_normal(loop_group, mesh)
 
     # Test if loop normal and b_0_direction are not independent enough
@@ -57,6 +58,7 @@ def find_group_cut_position(loop_group: TopoGroup, group_center, mesh : Mesh, b_
             cut_plane_direction = cut_plane_direction / np.linalg.norm(cut_plane_direction)
     else:
         cut_plane_direction = np.cross(b_0_direction, loop_normal)
+        # M: cut_plane_direction	[-1;0.0061;0]	3x1	double [~y]
         cut_plane_direction = cut_plane_direction / np.linalg.norm(cut_plane_direction)
 
     # Calculate the cut shapes
@@ -68,6 +70,11 @@ def find_group_cut_position(loop_group: TopoGroup, group_center, mesh : Mesh, b_
         for point_ind in range(1, loop_group.loops[loop_ind].v.shape[1]):
             point_a = loop_group.loops[loop_ind].v[:, point_ind - 1]
             point_b = loop_group.loops[loop_ind].v[:, point_ind]
+            # point_a	[-0.4935,0.0492,-0.6]	1x3	double
+            # point_b	[-0.4962,0.0292,-0.5662]	1x3	double
+            # group_center	[0.0011;0.4999;-0.3172]	3x1	double
+            # cut_p	[0.0221,3.966,-7.2201]	1x3	double
+            # cut_flag	3	1x1	double
             cut_p, cut_flag = plane_line_intersect(cut_plane_direction, group_center, point_a, point_b)
 
             if cut_flag == 1:  # Test if there is a cut between the line points
