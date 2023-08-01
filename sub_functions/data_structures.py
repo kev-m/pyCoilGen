@@ -291,16 +291,24 @@ class UnarrangedLoopContainer:
         self.loop: List[UnarrangedLoop] = []
 
 
+# Used in topological_loop_grouping
 @dataclass
-class UnsortedPoints:
+class Shape2D:  # Used in topological_loop_grouping
+    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
+
+    def add_uv(self, uv):
+        append_uv_matlab(self, uv)
+
+
+@dataclass
+class UnsortedPoints(Shape2D):
     """
     Represents unsorted contours in the coil mesh.
 
     Used by calc_contours_by_triangular_potential_cuts
     """
     potential: float = None
-    edge_ind = None
-    uv = None
+    edge_ind: np.ndarray = None
 
 
 @dataclass
@@ -312,15 +320,6 @@ class RawPart:
     """
     unsorted_points: List[UnsortedPoints] = None
     unarranged_loops: List[UnarrangedLoop] = None
-
-
-# Used in topological_loop_grouping
-@dataclass
-class Shape2D:  # Used in topological_loop_grouping
-    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
-
-    def add_uv(self, uv):
-        append_uv_matlab(self, uv)
 
 
 @dataclass
@@ -363,6 +362,8 @@ class CoilPart:
     resistance_matrix: np.ndarray = None    # num_vertices x num_vertices
     raw: RawPart = None
     contour_lines: List[ContourLine] = None
+    potential_level_list: np.ndarray = None  # Placeholder (calc_potential_levels) (???)
+    contour_step: float = None             # Placeholder (calc_potential_levels) (???)
     field_by_loops: np.ndarray = None       # Placeholder (evaluate_loop_significance in process_raw_loops)
     combined_loop_field: np.ndarray = None  # Placeholder (evaluate_loop_significance in process_raw_loops) (3,m)
     loop_significance: np.ndarray = None    # Per contour line (evaluate_loop_significance in process_raw_loops) (n)
