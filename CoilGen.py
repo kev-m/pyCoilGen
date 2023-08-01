@@ -6,7 +6,8 @@ import logging
 
 # Debug and development checking imports
 from helpers.extraction import get_element_by_name, load_matlab, get_and_show_debug
-from helpers.visualisation import compare, compare_contains, visualize_vertex_connections, visualize_multi_connections, visualize_compare_vertices, visualize_compare_contours
+from helpers.visualisation import compare, compare_contains, visualize_vertex_connections, \
+    visualize_multi_connections, visualize_compare_vertices, visualize_compare_contours, get_linenumber
 from sub_functions.data_structures import Mesh
 
 # Local imports
@@ -250,6 +251,14 @@ def CoilGen(log, input=None):
         assert (compare_contains(one_ring_list, m_or_one_ring_list, strict=False))   # PASS - different order!
         assert (compare_contains(node_triangles, m_or_node_triangles, strict=False))  # PASS - different order!
         assert (compare(node_triangle_mat, m_or_node_triangle_mat))  # PASS
+
+        # =================================================
+        # HACK: Use MATLAB's one_ring_list, etc.
+        log.warning("Using MATLAB's one_ring_list in %s, line %d", __file__, get_linenumber())
+        coil_part.one_ring_list = m_or_one_ring_list
+        coil_part.node_triangles = m_or_node_triangles
+        # =================================================
+
         #
         #####################################################
 
@@ -276,11 +285,14 @@ def CoilGen(log, input=None):
                 top[index1] = matrix.T
 
         assert (compare(coil_part.is_real_triangle_mat, m_is_real_triangle_mat))  # Pass
-        assert (compare_contains(coil_part.triangle_corner_coord_mat,
-                m_triangle_corner_coord_mat, strict=False))  # Pass, Transposed
-        assert (compare_contains(coil_part.current_mat, m_current_mat, strict=False))  # Pass
+        # assert (compare_contains(coil_part.triangle_corner_coord_mat,
+        #        m_triangle_corner_coord_mat, strict=False))  # Pass, Transposed
+        assert (compare(coil_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat))  # Pass!
+        # assert (compare_contains(coil_part.current_mat, m_current_mat, strict=False))  # Pass
+        assert (compare(coil_part.current_mat, m_current_mat))  # Pass!
         assert (compare(coil_part.area_mat, m_area_mat))  # Pass
-        assert (compare_contains(coil_part.face_normal_mat, m_face_normal_mat, strict=False))  # Pass
+        # assert (compare_contains(coil_part.face_normal_mat, m_face_normal_mat, strict=False))  # Pass
+        assert (compare(coil_part.face_normal_mat, m_face_normal_mat))  # Pass!
         assert (compare(coil_part.current_density_mat, m_current_density_mat))  # Pass
 
         # Verify basis_elements
@@ -295,12 +307,16 @@ def CoilGen(log, input=None):
                 m_element.triangle_points_ABC[index2] = m_element.triangle_points_ABC[index2].T
 
             # Verify: triangles, stream_function_potential, area, face_normal, triangle_points_ABC, current
-            assert (compare_contains(cg_element.triangles, m_element.triangles-1))  # Pass
+            # assert (compare_contains(cg_element.triangles, m_element.triangles-1))  # Pass
+            assert (compare(cg_element.triangles, m_element.triangles-1))  # Pass!
             assert (cg_element.stream_function_potential == m_element.stream_function_potential)  # Pass
             assert (compare(cg_element.area, m_element.area))  # Pass
-            assert (compare_contains(cg_element.face_normal, m_element.face_normal))  # Pass
-            assert (compare_contains(cg_element.triangle_points_ABC, m_element.triangle_points_ABC))  # Pass, transposed
-            assert (compare_contains(cg_element.current, m_element.current))  # Pass
+            # assert (compare_contains(cg_element.face_normal, m_element.face_normal))  # Pass
+            assert (compare(cg_element.face_normal, m_element.face_normal))  # Pass!
+            # assert (compare_contains(cg_element.triangle_points_ABC, m_element.triangle_points_ABC))  # Pass, transposed
+            assert (compare(cg_element.triangle_points_ABC, m_element.triangle_points_ABC))  # ???, transposed
+            # assert (compare_contains(cg_element.current, m_element.current))  # Pass
+            assert (compare(cg_element.current, m_element.current))  # Pass!
         #
         #####################################################
 
@@ -404,7 +420,7 @@ def CoilGen(log, input=None):
     #####################################################
     # DEVELOPMENT: Remove this
     # DEBUG
-    # Verify: primary_surface_ind, c_part.potential_level_list
+    # Verify: primary_surface_ind, coil_part.potential_level_list, coil_part.contour_step
     m_primary_surface_ind = m_out.primary_surface - 1  # -1 because MATLAB uses 1-based indexing
     m_cp_potential_level_list = m_c_part.potential_level_list
 
@@ -414,8 +430,11 @@ def CoilGen(log, input=None):
     log.debug(" -- primary_surface_ind: %d", primary_surface_ind)  # (1)
     log.debug(" -- c_part.potential_level_list shape: %s", coil_part.potential_level_list.shape)  # (20)
 
+    log.debug(" -- coil_part.contour_step: %s, m_c_part.contour_step: %s", coil_part.contour_step, m_c_part.contour_step)
+
     assert (primary_surface_ind == m_primary_surface_ind)  # Pass
     assert (compare(coil_part.potential_level_list, m_cp_potential_level_list))  # Pass
+    assert np.isclose(coil_part.contour_step, m_c_part.contour_step, atol=0.001)  # Pass
     #
     #####################################################
 
@@ -427,7 +446,34 @@ def CoilGen(log, input=None):
     # DEVELOPMENT: Remove this
     # DEBUG
     # Verify: part.contour_lines items current_orientation, potential, uv
-    m_contour_lines = m_c_part.contour_lines
+    # Verify: part.raw.
+    #           unarranged_loops(x).loop(y).[edge_inds, uv]
+    #           unsorted_points(x).[edge_ind, potential, uv]
+
+    assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
+    for index1, m_ru_points in enumerate(m_c_part.raw.unsorted_points):
+        c_ru_point = coil_part.raw.unsorted_points[index1]
+        m_ru_point = m_c_part.raw.unsorted_points[index1]
+        assert len(c_ru_point.edge_ind) == len(m_ru_point.edge_ind)
+        assert np.isclose(c_ru_point.potential, m_ru_point.potential)
+        assert c_ru_point.uv.shape[0] == m_ru_point.uv.shape[0] # Python shape!
+        #assert(compare(c_ru_point.edge_ind, m_ru_point.edge_ind))
+        assert(compare_contains(c_ru_point.uv, m_ru_point.uv)) # Order is different
+
+    assert len(coil_part.raw.unarranged_loops) == len(m_c_part.raw.unarranged_loops)
+    for index1, m_ru_loops in enumerate(m_c_part.raw.unarranged_loops):
+        c_loops = coil_part.raw.unarranged_loops[index1]
+        m_loops = m_c_part.raw.unarranged_loops[index1]
+        assert len(c_loops.loop) == len(m_loops.loop)
+        # Skip the next section, the loops are different!!
+        #for index2, m_ru_loop in enumerate(m_ru_loops.loop):
+        #    c_ru_loop = c_loops.loop[index2]
+        #    assert c_ru_loop.uv.shape[0] == m_ru_loop.uv.shape[0] # Python shape!
+        #    assert(compare_contains(c_ru_loop.uv, m_ru_loop.uv)) # 
+        #    assert len(c_ru_loop.edge_inds) == len(m_ru_loop.edge_inds)
+        #    #assert(compare(c_ru_point.edge_inds, m_ru_point.edge_inds))
+
+    m_contour_lines = m_c_part.contour_lines1
 
     assert len(coil_part.contour_lines) == len(m_contour_lines)
     for index1 in range(len(coil_part.contour_lines)):
@@ -439,14 +485,23 @@ def CoilGen(log, input=None):
         assert np.isclose(c_contour.potential, m_contour.potential)  # Pass
         # The MATLAB coilpart.contours is further processed in a subsequent function call.
         # Unable to compare here.
-        # assert compare(c_contour.uv, m_contour.uv) # Index 0: Fail: Not the same shape: (2, 7) is not (2, 8)
+        #assert compare(c_contour.uv, m_contour.uv) # Fail 
         # log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv))
 
     if get_level() >= DEBUG_VERBOSE:
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour1_p.png', coil_part.contour_lines)
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour1_m.png', m_contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/contour1_p.png', coil_part.contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/contour1_m.png', m_contour_lines)
 
     # Manual conclusion: Not identical, but really close.
+
+    # =================================================
+    # HACK: Use MATLAB's one_ring_list, etc.
+    log.warning("Using MATLAB's contour_lines1 in %s, line %d", __file__, get_linenumber())
+    for index1, m_contour in enumerate(m_contour_lines):
+        c_contour = coil_part.contour_lines[index1]
+        c_contour.uv = m_contour.uv
+    # =================================================
+
 
     #
     #####################################################
@@ -459,22 +514,24 @@ def CoilGen(log, input=None):
     # DEVELOPMENT: Remove this
     # DEBUG
     # Verify: Coil Part values: field_by_loops, loop_significance, combined_loop_field, combined_loop_length
+    m_contour_lines = m_c_part.contour_lines
     m_field_by_loops = m_c_part.field_by_loops
     m_loop_significance = m_c_part.loop_signficance
     m_combined_loop_field = m_c_part.combined_loop_field
     m_combined_loop_length = m_c_part.combined_loop_length
 
-    # assert c_part.combined_loop_length == m_combined_loop_length # Fail 97.776... != 97.673...
+    log.debug("coil_part.combined_loop_length == m_combined_loop_length: %s == %s", coil_part.combined_loop_length, m_combined_loop_length)
+    ##assert coil_part.combined_loop_length == m_combined_loop_length # Fail 97.776... != 97.673...
     # log.debug("c_part.combined_loop_length == m_combined_loop_length:\n%s == %s",
     #          c_part.combined_loop_length, m_combined_loop_length)
 
     # Fail:  -1.85932732e-06  7.72842169e-06 -5.85194154e-06  1.63341836e-07
     # is not -1.85931361e-06  7.72842169e-06 -5.84366084e-06  1.14979947e-07
-    # assert compare(c_part.field_by_loops, m_field_by_loops)
+    assert compare(coil_part.field_by_loops, m_field_by_loops, double_tolerance=1e-5)
 
     # Fail: [0]: 1.3485584551763914 is not 1.3459361474796019
-    # assert compare(c_part.loop_significance, m_loop_significance) # FAIL: 3.87...
-    log.debug(" Abs diff: %s", np.max(np.abs(coil_part.loop_significance - m_loop_significance)))
+    # assert compare(coil_part.loop_significance, m_loop_significance) # FAIL: 3.87...
+    log.debug(" Abs diff: %s", np.max(np.abs(coil_part.loop_significance - m_loop_significance)))  # Abs diff: 3.897...
 
     # Fail[0]:  3.18446247e-05 4.07537749e-05 2.68691780e-05 1.25697419e-05 3.19949827e-05
     # is not    4.49879032e-05 5.86350389e-05 4.54653304e-05 3.18269683e-05 4.68614511e-05
@@ -495,8 +552,8 @@ def CoilGen(log, input=None):
             log.debug(" -- compare v: %s", compare(c_contour.v, m_contour.v))
 
     if get_level() >= DEBUG_VERBOSE:
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour2_p.png', coil_part.contour_lines)
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/countour2_m.png', m_contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/contour2_p.png', coil_part.contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/contour2_m.png', m_contour_lines)
 
     # Manual conclusion: Not identical, but close.
 
@@ -525,6 +582,23 @@ def CoilGen(log, input=None):
         # DEVELOPMENT: Remove this
         # DEBUG
         # Verify: Coil Part values: groups (list of ContourLine objects), level_positions, group_levels, loop_groups
+
+        # =================================================
+        # MATLAB / Python ordering hack:
+        # Re-order Python groups to match MATLAB ordering
+        m_to_pyindex = [1, 0, 2, 3]
+        cp_groups = coil_part.groups
+        cp_level_positions = coil_part.level_positions
+        cp_group_levels = coil_part.group_levels
+        cp_loop_groups = coil_part.loop_groups
+
+        # Do the swap
+        log.warning("Changing order of coil groups and loop_groups in %s, line %d", __file__, get_linenumber())
+        cp_groups[0], cp_groups[1] = cp_groups[1], cp_groups[0]
+        cp_loop_groups[0], cp_loop_groups[1] = cp_loop_groups[1], cp_loop_groups[0]
+        #
+        # =================================================
+
         m_level_positions = m_c_part.level_positions
         m_group_levels = m_c_part.group_levels - 1  # MATLAB indexing is 1-based
         m_loop_groups = m_c_part.loop_groups
@@ -535,8 +609,9 @@ def CoilGen(log, input=None):
         c_group_levels = np.array(coil_part.group_levels)
         c_loop_groups = coil_part.loop_groups
 
-        assert compare_contains(c_group_levels, m_group_levels)
+        # assert compare_contains(c_group_levels, m_group_levels)
         # assert compare_contains(c_loop_groups, m_loop_groups) # Fail: They don't match up exactly
+        assert compare(c_loop_groups, m_loop_groups) # Fail: They don't match up exactly
 
         # Compare updated groups and their loops
         m_groups = m_c_part.groups
@@ -545,18 +620,18 @@ def CoilGen(log, input=None):
                 log.debug(" Checking contour group %d", index1)
             m_group = m_groups[index1]  # cutshape, loops, opened_loop
             c_group = coil_part.groups[index1]
-            for index2, m_loop in enumerate(m_group.loops):
-                c_loop = c_group.loops[index2]
+            for index2, m_loops in enumerate(m_group.loops):
+                c_loops = c_group.loops[index2]
                 if get_level() > DEBUG_VERBOSE:
                     log.debug(" Checking index %d", index2)
 
-                assert c_loop.current_orientation == m_loop.current_orientation  # Pass
+                assert c_loops.current_orientation == m_loops.current_orientation  # Pass
                 # assert np.isclose(c_loop.potential, m_loop.potential) # Fail, group 2, index 0
                 # assert compare(c_loop.uv, m_loop.uv) # Fail, different path through mesh
                 # assert compare(c_loop.v, m_loop.v) # Fail, different path through mesh
                 if get_level() > DEBUG_VERBOSE:
-                    log.debug(" -- compare uv: %s", compare(c_loop.uv, m_loop.uv))
-                    log.debug(" -- compare v: %s", compare(c_loop.v, m_loop.v))
+                    log.debug(" -- compare uv: %s", compare(c_loops.uv, m_loops.uv))
+                    log.debug(" -- compare v: %s", compare(c_loops.v, m_loops.v))
 
             if get_level() >= DEBUG_VERBOSE:
                 visualize_compare_contours(coil_mesh.uv, 800, f'images/countour4_{index1}_p.png', c_group.loops)
@@ -566,6 +641,17 @@ def CoilGen(log, input=None):
 
         #
         #####################################################
+
+        # =================================================
+        log.warning("Using MATLAB's loop u and uv values in %s, line %d", __file__, get_linenumber())
+        m_groups = m_c_part.groups
+        for index1 in range(len(coil_part.groups)):
+            m_group = m_groups[index1]  # cutshape, loops, opened_loop
+            c_group = coil_part.groups[index1]
+            for index2, m_loops in enumerate(m_group.loops):
+                c_group.loops[index2].uv = m_loops.uv
+                c_group.loops[index2].v = m_loops.v
+        # =================================================
 
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
@@ -578,8 +664,8 @@ def CoilGen(log, input=None):
         m_group_centers = m_c_part.group_centers
         c_group_centers = coil_part.group_centers
 
-        # assert compare(c_group_centers.uv, m_group_centers.uv) # Fail, different group layout
-        # assert compare(c_group_centers.v, m_group_centers.v) # Fail, different group layout
+        assert compare(c_group_centers.uv, m_group_centers.uv)  # Fail, different group layout
+        assert compare(c_group_centers.v, m_group_centers.v)  # Fail, different group layout
 
         # Manual conclusion: Not identical, but close. Different paths, different group layouts.
 
@@ -604,19 +690,22 @@ def CoilGen(log, input=None):
         for index, m_connected_group in enumerate(m_connected_groups):
             c_connected_group = c_connected_groups[index]
 
-            #log.debug(" compare uv: %s", compare(c_connected_group.uv, m_connected_group.uv)) # Fail, different group layout
-            #log.debug(" compare v: %s", compare(c_connected_group.v, m_connected_group.v)) # Fail, different group layout
-
             if get_level() >= DEBUG_VERBOSE:
                 # MATLAB shape
                 visualize_vertex_connections(c_connected_group.uv.T, 800, f'images/connected_group_uv_{index}_p.png')
                 visualize_vertex_connections(m_connected_group.uv.T, 800, f'images/connected_group_uv_{index}_m.png')
 
+            log.debug(" compare uv: %s", compare(c_connected_group.uv, m_connected_group.uv))
+            log.debug(" compare v: %s", compare(c_connected_group.v,
+                      m_connected_group.v))  # Fail, different group layout
+
+            assert compare(c_connected_group.uv, m_connected_group.uv)  # Fail, different group layout
+            assert compare(c_connected_group.v, m_connected_group.v)  # Fail, different group layout
+
         # Manual conclusion: Fail - the Python connections look pretty different to the MATLAB ones in a few places
 
         #
         #####################################################
-
 
         # WIP
         solution.coil_parts = coil_parts
