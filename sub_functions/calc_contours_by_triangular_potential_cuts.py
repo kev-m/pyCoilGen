@@ -211,7 +211,6 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                                 next_edge = possible_next_edges[1]
 
                 set_new_start = True
-
         # End of Part 2
 
         # Start of Part 3
