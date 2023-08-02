@@ -4,6 +4,7 @@ from typing import List
 
 # Local imports
 from sub_functions.data_structures import ContourLine
+from helpers.common import nearest_approaches
 
 
 def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only_point_flag: bool):
@@ -34,12 +35,7 @@ def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only
         for test_point_ind in range(loop_b_points - 1):
             x1 = np.tile(loop_b.v[:, test_point_ind, np.newaxis], (1, loop_a_points))
             x2 = np.tile(loop_b.v[:, test_point_ind + 1, np.newaxis], (1, loop_a_points))
-            diff = x2 - x1
-            p1 = loop_a.v - x1
-            # MATLAB does dot(mxn,mxn) product by composition
-            t1dot = [np.dot(p1[:, i], diff[:, 1]) for i in range(loop_a_points)]
-            diff_sum = np.sum((diff) ** 2, axis=0)
-            t = t1dot/diff_sum
+            t, diff = nearest_approaches(loop_a.v, x1, x2)
             t[t < 0] = 0
             t[t > 1] = 1
             all_near_points_b = x1 + (diff) * np.tile(t, (3, 1))
@@ -56,13 +52,8 @@ def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only
             (loop_b.uv[:, min_ind_b + 1] - loop_b.uv[:, min_ind_b]) * near_t_b[min_ind_b]
         x1 = loop_a.v[:, :-1]
         x2 = loop_a.v[:, 1:]
-        diff = x2 - x1
-
-        # MATLAB performs (vector - matrix) by decomposition.
-        delta_npbv_x1 = np.array([near_points_b_v - x1[:, i] for i in range(x1.shape[1])]).T
-        # MATLAB does dot(mxn,mxn) product by composition
-        t2dot = [np.dot(delta_npbv_x1[:, i], diff[:, 1]) for i in range(diff.shape[1])]
-        t = t2dot/np.sum((diff) ** 2, axis=0)
+        near_points = np.tile(near_points_b_v[:, np.newaxis], (1, loop_a_points-1))
+        t, diff = nearest_approaches(near_points, x1, x2)
         t[t < 0] = 0
         t[t > 1] = 1
         all_near_points_a = x1 + (diff) * np.tile(t, (3, 1))
