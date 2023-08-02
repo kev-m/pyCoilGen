@@ -57,34 +57,34 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
         # Sort the force cut selection within their level according to their average z-position
         avg_z_value = np.zeros(len(coil_part.loop_groups))
         for group_ind in range(num_part_groups):
-            part_groups = coil_part.groups[group_ind]
-            all_points = part_groups.loops[0].v.copy()
-            for loop_ind in range(1, len(part_groups.loops)):
-                all_points = np.hstack((all_points, part_groups.loops[loop_ind].v))
+            part_group = coil_part.groups[group_ind]
+            all_points = part_group.loops[0].v.copy()
+            for loop_ind in range(1, len(part_group.loops)):
+                all_points = np.hstack((all_points, part_group.loops[loop_ind].v))
             # Why multiply all_points by [0.05, 0, 1] ?
             avg_z_value[group_ind] = np.sum(all_points * np.array([[0.05], [0], [1]])) / all_points.shape[0]
 
         new_group_inds = np.argsort(avg_z_value)
 
         for group_ind in range(num_part_groups):
-            part_groups = coil_part.groups[group_ind]
+            part_group = coil_part.groups[group_ind]
             coil_part.connected_group[group_ind] = TopoGroup()
             part_connected_group = coil_part.connected_group[group_ind]
 
-            if len(part_groups.loops) == 1:
+            if len(part_group.loops) == 1:
                 # If the group consists of only one loop, it is not necessary to open it
-                part_groups.opened_loop = part_groups.loops.uv
-                part_groups.cutshape.uv = np.array([np.nan, np.nan])
+                part_group.opened_loop = part_group.loops.uv
+                part_group.cutshape.uv = np.array([np.nan, np.nan])
                 part_connected_group.return_path.uv = np.array([np.nan, np.nan])
-                part_connected_group.uv = part_groups.loops.uv
-                part_connected_group.v = part_groups.loops.v
-                part_connected_group.spiral_in.uv = part_groups.loops.uv
-                part_connected_group.spiral_in.v = part_groups.loops.v
-                part_connected_group.spiral_out.uv = part_groups.loops.uv
-                part_connected_group.spiral_out.v = part_groups.loops.v
+                part_connected_group.uv = part_group.loops.uv
+                part_connected_group.v = part_group.loops.v
+                part_connected_group.spiral_in.uv = part_group.loops.uv
+                part_connected_group.spiral_in.v = part_group.loops.v
+                part_connected_group.spiral_out.uv = part_group.loops.uv
+                part_connected_group.spiral_out.v = part_group.loops.v
             else:
-                part_groups.opened_loop = [None] * len(part_groups.loops)
-                part_groups.cutshape = [None] * len(part_groups.loops)
+                part_group.opened_loop = [None] * len(part_group.loops)
+                part_group.cutshape = [None] * len(part_group.loops)
 
                 # Generate the cutshapes for all the loops within the group
                 log.debug("--- here ---: %s, line %d", __file__, get_linenumber())
@@ -93,7 +93,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                 # uv	[-1.2860,-2.0066;-0.0017,0.0533]	2x2	double
                 # segment_ind	[19,46]	1x2	double                
                 cut_positions = find_group_cut_position(
-                    part_groups,
+                    part_group,
                     coil_part.group_centers.v[:, group_ind],
                     coil_part.coil_mesh,
                     input_args.b_0_direction,
@@ -103,7 +103,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                 # Choose either low or high cutshape
                 force_cut_selection = [force_cut_selection[ind] for ind in new_group_inds]
 
-                for loop_ind in range(len(part_groups.loops)):
+                for loop_ind in range(len(part_group.loops)):
 
                     if force_cut_selection[group_ind] == 'high':
                         # Exception has occurred: AttributeError: 'list' object has no attribute 'group'
@@ -119,30 +119,30 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
 
                     # Open the loop
                     opened_loop, uv, _ = open_loop_with_3d_sphere(
-                        part_groups.loops[loop_ind],
+                        part_group.loops[loop_ind],
                         cut_position_used,
                         input_args.interconnection_cut_width
                     )
-                    part_groups.cutshape[loop_ind] = Shape2D(uv=uv)
-                    part_groups.opened_loop[loop_ind] = Shape3D(uv=opened_loop.uv, v=opened_loop.v)
+                    part_group.cutshape[loop_ind] = Shape2D(uv=uv)
+                    part_group.opened_loop[loop_ind] = Shape3D(uv=opened_loop.uv, v=opened_loop.v)
 
                 # Build the interconnected group by adding the opened loops
                 part_connected_group.spiral_in = Shape3D()
                 part_connected_group.spiral_out = Shape3D()
-                for loop_ind in range(0, len(part_groups.loops)):
-                    loop_item = part_groups.opened_loop[loop_ind]
+                for loop_ind in range(0, len(part_group.loops)):
+                    loop_item = part_group.opened_loop[loop_ind]
                     part_connected_group.add_uv(loop_item.uv)
                     part_connected_group.add_v(loop_item.v)
                     part_connected_group.spiral_in.add_uv(loop_item.uv)
                     part_connected_group.spiral_in.add_v(loop_item.v)
-                    other_item = part_groups.opened_loop[len(part_groups.loops) - loop_ind - 1]
+                    other_item = part_group.opened_loop[len(part_group.loops) - loop_ind - 1]
                     part_connected_group.spiral_out.add_uv(other_item.uv)
                     part_connected_group.spiral_out.add_v(other_item.v)
 
                 # Add the return path
                 part_connected_group.return_path = Shape3D()
-                for loop_ind in range(len(part_groups.loops)-1, -1, -1):
-                    loop_item = part_groups.opened_loop[loop_ind]
+                for loop_ind in range(len(part_group.loops)-1, -1, -1):
+                    loop_item = part_group.opened_loop[loop_ind]
                     part_connected_group.return_path.add_uv(np.mean(loop_item.uv[:, [0, -1]], axis=1).reshape(-1, 1))
                     part_connected_group.return_path.add_v(np.mean(loop_item.v[:, [0, -1]], axis=1).reshape(-1, 1))
 
