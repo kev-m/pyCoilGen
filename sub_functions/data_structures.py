@@ -329,6 +329,8 @@ class Shape3D(Shape2D):  # Used in topological_loop_grouping
     def add_v(self, v):
         append_v_matlab(self, v)
 
+    def copy(self):
+        return Shape3D(uv=self.uv.copy(), v=self.v.copy())
 
 @dataclass
 class ContourLine(Shape3D):
