@@ -872,7 +872,7 @@ if __name__ == "__main__":
         "set_roi_into_mesh_center": 1,
         "sf_opt_method": "tikkonov",
         "sf_source_file": "none",
-        "skip_calculation_min_winding_distance": 0, # Default 1
+        "skip_calculation_min_winding_distance": 1, # Default 1
         "skip_inductance_calculation": 0,
         "skip_normal_shift": 0,
         "skip_postprocessing": 0,
