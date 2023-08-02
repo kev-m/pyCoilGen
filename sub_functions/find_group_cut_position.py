@@ -96,7 +96,7 @@ def find_group_cut_position(loop_group: TopoGroup, group_center, mesh : Mesh, b_
         #    -1.2860   -2.0066
         #    -0.0017    0.0533
 
-        # M: diff(cut_position(loop_ind).cut_point.uv, 1, 2)
+        # M: diff(cut_position(loop_ind).cut_point.uv, 1, 2) [y]
         # ans =
         #    -0.7206
         #     0.0550
@@ -114,7 +114,7 @@ def find_group_cut_position(loop_group: TopoGroup, group_center, mesh : Mesh, b_
         cut_position.cut_point.segment_ind = np.delete(
             cut_position.cut_point.segment_ind, np.where(is_repeating_cutpoint))
 
-        # M: cut_position(loop_ind).cut_point.v
+        # M: cut_position(loop_ind).cut_point.v [y]
         # ans =
         #     0.0011    0.0011
         #     0.4999    0.4999
@@ -154,7 +154,6 @@ def find_group_cut_position(loop_group: TopoGroup, group_center, mesh : Mesh, b_
             # center_first_cut = (cut_position.high_cut.v + cut_position.low_cut.v) / 2
 
         else:  # Now for the following inner loops
-
             # Choose the following cut pairs regarding their distance to the high and low cut of the first loop
             high_dists = np.linalg.norm(cut_position.cut_point.v - high_cut_primer, axis=1)
             low_dists = np.linalg.norm(cut_position.cut_point.v - low_cut_primer, axis=1)

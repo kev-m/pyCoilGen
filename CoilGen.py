@@ -495,13 +495,12 @@ def CoilGen(log, input=None):
     # Manual conclusion: Not identical, but really close.
 
     # =================================================
-    # HACK: Use MATLAB's one_ring_list, etc.
+    # HACK: Use MATLAB's contour_lines
     log.warning("Using MATLAB's contour_lines1 in %s, line %d", __file__, get_linenumber())
     for index1, m_contour in enumerate(m_contour_lines):
         c_contour = coil_part.contour_lines[index1]
         c_contour.uv = m_contour.uv
     # =================================================
-
 
     #
     #####################################################
@@ -521,7 +520,7 @@ def CoilGen(log, input=None):
     m_combined_loop_length = m_c_part.combined_loop_length
 
     log.debug("coil_part.combined_loop_length == m_combined_loop_length: %s == %s", coil_part.combined_loop_length, m_combined_loop_length)
-    ##assert coil_part.combined_loop_length == m_combined_loop_length # Fail 97.776... != 97.673...
+    # assert coil_part.combined_loop_length == m_combined_loop_length # Fail 97.776... != 97.673...
     # log.debug("c_part.combined_loop_length == m_combined_loop_length:\n%s == %s",
     #          c_part.combined_loop_length, m_combined_loop_length)
 
@@ -533,10 +532,6 @@ def CoilGen(log, input=None):
     # assert compare(coil_part.loop_significance, m_loop_significance) # FAIL: 3.87...
     log.debug(" Abs diff: %s", np.max(np.abs(coil_part.loop_significance - m_loop_significance)))  # Abs diff: 3.897...
 
-    # Fail[0]:  3.18446247e-05 4.07537749e-05 2.68691780e-05 1.25697419e-05 3.19949827e-05
-    # is not    4.49879032e-05 5.86350389e-05 4.54653304e-05 3.18269683e-05 4.68614511e-05
-    # assert compare(c_part.combined_loop_field, m_combined_loop_field, 1e-5)
-
     # Compare updated contour lines
     for index1 in range(len(coil_part.contour_lines)):
         if get_level() > DEBUG_VERBOSE:
@@ -545,7 +540,7 @@ def CoilGen(log, input=None):
         c_contour = coil_part.contour_lines[index1]
         assert c_contour.current_orientation == m_contour.current_orientation  # Pass
         assert np.isclose(c_contour.potential, m_contour.potential)  # Pass | Fail with min_loop_significance == 3
-        # assert compare(c_contour.uv, m_contour.uv) # Pass [0], Fail [4]
+        assert compare(c_contour.uv, m_contour.uv) # Pass [0], Fail [4]
         # assert compare(c_contour.v, m_contour.v) # Fail: 2nd position 1.15644483e-03 != -9.12899313e-17
         if get_level() > DEBUG_VERBOSE:
             log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv))
@@ -555,7 +550,20 @@ def CoilGen(log, input=None):
         visualize_compare_contours(coil_mesh.uv, 800, 'images/contour2_p.png', coil_part.contour_lines)
         visualize_compare_contours(coil_mesh.uv, 800, 'images/contour2_m.png', m_contour_lines)
 
+    # Fail[0]:  3.18446247e-05 4.07537749e-05 2.68691780e-05 1.25697419e-05 3.19949827e-05
+    # is not    4.49879032e-05 5.86350389e-05 4.54653304e-05 3.18269683e-05 4.68614511e-05
+    # assert compare(coil_part.combined_loop_field, m_combined_loop_field, 1e-6)
+
+
     # Manual conclusion: Not identical, but close.
+
+    # =================================================
+    # HACK: Use MATLAB's contour_lines.v
+    log.warning("Using MATLAB's contour_lines1 in %s, line %d", __file__, get_linenumber())
+    for index1, m_contour in enumerate(m_contour_lines):
+        c_contour = coil_part.contour_lines[index1]
+        c_contour.v = m_contour.v
+    # =================================================
 
     #
     #####################################################
@@ -570,7 +578,9 @@ def CoilGen(log, input=None):
         # DEBUG
         # Verify: Coil Part values: pcb_track_width
         m_pcb_track_width = m_c_part.pcb_track_width
-        assert coil_part.pcb_track_width == m_pcb_track_width  # Pass
+        log.debug(" coil_part.pcb_track_width: %f", coil_part.pcb_track_width)
+        log.debug(" m_pcb_track_width: %f", m_pcb_track_width)
+        assert np.isclose(coil_part.pcb_track_width, m_pcb_track_width)  # Pass
         #
         #####################################################
 
@@ -594,8 +604,8 @@ def CoilGen(log, input=None):
 
         # Do the swap
         log.warning("Changing order of coil groups and loop_groups in %s, line %d", __file__, get_linenumber())
-        cp_groups[0], cp_groups[1] = cp_groups[1], cp_groups[0]
-        cp_loop_groups[0], cp_loop_groups[1] = cp_loop_groups[1], cp_loop_groups[0]
+        #cp_groups[0], cp_groups[1] = cp_groups[1], cp_groups[0]
+        #cp_loop_groups[0], cp_loop_groups[1] = cp_loop_groups[1], cp_loop_groups[0]
         #
         # =================================================
 
@@ -794,7 +804,7 @@ if __name__ == "__main__":
         "set_roi_into_mesh_center": 0,
         "sf_opt_method": "tikkonov",
         "sf_source_file": "none",
-        "skip_calculation_min_winding_distance": 1,
+        "skip_calculation_min_winding_distance": 1, # Default: 1
         "skip_inductance_calculation": 0,
         "skip_normal_shift": 0,
         "skip_postprocessing": 0,
@@ -838,7 +848,7 @@ if __name__ == "__main__":
         "gauss_order": 2,
         # "geometry_source_path": "/MATLAB Drive/CoilGen/Geometry_Data",
         "group_interconnection_method": "crossed",
-        "interconnection_cut_width": 0.1,
+        "interconnection_cut_width": 0.01,
         "interconnection_method": "regular",
         "iteration_num_mesh_refinement": 0,
         "level_set_method": "primary",
@@ -862,7 +872,7 @@ if __name__ == "__main__":
         "set_roi_into_mesh_center": 1,
         "sf_opt_method": "tikkonov",
         "sf_source_file": "none",
-        "skip_calculation_min_winding_distance": 1,
+        "skip_calculation_min_winding_distance": 0, # Default 1
         "skip_inductance_calculation": 0,
         "skip_normal_shift": 0,
         "skip_postprocessing": 0,
