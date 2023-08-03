@@ -58,7 +58,6 @@ def find_group_cut_position(loop_group: TopoGroup, group_center : np.ndarray, me
             cut_plane_direction = cut_plane_direction / np.linalg.norm(cut_plane_direction)
     else:
         cut_plane_direction = np.cross(b_0_direction, loop_normal)
-        # M: cut_plane_direction	[-1;0.0061;0]	3x1	double [~y]
         cut_plane_direction = cut_plane_direction / np.linalg.norm(cut_plane_direction)
 
     # Calculate the cut shapes
@@ -70,11 +69,6 @@ def find_group_cut_position(loop_group: TopoGroup, group_center : np.ndarray, me
         for point_ind in range(1, loop_group.loops[loop_ind].v.shape[1]):
             point_a = loop_group.loops[loop_ind].v[:, point_ind - 1]
             point_b = loop_group.loops[loop_ind].v[:, point_ind]
-            # point_a	[-0.4935,0.0492,-0.6]	1x3	double
-            # point_b	[-0.4962,0.0292,-0.5662]	1x3	double
-            # group_center	[0.0011;0.4999;-0.3172]	3x1	double
-            # cut_p	[0.0221,3.966,-7.2201]	1x3	double
-            # cut_flag	3	1x1	double
             cut_p, cut_flag = plane_line_intersect(cut_plane_direction, group_center, point_a, point_b)
 
             if cut_flag == 1:  # Test if there is a cut between the line points
@@ -87,25 +81,9 @@ def find_group_cut_position(loop_group: TopoGroup, group_center : np.ndarray, me
                 cut_point_uv = point_a_uv + (point_b_uv - point_a_uv) * cut_point_ratio
                 cut_position.cut_point.add_uv(cut_point_uv)
 
-            # NOTE: cut_point has shape (3,) not (1,3), i.e. Python not MATLAB convention
+        # NOTE: cut_point has shape (3,) not (1,3), i.e. Python not MATLAB convention
 
         # Delete repeating degenerate cut points
-
-        # M: cut_position(loop_ind).cut_point.uv
-        # ans =
-        #    -1.2860   -2.0066
-        #    -0.0017    0.0533
-
-        # M: diff(cut_position(loop_ind).cut_point.uv, 1, 2) [y]
-        # ans =
-        #    -0.7206
-        #     0.0550
-
-        # M: abs([[1 1]' diff(cut_position(loop_ind).cut_point.uv, 1, 2)]) [y]
-        # ans =
-        #     1.0000    0.7206
-        #     1.0000    0.0550
-
         arr_true = [1, 1]
         arr_abs = np.abs(np.vstack((arr_true, np.diff(cut_position.cut_point.uv, axis=0))))  # Python convention
         is_repeating_cutpoint = np.all(arr_abs) < 10**(-10)
@@ -113,12 +91,6 @@ def find_group_cut_position(loop_group: TopoGroup, group_center : np.ndarray, me
         cut_position.cut_point.uv = np.delete(cut_position.cut_point.uv, np.where(is_repeating_cutpoint), axis=0)
         cut_position.cut_point.segment_ind = np.delete(
             cut_position.cut_point.segment_ind, np.where(is_repeating_cutpoint))
-
-        # M: cut_position(loop_ind).cut_point.v [y]
-        # ans =
-        #     0.0011    0.0011
-        #     0.4999    0.4999
-        #    -0.0138   -0.7357
 
         # Separated into higher and lower cut points:
         # First: use the 2D representation of the loop
