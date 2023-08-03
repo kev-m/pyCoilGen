@@ -695,8 +695,6 @@ def CoilGen(log, input=None):
 
         assert len(m_connected_groups) == len(c_connected_groups)
 
-        log.debug("--- here ---")
-
         for index, m_connected_group in enumerate(m_connected_groups):
             c_connected_group = c_connected_groups[index]
 
@@ -705,10 +703,22 @@ def CoilGen(log, input=None):
                 visualize_vertex_connections(c_connected_group.uv.T, 800, f'images/connected_group_uv_{index}_p.png')
                 visualize_vertex_connections(m_connected_group.uv.T, 800, f'images/connected_group_uv_{index}_m.png')
 
-            log.debug(" compare uv: %s", compare(c_connected_group.uv, m_connected_group.uv))
-            log.debug(" compare v: %s", compare(c_connected_group.v,
-                      m_connected_group.v))  # Fail, different group layout
+            # Check....
+            log.debug(" Here: uv values in %s, line %d", __file__, get_linenumber())
+            log.debug(" return_path.v: %s", compare(c_connected_group.return_path.v, m_connected_group.return_path.v))
+            log.debug(" return_path.uv: %s", compare(c_connected_group.return_path.uv, m_connected_group.return_path.uv))
 
+            log.debug(" spiral_in.v: %s", compare(c_connected_group.spiral_in.v, m_connected_group.spiral_in.v))
+            log.debug(" spiral_in.uv: %s", compare(c_connected_group.spiral_in.uv, m_connected_group.spiral_in.uv))
+
+            log.debug(" spiral_out.v: %s", compare(c_connected_group.spiral_out.v, m_connected_group.spiral_out.v))
+            log.debug(" spiral_out.uv: %s", compare(c_connected_group.spiral_out.uv, m_connected_group.spiral_out.uv))
+
+            # Fail, different group layout
+            log.debug(" compare uv: %s", compare(c_connected_group.uv, m_connected_group.uv))
+            log.debug(" compare v: %s", compare(c_connected_group.v, m_connected_group.v)) 
+
+            log.debug("--- here ---")
             assert compare(c_connected_group.uv, m_connected_group.uv)  # Fail, different group layout
             assert compare(c_connected_group.v, m_connected_group.v)  # Fail, different group layout
 
