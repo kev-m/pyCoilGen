@@ -34,6 +34,8 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
 
     # Remove doubled points from the curve
     indices_to_delete = np.where(np.linalg.norm(curve_points.v[:, 1:] - curve_points.v[:, :-1], axis=0) < 1e-10)
+    if debug_data is not None:
+        log.debug("indices_to_delete: %s len(%d)", debug_data['points_to_delete'], len(debug_data['points_to_delete']))
     # Always remove last point
     curve_points.v = curve_points.v[:, :-1]
     curve_points.uv = curve_points.uv[:, :-1]
@@ -43,22 +45,32 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
     curve_points.number_points = curve_points.v.shape[1]
 
     if debug_data is not None:
-        log.debug(" 0a  v: %s", compare(curve_points.v, debug_data['curve_points0a'].v))
-        log.debug(" 0a uv: %s", compare(curve_points.uv, debug_data['curve_points0a'].uv))
+        log.debug("debug_data['curve_points0a'].v.shape: %s", debug_data['curve_points0a'].v.shape)
+        log.debug(" 0c curve_points.number_points: %s", curve_points.number_points == debug_data['number_points'])
+
+        log.debug(" 0b  v: %s", compare(curve_points.v, debug_data['curve_points0a'].v))    #
+        log.debug(" 0b uv: %s", compare(curve_points.uv, debug_data['curve_points0a'].uv))  #
+        log.debug(" 0c sphere_center: %s", compare(sphere_center, debug_data['sphere_center']))
+        log.debug(" 0c sphere_diameter: %s", sphere_diameter == debug_data['sphere_diameter'])
 
 
     # Add a point within the curve which has the shortest distance to the sphere
-    curve_points, _ = add_nearest_ref_point_to_curve(curve_points, sphere_center)
+    curve_points, near_points = add_nearest_ref_point_to_curve(curve_points, sphere_center) # P: 3x57, M 3x58
 
     if debug_data is not None:
-        log.debug(" 1  v: %s", compare(curve_points.v, debug_data['curve_points1'].v))
-        log.debug(" 1 uv: %s", compare(curve_points.uv, debug_data['curve_points1'].uv))
+        log.debug(" 1a  v: %s", compare(curve_points.v, debug_data['curve_points1'].v))
+        log.debug(" 1b uv: %s", compare(curve_points.uv, debug_data['curve_points1'].uv))
+        log.debug(" 1c  v: %s", compare(near_points.v, debug_data['near_points1'].v))
+        log.debug(" 1c uv: %s", compare(near_points.uv, debug_data['near_points1'].uv))
 
     inside_sphere_ind = np.linalg.norm(curve_points.v - sphere_center, axis=0) < sphere_diameter / 2
 
+    if debug_data is not None:
+        log.debug(" 2 inside_sphere_ind: %s", compare(inside_sphere_ind, debug_data['inside_sphere_ind1']))
+
     # Circshift the path so that the starting location is outside the sphere
     if np.any(inside_sphere_ind) and not np.all(inside_sphere_ind):
-        min_ind = np.min(np.where(~inside_sphere_ind)) - 1
+        min_ind = np.min(np.where(~inside_sphere_ind))
         curve_points.v = np.roll(curve_points.v, -min_ind, axis=1)
         curve_points.uv = np.roll(curve_points.uv, -min_ind, axis=1)
         inside_sphere_ind = np.linalg.norm(curve_points.v - sphere_center, axis=0) < sphere_diameter / 2
@@ -68,7 +80,17 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
     else:
         raise ValueError("Opening of loop not possible, no overlap between cut sphere and loop")
 
+    if debug_data is not None:
+        log.debug(" 3a inside_sphere_ind: %s", compare(inside_sphere_ind, debug_data['inside_sphere_ind2']))
+        log.debug(" 3b curve_points1b  v: %s", compare(curve_points.v, debug_data['curve_points1b'].v))
+        log.debug(" 3c curve_points1b uv: %s", compare(curve_points.uv, debug_data['curve_points1b'].uv))
+
+
     inside_sphere_ind = np.linalg.norm(curve_points.v - sphere_center, axis=0) < sphere_diameter / 2
+
+    if debug_data is not None:
+        log.debug(" 4a inside_sphere_ind: %s", compare(inside_sphere_ind, debug_data['inside_sphere_ind3']))
+
     ind_diff_array = np.diff(inside_sphere_ind.astype(int))
     # In case of multiple cuts with the sphere, select the part of the curve which is closer to the sphere center
     if np.sum(np.abs(ind_diff_array)) > 2:
@@ -94,16 +116,36 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
     first_sphere_penetration_locations = np.where(np.abs(np.diff(inside_sphere_ind_unique)) == 1)[0]
     second_sphere_penetration_locations = first_sphere_penetration_locations + 1
 
+    if debug_data is not None:
+        log.debug(" 3 first_sphere_penetration_locations: %s", compare(first_sphere_penetration_locations, debug_data['first_sphere_penetration_locations']-1))
+        log.debug(" 3 second_sphere_penetration_locations: %s", compare(second_sphere_penetration_locations, debug_data['second_sphere_penetration_locations']-1))
+
+
     first_distances = np.linalg.norm(curve_points.v[:, first_sphere_penetration_locations] - sphere_center, axis=0)
     second_distances = np.linalg.norm(curve_points.v[:, second_sphere_penetration_locations] - sphere_center, axis=0)
 
+    if debug_data is not None:
+        log.debug(" 4 first_distances: %s", compare(first_distances, debug_data['first_distances']))
+        log.debug(" 4 second_distances: %s", compare(second_distances, debug_data['second_distances']))
+
+
     sphere_crossing_vecs = Shape3D(v=curve_points.v[:, second_sphere_penetration_locations] - curve_points.v[:, first_sphere_penetration_locations],
                                    uv=curve_points.uv[:, second_sphere_penetration_locations] - curve_points.uv[:, first_sphere_penetration_locations])
+
+    if debug_data is not None:
+        log.debug(" 5 sphere_crossing_vecs.v: %s", compare(sphere_crossing_vecs.v, debug_data['sphere_crossing_vecs'].v))
+        log.debug(" 5 sphere_crossing_vecs.uv: %s", compare(sphere_crossing_vecs.uv, debug_data['sphere_crossing_vecs'].uv))
+
 
     # Calculate the penetration points by means of interpolation of weighted mean for the radial distance
     repeated_radii = np.ones(first_distances.shape) * sphere_diameter / 2
     cut_points = Shape3D(v=curve_points.v[:, first_sphere_penetration_locations] + sphere_crossing_vecs.v * ((repeated_radii - first_distances) / (second_distances - first_distances)),
                          uv=curve_points.uv[:, first_sphere_penetration_locations] + sphere_crossing_vecs.uv * ((repeated_radii - first_distances) / (second_distances - first_distances)))
+
+    if debug_data is not None:
+        log.debug(" 6 cut_points.v: %s", compare(cut_points.v, debug_data['cut_points'].v))
+        log.debug(" 6 cut_points.uv: %s", compare(cut_points.uv, debug_data['cut_points'].uv))
+
 
     # Open the loop; Check which parts of the curve are inside or outside the sphere
     shift_ind = (np.min(np.where(inside_sphere_ind_unique == 1)) - 1) * (-1)
@@ -228,8 +270,8 @@ def add_nearest_ref_point_to_curve(curve_track_in: Shape3D, target_point: np.nda
     # Check if the nearest point is not the last point in the contour line
     if min_ind_seq != curve_track_in.v.shape[1] - 1: # -1 because of MATLAB: min_ind_seq = 45, not 46.
         #  curve_track_out.v = [curve_track_out.v curve_track_in.v(:, min_ind_seq + 1:end)];
-        curve_track_out_v = np.column_stack((curve_track_out_v, curve_track_in.v[:, min_ind_seq + 1:-1])) # M: min_ind_seq: 46
-        curve_track_out_uv = np.column_stack((curve_track_out_uv, curve_track_in.uv[:, min_ind_seq + 1:-1]))
+        curve_track_out_v = np.column_stack((curve_track_out_v, curve_track_in.v[:, min_ind_seq + 1:])) # M: min_ind_seq: 46
+        curve_track_out_uv = np.column_stack((curve_track_out_uv, curve_track_in.uv[:, min_ind_seq + 1:]))
 
     curve_track_out = Shape3D(v=curve_track_out_v, uv=curve_track_out_uv) # 3x59 M: 3x58
 
