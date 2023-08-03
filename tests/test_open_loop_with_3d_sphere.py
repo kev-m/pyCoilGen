@@ -28,15 +28,13 @@ def test_open_loop_with_3d_sphere():
     opened_loop, uv_cut, cut_points = open_loop_with_3d_sphere(
         curve_points_in=loop, sphere_center=sphere_center, sphere_diameter=sphere_diameter,
         debug_data=debug_data)
-    print("--- Verifying.... --")
 
+    assert compare(cut_points.uv, result['cut_points'].uv)
+    assert compare(cut_points.v, result['cut_points'].v)
     assert compare(opened_loop.uv, result['opened_loop'].uv)
     assert compare(opened_loop.v, result['opened_loop'].v)
     assert compare(uv_cut, result['uv_cut'])
-    assert compare(cut_points.uv, result['cut_points'].uv)
-    assert compare(cut_points.v, result['cut_points'].v)
 
-    log.debug("---here --")
 
 def test_add_nearest_ref_point_to_curve():
     result = np.load('tests/test_data/test_add_nearest_ref_point_to_curve1.npy', allow_pickle=True)[0]
@@ -55,9 +53,6 @@ def test_add_nearest_ref_point_to_curve():
     curve_track_data = result['curve_track_out'] # 3x58
     assert compare(curve_track_out.uv, curve_track_data.uv) # Pass
     assert compare(curve_track_out.v, curve_track_data.v)   # Pass
-
-    # DEBUG: Remove this
-    print("test_add_nearest_ref_point_to_curve Pass")
 
 def make_data(filename):
     mat_data = load_matlab(filename)

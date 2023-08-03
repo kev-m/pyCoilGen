@@ -148,12 +148,29 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
 
 
     # Open the loop; Check which parts of the curve are inside or outside the sphere
-    shift_ind = (np.min(np.where(inside_sphere_ind_unique == 1)) - 1) * (-1)
+    shift_ind = np.min(np.where(inside_sphere_ind_unique == True)) * (-1)
+
+    if debug_data is not None:
+        log.debug(" 7 shift_ind: %s", shift_ind == debug_data['shift_ind'])
+
     curve_points.v = np.roll(curve_points.v, shift_ind, axis=1)
     curve_points.uv = np.roll(curve_points.uv, shift_ind, axis=1)
+
+    if debug_data is not None:
+        log.debug(" 8 curve_points.v: %s", compare(curve_points.v, debug_data['curve_points2'].v))
+        log.debug(" 8 curve_points.uv: %s", compare(curve_points.uv, debug_data['curve_points2'].uv))
+
     inside_sphere_ind_unique = np.roll(inside_sphere_ind_unique, shift_ind)
+
+    if debug_data is not None:
+        log.debug(" 9 inside_sphere_ind_unique: %s", compare(inside_sphere_ind_unique.astype(int), debug_data['inside_sphere_ind_unique2']))
+
     curve_points.v = curve_points.v[:, ~inside_sphere_ind_unique]
     curve_points.uv = curve_points.uv[:, ~inside_sphere_ind_unique]
+
+    if debug_data is not None:
+        log.debug(" 10 curve_points.v: %s", compare(curve_points.v, debug_data['curve_points3'].v))
+        log.debug(" 10 curve_points.uv: %s", compare(curve_points.uv, debug_data['curve_points3'].uv))
 
     # Build the "opened" loop with the cut_points as open ends
     # Remove curve points which are still inside the sphere
