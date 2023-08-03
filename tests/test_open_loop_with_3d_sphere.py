@@ -20,8 +20,7 @@ from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere, add
 def test_open_loop_with_3d_sphere():
     result = np.load('tests/test_data/test_open_loop_with_3d_sphere1.npy', allow_pickle=True)[0]
     loop = result['curve_points_in']
-    sphere_center_p = result['sphere_center']
-    sphere_center = [[sphere_center_p[0]],[sphere_center_p[1]],[sphere_center_p[2]]] # Python to MATLAB
+    sphere_center = result['sphere_center']
     sphere_diameter = result['sphere_diameter']
 
     # TODO: Remove DEBUG ONLY 'debug=....'
@@ -29,6 +28,7 @@ def test_open_loop_with_3d_sphere():
     opened_loop, uv_cut, cut_points = open_loop_with_3d_sphere(
         curve_points_in=loop, sphere_center=sphere_center, sphere_diameter=sphere_diameter,
         debug_data=debug_data)
+    print("--- Verifying.... --")
 
     assert compare(opened_loop.uv, result['opened_loop'].uv)
     assert compare(opened_loop.v, result['opened_loop'].v)
@@ -41,8 +41,7 @@ def test_open_loop_with_3d_sphere():
 def test_add_nearest_ref_point_to_curve():
     result = np.load('tests/test_data/test_add_nearest_ref_point_to_curve1.npy', allow_pickle=True)[0]
     curve_track_in = result['curve_points_in'] # 3,57
-    sphere_center_p = result['sphere_center']
-    sphere_center = [[sphere_center_p[0]],[sphere_center_p[1]],[sphere_center_p[2]]] # Python to MATLAB
+    sphere_center = result['sphere_center']
 
     # Function under test
     debug_data = np.load('tests/test_data/test_add_nearest_ref_point_to_curve1_debug.npy', allow_pickle=True)[0]
@@ -67,11 +66,16 @@ def make_data(filename):
     input_data = open_loop_with_3d_sphere_data.inputs
     output_data = open_loop_with_3d_sphere_data.outputs
 
+    debug_base = output_data.curve_points_out
+
+    log.debug("1 inputs = inputs? %s", compare(input_data.curve_points_in.v, coil_parts.groups[0].loops[0].v))
+    log.debug("2 inputs = inputs? %s", compare(input_data.curve_points_in.v, debug_base.curve_points0.v))
+
     # Test data for test_open_loop_with_3d_sphere
     result = {}
-    debug_base = output_data.curve_points_in
-    result['curve_points_in'] = Shape3D(uv=debug_base.curve_points0.uv, v=debug_base.curve_points0.v)
-    result['sphere_center'] = input_data.sphere_center
+    result['curve_points_in'] = Shape3D(v=debug_base.curve_points0.v, uv=debug_base.curve_points0.uv)
+    centre = input_data.sphere_center
+    result['sphere_center'] = np.array([[centre[0]],[centre[1]],[centre[2]]])
     result['sphere_diameter'] = input_data.sphere_diameter
     result['opened_loop'] = Shape3D(uv=output_data.opened_loop.uv, v=output_data.opened_loop.v)
     result['uv_cut'] = output_data.uv_cut
@@ -81,23 +85,26 @@ def make_data(filename):
     # Debug data for test_open_loop_with_3d_sphere
     debug_data = {}
     #debug_data['xxxx'] = debug_base.xxxx
-    debug_data['curve_points_in'] = Shape3D(uv=input_data.curve_points_in.uv, v=input_data.curve_points_in.v)
+    debug_data['curve_points_in'] = Shape3D(v=debug_base.curve_points0.v, uv=debug_base.curve_points0.uv)
+    debug_data['curve_points_in2'] = Shape3D(v=input_data.curve_points_in.v, uv=input_data.curve_points_in.uv)
+    debug_data['sphere_center'] = np.array([[centre[0]],[centre[1]],[centre[2]]])
+    debug_data['sphere_diameter'] = input_data.sphere_diameter
     debug_data['points_to_delete'] = debug_base.points_to_delete
     debug_data['curve_points0a'] = debug_base.curve_points0a
-    #debug_data['curve_points1'] = debug_base.curve_points1
     debug_data['near_points1'] = debug_base.near_points1
-    debug_data['inside_sphere_ind1'] = debug_base.inside_sphere_ind1
-    debug_data['inside_sphere_ind2'] = debug_base.inside_sphere_ind2
+    debug_data['cut_points_out'] = Shape3D(uv=output_data.cut_points.uv, v=output_data.cut_points.v)
+    debug_data['inside_sphere_ind1'] = debug_base.inside_sphere_ind1.astype(bool)
+    debug_data['inside_sphere_ind2'] = debug_base.inside_sphere_ind2.astype(bool)
     debug_data['curve_points1b'] = debug_base.curve_points1b
-    debug_data['inside_sphere_ind3'] = debug_base.inside_sphere_ind3
-    debug_data['number_points'] = debug_base.number_points
+    debug_data['inside_sphere_ind3'] = debug_base.inside_sphere_ind3.astype(bool)
+    debug_data['number_points'] = debug_base.curve_points0a.number_points
     #debug_data['parts_avg_dist'] = debug_base.parts_avg_dist
     debug_data['inside_sphere_ind_unique1'] = debug_base.inside_sphere_ind_unique1.astype(int)
     debug_data['first_sphere_penetration_locations'] = debug_base.first_sphere_penetration_locations
     debug_data['second_sphere_penetration_locations'] = debug_base.second_sphere_penetration_locations
     debug_data['first_distances'] = debug_base.first_distances
     debug_data['second_distances'] = debug_base.second_distances
-    debug_data['sphrere_crossing_vecs'] = debug_base.sphrere_crossing_vecs
+    debug_data['sphere_crossing_vecs'] = debug_base.sphrere_crossing_vecs
     debug_data['cut_points'] = debug_base.cut_points
     debug_data['shift_ind'] = debug_base.shift_ind
     debug_data['inside_sphere_ind_unique2'] = debug_base.inside_sphere_ind_unique2
@@ -111,8 +118,9 @@ def make_data(filename):
 
     # Data to be used by 'test_add_nearest_ref_point_to_curve1'
     result = {}
-    result['curve_points_in'] = Shape3D(v=debug_base.curve_points0.v, uv=debug_base.curve_points0.uv)
-    result['sphere_center'] = input_data.sphere_center
+    result['curve_points_in'] = Shape3D(v=debug_base.curve_points0a.v, uv=debug_base.curve_points0a.uv)
+    centre = input_data.sphere_center
+    result['sphere_center'] = np.array([[centre[0]],[centre[1]],[centre[2]]])
     result['sphere_diameter'] = debug_base.sphere_diameter
     result['near_points'] = debug_base.near_points1
     result['curve_track_out'] = debug_base.curve_points1 # 3x58
@@ -120,7 +128,7 @@ def make_data(filename):
 
     debug_data = {}
     #debug_data['target_point'] = debug_base.target_point
-    debug_data['curve_points_in'] = Shape3D(v=debug_base.curve_points0.v, uv=debug_base.curve_points0.uv)
+    debug_data['curve_points_in'] = Shape3D(v=input_data.curve_points_in.v, uv=input_data.curve_points_in.uv)
     debug_data['curve_points'] = debug_base.curve_points1
     debug_data['near_points'] = debug_base.near_points1
     #debug_data['xxxx'] = debug_base.add_nearest_ref_point_to_curve.xxxx
