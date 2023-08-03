@@ -109,6 +109,7 @@ def make_data(filename):
     debug_data['first_distances'] = debug_base.first_distances
     debug_data['mean_dist_1'] = debug_base.mean_dist_1
     debug_data['mean_dist_2'] = debug_base.mean_dist_2
+    debug_data['uv_cut_array'] = debug_base.uv_cut_array
     np.save('tests/test_data/test_open_loop_with_3d_sphere1_debug.npy', [debug_data])
 
     # Data to be used by 'test_add_nearest_ref_point_to_curve1'

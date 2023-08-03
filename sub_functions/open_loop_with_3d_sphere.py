@@ -182,6 +182,11 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
     mean_dist_1 = np.sum(np.linalg.norm(finished_loop_case1.v[:, 1:] - finished_loop_case1.v[:, :-1], axis=0))
     mean_dist_2 = np.sum(np.linalg.norm(finished_loop_case2.v[:, 1:] - finished_loop_case2.v[:, :-1], axis=0))
 
+    if debug_data is not None:
+        log.debug(" 11 mean_dist_1: %s", np.isclose(mean_dist_1, debug_data['mean_dist_1']))
+        log.debug(" 11 mean_dist_2: %s", np.isclose(mean_dist_2, debug_data['mean_dist_2']))
+
+
     if mean_dist_1 < mean_dist_2:
         opened_loop = Shape3D(v=finished_loop_case1.v, uv=finished_loop_case1.uv)
     else:
@@ -189,10 +194,14 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
 
     # Generate the 2d contour of the cut shape for later plotting
     radius_2d = np.linalg.norm(opened_loop.uv[:, [0]] - opened_loop.uv[:, [-1]]) / 2
-    sin_cos_arr = [
+    sin_cos_arr = np.array([
         np.sin([i / (50 / (2 * np.pi)) for i in range(51)]),
         np.cos([i / (50 / (2 * np.pi)) for i in range(51)])
-    ]
+    ])
+
+    if debug_data is not None:
+        log.debug(" 12 sin_cos_arr: %s", compare(sin_cos_arr, debug_data['uv_cut_array']))
+
     uv_cut = np.array(sin_cos_arr) * radius_2d + (opened_loop.uv[:, [0]] + opened_loop.uv[:, [-1]]) / 2
 
     return opened_loop, uv_cut, cut_points
