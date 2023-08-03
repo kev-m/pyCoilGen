@@ -51,37 +51,40 @@ def get_loop():
     return loop
 
 def test_add_nearest_ref_point_to_curve():
-    debug_data = np.load('tests/test_data/test_add_nearest_ref_point_to_curve1_debug.npy', allow_pickle=True)[0]
-    curve_track_in = get_loop()
-    point = [[0.001062790626410015], [0.49986007584689524], [-0.7356689604607456]]
-    target_point = [[0.001062790626410015], [0.49986007584689524], [-0.7356689604607456]]
+    result = np.load('tests/test_data/test_add_nearest_ref_point_to_curve1.npy', allow_pickle=True)[0]
+    curve_track_in = result['curve_points_in'] # 3,57
+    #curve_track_in = get_loop() # 3,58
+    sphere_center_p = result['sphere_center']
+    sphere_center = [[sphere_center_p[0]],[sphere_center_p[1]],[sphere_center_p[2]]] # Python to MATLAB
 
     # Function under test
-    curve_track_out, near_points = add_nearest_ref_point_to_curve(curve_track_in, target_point, debug_data)
+    debug_data = np.load('tests/test_data/test_add_nearest_ref_point_to_curve1_debug.npy', allow_pickle=True)[0]
+    curve_track_out, near_points = add_nearest_ref_point_to_curve(curve_track_in, sphere_center, debug_data)
 
     result = np.load('tests/test_data/test_add_nearest_ref_point_to_curve1.npy', allow_pickle=True)[0]
     near_points_data = result['near_points']
-    assert compare(near_points.uv, near_points_data.uv, double_tolerance=0.001)
-    assert compare(near_points.v, near_points_data.v, double_tolerance=0.001)
+    assert compare(near_points.uv, near_points_data.uv) # Pass
+    assert compare(near_points.v, near_points_data.v)   # Pass
 
-    curve_track_data = result['curve_track_out']
-    assert compare(curve_track_out.uv, curve_track_data.uv, double_tolerance=0.5) # Why such a big tolerance?
-    assert compare(curve_track_out.v, curve_track_data.v, double_tolerance=0.5)# Why such a big tolerance?
+    curve_track_data = result['curve_track_out'] # 3x58
+    assert compare(curve_track_out.uv, curve_track_data.uv) # Pass
+    assert compare(curve_track_out.v, curve_track_data.v)   # Pass
 
 
 
 def test_open_loop_with_3d_sphere():
-    point1 = [[0.0011], [0.4999], [-0.7357]]
-    point = [[0.001062790626410015], [0.49986007584689524], [-0.7356689604607456]]
-    diameter = 0.1
-    loop = get_loop()
+    result = np.load('tests/test_data/test_open_loop_with_3d_sphere1.npy', allow_pickle=True)[0]
+    loop = result['curve_points']
+    sphere_center_p = result['sphere_center']
+    sphere_center = [[sphere_center_p[0]],[sphere_center_p[1]],[sphere_center_p[2]]] # Python to MATLAB
+    sphere_diameter = result['sphere_diameter']
+
     # TODO: Remove DEBUG ONLY 'debug=....'
     debug_data = np.load('tests/test_data/test_open_loop_with_3d_sphere1_debug.npy', allow_pickle=True)[0]
     opened_loop, uv_cut, cut_points = open_loop_with_3d_sphere(
-        curve_points_in=loop, sphere_center=point, sphere_diameter=diameter,
+        curve_points_in=loop, sphere_center=sphere_center, sphere_diameter=sphere_diameter,
         debug_data=debug_data)
 
-    result = np.load('tests/test_data/test_open_loop_with_3d_sphere1.npy', allow_pickle=True)[0]
     assert compare(opened_loop.uv, result['opened_loop'].uv)
     assert compare(opened_loop.v, result['opened_loop'].v)
     assert compare(uv_cut, result['uv_cut'])
@@ -97,13 +100,17 @@ def make_data(filename):
     open_loop_with_3d_sphere_data = coil_parts.groups[0].loops[0].open_loop_with_3d_sphere
     intput_data = open_loop_with_3d_sphere_data.inputs
     output_data = open_loop_with_3d_sphere_data.outputs
+
     result = {}
+    debug_base = output_data.curve_points_in
+    result['curve_points'] = Shape3D(uv=debug_base.curve_points1.uv, v=debug_base.curve_points1.v)
+    result['sphere_center'] = debug_base.sphere_center
+    result['sphere_diameter'] = debug_base.sphere_diameter
     result['opened_loop'] = Shape3D(uv=output_data.opened_loop.uv, v=output_data.opened_loop.v)
     result['uv_cut'] = output_data.uv_cut
     result['cut_points'] = Shape3D(uv=output_data.cut_points.uv, v=output_data.cut_points.v)
     np.save('tests/test_data/test_open_loop_with_3d_sphere1.npy', [result])
 
-    debug_base = output_data.curve_points_in
     debug_data = {}
     #debug_data['xxxx'] = debug_base.xxxx
     debug_data['points_to_delete'] = debug_base.points_to_delete
@@ -126,10 +133,13 @@ def make_data(filename):
     debug_data['mean_dist_2'] = debug_base.mean_dist_2
     np.save('tests/test_data/test_open_loop_with_3d_sphere1_debug.npy', [debug_data])
 
-
+    # Data to be used by 'test_add_nearest_ref_point_to_curve1'
     result = {}
+    result['curve_points_in'] = Shape3D(v=debug_base.curve_points0.v, uv=debug_base.curve_points0.uv)
+    result['sphere_center'] = debug_base.sphere_center
+    result['sphere_diameter'] = debug_base.sphere_diameter
     result['near_points'] = debug_base.near_points1
-    result['curve_track_out'] = debug_base.add_nearest_ref_point_to_curve.curve_track_out
+    result['curve_track_out'] = debug_base.curve_points1
     np.save('tests/test_data/test_add_nearest_ref_point_to_curve1.npy', [result])
 
     debug_data = {}

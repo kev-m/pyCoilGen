@@ -206,10 +206,10 @@ def add_nearest_ref_point_to_curve(curve_track_in: Shape3D, target_point: np.nda
     # Check if the nearest point is not the last point in the contour line
     if min_ind_seq != curve_track_in.v.shape[1] - 1:
         #  curve_track_out.v = [curve_track_out.v curve_track_in.v(:, min_ind_seq + 1:end)];
-        curve_track_out_v = np.column_stack((curve_track_out_v, curve_track_in.v[:, min_ind_seq + 2:]))
-        curve_track_out_uv = np.column_stack((curve_track_out_uv, curve_track_in.uv[:, min_ind_seq + 2:]))
+        curve_track_out_v = np.column_stack((curve_track_out_v, curve_track_in.v[:, min_ind_seq + 1:]))
+        curve_track_out_uv = np.column_stack((curve_track_out_uv, curve_track_in.uv[:, min_ind_seq + 1:]))
 
-    curve_track_out = Shape3D(v=curve_track_out_v, uv=curve_track_out_uv) # 2x58 / 3x58
+    curve_track_out = Shape3D(v=curve_track_out_v, uv=curve_track_out_uv)
 
     if debug_data is not None:
         log.debug(" 9 curve_track_out.v: %s", compare(curve_track_out.v, debug_data['curve_track_out'].v, double_tolerance=0.001))
