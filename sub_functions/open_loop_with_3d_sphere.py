@@ -26,23 +26,33 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
     Returns:
         CurvePoints, ndarray, CurvePoints: The opened loop, 2D contour of the cut shape, and cut points.
     """
-
-    # Remove doubled points from the curve
-    indices_to_delete = np.where(np.linalg.norm(curve_points_in.v[:, 1:] - curve_points_in.v[:, :-1], axis=0) < 1e-10)
-    # Always remove last point
-    curve_points_in.v = curve_points_in.v[:, :-1]
-    curve_points_in.uv = curve_points_in.uv[:, :-1]
-
-    np.delete(curve_points_in.v, indices_to_delete)
-    np.delete(curve_points_in.uv, indices_to_delete)
-    curve_points_in.number_points = curve_points_in.v.shape[1]
-
-    # Add a point within the curve which has the shortest distance to the sphere
-    curve_points, _ = add_nearest_ref_point_to_curve(curve_points_in, sphere_center)
+    curve_points = curve_points_in.copy()
 
     if debug_data is not None:
-        log.debug(" 1  v: %s", compare(curve_points.v, debug_data['curve_points1'].v, double_tolerance=0.01))
-        log.debug(" 1 uv: %s", compare(curve_points.uv, debug_data['curve_points1'].uv, double_tolerance=0.01))
+        log.debug(" 0  v: %s", compare(curve_points.v, debug_data['curve_points_in'].v))
+        log.debug(" 0 uv: %s", compare(curve_points.uv, debug_data['curve_points_in'].uv))
+
+    # Remove doubled points from the curve
+    indices_to_delete = np.where(np.linalg.norm(curve_points.v[:, 1:] - curve_points.v[:, :-1], axis=0) < 1e-10)
+    # Always remove last point
+    curve_points.v = curve_points.v[:, :-1]
+    curve_points.uv = curve_points.uv[:, :-1]
+
+    np.delete(curve_points.v, indices_to_delete)
+    np.delete(curve_points.uv, indices_to_delete)
+    curve_points.number_points = curve_points.v.shape[1]
+
+    if debug_data is not None:
+        log.debug(" 0a  v: %s", compare(curve_points.v, debug_data['curve_points0a'].v))
+        log.debug(" 0a uv: %s", compare(curve_points.uv, debug_data['curve_points0a'].uv))
+
+
+    # Add a point within the curve which has the shortest distance to the sphere
+    curve_points, _ = add_nearest_ref_point_to_curve(curve_points, sphere_center)
+
+    if debug_data is not None:
+        log.debug(" 1  v: %s", compare(curve_points.v, debug_data['curve_points1'].v))
+        log.debug(" 1 uv: %s", compare(curve_points.uv, debug_data['curve_points1'].uv))
 
     inside_sphere_ind = np.linalg.norm(curve_points.v - sphere_center, axis=0) < sphere_diameter / 2
 
@@ -75,6 +85,10 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
         inside_sphere_ind_unique[parts_start[nearest_part]:parts_end[nearest_part] + 1] = True
     else:
         inside_sphere_ind_unique = inside_sphere_ind
+
+    if debug_data is not None:
+        log.debug(" 2 inside_sphere_ind: %s", compare(inside_sphere_ind_unique.astype(int), debug_data['inside_sphere_ind_unique1']))
+
 
     # Find the positions where the curve enters the sphere
     first_sphere_penetration_locations = np.where(np.abs(np.diff(inside_sphere_ind_unique)) == 1)[0]
@@ -143,6 +157,10 @@ def add_nearest_ref_point_to_curve(curve_track_in: Shape3D, target_point: np.nda
     # Create a copy of the input contour line to avoid modifying the original
     curve_track = curve_track_in.copy()
 
+    if debug_data is not None:
+        log.debug(" 0  v: %s", compare(curve_track.v, debug_data['curve_points_in'].v))
+        log.debug(" 0 uv: %s", compare(curve_track.uv, debug_data['curve_points_in'].uv))
+
     # Check if the contour line is open, if so, close it by duplicating the first point
     if (curve_track.v[:, 0] != curve_track.v[:, -1]).any():
         curve_track.v = np.column_stack((curve_track.v, curve_track.v[:, 0]))
@@ -150,42 +168,42 @@ def add_nearest_ref_point_to_curve(curve_track_in: Shape3D, target_point: np.nda
 
     # debug_data.curve_track = curve_track;
     if debug_data is not None:
-        log.debug(" 1  v: %s", compare(curve_track.v, debug_data['curve_track'].v, double_tolerance=0.001))
-        log.debug(" 1 uv: %s", compare(curve_track.uv, debug_data['curve_track'].uv, double_tolerance=0.001))
+        log.debug(" 1  v: %s", compare(curve_track.v, debug_data['curve_track'].v))
+        log.debug(" 1 uv: %s", compare(curve_track.uv, debug_data['curve_track'].uv))
 
     # Extract segment start and end points
     seg_starts = Shape3D(v=curve_track.v[:, :-1], uv=curve_track.uv[:, :-1])
     seg_ends = Shape3D(v=curve_track.v[:, 1:], uv=curve_track.uv[:, 1:])
 
     if debug_data is not None:
-        log.debug(" 2 seg_starts.v: %s", compare(seg_starts.v, debug_data['seg_starts'].v, double_tolerance=0.001))
-        log.debug(" 2 seg_starts.uv: %s", compare(seg_starts.uv, debug_data['seg_starts'].uv, double_tolerance=0.001))
-        log.debug(" 3 seg_ends.v: %s", compare(seg_ends.v, debug_data['seg_ends'].v, double_tolerance=0.001))
-        log.debug(" 3 seg_ends.uv: %s", compare(seg_ends.uv, debug_data['seg_ends'].uv, double_tolerance=0.001))
+        log.debug(" 2 seg_starts.v: %s", compare(seg_starts.v, debug_data['seg_starts'].v))
+        log.debug(" 2 seg_starts.uv: %s", compare(seg_starts.uv, debug_data['seg_starts'].uv))
+        log.debug(" 3 seg_ends.v: %s", compare(seg_ends.v, debug_data['seg_ends'].v))
+        log.debug(" 3 seg_ends.uv: %s", compare(seg_ends.uv, debug_data['seg_ends'].uv))
 
     # Calculate the parameter 't' to find the nearest point on each segment to the target point
     t, vec_segs = nearest_approaches(target_point, seg_starts.v, seg_ends.v)
     if debug_data is not None:
-        log.debug(" 4 t1: %s", compare(t, debug_data['t1'], double_tolerance=0.001))
+        log.debug(" 4 t1: %s", compare(t, debug_data['t1']))
     t[t < 0] = 0
     if debug_data is not None:
-        log.debug(" 4 t2: %s", compare(t, debug_data['t2'], double_tolerance=0.001))
+        log.debug(" 4 t2: %s", compare(t, debug_data['t2']))
     t[t > 1] = 1
     if debug_data is not None:
-        log.debug(" 4 t3: %s", compare(t, debug_data['t3'], double_tolerance=0.001))
+        log.debug(" 4 t3: %s", compare(t, debug_data['t3']))
 
     # Calculate all near points on each segment
     all_near_points_v = seg_starts.v + vec_segs * np.tile(t, (3, 1))
     all_near_points_uv = seg_starts.uv + (seg_ends.uv - seg_starts.uv) * np.tile(t, (2, 1))
 
     if debug_data is not None:
-        log.debug(" 5 all_near_points_v: %s", compare(all_near_points_v, debug_data['all_near_points'].v, double_tolerance=0.001))
-        log.debug(" 5 all_near_points_uv: %s", compare(all_near_points_uv, debug_data['all_near_points'].uv, double_tolerance=0.001))
+        log.debug(" 5 all_near_points_v: %s", compare(all_near_points_v, debug_data['all_near_points'].v))
+        log.debug(" 5 all_near_points_uv: %s", compare(all_near_points_uv, debug_data['all_near_points'].uv))
 
     # Calculate distances from all_near_points to the target point
     all_dists = np.linalg.norm(all_near_points_v - target_point, axis=0)
     if debug_data is not None:
-        log.debug(" 6 all_dists: %s", compare(all_dists, debug_data['all_dists'], double_tolerance=0.001))
+        log.debug(" 6 all_dists: %s", compare(all_dists, debug_data['all_dists']))
 
     # Find the nearest point (minimum distance) and its index
     min_ind_seq = np.argmin(all_dists)
@@ -196,24 +214,28 @@ def add_nearest_ref_point_to_curve(curve_track_in: Shape3D, target_point: np.nda
     near_points = Shape3D(v=all_near_points_v[:, min_ind_seq], uv=all_near_points_uv[:, min_ind_seq])
 
     if debug_data is not None:
-        log.debug(" 8 near_points: %s", compare(near_points.v, debug_data['near_points'].v, double_tolerance=0.001))
-        log.debug(" 8 near_points: %s", compare(near_points.uv, debug_data['near_points'].uv, double_tolerance=0.001))
+        log.debug(" 8 near_points: %s", compare(near_points.v, debug_data['near_points'].v))
+        log.debug(" 8 near_points: %s", compare(near_points.uv, debug_data['near_points'].uv))
 
     # Add the nearest point within the curve
     curve_track_out_v = np.column_stack((curve_track_in.v[:, :min_ind_seq+1], near_points.v))
     curve_track_out_uv = np.column_stack((curve_track_in.uv[:, :min_ind_seq+1], near_points.uv))
 
-    # Check if the nearest point is not the last point in the contour line
-    if min_ind_seq != curve_track_in.v.shape[1] - 1:
-        #  curve_track_out.v = [curve_track_out.v curve_track_in.v(:, min_ind_seq + 1:end)];
-        curve_track_out_v = np.column_stack((curve_track_out_v, curve_track_in.v[:, min_ind_seq + 1:]))
-        curve_track_out_uv = np.column_stack((curve_track_out_uv, curve_track_in.uv[:, min_ind_seq + 1:]))
+    if debug_data is not None:
+        log.debug(" 9 curve_track_out_v: %s", compare(curve_track_out_v, debug_data['curve_track_out1'].v))
+        log.debug(" 9 curve_track_out_uvv: %s", compare(curve_track_out_uv, debug_data['curve_track_out1'].uv))
 
-    curve_track_out = Shape3D(v=curve_track_out_v, uv=curve_track_out_uv)
+    # Check if the nearest point is not the last point in the contour line
+    if min_ind_seq != curve_track_in.v.shape[1] - 1: # -1 because of MATLAB: min_ind_seq = 45, not 46.
+        #  curve_track_out.v = [curve_track_out.v curve_track_in.v(:, min_ind_seq + 1:end)];
+        curve_track_out_v = np.column_stack((curve_track_out_v, curve_track_in.v[:, min_ind_seq + 1:-1])) # M: min_ind_seq: 46
+        curve_track_out_uv = np.column_stack((curve_track_out_uv, curve_track_in.uv[:, min_ind_seq + 1:-1]))
+
+    curve_track_out = Shape3D(v=curve_track_out_v, uv=curve_track_out_uv) # 3x59 M: 3x58
 
     if debug_data is not None:
-        log.debug(" 9 curve_track_out.v: %s", compare(curve_track_out.v, debug_data['curve_track_out'].v, double_tolerance=0.001))
-        log.debug(" 9 curve_track_out.uv: %s", compare(curve_track_out.uv, debug_data['curve_track_out'].uv, double_tolerance=0.001))
+        log.debug(" 10 curve_track_out.v: %s", compare(curve_track_out.v, debug_data['curve_track_out2'].v))
+        log.debug(" 10 curve_track_out.uv: %s", compare(curve_track_out.uv, debug_data['curve_track_out2'].uv))
 
     return curve_track_out, near_points
 
