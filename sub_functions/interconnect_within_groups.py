@@ -89,7 +89,6 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                 part_group.cutshape = [None] * len(part_group.loops)
 
                 # Generate the cutshapes for all the loops within the group
-                log.debug("--- here ---: %s, line %d", __file__, get_linenumber())
                 # M: cut_position(1).group(1).cut_point
                 # v	[0.0011,0.0011;0.4999,0.4999;-0.0138,-0.7357]	3x2	double
                 # uv	[-1.2860,-2.0066;-0.0017,0.0533]	2x2	double
@@ -146,6 +145,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                 #               v: [3x2 double]
                 #              uv: [2x2 double]
                 #     segment_ind: [3 5]
+                log.debug("--- here ---: %s, line %d", __file__, get_linenumber())
                 cut_positions = find_group_cut_position(
                     part_group,
                     coil_part.group_centers.v[:, group_ind],
