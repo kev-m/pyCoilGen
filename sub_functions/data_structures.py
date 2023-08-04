@@ -206,9 +206,57 @@ class Mesh:
         node_triangles = np.array([row[row != -1] for row in node_triangles_tri], dtype=object)
         return node_triangles
 
+
+# Helper functions
+def append_uv(uv_container, uv_value):
+    if uv_container.uv is None:
+        uv_container.uv = np.zeros((1, 2), dtype=float)
+        uv_container.uv[0] = uv_value
+        return
+    uv_container.uv = np.vstack((uv_container.uv, [uv_value]))
+
+
+def append_v(v_container, v_value):
+    if v_container.v is None:
+        v_container.v = np.zeros((1, 3), dtype=float)
+        v_container.v[0] = v_value
+        return
+    v_container.v = np.vstack((v_container.v, [v_value]))
+
+
+def append_uv_matlab(uv_container, uv_value: np.ndarray):
+    """
+    Append a (2,n) array or item to the uv_container's uv member.
+    """
+    if uv_container.uv is None:
+        uv_container.uv = uv_value.copy()
+        # if uv_value.shape[1] == 1:
+        #    uv_container.uv = np.zeros((2, 1), dtype=float)
+        #    uv_container.uv[:,0] = uv_value[:,0]
+        # else:
+        #    uv_container.uv = uv_value
+        return
+    # uv_container.uv = np.hstack((uv_container.uv, [uv_value]))
+    uv_container.uv = np.hstack((uv_container.uv, uv_value))
+
+
+def append_v_matlab(v_container, v_value: np.ndarray):
+    """
+    Append a (3,n) array or item to the v_container's v member.
+    """
+    if v_container.v is None:
+        v_container.v = v_value.copy()
+        # if v_value.shape[1] == 1:
+        #    v_container.v = np.zeros((3, 1), dtype=float)
+        #    v_container.v[:,0] = v_value[:,0]
+        # else:
+        #    v_container.v = v_value
+        return
+    # v_container.v = np.hstack((v_container.v, [v_value]))
+    v_container.v = np.hstack((v_container.v, v_value))
+
+
 # Generated for calculate_basis_functions
-
-
 class BasisElement:
     stream_function_potential: float
     triangles: List[int]                # node_triangles x ?
@@ -235,11 +283,7 @@ class UnarrangedLoop:
         self.edge_inds.append(edge)
 
     def add_uv(self, uv):
-        if self.uv is None:
-            self.uv = np.zeros((1, 2), dtype=float)
-            self.uv[0] = uv
-            return
-        self.uv = np.vstack((self.uv, [uv]))
+        append_uv(self, uv)
 
 
 class UnarrangedLoopContainer:
@@ -247,16 +291,24 @@ class UnarrangedLoopContainer:
         self.loop: List[UnarrangedLoop] = []
 
 
+# Used in topological_loop_grouping
 @dataclass
-class UnsortedPoints:
+class Shape2D:  # Used in topological_loop_grouping
+    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
+
+    def add_uv(self, uv):
+        append_uv_matlab(self, uv)
+
+
+@dataclass
+class UnsortedPoints(Shape2D):
     """
     Represents unsorted contours in the coil mesh.
 
     Used by calc_contours_by_triangular_potential_cuts
     """
     potential: float = None
-    edge_ind = None
-    uv = None
+    edge_ind: np.ndarray = None
 
 
 @dataclass
@@ -271,35 +323,38 @@ class RawPart:
 
 
 @dataclass
-class ContourLine:
+class Shape3D(Shape2D):  # Used in topological_loop_grouping
+    v: np.ndarray = None  # 3D co-ordinates of the shape (3,n)
+
+    def add_v(self, v):
+        append_v_matlab(self, v)
+
+    def copy(self):
+        return Shape3D(uv=self.uv.copy(), v=self.v.copy())
+
+@dataclass
+class ContourLine(Shape3D):
     """
     Represents a contour line
 
     Used by calc_contours_by_triangular_potential_cuts
     """
-    v: np.ndarray = None   # 3D co-ordinates of the contour (process_raw_loops) (3,m)
-    uv: np.ndarray = None  # 2D co-ordinates of the contour (process_raw_loops) (2,2)
+    # v: np.ndarray = None   # 3D co-ordinates of the contour (process_raw_loops) (3,m)
+    # uv: np.ndarray = None  # 2D co-ordinates of the contour (process_raw_loops) (2,m)
     potential: float = None  # Potential value of the contour
     current_orientation: int = None
 
 
-# Used in topological_loop_grouping
 @dataclass
-class Shape2D:  # Used in topological_loop_grouping
-    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
-
-
-@dataclass
-class Shape3D:  # Used in topological_loop_grouping
-    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
-    v: np.ndarray = None  # 3D co-ordinates of the shape (3,n)
-
-
-@dataclass
-class TopoGroup:
-    loops: List[ContourLine] = None  # Assigned in topological_loop_grouping
+class TopoGroup(Shape3D):
+    loops: List[ContourLine] = None     # Assigned in topological_loop_grouping
     cutshape: List[Shape2D] = None
     opened_loop: List[Shape3D] = None
+    return_path: Shape3D = None         # Assigned in interconnect_within_groups
+    spiral_in: Shape3D = None           # Assigned in interconnect_within_groups
+    spiral_out: Shape3D = None          # Assigned in interconnect_within_groups
+    # uv: np.ndarray = None             # 2D shape (2,n) Assigned in interconnect_within_groups
+    # v: np.ndarray = None              # 3D shape (3,n) Assigned in interconnect_within_groups
 
 
 @dataclass
@@ -309,6 +364,8 @@ class CoilPart:
     resistance_matrix: np.ndarray = None    # num_vertices x num_vertices
     raw: RawPart = None
     contour_lines: List[ContourLine] = None
+    potential_level_list: np.ndarray = None  # Placeholder (calc_potential_levels) (???)
+    contour_step: float = None             # Placeholder (calc_potential_levels) (???)
     field_by_loops: np.ndarray = None       # Placeholder (evaluate_loop_significance in process_raw_loops)
     combined_loop_field: np.ndarray = None  # Placeholder (evaluate_loop_significance in process_raw_loops) (3,m)
     loop_significance: np.ndarray = None    # Per contour line (evaluate_loop_significance in process_raw_loops) (n)
@@ -318,7 +375,8 @@ class CoilPart:
     group_levels: np.ndarray = None         # ??? (topological_loop_grouping)
     level_positions: np.ndarray = None      # ??? (topological_loop_grouping)
     groups: List[TopoGroup] = None          # Topological groups (topological_loop_grouping)
-    group_centers: List[Shape3D] = None     # The centre of each group (calculate_group_ceners)
+    group_centers: List[Shape3D] = None     # The centre of each group (calculate_group_centers)
+    connected_group: List[TopoGroup] = None  # Connected topological groups (interconnect_within_groups)
 
 
 class CoilSolution:
@@ -380,6 +438,38 @@ class WirePart:
 
     def __str__(self):
         return as_string(self)
+
+
+@dataclass
+class CutPoint:
+    """
+    Defines .....
+
+    See Shape3D (which is identical, except that uv and v are (2,n) & (3,n)).
+
+    Assigned in find_group_cut_position
+    """
+    uv: np.ndarray = None   # 2D co-ordinates of the shape (n,2)
+    v: np.ndarray = None    # 3D co-ordinates of the shape (n,3)
+    segment_ind: List[int] = None  # ???
+
+    def add_uv(self, uv):
+        append_uv(self, uv)
+
+    def add_v(self, v):
+        append_v(self, v)
+
+
+@dataclass
+class CutPosition:
+    """
+    Defines .....
+
+    Assigned in find_group_cut_position
+    """
+    cut_point: CutPoint = None   # ????
+    high_cut: CutPoint = None   # ????
+    low_cut: CutPoint = None    # ???
 
 
 #

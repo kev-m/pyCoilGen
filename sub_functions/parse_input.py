@@ -91,7 +91,7 @@ def parse_input(parse_cli=True):
     parser.add_argument('--surface_is_cylinder_flag',
                         action='store_true', help="Flag for cylindrical surface")
 
-    # Add the circular diameter factor for cylinder parameterization
+    # Add the circular diameter factor for cylinder parameterization (circular_diameter_factor_cylinder_parameterization)
     parser.add_argument('--circular_diameter_factor', type=float, default=1,
                         help="Circular diameter factor for cylinder parameterization")
 

@@ -11,6 +11,7 @@ from sub_functions.find_min_mutual_loop_distance import find_min_mutual_loop_dis
 
 log = logging.getLogger(__name__)
 
+
 def find_minimal_contour_distance(coil_parts: List[CoilPart], input_args):
     """
     Find the minimal distance in the xyz domain between contours to assign a proper conductor width later.
@@ -27,9 +28,9 @@ def find_minimal_contour_distance(coil_parts: List[CoilPart], input_args):
         if not input_args.skip_calculation_min_winding_distance:
             min_vals = []
             for ind_1 in range(len(coil_part.contour_lines)):
-                for ind_2 in range(len(coil_part.contour_lines)):
+                for ind_2 in range(ind_1, len(coil_part.contour_lines)):
                     if ind_1 != ind_2:
-                        _, _, _, _, min_dist = find_min_mutual_loop_distance(coil_part.contour_lines[ind_1],
+                        min_dist, _, _, _, _ = find_min_mutual_loop_distance(coil_part.contour_lines[ind_1],
                                                                              coil_part.contour_lines[ind_2],
                                                                              False)
                         min_vals.append(min_dist)

@@ -6,6 +6,11 @@ import logging
 
 log = logging.getLogger(__name__)
 
+from inspect import currentframe
+
+def get_linenumber():
+    cf = currentframe()
+    return cf.f_back.f_lineno
 
 def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True):
     """
@@ -63,7 +68,7 @@ def compare_contains(array1, array2, double_tolerance=1e-10, strict=True, equal_
         array2: The second array to compare.
         double_tolerance (float): Tolerance for comparing floating-point values.
         strict (bool): Whether order matters in the sub-elements.
-    
+
     Returns:
         bool: True if the instances have matching entries, False otherwise.
     """
@@ -75,7 +80,7 @@ def compare_contains(array1, array2, double_tolerance=1e-10, strict=True, equal_
         if not array1.shape == array2.shape:
             log.error(" Not the same shape: %s is not %s", np.shape(array1), np.shape(array2))
             return False
-       
+
         # Handle if array1 / array2 are simple arrays
         # e.g. [0.1, 0.2, 0.3] and [0.3, 0.2, 0.1]
         if not isinstance(array1[0], np.ndarray):
@@ -106,7 +111,7 @@ def compare_contains(array1, array2, double_tolerance=1e-10, strict=True, equal_
                         break
                 if found == False:
                     log.error(" Can not find value at index [%d] %s:\n %s ... and \n %s ...",
-                            index, item, array1[:5], array2[:5])
+                              index, item, array1[:5], array2[:5])
                     return False
             else:
                 # Check that every item in arr1 is in arr2
@@ -117,7 +122,7 @@ def compare_contains(array1, array2, double_tolerance=1e-10, strict=True, equal_
                         break
                 if found == False:
                     log.error(" Can not find value at index [%d] %s:\n %s ... and \n %s ...",
-                            index, array1[index], array1[:5], array2[:5])
+                              index, array1[index], array1[:5], array2[:5])
                     return False
 
         return True
@@ -317,6 +322,7 @@ def visualize_compare_vertices(vertices2d1, vertices2d2, image_x_size, image_pat
     # Save the image
     image.save(image_path)
 
+
 def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_list):
     """
     Draw the given contour_list onto an image of the specified size and save the image to a file.
@@ -352,7 +358,7 @@ def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_lis
     radius_stop = 1.4
 
     for contour in contour_list:
-        uv = contour.uv.T # Array of [x,y] pairs
+        uv = contour.uv.T  # Array of [x,y] pairs
         num_contours = len(uv)
         start_uv = uv[0]
         start_xy = (start_uv - minima) * vertices2d1_scale
@@ -372,6 +378,7 @@ def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_lis
 
     # Save the image
     image.save(image_path)
+
 
 def project_vertex_onto_plane(vertex, pov):
     # Extract the coordinates of the vertex and POV
