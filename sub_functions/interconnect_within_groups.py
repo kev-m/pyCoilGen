@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 from helpers.visualisation import get_linenumber
 from helpers.visualisation import compare
 
-def interconnect_within_groups(coil_parts: List[CoilPart], input_args, m_c_part):
+def interconnect_within_groups(coil_parts: List[CoilPart], input_args, m_c_part = None):
     """
     Interconnects the loops within each group for each coil part.
 
@@ -106,15 +106,16 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args, m_c_part)
                     # Debug: Remove this
                     # Check cut position used
                     # m_group.loops[index2].open_loop_with_3d_sphere.outputs.opened_loop.v
-                    inputs = m_c_part.groups[group_ind].loops[loop_ind].open_loop_with_3d_sphere.inputs
-                    m_cut_position_used = inputs.sphere_center
-                    m_curve_points_in = inputs.curve_points_in
-                    m_cut_width = inputs.sphere_diameter
+                    if m_c_part is not None:
+                        inputs = m_c_part.groups[group_ind].loops[loop_ind].open_loop_with_3d_sphere.inputs
+                        m_cut_position_used = inputs.sphere_center
+                        m_curve_points_in = inputs.curve_points_in
+                        m_cut_width = inputs.sphere_diameter
 
-                    assert np.allclose(cut_position_used, m_cut_position_used)
-                    assert input_args.interconnection_cut_width == m_cut_width
-                    assert compare(part_group.loops[loop_ind].v, m_curve_points_in.v)
-                    assert compare(part_group.loops[loop_ind].uv, m_curve_points_in.uv)
+                        assert np.allclose(cut_position_used, m_cut_position_used)
+                        assert input_args.interconnection_cut_width == m_cut_width
+                        assert compare(part_group.loops[loop_ind].v, m_curve_points_in.v)
+                        assert compare(part_group.loops[loop_ind].uv, m_curve_points_in.uv)
                     #
                     #================================================================
 

@@ -51,6 +51,33 @@ def test_add_nearest_ref_point_to_curve():
     assert compare(curve_track_out.uv, curve_track_data.uv)  # Pass
     assert compare(curve_track_out.v, curve_track_data.v)   # Pass
 
+def brute_test_open_loop_with_3d_sphere_brute():
+    mat_data = load_matlab('debug/ygradient_coil')
+    coil_parts = mat_data['coil_layouts'].out.coil_parts
+    m_c_part = coil_parts
+    for index1, m_group in enumerate(m_c_part.groups):
+        for index2, m_opened_loop in enumerate(m_group.opened_loop):
+            test_data = m_c_part.groups[index1].loops[index2].open_loop_with_3d_sphere
+            inputs = test_data.inputs
+            outputs = test_data.outputs
+            m_cut_position_used = inputs.sphere_center # [y]
+            m_curve_points_in = inputs.curve_points_in
+            m_cut_width = inputs.sphere_diameter
+
+            debug_data = outputs.curve_points_out
+
+            curve_points_in = Shape3D(m_curve_points_in.uv, m_curve_points_in.v)
+            cut_position_used = [[m_cut_position_used[0]], [m_cut_position_used[1]], [m_cut_position_used[2]]]
+
+            log.debug(" Group: %d, loop: %d", index1, index2)
+            opened_loop, uv_cut, cut_points = open_loop_with_3d_sphere(curve_points_in, cut_position_used, m_cut_width)#, debug_data)
+
+            assert compare(cut_points.uv, outputs.cut_points.uv)
+            assert compare(cut_points.v, outputs.cut_points.v)
+            assert compare(opened_loop.uv, outputs.opened_loop.uv)
+            assert compare(opened_loop.v, outputs.opened_loop.v)
+            assert compare(uv_cut, outputs.uv_cut)
+
 
 def make_data(filename):
     mat_data = load_matlab(filename)
@@ -89,6 +116,7 @@ if __name__ == "__main__":
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
 
-    make_data('debug/ygradient_coil')
-    test_add_nearest_ref_point_to_curve()
-    test_open_loop_with_3d_sphere()
+    #make_data('debug/ygradient_coil')
+    #test_add_nearest_ref_point_to_curve()
+    #test_open_loop_with_3d_sphere()
+    brute_test_open_loop_with_3d_sphere_brute()
