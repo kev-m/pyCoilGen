@@ -12,10 +12,6 @@ from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
 
 log = logging.getLogger(__name__)
 
-# Debugging
-from helpers.visualisation import get_linenumber
-from helpers.visualisation import compare
-
 def interconnect_within_groups(coil_parts: List[CoilPart], input_args, m_c_part = None):
     """
     Interconnects the loops within each group for each coil part.
@@ -102,23 +98,6 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args, m_c_part 
                     else:
                         cut_position_used = cut_positions[loop_ind].high_cut.add_v
 
-                    #================================================================
-                    # Debug: Remove this
-                    # Check cut position used
-                    # m_group.loops[index2].open_loop_with_3d_sphere.outputs.opened_loop.v
-                    if m_c_part is not None:
-                        inputs = m_c_part.groups[group_ind].loops[loop_ind].open_loop_with_3d_sphere.inputs
-                        m_cut_position_used = inputs.sphere_center
-                        m_curve_points_in = inputs.curve_points_in
-                        m_cut_width = inputs.sphere_diameter
-
-                        assert np.allclose(cut_position_used, m_cut_position_used)
-                        assert input_args.interconnection_cut_width == m_cut_width
-                        assert compare(part_group.loops[loop_ind].v, m_curve_points_in.v)
-                        assert compare(part_group.loops[loop_ind].uv, m_curve_points_in.uv)
-                    #
-                    #================================================================
-
                     # NOTE: high_cut/low_cut.v are (n,3) whereas part_group.loops[] etc are (3,n)
                     # Temporary hack until all v and uv are changed from MATLAB (2,m) to Python (m,2)
                     cut_position_used = [[cut_position_used[0]], [cut_position_used[1]], [cut_position_used[2]]]
@@ -137,21 +116,13 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args, m_c_part 
                 for loop_ind in range(0, len(part_group.loops)-1): # [Loop 1]
                     loop_item = part_group.opened_loop[loop_ind]
 
-                    # Not the same shape: (3, 384) is not (3, 390)
                     part_connected_group.add_uv(loop_item.uv)
                     part_connected_group.add_v(loop_item.v)
 
-                    #part_connected_group.spiral_in.uv = [part_connected_group.spiral_in.uv loop_item.uv];
-                    #part_connected_group.spiral_in.v = [part_connected_group.spiral_in.v loop_item.v];
-                    # Not the same shape: (3, 373) is not (3, 379)
                     part_connected_group.spiral_in.add_uv(loop_item.uv)
                     part_connected_group.spiral_in.add_v(loop_item.v)
                     
-                    # xxxx = numel(coil_parts(part_ind).groups(group_ind).loops) + 1 - loop_ind
-                    #part_connected_group.spiral_out.uv = [part_connected_group.spiral_out.uv part_group.opened_loop(xxxx).uv];
-                    #part_connected_group.spiral_out.v = [part_connected_group.spiral_out.v part_group.opened_loop(xxxx).v];
-                    xxxx = len(part_group.loops) - loop_ind - 1
-                    other_item = part_group.opened_loop[xxxx]
+                    other_item = part_group.opened_loop[len(part_group.loops) - loop_ind - 1]
                     part_connected_group.spiral_out.add_uv(other_item.uv)
                     part_connected_group.spiral_out.add_v(other_item.v)
 
