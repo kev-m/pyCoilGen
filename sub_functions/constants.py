@@ -3,7 +3,7 @@ DEBUG_NONE = 0
 DEBUG_BASIC = 1
 DEBUG_VERBOSE = 2
 
-_shared_data = {'CURRENT_LEVEL': None}
+_shared_data = {'CURRENT_LEVEL': DEBUG_NONE}
 
 
 def set_level(level):
