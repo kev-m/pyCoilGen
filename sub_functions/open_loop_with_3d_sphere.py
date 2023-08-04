@@ -22,7 +22,7 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
         sphere_diameter (float): The diameter of the sphere.
 
     Returns:
-        CurvePoints, ndarray, CurvePoints: The opened loop, 2D contour of the cut shape, and cut points.
+        opened_loop (Shape3D), uv_cut (np.ndarray), cut_points (Shape3D): The opened loop, 2D contour of the cut shape, and cut points.
     """
     curve_points = curve_points_in.copy()
 
@@ -64,9 +64,13 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
             parts_avg_dist[part_ind] = np.mean(np.linalg.norm(
                 curve_points.v[:, parts_start[part_ind]:parts_end[part_ind]] - sphere_center, axis=0))
 
-        nearest_part = np.nanargmin(parts_avg_dist)
-        inside_sphere_ind_unique = np.zeros(inside_sphere_ind.shape, dtype=bool)
-        inside_sphere_ind_unique[parts_start[nearest_part]:parts_end[nearest_part] + 1] = True
+        try:
+            nearest_part = np.nanargmin(parts_avg_dist)
+            inside_sphere_ind_unique = np.zeros(inside_sphere_ind.shape, dtype=bool)
+            inside_sphere_ind_unique[parts_start[nearest_part]:parts_end[nearest_part] + 1] = True
+        except ValueError as e:
+            log.debug(" Caught ValueError exception, setting indices to False")
+            inside_sphere_ind_unique = np.zeros(inside_sphere_ind.shape, dtype=bool)
     else:
         inside_sphere_ind_unique = inside_sphere_ind
 
@@ -82,35 +86,41 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
 
     # Calculate the penetration points by means of interpolation of weighted mean for the radial distance
     repeated_radii = np.ones(first_distances.shape) * sphere_diameter / 2
-    cut_points = Shape3D(v=curve_points.v[:, first_sphere_penetration_locations] + sphere_crossing_vecs.v * ((repeated_radii - first_distances) / (second_distances - first_distances)),
-                         uv=curve_points.uv[:, first_sphere_penetration_locations] + sphere_crossing_vecs.uv * ((repeated_radii - first_distances) / (second_distances - first_distances)))
 
     # Open the loop; Check which parts of the curve are inside or outside the sphere
-    shift_ind = np.min(np.where(inside_sphere_ind_unique == True)) * (-1)
+    try:
+        shift_ind = np.min(np.where(inside_sphere_ind_unique == True)) * (-1)
 
-    curve_points.v = np.roll(curve_points.v, shift_ind, axis=1)
-    curve_points.uv = np.roll(curve_points.uv, shift_ind, axis=1)
+        cut_points = Shape3D(v=curve_points.v[:, first_sphere_penetration_locations] + sphere_crossing_vecs.v * ((repeated_radii - first_distances) / (second_distances - first_distances)),
+                            uv=curve_points.uv[:, first_sphere_penetration_locations] + sphere_crossing_vecs.uv * ((repeated_radii - first_distances) / (second_distances - first_distances)))
 
-    inside_sphere_ind_unique = np.roll(inside_sphere_ind_unique, shift_ind)
+        curve_points.v = np.roll(curve_points.v, shift_ind, axis=1)
+        curve_points.uv = np.roll(curve_points.uv, shift_ind, axis=1)
 
-    curve_points.v = curve_points.v[:, ~inside_sphere_ind_unique]
-    curve_points.uv = curve_points.uv[:, ~inside_sphere_ind_unique]
+        inside_sphere_ind_unique = np.roll(inside_sphere_ind_unique, shift_ind)
 
-    # Build the "opened" loop with the cut_points as open ends
-    # Remove curve points which are still inside the sphere
-    finished_loop_case1 = Shape3D(v=np.hstack((cut_points.v[:, [0]], curve_points.v, cut_points.v[:, [-1]])),
-                                  uv=np.hstack((cut_points.uv[:, [0]], curve_points.uv, cut_points.uv[:, [-1]])))
-    finished_loop_case2 = Shape3D(v=np.hstack((cut_points.v[:, [-1]], curve_points.v, cut_points.v[:, [0]])),
-                                  uv=np.hstack((cut_points.uv[:, [-1]], curve_points.uv, cut_points.uv[:, [0]])))
+        curve_points.v = curve_points.v[:, ~inside_sphere_ind_unique]
+        curve_points.uv = curve_points.uv[:, ~inside_sphere_ind_unique]
 
-    mean_dist_1 = np.sum(np.linalg.norm(finished_loop_case1.v[:, 1:] - finished_loop_case1.v[:, :-1], axis=0))
-    mean_dist_2 = np.sum(np.linalg.norm(finished_loop_case2.v[:, 1:] - finished_loop_case2.v[:, :-1], axis=0))
+        # Build the "opened" loop with the cut_points as open ends
+        # Remove curve points which are still inside the sphere
+        finished_loop_case1 = Shape3D(v=np.hstack((cut_points.v[:, [0]], curve_points.v, cut_points.v[:, [-1]])),
+                                    uv=np.hstack((cut_points.uv[:, [0]], curve_points.uv, cut_points.uv[:, [-1]])))
+        finished_loop_case2 = Shape3D(v=np.hstack((cut_points.v[:, [-1]], curve_points.v, cut_points.v[:, [0]])),
+                                    uv=np.hstack((cut_points.uv[:, [-1]], curve_points.uv, cut_points.uv[:, [0]])))
 
-    if mean_dist_1 < mean_dist_2:
-        opened_loop = Shape3D(v=finished_loop_case1.v, uv=finished_loop_case1.uv)
-    else:
-        opened_loop = Shape3D(v=finished_loop_case2.v, uv=finished_loop_case2.uv)
+        mean_dist_1 = np.sum(np.linalg.norm(finished_loop_case1.v[:, 1:] - finished_loop_case1.v[:, :-1], axis=0))
+        mean_dist_2 = np.sum(np.linalg.norm(finished_loop_case2.v[:, 1:] - finished_loop_case2.v[:, :-1], axis=0))
 
+        if mean_dist_1 < mean_dist_2:
+            opened_loop = Shape3D(v=finished_loop_case1.v, uv=finished_loop_case1.uv)
+        else:
+            opened_loop = Shape3D(v=finished_loop_case2.v, uv=finished_loop_case2.uv)
+    except ValueError as e:
+        log.debug(" Caught ValueError exception, setting cut_points to empty")
+        opened_loop = Shape3D(v=curve_points.v, uv=curve_points.uv)
+        cut_points = Shape3D(uv=np.array([]), v=np.array([]))
+    
     # Generate the 2d contour of the cut shape for later plotting
     radius_2d = np.linalg.norm(opened_loop.uv[:, [0]] - opened_loop.uv[:, [-1]]) / 2
     sin_cos_arr = np.array([
