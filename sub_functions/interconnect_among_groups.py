@@ -6,10 +6,12 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart, Shape3D
+from sub_functions.data_structures import CoilPart, Shape3D, Cuts
 from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
+from sub_functions.remove_points_from_loop import remove_points_from_loop
 
 log = logging.getLogger(__name__)
+
 
 def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
     """
@@ -58,7 +60,7 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                 num_connections_to_do = group_len - 1
 
                 if num_connections_to_do > 0:
-                    coil_part.opening_cuts_among_groups = [{} for _ in range(num_connections_to_do)]
+                    coil_part.opening_cuts_among_groups = [Cuts() for _ in range(num_connections_to_do)]
 
                     for connect_ind in range(num_connections_to_do):
                         # Get the tracks to connect
@@ -73,14 +75,14 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                             )
                             grouptracks_to_connect_without_returns[group_ind].unrolled_coords = np.array(
                                 [np.arctan2(grouptracks_to_connect_without_returns[group_ind].v[1, :], grouptracks_to_connect_without_returns[group_ind].v[0, :]),
-                                grouptracks_to_connect_without_returns[group_ind].v[2, :]]
+                                 grouptracks_to_connect_without_returns[group_ind].v[2, :]]
                             )
 
                         # Select the return paths of those interconnected groups for later
                         min_group_dists = np.zeros((group_len, group_len))
                         min_group_inds = np.zeros((group_len, group_len), dtype=int)
-                        min_pos_group = {"v": [[None for _ in range(group_len)] for _ in range(group_len)], 
-                                         "uv": [[None for _ in range(group_len)] for _ in range(group_len)]}
+                        min_pos_group = Shape3D(v=[[None for _ in range(group_len)] for _ in range(group_len)],
+                                                uv=[[None for _ in range(group_len)] for _ in range(group_len)])
 
                         # Find the minimal distance positions between the groups and the points with minimal distance
                         for ind1 in range(group_len):
@@ -97,8 +99,8 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                                         ))
                                     total_min_dist, total_min_ind = np.min(near_dist), np.argmin(near_dist)
                                     min_group_inds[ind1, ind2] = total_min_ind
-                                    min_pos_group["uv"][ind1][ind2] = grouptracks_to_connect_without_returns[ind1].uv[:, total_min_ind]
-                                    min_pos_group["v"][ind1][ind2] = grouptracks_to_connect_without_returns[ind1].v[:, total_min_ind]
+                                    min_pos_group.uv[ind1][ind2] = grouptracks_to_connect_without_returns[ind1].uv[:, total_min_ind]
+                                    min_pos_group.v[ind1][ind2] = grouptracks_to_connect_without_returns[ind1].v[:, total_min_ind]
                                     min_group_dists[ind1, ind2] = total_min_dist
                                     min_group_dists[min_group_dists == 0] = np.inf
 
@@ -109,41 +111,45 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
 
                         # Open the loop
                         opened_group_1, cut_shape_1, _ = open_loop_with_3d_sphere(
-                            grouptracks_to_connect[couple_group1], min_pos_group["v"][couple_group1][couple_group2][:, 0], input_args.interconnection_cut_width
+                            grouptracks_to_connect[couple_group1], min_pos_group.v[couple_group1][couple_group2][:,
+                                                                                                                 0], input_args.interconnection_cut_width
                         )
                         opened_group_2, cut_shape_2, _ = open_loop_with_3d_sphere(
-                            grouptracks_to_connect[couple_group2], min_pos_group["v"][couple_group2][couple_group1][:, 0], input_args.interconnection_cut_width
+                            grouptracks_to_connect[couple_group2], min_pos_group.v[couple_group2][couple_group1][:,
+                                                                                                                 0], input_args.interconnection_cut_width
                         )
 
                         # Save the cut shapes for later plotting
-                        coil_part.opening_cuts_among_groups[connect_ind]["cut1"] = cut_shape_1
-                        coil_part.opening_cuts_among_groups[connect_ind]["cut2"] = cut_shape_2
+                        coil_part.opening_cuts_among_groups[connect_ind].cut1 = cut_shape_1
+                        coil_part.opening_cuts_among_groups[connect_ind].cut2 = cut_shape_2
 
                         # Fuse both groups
                         # Check which fusing order is better:
                         track_combilength1 = np.concatenate([opened_group_1.v, opened_group_2.v], axis=1)
                         track_combilength2 = np.concatenate([opened_group_2.v, opened_group_1.v], axis=1)
-                        track_combilength1 = np.sum(np.linalg.norm(track_combilength1[:, 1:] - track_combilength1[:, :-1], axis=0))
-                        track_combilength2 = np.sum(np.linalg.norm(track_combilength2[:, 1:] - track_combilength2[:, :-1], axis=0))
+                        track_combilength1 = np.sum(np.linalg.norm(
+                            track_combilength1[:, 1:] - track_combilength1[:, :-1], axis=0))
+                        track_combilength2 = np.sum(np.linalg.norm(
+                            track_combilength2[:, 1:] - track_combilength2[:, :-1], axis=0))
 
                         if track_combilength1 < track_combilength2:
-                            fused_group = {"v": np.concatenate([opened_group_1.v, opened_group_2.v], axis=1),
-                                           "uv": np.concatenate([opened_group_1.uv, opened_group_2.uv], axis=1)}
+                            fused_group = Shape3D(v=np.concatenate([opened_group_1.v, opened_group_2.v], axis=1),
+                                                  uv=np.concatenate([opened_group_1.uv, opened_group_2.uv], axis=1))
                         else:
-                            fused_group = {"v": np.concatenate([opened_group_2.v, opened_group_1.v], axis=1),
-                                           "uv": np.concatenate([opened_group_2.uv, opened_group_1.uv], axis=1)}
+                            fused_group = Shape3D(v=np.concatenate([opened_group_2.v, opened_group_1.v], axis=1),
+                                                  uv=np.concatenate([opened_group_2.uv, opened_group_1.uv], axis=1))
 
                         # Overwrite fused track into both group point arrays
                         # Delete one of the connected groups to avoid redundancy
                         # Do not select the host level group here!
                         if is_enclosing[couple_group1]:
-                            connected_group[groups_to_connect[couple_group1]].uv = fused_group["uv"]
-                            connected_group[groups_to_connect[couple_group1]].v = fused_group["v"]
+                            connected_group[groups_to_connect[couple_group1]].uv = fused_group.uv
+                            connected_group[groups_to_connect[couple_group1]].v = fused_group.v
                             is_enclosing.pop(couple_group2)
                             groups_to_connect.pop(couple_group2)
                         else:
-                            connected_group[groups_to_connect[couple_group2]].uv = fused_group["uv"]
-                            connected_group[groups_to_connect[couple_group2]].v = fused_group["v"]
+                            connected_group[groups_to_connect[couple_group2]].uv = fused_group.uv
+                            connected_group[groups_to_connect[couple_group2]].v = fused_group.v
                             is_enclosing.pop(couple_group1)
                             groups_to_connect.pop(couple_group1)
 
@@ -159,6 +165,7 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
         coil_part.wire_path = full_track
 
     return coil_parts
+
 
 """
 Note: The code assumes that the functions remove_points_from_loop and open_loop_with_3d_sphere are already defined
