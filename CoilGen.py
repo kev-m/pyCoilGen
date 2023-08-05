@@ -36,8 +36,8 @@ from sub_functions.find_minimal_contour_distance import find_minimal_contour_dis
 from sub_functions.topological_loop_grouping import topological_loop_grouping
 from sub_functions.calculate_group_centers import calculate_group_centers
 from sub_functions.interconnect_within_groups import interconnect_within_groups
+from sub_functions.interconnect_among_groups import interconnect_among_groups
 """
-from interconnect_among_groups import interconnect_among_groups
 from shift_return_paths import shift_return_paths
 from generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
 from create_sweep_along_surface import create_sweep_along_surface
@@ -239,7 +239,7 @@ def CoilGen(log, input=None):
 
         # =================================================
         # HACK: Use MATLAB's one_ring_list, etc.
-        use_matlab_data = False
+        use_matlab_data = True
         if use_matlab_data:
             log.warning("Using MATLAB's one_ring_list in %s, line %d", __file__, get_linenumber())
             coil_part.one_ring_list = m_or_one_ring_list
@@ -508,13 +508,13 @@ def CoilGen(log, input=None):
     m_combined_loop_length = m_c_part.combined_loop_length
 
     log.debug("coil_part.combined_loop_length == m_combined_loop_length: %s == %s", coil_part.combined_loop_length, m_combined_loop_length)
-    # assert coil_part.combined_loop_length == m_combined_loop_length # Fail 97.776... != 97.673...
+    ##assert coil_part.combined_loop_length == m_combined_loop_length # Fail 97.776... != 97.673...
     # log.debug("c_part.combined_loop_length == m_combined_loop_length:\n%s == %s",
     #          c_part.combined_loop_length, m_combined_loop_length)
 
     # Fail:  -1.85932732e-06  7.72842169e-06 -5.85194154e-06  1.63341836e-07
     # is not -1.85931361e-06  7.72842169e-06 -5.84366084e-06  1.14979947e-07
-    ### assert compare(coil_part.field_by_loops, m_field_by_loops, double_tolerance=1e-5) # Pass!
+    assert compare(coil_part.field_by_loops, m_field_by_loops, double_tolerance=1e-5) # Pass!
 
     # Fail: [0]: 1.3485584551763914 is not 1.3459361474796019
     # assert compare(coil_part.loop_significance, m_loop_significance) # FAIL: 3.87...
@@ -599,11 +599,15 @@ def CoilGen(log, input=None):
         #
         # =================================================
 
+
         m_level_positions = m_c_part.level_positions
         m_group_levels = m_c_part.group_levels - 1  # MATLAB indexing is 1-based
+
+        #assert compare(cp_group_levels[0], m_group_levels)
+
         m_loop_groups = m_c_part.loop_groups
-        for index, loop_group in enumerate(m_loop_groups):
-            m_loop_groups[index] = loop_group - 1  # MATLAB indexing is 1-based
+        for index1, loop_group in enumerate(m_loop_groups):
+            m_loop_groups[index1] = loop_group - 1  # MATLAB indexing is 1-based
 
         c_level_positions = coil_part.level_positions
         c_group_levels = np.array(coil_part.group_levels)
@@ -701,13 +705,13 @@ def CoilGen(log, input=None):
 
         assert len(m_connected_groups) == len(c_connected_groups)
 
-        for index, m_connected_group in enumerate(m_connected_groups):
-            c_connected_group = c_connected_groups[index]
+        for index1, m_connected_group in enumerate(m_connected_groups):
+            c_connected_group = c_connected_groups[index1]
 
             if get_level() >= DEBUG_VERBOSE:
                 # MATLAB shape
-                visualize_vertex_connections(c_connected_group.uv.T, 800, f'images/connected_group_uv_{index}_p.png')
-                visualize_vertex_connections(m_connected_group.uv.T, 800, f'images/connected_group_uv_{index}_m.png')
+                visualize_vertex_connections(c_connected_group.uv.T, 800, f'images/connected_group_uv_{index1}_p.png')
+                visualize_vertex_connections(m_connected_group.uv.T, 800, f'images/connected_group_uv_{index1}_m.png')
 
             # Check....
             log.debug(" Here: uv values in %s, line %d", __file__, get_linenumber())
@@ -736,13 +740,36 @@ def CoilGen(log, input=None):
         #
         #####################################################
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
-
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
         coil_parts = interconnect_among_groups(coil_parts, input_args)
+
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: coil_parts(part_ind). [opening_cuts_among_groups, wire_path]
+
+        for index1, p_coil_part in enumerate(coil_parts):
+            # Opening cuts
+            for index2, m_cut in enumerate(m_c_part.opening_cuts_among_groups):
+                p_cut = p_coil_part.opening_cuts_among_groups[index2]
+                visualize_vertex_connections(p_cut.cut1, 800, f'images/cuts_cut1_{index1}_{index2}_p.png')
+                visualize_vertex_connections(m_cut.cut1, 800, f'images/cuts_cut1_{index1}_{index2}_m.png')
+                visualize_vertex_connections(p_cut.cut2, 800, f'images/cuts_cut2_{index1}_{index2}_p.png')
+                visualize_vertex_connections(m_cut.cut2, 800, f'images/cuts_cut2_{index1}_{index2}_m.png')
+
+            # Wire path
+            c_wire_path = p_coil_part.wire_path
+            m_wire_path = m_c_part.wire_path
+            if get_level() >= DEBUG_VERBOSE:
+                visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_p.png')
+                visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_m.png')
+        #
+        #####################################################
+
+        # WIP
+        solution.coil_parts = coil_parts
+        return solution
 
         # Connect the groups and shift the return paths over the surface
         print('Shift the return paths over the surface:')
