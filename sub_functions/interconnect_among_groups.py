@@ -31,30 +31,20 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
 
     for part_ind in range(len(coil_parts)):
         coil_part = coil_parts[part_ind]
-        connected_group = coil_part.connected_group
+        connected_group_buff = coil_part.connected_group.copy()
 
         # Gather all return points to dismiss them for the search of group cut points
-        all_cut_points = np.concatenate([group.return_path.uv for group in connected_group], axis=1)
-        # M: all_cut_points	2x40 double	2x40	double
-        # -1.5528	-1.7177	-1.758	-1.7982	-1.8382	-1.8683	-1.8959	-1.9237	-1.9515	-1.9792	0.9463	0.9913	1.0358	1.0804	1.1082	1.1318	1.1554	1.1789	1.2025	1.226	1.5319	1.6998	1.7404	1.7806	1.8206	1.8511	1.879	1.9068	1.9348	1.9628	-0.9658	-1.011	-1.0562	-1.1013	-1.1281	-1.1517	-1.1753	-1.1989	-1.2224	-1.2458
-        # 0.1228	0.027	0.0307	0.034	0.0375	0.0404	0.0432	0.0457	0.0486	0.0514	-0.0031	-0.0017	0.0012	0.0026	0.0035	0.0045	0.0068	0.0078	0.0088	0.0098	0.1366	0.0721	0.073	0.0793	0.0878	0.0911	0.0951	0.1004	0.1031	0.1058	-0.0029	0.0049	0.0074	0.0026	0.0027	0.0036	0.0046	0.006	0.0077	0.0087
+        all_cut_points = np.concatenate([group.return_path.uv for group in connected_group_buff], axis=1)
 
         # Group fusions
-        # M: level_hierachy	0	1x1	double
         level_hierarchy = [len(coil_part.level_positions[i]) for i in range(len(coil_part.level_positions))]
 
         for level_ind in range(max(level_hierarchy), -1, -1):
-            # M: levels_to_process	1	1x1	double
             levels_to_process = [idx for idx, value in enumerate(level_hierarchy) if value == level_ind]
 
             # Interconnect one level into a single group
             for single_level_ind in range(len(levels_to_process)):
                 current_level = levels_to_process[single_level_ind]
-                # M: coil_parts(part_ind).group_levels
-                # ans =
-                #   1x1 cell array
-                #     {[1 2 3 4]}
-                # M: groups_to_connect	[1,2,3,4]	1x4	double
                 groups_to_connect = coil_part.group_levels[current_level]
                 group_len = len(groups_to_connect)
 
@@ -74,10 +64,10 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
 
                     for connect_ind in range(num_connections_to_do):
                         # Get the tracks to connect
-                        grouptracks_to_connect = [connected_group[group] for group in groups_to_connect]
+                        grouptracks_to_connect = [connected_group_buff[group] for group in groups_to_connect]
 
                         # Remove the return_path for the search of mutual group cuts
-                        grouptracks_to_connect_without_returns = [connected_group[group] for group in groups_to_connect]
+                        grouptracks_to_connect_without_returns = [connected_group_buff[group] for group in groups_to_connect]
 
                         for group_ind in range(group_len):
                             grouptracks_to_connect_without_returns[group_ind].uv, grouptracks_to_connect_without_returns[group_ind].v = remove_points_from_loop(
@@ -158,19 +148,21 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                         # Delete one of the connected groups to avoid redundancy
                         # Do not select the host level group here!
                         if is_enclosing[couple_group1]:
-                            connected_group[groups_to_connect[couple_group1]].uv = fused_group.uv
-                            connected_group[groups_to_connect[couple_group1]].v = fused_group.v
+                            connected_group_buff[groups_to_connect[couple_group1]].uv = fused_group.uv
+                            connected_group_buff[groups_to_connect[couple_group1]].v = fused_group.v
                             is_enclosing.pop(couple_group2)
-                            groups_to_connect.pop(couple_group2)
+                            groups_to_connect = np.delete(groups_to_connect, couple_group2)
                         else:
-                            connected_group[groups_to_connect[couple_group2]].uv = fused_group.uv
-                            connected_group[groups_to_connect[couple_group2]].v = fused_group.v
+                            connected_group_buff[groups_to_connect[couple_group2]].uv = fused_group.uv
+                            connected_group_buff[groups_to_connect[couple_group2]].v = fused_group.v
                             is_enclosing.pop(couple_group1)
-                            groups_to_connect.pop(couple_group1)
+                            groups_to_connect = np.delete(groups_to_connect, couple_group1)
+                        # Update the group_len variable
+                        group_len = len(groups_to_connect)
 
         # Select the full track as the final return
-        _, is_final_ind = max([(len(connected_group[group].v[0]), idx) for idx, group in enumerate(groups_to_connect)])
-        full_track = connected_group[groups_to_connect[is_final_ind]]
+        _, is_final_ind = max([(len(connected_group_buff[group].v[0]), idx) for idx, group in enumerate(groups_to_connect)])
+        full_track = connected_group_buff[groups_to_connect[is_final_ind]]
         # Shift the open ends to the boundaries of the coil
         min_ind = np.argmax(full_track.v[2, :])
         full_track.v = np.roll(full_track.v, -min_ind, axis=1)
