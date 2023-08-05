@@ -37,7 +37,7 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
         all_cut_points = np.concatenate([group.return_path.uv for group in connected_group], axis=1)
         # M: all_cut_points	2x40 double	2x40	double
         # -1.5528	-1.7177	-1.758	-1.7982	-1.8382	-1.8683	-1.8959	-1.9237	-1.9515	-1.9792	0.9463	0.9913	1.0358	1.0804	1.1082	1.1318	1.1554	1.1789	1.2025	1.226	1.5319	1.6998	1.7404	1.7806	1.8206	1.8511	1.879	1.9068	1.9348	1.9628	-0.9658	-1.011	-1.0562	-1.1013	-1.1281	-1.1517	-1.1753	-1.1989	-1.2224	-1.2458
-        # 0.1228	0.027	0.0307	0.034	0.0375	0.0404	0.0432	0.0457	0.0486	0.0514	-0.0031	-0.0017	0.0012	0.0026	0.0035	0.0045	0.0068	0.0078	0.0088	0.0098	0.1366	0.0721	0.073	0.0793	0.0878	0.0911	0.0951	0.1004	0.1031	0.1058	-0.0029	0.0049	0.0074	0.0026	0.0027	0.0036	0.0046	0.006	0.0077	0.0087        
+        # 0.1228	0.027	0.0307	0.034	0.0375	0.0404	0.0432	0.0457	0.0486	0.0514	-0.0031	-0.0017	0.0012	0.0026	0.0035	0.0045	0.0068	0.0078	0.0088	0.0098	0.1366	0.0721	0.073	0.0793	0.0878	0.0911	0.0951	0.1004	0.1031	0.1058	-0.0029	0.0049	0.0074	0.0026	0.0027	0.0036	0.0046	0.006	0.0077	0.0087
 
         # Group fusions
         # M: level_hierachy	0	1x1	double
@@ -124,14 +124,15 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                         couple_group1, couple_group2 = min_dist_couple[0][0], min_dist_couple[1][0]
 
                         # Open the loop
+                        target_point = min_pos_group.v[couple_group1][couple_group2] # Python shape
+                        target_point = [[target_point[0]], [target_point[1]], [target_point[2]]] # MATLAB shape
                         opened_group_1, cut_shape_1, _ = open_loop_with_3d_sphere(
-                            grouptracks_to_connect[couple_group1], min_pos_group.v[couple_group1][couple_group2][:,
-                                                                                                                 0], input_args.interconnection_cut_width
-                        )
+                            grouptracks_to_connect[couple_group1], target_point, input_args.interconnection_cut_width)
+
+                        target_point = min_pos_group.v[couple_group2][couple_group1]
+                        target_point = [[target_point[0]], [target_point[1]], [target_point[2]]] # MATLAB shape
                         opened_group_2, cut_shape_2, _ = open_loop_with_3d_sphere(
-                            grouptracks_to_connect[couple_group2], min_pos_group.v[couple_group2][couple_group1][:,
-                                                                                                                 0], input_args.interconnection_cut_width
-                        )
+                            grouptracks_to_connect[couple_group2], target_point, input_args.interconnection_cut_width)
 
                         # Save the cut shapes for later plotting
                         coil_part.opening_cuts_among_groups[connect_ind].cut1 = cut_shape_1
