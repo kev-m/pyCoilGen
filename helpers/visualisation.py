@@ -169,8 +169,8 @@ def visualize_vertex_connections(vertices2_or_3d, image_x_size, image_path, boun
     draw = ImageDraw.Draw(image)
 
     # Draw the vertex connections
-    radius_start = 5
-    radius_end = 7
+    radius_start = 2
+    radius_end = 3
     if boundaries is not None:
         for boundary in boundaries:
             edges = len(boundary)
