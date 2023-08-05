@@ -46,18 +46,27 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
     coil_parts = evaluate_loop_significance(coil_parts, target_field)
     for coil_part in coil_parts:
         loops_to_delete = coil_part.loop_significance < input_args.min_loop_significance
-        coil_part.contour_lines = [loop for i, loop in enumerate(coil_part.contour_lines) if not loops_to_delete[i]]
+        if np.any(loops_to_delete):
+            coil_part.contour_lines = [loop for i, loop in enumerate(coil_part.contour_lines) if not loops_to_delete[i]]
 
     # Close the loops
     for coil_part in coil_parts:
         for loop in coil_part.contour_lines:
-            if not np.allclose(loop.uv[:, 0], loop.uv[:, -1]) or not np.allclose(loop.uv[:, 1], loop.uv[:, -1]):
+            # if loop.uv(1, end) ~= loop.uv(1, 1) & loop.uv(2, end) ~= loop.uv(2, 1)
+            if loop.uv[0, -1] != loop.uv[0, 0] and loop.uv[1, -1] != loop.uv[1, 0]:
                 loop.add_uv(loop.uv[:, 0][:, None])# Close the loops
                 loop.add_v(loop.v[:, 0][:, None])  # Close the loops
 
     # Calculate the combined wire length for the unconnected loops
     coil_parts[-1].combined_loop_length = 0
     for coil_part in coil_parts:
+        # coil_part.combined_loop_length = sum(arrayfun(@(x) 
+        #   sum(
+        #       vecnorm(
+        #           coil_part.contour_lines(x).v(:, 2:end) - 
+        #           coil_part.contour_lines(x).v(:, 1:end - 1)
+        #       )
+        #   ), 1:numel(coil_part.contour_lines)));
         combined_loop_length = sum(np.sum(np.linalg.norm(
             loop.v[:, 1:] - loop.v[:, :-1], axis=0)) for loop in coil_part.contour_lines)
         coil_part.combined_loop_length = combined_loop_length
