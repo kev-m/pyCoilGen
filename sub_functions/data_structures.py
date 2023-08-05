@@ -358,6 +358,11 @@ class TopoGroup(Shape3D):
 
 
 @dataclass
+class Cuts():
+    cut1 : np.ndarray = None            # Cut data (interconnect_among_groups)
+    cut2 : np.ndarray = None            # Cut data (interconnect_among_groups)
+
+@dataclass
 class CoilPart:
     coil_mesh: Mesh = None
     basis_elements: List[BasisElement] = None
@@ -377,6 +382,7 @@ class CoilPart:
     groups: List[TopoGroup] = None          # Topological groups (topological_loop_grouping)
     group_centers: List[Shape3D] = None     # The centre of each group (calculate_group_centers)
     connected_group: List[TopoGroup] = None  # Connected topological groups (interconnect_within_groups)
+    opening_cuts_among_groups:List[Cuts] = None  # ??? (interconnect_among_groups)
 
 
 class CoilSolution:
