@@ -35,16 +35,26 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
 
         # Gather all return points to dismiss them for the search of group cut points
         all_cut_points = np.concatenate([group.return_path.uv for group in connected_group], axis=1)
+        # M: all_cut_points	2x40 double	2x40	double
+        # -1.5528	-1.7177	-1.758	-1.7982	-1.8382	-1.8683	-1.8959	-1.9237	-1.9515	-1.9792	0.9463	0.9913	1.0358	1.0804	1.1082	1.1318	1.1554	1.1789	1.2025	1.226	1.5319	1.6998	1.7404	1.7806	1.8206	1.8511	1.879	1.9068	1.9348	1.9628	-0.9658	-1.011	-1.0562	-1.1013	-1.1281	-1.1517	-1.1753	-1.1989	-1.2224	-1.2458
+        # 0.1228	0.027	0.0307	0.034	0.0375	0.0404	0.0432	0.0457	0.0486	0.0514	-0.0031	-0.0017	0.0012	0.0026	0.0035	0.0045	0.0068	0.0078	0.0088	0.0098	0.1366	0.0721	0.073	0.0793	0.0878	0.0911	0.0951	0.1004	0.1031	0.1058	-0.0029	0.0049	0.0074	0.0026	0.0027	0.0036	0.0046	0.006	0.0077	0.0087        
 
         # Group fusions
+        # M: level_hierachy	0	1x1	double
         level_hierarchy = [len(coil_part.level_positions[i]) for i in range(len(coil_part.level_positions))]
 
         for level_ind in range(max(level_hierarchy), -1, -1):
+            # M: levels_to_process	1	1x1	double
             levels_to_process = [idx for idx, value in enumerate(level_hierarchy) if value == level_ind]
 
             # Interconnect one level into a single group
             for single_level_ind in range(len(levels_to_process)):
                 current_level = levels_to_process[single_level_ind]
+                # M: coil_parts(part_ind).group_levels
+                # ans =
+                #   1x1 cell array
+                #     {[1 2 3 4]}
+                # M: groups_to_connect	[1,2,3,4]	1x4	double
                 groups_to_connect = coil_part.group_levels[current_level]
                 group_len = len(groups_to_connect)
 
@@ -94,9 +104,13 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                                     near_dist = np.zeros(group_a.v.shape[1])
 
                                     for point_ind in range(group_a.v.shape[1]):
-                                        near_dist[point_ind], near_ind[point_ind] = np.min(np.linalg.norm(
-                                            group_b.v[:, :] - group_a.v[:, point_ind][:, np.newaxis], axis=0
-                                        ))
+                                        # Calculate the distances between group_b.v and each point in group_a.v
+                                        distances = np.sqrt((group_b.v[0, :] - group_a.v[0, point_ind])**2 +
+                                                            (group_b.v[1, :] - group_a.v[1, point_ind])**2 +
+                                                            (group_b.v[2, :] - group_a.v[2, point_ind])**2)
+                                        # Find the minimum distance and its index
+                                        near_dist[point_ind] = np.min(distances)
+                                        near_ind[point_ind] = np.argmin(distances)
                                     total_min_dist, total_min_ind = np.min(near_dist), np.argmin(near_dist)
                                     min_group_inds[ind1, ind2] = total_min_ind
                                     min_pos_group.uv[ind1][ind2] = grouptracks_to_connect_without_returns[ind1].uv[:, total_min_ind]
