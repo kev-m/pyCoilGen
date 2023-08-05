@@ -383,6 +383,7 @@ class CoilPart:
     group_centers: List[Shape3D] = None     # The centre of each group (calculate_group_centers)
     connected_group: List[TopoGroup] = None  # Connected topological groups (interconnect_within_groups)
     opening_cuts_among_groups:List[Cuts] = None  # ??? (interconnect_among_groups)
+    wire_path : Shape3D = None              # The shape of the wire track (interconnect_among_groups)
 
 
 class CoilSolution:
