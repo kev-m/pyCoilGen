@@ -119,7 +119,10 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         sort_indices = np.argsort([len(group) for group in loop_groups])[::-1]
         # Sort each group level
         for group_index, group_level in enumerate(group_levels):
-            group_levels[group_index] = [group_level[sort_idex] for sort_idex in sort_indices]
+            sorted_group_level =  group_level.copy()
+            for index in range(len(group_level)):
+                sorted_group_level[index] = group_level[sort_indices[index]]
+            group_levels[group_index] = sorted_group_level
 
         # Renumber (=rename) the groups (also in the levels)
         renamed_group_levels = group_levels.copy()
@@ -128,13 +131,13 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
                 for renamed_index in range(len(loop_groups)):
                     if group_levels[iiii][level_index] in loop_groups[renamed_index]:
                         renamed_group_levels[iiii][level_index] = renamed_index
+                        break
 
-        # Resort parallel_levels to new group names
+        # Re-sort parallel_levels to new group names
         renamed_group_levels = sorted(list(set(tuple(level) for level in renamed_group_levels)))
         group_levels = [list(level) for level in renamed_group_levels]
 
-        assert len(group_levels) == 1 # MATLAB cell is always has 1 element
-        coil_part.group_levels = group_levels[0]
+        coil_part.group_levels = np.array(group_levels)
 
         # Find for each parallel level the groups that contain that level
         loops_per_level = []
