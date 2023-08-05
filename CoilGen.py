@@ -753,10 +753,10 @@ def CoilGen(log, input=None):
             # Opening cuts
             for index2, m_cut in enumerate(m_c_part.opening_cuts_among_groups):
                 p_cut = p_coil_part.opening_cuts_among_groups[index2]
-                visualize_vertex_connections(p_cut.cut1, 800, f'images/cuts_cut1_{index1}_{index2}_p.png')
-                visualize_vertex_connections(m_cut.cut1, 800, f'images/cuts_cut1_{index1}_{index2}_m.png')
-                visualize_vertex_connections(p_cut.cut2, 800, f'images/cuts_cut2_{index1}_{index2}_p.png')
-                visualize_vertex_connections(m_cut.cut2, 800, f'images/cuts_cut2_{index1}_{index2}_m.png')
+                visualize_vertex_connections(p_cut.cut1.T, 800, f'images/cuts_cut1_{index1}_{index2}_p.png')
+                visualize_vertex_connections(m_cut.cut1.T, 800, f'images/cuts_cut1_{index1}_{index2}_m.png')
+                visualize_vertex_connections(p_cut.cut2.T, 800, f'images/cuts_cut2_{index1}_{index2}_p.png')
+                visualize_vertex_connections(m_cut.cut2.T, 800, f'images/cuts_cut2_{index1}_{index2}_m.png')
 
             # Wire path
             c_wire_path = p_coil_part.wire_path
