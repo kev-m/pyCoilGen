@@ -13,6 +13,12 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
     """
     Group the contour loops in topological order.
 
+    Initialises the following properties of a CoilPart:
+        - loop_groups: ?
+        - group_levels: 
+        - level_positions: ?
+        - groups: ?
+
     Args:
         coil_parts (List[CoilPart]): List of CoilPart structures, each containing contour_lines.
         input_args: The input arguments (structure).
