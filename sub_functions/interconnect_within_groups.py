@@ -116,7 +116,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args, m_c_part 
                 part_connected_group.spiral_in = Shape3D()
                 part_connected_group.spiral_out = Shape3D()
                 # for loop_ind = 1:numel(coil_parts(part_ind).groups(group_ind).loops)
-                for loop_ind in range(0, len(part_group.loops)-1): # [Loop 1]
+                for loop_ind in range(0, len(part_group.loops)): # [Loop 1]
                     opened_loop = part_group.opened_loop[loop_ind]
                     # part_connected_group.uv = [part_connected_group.uv opened_loop.uv];
                     part_connected_group.add_uv(opened_loop.uv)
