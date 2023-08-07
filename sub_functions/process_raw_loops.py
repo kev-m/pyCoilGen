@@ -38,9 +38,8 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
     # Generate the curved coordinates
     for coil_part in coil_parts:
         curved_mesh = coil_part.coil_mesh.trimesh_obj
-        for loop in coil_part.contour_lines:
-            # log.debug(" - Loop: %s", loop.potential)
-            loop.v, loop.uv = uv_to_xyz(loop.uv, coil_part.coil_mesh.uv, curved_mesh)
+        for p_contour in coil_part.contour_lines:
+            p_contour.v, p_contour.uv = uv_to_xyz(p_contour.uv, coil_part.coil_mesh.uv, curved_mesh)
 
     # Evaluate loop significance and remove loops that do not contribute enough to the target field
     coil_parts = evaluate_loop_significance(coil_parts, target_field)
@@ -51,22 +50,15 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
 
     # Close the loops
     for coil_part in coil_parts:
-        for loop in coil_part.contour_lines:
+        for p_contour in coil_part.contour_lines:
             # if loop.uv(1, end) ~= loop.uv(1, 1) & loop.uv(2, end) ~= loop.uv(2, 1)
-            if loop.uv[0, -1] != loop.uv[0, 0] and loop.uv[1, -1] != loop.uv[1, 0]:
-                loop.add_uv(loop.uv[:, 0][:, None])# Close the loops
-                loop.add_v(loop.v[:, 0][:, None])  # Close the loops
+            if p_contour.uv[0, -1] != p_contour.uv[0, 0] and p_contour.uv[1, -1] != p_contour.uv[1, 0]:
+                p_contour.add_uv(p_contour.uv[:, 0][:, None])  # Close the loops
+                p_contour.add_v(p_contour.v[:, 0][:, None])  # Close the loops
 
     # Calculate the combined wire length for the unconnected loops
     coil_parts[-1].combined_loop_length = 0
     for coil_part in coil_parts:
-        # coil_part.combined_loop_length = sum(arrayfun(@(x) 
-        #   sum(
-        #       vecnorm(
-        #           coil_part.contour_lines(x).v(:, 2:end) - 
-        #           coil_part.contour_lines(x).v(:, 1:end - 1)
-        #       )
-        #   ), 1:numel(coil_part.contour_lines)));
         combined_loop_length = sum(np.sum(np.linalg.norm(
             loop.v[:, 1:] - loop.v[:, :-1], axis=0)) for loop in coil_part.contour_lines)
         coil_part.combined_loop_length = combined_loop_length
@@ -178,12 +170,6 @@ def biot_savart_calc_b(wire_elements: np.ndarray, target_f: TargetField):
         dB = r_cross_I / (r_norm)[:, :, np.newaxis]
         b_field_part = mu0 / (4 * np.pi) * np.sum(dB, axis=1)
 
-        #################################
-        # MATLAB 3x257
-        # -3.2524e-9	-3.1937e-9	-2.9359e-9	-2.6999e-9 ...
-        # -1.2585e-8	-1.5238e-8	-1.3577e-8	-1.2096e-8 ...
-        # -9.7899e-9	-1.1245e-8	-1.0907e-8	-1.0509e-8 ...
-        #################################
         b_field += b_field_part
 
     # NOTE: Returning MATLAB 3xM layout
