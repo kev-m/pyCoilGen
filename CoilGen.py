@@ -271,15 +271,19 @@ def CoilGen(log, input=None):
                 matrix = top[index1]
                 top[index1] = matrix.T
 
+        if use_matlab_data:
+            assert (compare(coil_part.current_mat, m_current_mat))  # Pass!
+            assert (compare(coil_part.face_normal_mat, m_face_normal_mat))  # Pass!
+            assert (compare(coil_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat))  # Pass!
+        else:
+            assert (compare_contains(coil_part.current_mat, m_current_mat, strict=False))  # Pass
+            assert (compare_contains(coil_part.triangle_corner_coord_mat,
+                    m_triangle_corner_coord_mat, strict=False))  # Pass, Transposed
+            # assert (compare(coil_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat))  # Different order?
+
         assert (compare(coil_part.is_real_triangle_mat, m_is_real_triangle_mat))  # Pass
-        assert (compare_contains(coil_part.triangle_corner_coord_mat,
-                m_triangle_corner_coord_mat, strict=False))  # Pass, Transposed
-        ## assert (compare(coil_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat))  # Pass!
-        assert (compare_contains(coil_part.current_mat, m_current_mat, strict=False))  # Pass
-        ## assert (compare(coil_part.current_mat, m_current_mat))  # Pass!
         assert (compare(coil_part.area_mat, m_area_mat))  # Pass
         assert (compare_contains(coil_part.face_normal_mat, m_face_normal_mat, strict=False))  # Pass
-        ## assert (compare(coil_part.face_normal_mat, m_face_normal_mat))  # Pass!
         assert (compare(coil_part.current_density_mat, m_current_density_mat))  # Pass
 
         # Verify basis_elements
@@ -490,6 +494,8 @@ def CoilGen(log, input=None):
             c_contour.uv = m_contour.uv
     # =================================================
 
+    #np.save('debug/ygradient_coil_python_10.npy', coil_parts)
+
     #
     #####################################################
 
@@ -501,24 +507,12 @@ def CoilGen(log, input=None):
     # DEVELOPMENT: Remove this
     # DEBUG
     # Verify: Coil Part values: field_by_loops, loop_significance, combined_loop_field, combined_loop_length
-    m_contour_lines = m_c_part.contour_lines
-    m_field_by_loops = m_c_part.field_by_loops
-    m_loop_significance = m_c_part.loop_signficance
-    m_combined_loop_field = m_c_part.combined_loop_field
-    m_combined_loop_length = m_c_part.combined_loop_length
 
-    log.debug("coil_part.combined_loop_length == m_combined_loop_length: %s == %s", coil_part.combined_loop_length, m_combined_loop_length)
-    ##assert coil_part.combined_loop_length == m_combined_loop_length # Fail 97.776... != 97.673...
-    # log.debug("c_part.combined_loop_length == m_combined_loop_length:\n%s == %s",
-    #          c_part.combined_loop_length, m_combined_loop_length)
-
-    # Fail:  -1.85932732e-06  7.72842169e-06 -5.85194154e-06  1.63341836e-07
-    # is not -1.85931361e-06  7.72842169e-06 -5.84366084e-06  1.14979947e-07
-    assert compare(coil_part.field_by_loops, m_field_by_loops, double_tolerance=1e-5) # Pass!
-
-    # Fail: [0]: 1.3485584551763914 is not 1.3459361474796019
-    # assert compare(coil_part.loop_significance, m_loop_significance) # FAIL: 3.87...
-    log.debug(" Abs diff: %s", np.max(np.abs(coil_part.loop_significance - m_loop_significance)))  # Abs diff: 3.897...
+    assert len(coil_part.contour_lines) == len(m_c_part.contour_lines)
+    assert abs(coil_part.combined_loop_length - m_c_part.combined_loop_length) < 0.002 # 0.0005 # Pass
+    assert compare(coil_part.combined_loop_field, m_c_part.combined_loop_field, double_tolerance=5e-7) # Pass
+    assert compare(coil_part.loop_significance, m_c_part.loop_signficance, double_tolerance=0.005)
+    assert compare(coil_part.field_by_loops, m_c_part.field_by_loops, double_tolerance=2e-7) # Pass!
 
     # Compare updated contour lines
     for index1 in range(len(coil_part.contour_lines)):
@@ -538,16 +532,12 @@ def CoilGen(log, input=None):
         visualize_compare_contours(coil_mesh.uv, 800, 'images/contour2_p.png', coil_part.contour_lines)
         visualize_compare_contours(coil_mesh.uv, 800, 'images/contour2_m.png', m_contour_lines)
 
-    # Fail[0]:  3.18446247e-05 4.07537749e-05 2.68691780e-05 1.25697419e-05 3.19949827e-05
-    # is not    4.49879032e-05 5.86350389e-05 4.54653304e-05 3.18269683e-05 4.68614511e-05
-    # assert compare(coil_part.combined_loop_field, m_combined_loop_field, 1e-6)
-
-
     # Manual conclusion: Not identical, but close.
 
     # =================================================
     # HACK: Use MATLAB's contour_lines.v
     if use_matlab_data:
+        m_contour_lines = m_c_part.contour_lines
         log.warning("Using MATLAB's contour_lines1 in %s, line %d", __file__, get_linenumber())
         for index1, m_contour in enumerate(m_contour_lines):
             c_contour = coil_part.contour_lines[index1]
@@ -669,8 +659,9 @@ def CoilGen(log, input=None):
         m_group_centers = m_c_part.group_centers
         c_group_centers = coil_part.group_centers
 
-        ## assert compare(c_group_centers.uv, m_group_centers.uv)  # Fail, different group layout Pass!
-        ## assert compare(c_group_centers.v, m_group_centers.v)  # Fail, different group layout Pass!
+        if use_matlab_data == True:
+            assert compare(c_group_centers.uv, m_group_centers.uv)  # Fail, different group layout Pass!
+            assert compare(c_group_centers.v, m_group_centers.v)  # Fail, different group layout Pass!
 
         # Manual conclusion: Not identical, but close. Different paths, different group layouts.
 
@@ -834,7 +825,7 @@ if __name__ == "__main__":
         "make_cylndrical_pcb": 0,
         "max_allowed_angle_within_coil_track": 120,
         "min_allowed_angle_within_coil_track": 0.0001,
-        "min_loop_signifcance": 3,
+        "min_loop_significance": 3,
         "min_point_loop_number": 20,
         "normal_shift_length": 0.004,
         "normal_shift_smooth_factors": [2, 3, 2],
@@ -902,7 +893,7 @@ if __name__ == "__main__":
         "make_cylindrical_pcb": 1,
         "max_allowed_angle_within_coil_track": 120,
         "min_allowed_angle_within_coil_track": 0.0001,
-        "min_loop_signifcance": 1,
+        "min_loop_significance": 1,
         "min_point_loop_number": 20,
         "normal_shift_length": 0.025,
         "normal_shift_smooth_factors": [2, 3, 2],
