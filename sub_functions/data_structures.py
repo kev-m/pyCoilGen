@@ -346,10 +346,13 @@ class ContourLine(Shape3D):
 
 
 @dataclass
-class TopoGroup(Shape3D):
+class TopoGroup:                        # CoilPart.groups
     loops: List[ContourLine] = None     # Assigned in topological_loop_grouping
-    cutshape: List[Shape2D] = None
-    opened_loop: List[Shape3D] = None
+    cutshape: List[Shape2D] = None      # Assigned in interconnect_within_groups
+    opened_loop: List[Shape3D] = None   # Assigned in interconnect_within_groups
+
+@dataclass
+class ConnectedGroup(Shape3D):          # CoilPart.connected_group
     return_path: Shape3D = None         # Assigned in interconnect_within_groups
     spiral_in: Shape3D = None           # Assigned in interconnect_within_groups
     spiral_out: Shape3D = None          # Assigned in interconnect_within_groups
