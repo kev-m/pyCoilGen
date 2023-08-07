@@ -14,7 +14,8 @@ print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
-from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary
+from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber
+from helpers.extraction import load_matlab
 from sub_functions.data_structures import DataStructure, Mesh, CoilPart
 from sub_functions.read_mesh import create_unique_noded_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh, get_boundary_loop_nodes
@@ -269,6 +270,97 @@ def debug6():
     output = stlread_local('Geometry_Data/cylinder_radius500mm_length1500mm.stl')
     log.debug(" cylinder_radius500mm_length1500mm: vertices: %s, faces: %s, normals: %s", np.shape(output.vertices), np.shape(output.faces), np.shape(output.normals) )
 
+def test_interconnect_within_groups():
+    from sub_functions.interconnect_within_groups import interconnect_within_groups
+    mat_data = load_matlab('debug/ygradient_coil')
+    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
+    m_c_part = m_coil_parts
+    p_coil_parts = np.load('debug/ygradient_coil_python.npy', allow_pickle=True)
+
+    input_args = DataStructure(force_cut_selection=['high'], b_0_direction=[0, 0, 1], interconnection_cut_width=0.1)
+    coil_parts = interconnect_within_groups(p_coil_parts, input_args, m_c_part)
+
+    # And now!!
+    coil_part = coil_parts[0]
+
+    # Part groups
+    m_groups = m_c_part.groups
+    c_groups = coil_part.groups
+    assert len(m_groups) == len(c_groups)
+    for index1, m_group in enumerate(m_groups):
+        c_group = c_groups[index1]
+        for index2, m_loop in enumerate(m_group.opened_loop):
+            c_loop = c_group.opened_loop[index2]
+            assert compare(c_loop.uv, m_loop.uv)
+            assert compare(c_loop.v, m_loop.v)
+
+    # Connected Groups
+    m_connected_groups = m_c_part.connected_group
+    c_connected_groups = coil_part.connected_group
+    assert len(m_connected_groups) == len(c_connected_groups)
+    for index1, m_connected_group in enumerate(m_connected_groups):
+        c_connected_group = c_connected_groups[index1]
+
+        # MATLAB shape
+        visualize_vertex_connections(c_connected_group.uv.T, 800, f'images/connected_group_uv1_{index1}_p.png')
+        visualize_vertex_connections(m_connected_group.group_debug.uv.T, 800, f'images/connected_group_uv1_{index1}_m.png')
+
+        log.debug(" Here: uv values in %s, line %d", __file__, get_linenumber())
+
+        # Check....
+        log.debug(" c_connected_group.uv shape: %s", c_connected_group.uv.shape)
+        compare(c_connected_group.return_path.v, m_connected_group.return_path.v) # True
+        compare(c_connected_group.return_path.uv, m_connected_group.return_path.uv)
+
+        log.debug(" return_path.v shape: %s", c_connected_group.return_path.v.shape)
+        compare(c_connected_group.return_path.v, m_connected_group.return_path.v) # True
+        compare(c_connected_group.return_path.uv, m_connected_group.return_path.uv)
+
+        # Not the same shape: (3, 373) is not (3, 379)
+        log.debug(" spiral_in.v shape: %s", c_connected_group.spiral_in.v.shape)
+        log.debug(" spiral_in.v: %s", compare(c_connected_group.spiral_in.v, m_connected_group.group_debug.spiral_in.v))
+        log.debug(" spiral_in.uv: %s", compare(c_connected_group.spiral_in.uv, m_connected_group.group_debug.spiral_in.uv))
+
+        # Not the same shape: (3, 321) is not (3, 379)
+        log.debug(" spiral_out.v: %s", compare(c_connected_group.spiral_out.v, m_connected_group.group_debug.spiral_out.v))
+        log.debug(" spiral_out.uv: %s", compare(c_connected_group.spiral_out.uv, m_connected_group.group_debug.spiral_out.uv))
+
+        # Not the same shape: (3, 384) is not (3, 390)
+        log.debug(" compare uv: %s", compare(c_connected_group.uv, m_connected_group.uv))
+        log.debug(" compare v: %s", compare(c_connected_group.v, m_connected_group.v)) 
+
+        break
+
+
+def brute_test_process_raw_loops_brute():
+    from sub_functions.process_raw_loops import process_raw_loops
+
+    # MATLAB saved data
+    mat_data = load_matlab('debug/ygradient_coil')
+    mat_data_out = mat_data['coil_layouts'].out
+    m_coil_parts = mat_data_out.coil_parts
+    m_coil_part = m_coil_parts
+
+    # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
+    p_coil_parts = np.load('debug/ygradient_coil_python_10.npy', allow_pickle=True) 
+
+    input_args = DataStructure(smooth_flag=1, smooth_factor=1, min_loop_significance=1)
+    target_field = mat_data_out.target_field
+
+    debug_data = m_coil_part
+    ###################################################################################
+    # Function under test
+    coil_parts2 = process_raw_loops(p_coil_parts, input_args, target_field, debug_data)
+    ###################################################################################
+
+    # Checks:
+    coil_part = coil_parts2[0]
+    assert len(coil_part.contour_lines) == len(m_coil_part.contour_lines)
+    assert abs(coil_part.combined_loop_length - m_coil_part.combined_loop_length) < 0.0005 # Pass
+    assert compare(coil_part.combined_loop_field, m_coil_part.combined_loop_field, double_tolerance=5e-7) # Pass
+    assert compare(coil_part.loop_significance, m_coil_part.loop_signficance, double_tolerance=0.005)
+    assert compare(coil_part.field_by_loops, m_coil_part.field_by_loops, double_tolerance=2e-7) # Pass!
+
 
 if __name__ == "__main__":
     # Set up logging
@@ -276,9 +368,12 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     #debug1() # Planar mesh
-    debug1b() # Planar mesh
+    # debug1b() # Planar mesh
     # debug2() # Planar mesh with a hole
     # debug3() # Planar mesh from file
     # debug4() # Cylindrical mesh
     # debug5() # Refine a simple 1 face mesh into four.
     # debug6() # Examine cylinder_radius500mm_length1500mm.stl
+    #test_add_nearest_ref_point_to_curve()
+    #test_interconnect_within_groups()
+    brute_test_process_raw_loops_brute()
