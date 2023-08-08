@@ -385,7 +385,7 @@ def test_interconnect_among_groups():
     # Wire path
     for index1 in range(len(coil_parts)):
         c_wire_path = coil_parts[index1].wire_path
-        m_wire_path = m_c_part.wire_path
+        m_wire_path = m_c_part.wire_path1
 
         visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_p.png')
         visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_m.png')
