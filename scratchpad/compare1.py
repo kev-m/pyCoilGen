@@ -33,6 +33,8 @@ def print_structure(mat_input, indent_char = ' ', indent = None):
             if fields is not None:
                 index = 0
                 for field_name in fields:
+                    if field_name == 'loop_groups':
+                        log.debug(' Found loop_groups - now go deeper!')
                     print(f'{indent}: {field_name}')
                     try:
                         next_item = item.__dict__[field_name]
@@ -152,8 +154,8 @@ def print_config(x_channel):
 if __name__ == "__main__":
     # Set up logging
     log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.DEBUG)
-    # logging.basicConfig(level=logging.INFO)
+    #logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     # 1. Load Matlab
 
@@ -199,6 +201,6 @@ if __name__ == "__main__":
     #log.debug(" -- b: %s", b)
 
     # 2. Extract input parameters structure
-    ## print_config(x_channel)
+    # print_config(x_channel)
 
     # 3. Call CoilGen code with equivalent input parameters
