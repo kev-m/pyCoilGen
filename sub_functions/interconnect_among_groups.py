@@ -178,9 +178,6 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part =
                             assert compare(grouptracks_to_connect[couple_group2].uv, m_sphere_base.debug_open2.input.curve_in.uv)
                             assert compare(grouptracks_to_connect[couple_group2].v, m_sphere_base.debug_open2.input.curve_in.v)
 
-                        if connect_ind == 2 and group_ind == 1:
-                            log.debug(" Now! This one!") # Not the same shape: (2, 766) is not (2, 767), below
-
                         opened_group_1, cut_shape_1, _ = open_loop_with_3d_sphere(
                             grouptracks_to_connect[couple_group1], target_point, input_args.interconnection_cut_width)
 
