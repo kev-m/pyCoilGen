@@ -122,13 +122,15 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         loop_groups = coil_part.loop_groups # Use the np.array from here on.
 
         # Order the groups based on the number of loops
-        sort_indices = np.argsort([len(group) for group in loop_groups])[::-1]
-        # Sort each group level
-        for group_index, group_level in enumerate(group_levels):
-            sorted_group_level =  group_level.copy()
-            for index in range(len(group_level)):
-                sorted_group_level[index] = group_level[sort_indices[index]]
-            group_levels[group_index] = sorted_group_level
+        len_array = [len(group) for group in loop_groups]
+        if min(len_array) < max(len_array):
+            sort_indices = np.argsort(len_array)[::-1]
+            # Sort each group level
+            for group_index, group_level in enumerate(group_levels):
+                sorted_group_level =  group_level.copy()
+                for index in range(len(group_level)):
+                    sorted_group_level[index] = group_level[sort_indices[index]]
+                group_levels[group_index] = sorted_group_level
 
         # Renumber (=rename) the groups (also in the levels)
         renamed_group_levels = group_levels.copy()
