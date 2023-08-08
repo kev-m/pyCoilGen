@@ -10,7 +10,11 @@ from sub_functions.data_structures import Shape3D
 
 log = logging.getLogger(__name__)
 
-def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, boundary_threshold: int):
+# TODO: Remove this debug data
+from helpers.visualisation import compare
+
+def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, boundary_threshold: int, debug_data = None):
+#def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, boundary_threshold: int, debug_data = None):
     """
     Remove points with identical uv coordinates from a loop, even with some additional more points around.
 
@@ -20,8 +24,8 @@ def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, bounda
         boundary_threshold (int): The number of additional points around each identical point to be removed.
 
     Returns:
-        Shape3D: The updated loop data after removing the specified points.
-
+        loop_out_uv (Shape2D): The updated 2D loop data after removing the specified points. 
+        loop_out_v (Shape3D): The updated 3D loop data after removing the specified points. 
     """
 
     rep_u = np.tile(loop.uv[0, :], (points_to_remove.shape[1], 1))
@@ -30,24 +34,46 @@ def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, bounda
     rep_u2 = np.tile(points_to_remove[0, :], (loop.uv.shape[1], 1))
     rep_v2 = np.tile(points_to_remove[1, :], (loop.uv.shape[1], 1))
 
-    identical_point_inds = np.where((rep_u == rep_u2.T) & (rep_v == rep_v2.T))
-    identical_point_inds = identical_point_inds[0]
+    # DEBUG
+    if debug_data is not None:
+        assert compare(rep_u, debug_data.rep_u)
+        assert compare(rep_v, debug_data.rep_v)
+        assert compare(rep_u2, debug_data.rep_u2)
+        assert compare(rep_v2, debug_data.rep_v2)
 
-    below_inds = np.arange(min(identical_point_inds) - boundary_threshold, min(identical_point_inds))
-    below_inds[below_inds < 0] = below_inds[below_inds < 0] + loop.uv.shape[1]
+    arr1 = rep_u == rep_u2.T
+    arr2 = rep_v == rep_v2.T
+    arr3 = arr1 & arr2
 
-    abow_inds = np.arange(max(identical_point_inds), max(identical_point_inds) + boundary_threshold + 1)
-    abow_inds[abow_inds >= loop.uv.shape[1]] = abow_inds[abow_inds >= loop.uv.shape[1]] - loop.uv.shape[1]
+    # DEBUG
+    if debug_data is not None:
+        assert compare(arr1.astype(int), debug_data.arr1)
+        assert compare(arr2.astype(int), debug_data.arr2)
+        assert compare(arr3.astype(int), debug_data.arr3)
 
-    # Add more points as a "boundary threshold"
-    full_point_inds_to_remove = np.concatenate((below_inds, identical_point_inds, abow_inds))
+    identical_point_inds1 = np.where(arr3)
+    identical_point_inds = identical_point_inds1[1] # Magic number chose to reproduce MATLAB results
 
-    # Use np.in1d to find the indices to keep
-    inds_to_keep = np.arange(loop.uv.shape[1])[~np.in1d(np.arange(loop.uv.shape[1]), full_point_inds_to_remove)]
+    if len(identical_point_inds) > 0:
+        below_inds = np.arange(min(identical_point_inds) - boundary_threshold, min(identical_point_inds)+1)
+        below_inds[below_inds < 0] = below_inds[below_inds < 0] + loop.uv.shape[1]
 
-    # Extract the loop with the remaining points
-    loop_out_uv = loop.uv[:, inds_to_keep]
-    loop_out_v = loop.v[:, inds_to_keep]
+        abow_inds = np.arange(max(identical_point_inds), max(identical_point_inds) + boundary_threshold + 1)
+        abow_inds[abow_inds >= loop.uv.shape[1]] = abow_inds[abow_inds >= loop.uv.shape[1]] - loop.uv.shape[1]
+
+        # Add more points as a "boundary threshold"
+        full_point_inds_to_remove = np.concatenate((below_inds, identical_point_inds, abow_inds))
+
+        # Use np.in1d to find the indices to keep
+        inds_to_keep = np.arange(loop.uv.shape[1])[~np.in1d(np.arange(loop.uv.shape[1]), full_point_inds_to_remove)]
+
+        # Extract the loop with the remaining points
+        loop_out_uv = loop.uv[:, inds_to_keep]
+        loop_out_v = loop.v[:, inds_to_keep]
+    else:
+        log.debug("No points removed!")
+        loop_out_uv = loop.uv
+        loop_out_v = loop.v
 
     return loop_out_uv, loop_out_v
 
