@@ -735,7 +735,10 @@ def CoilGen(log, input=None):
 
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
-        coil_parts = interconnect_among_groups(coil_parts, input_args, m_c_part)
+        if use_matlab_data:
+            coil_parts = interconnect_among_groups(coil_parts, input_args, m_c_part)
+        else:
+            coil_parts = interconnect_among_groups(coil_parts, input_args)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -762,8 +765,10 @@ def CoilGen(log, input=None):
 
 
             if use_matlab_data:
-                assert (compare(c_wire_path.uv, m_wire_path.uv))    # ???
+                assert (compare(c_wire_path.uv, m_wire_path.uv))    # Fail
                 assert (compare(c_wire_path.v, m_wire_path.v))      # ???
+
+        # Manual conclusion: Fail, maybe - the Python connections look a bit different to the MATLAB ones in a few places
         #
         #####################################################
 
