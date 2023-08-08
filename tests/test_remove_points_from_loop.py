@@ -25,7 +25,7 @@ def test_remove_points_from_loop():
 
     for index1, level in enumerate(result['levels']):
         for index2, connection in enumerate(level['connections']):
-            log.debug(" Level: %d, connection: %d", index1, index2)
+            #log.debug(" Level: %d, connection: %d", index1, index2)
             inputs = connection['inputs'] 
             outputs = connection['outputs']
 
@@ -39,7 +39,7 @@ def test_remove_points_from_loop():
 
             assert compare(np.array(loop_out_uv), outputs.loop_out_uv)
             assert compare(np.array(loop_out_v), outputs.loop_out_v)
-            log.debug(" Result: %s", compare(np.array(loop_out_uv), outputs.loop_out_uv))
+            #log.debug(" Result: %s", compare(np.array(loop_out_uv), outputs.loop_out_uv))
 
 
 def make_data(filename):
