@@ -6,14 +6,17 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart, Shape3D, Cuts
+from sub_functions.data_structures import CoilPart, Shape3D, Cuts, DataStructure
 from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
 from sub_functions.remove_points_from_loop import remove_points_from_loop
 
 log = logging.getLogger(__name__)
 
+# TODO: DEBUG remove debug imports
+from helpers.visualisation import compare
 
-def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
+# TODO: DEBUG remove reference to m_c_part
+def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part = None):
     """
     Interconnects groups to generate a single wire track.
 
@@ -25,6 +28,10 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
         None (Modifies the coil_parts list in-place).
 
     """
+    if m_c_part is not None:
+        m_top_debug = m_c_part.interconnect_among_groups
+        m_level_debug = m_top_debug.level_debug
+        m_level_connections = m_level_debug.connections
 
     # Local parameters
     additional_points_to_remove = 2
@@ -36,16 +43,21 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
         # Gather all return points to dismiss them for the search of group cut points
         all_cut_points = np.concatenate([group.return_path.uv for group in connected_group_buff], axis=1)
 
+        # DEBUG
+        if m_c_part is not None:
+            assert compare(all_cut_points, m_top_debug.all_cut_points) # Pass
+
         # Group fusions
-        level_hierarchy = [len(coil_part.level_positions[i]) for i in range(len(coil_part.level_positions))]
+        level_hierarchy = [len(coil_part.level_positions[i]) for i in range(len(coil_part.level_positions))] # [Y]
 
         for level_ind in range(max(level_hierarchy), -1, -1):
             levels_to_process = [idx for idx, value in enumerate(level_hierarchy) if value == level_ind]
 
             # Interconnect one level into a single group
-            for single_level_ind in range(len(levels_to_process)):
+            for single_level_ind in range(len(levels_to_process)): # 1 level
+
                 current_level = levels_to_process[single_level_ind]
-                groups_to_connect = coil_part.group_levels[current_level]
+                groups_to_connect = coil_part.group_levels[current_level].copy()
                 group_len = len(groups_to_connect)
 
                 # Select the current host group of the level
@@ -56,20 +68,39 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                     groups_to_connect.append(current_top_group)
                     is_enclosing.append(1)
 
+                if m_c_part is not None:
+                    assert compare(np.array(is_enclosing), m_level_debug.is_enclosing) # [Y]
+
                 # Make the n-1 interconnections in an optimal way resulting in one track for that level
                 num_connections_to_do = group_len - 1
+
+                if m_c_part is not None:
+                    assert num_connections_to_do == m_level_debug.num_connections_to_do
 
                 if num_connections_to_do > 0:
                     coil_part.opening_cuts_among_groups = [Cuts() for _ in range(num_connections_to_do)]
 
-                    for connect_ind in range(num_connections_to_do):
+                    for connect_ind in range(num_connections_to_do): # 3
+                        # DEBUG
+                        if m_c_part is not None:
+                            m_connection_debug = m_level_connections[connect_ind]
+
                         # Get the tracks to connect
+                        # M: In each loop, has 
                         grouptracks_to_connect = [connected_group_buff[group] for group in groups_to_connect]
+
+                        if m_c_part is not None:
+                            assert len(groups_to_connect) == len(m_connection_debug.grouptracks_to_connect1)
+                            for index, m_track in enumerate(m_connection_debug.grouptracks_to_connect1):
+                                p_track = grouptracks_to_connect[index]
+                                assert compare(p_track.uv,m_track.uv) # [Y]
+
 
                         # Remove the return_path for the search of mutual group cuts
                         grouptracks_to_connect_without_returns = [connected_group_buff[group] for group in groups_to_connect]
 
                         for group_ind in range(group_len):
+                            log.debug(" -- Removing points for: connect_ind: %d, group_ind: %d", connect_ind, group_ind)
                             grouptracks_to_connect_without_returns[group_ind].uv, grouptracks_to_connect_without_returns[group_ind].v = remove_points_from_loop(
                                 grouptracks_to_connect[group_ind], all_cut_points, additional_points_to_remove
                             )
@@ -78,10 +109,17 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                                  grouptracks_to_connect_without_returns[group_ind].v[2, :]]
                             )
 
+
+                            # DEBUG
+                            if m_c_part is not None:
+                                assert compare(grouptracks_to_connect_without_returns[group_ind].v, m_connection_debug.grouptracks_to_connect_without_returns[group_ind].v)
+                                assert compare(grouptracks_to_connect_without_returns[group_ind].uv, m_connection_debug.grouptracks_to_connect_without_returns[group_ind].uv)
+
+
                         # Select the return paths of those interconnected groups for later
                         min_group_dists = np.zeros((group_len, group_len))
                         min_group_inds = np.zeros((group_len, group_len), dtype=int)
-                        min_pos_group = Shape3D(v=[[None for _ in range(group_len)] for _ in range(group_len)],
+                        min_pos_group = DataStructure(v=[[None for _ in range(group_len)] for _ in range(group_len)],
                                                 uv=[[None for _ in range(group_len)] for _ in range(group_len)])
 
                         # Find the minimal distance positions between the groups and the points with minimal distance
@@ -109,8 +147,8 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                                     min_group_dists[min_group_dists == 0] = np.inf
 
                         # Select the pair of groups with the shortest respective distance
-                        min_dist_couple = min_group_dists == np.min(min_group_dists)
-                        min_dist_couple = np.where(min_dist_couple)
+                        min_dist_couple1 = min_group_dists == np.min(min_group_dists)
+                        min_dist_couple = np.where(min_dist_couple1)
                         couple_group1, couple_group2 = min_dist_couple[0][0], min_dist_couple[1][0]
 
                         # Open the loop
@@ -161,8 +199,9 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                         group_len = len(groups_to_connect)
 
         # Select the full track as the final return
-        _, is_final_ind = max([(len(connected_group_buff[group].v[0]), idx) for idx, group in enumerate(groups_to_connect)])
-        full_track = connected_group_buff[groups_to_connect[is_final_ind]]
+        arr1 = [(len(connected_group_buff[idx].v[0]), idx) for idx, group in enumerate(connected_group_buff)]
+        _, is_final_ind = max(arr1)
+        full_track = connected_group_buff[is_final_ind]
         # Shift the open ends to the boundaries of the coil
         min_ind = np.argmax(full_track.v[2, :])
         full_track.v = np.roll(full_track.v, -min_ind, axis=1)
