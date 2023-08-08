@@ -25,8 +25,7 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part =
         input_args (Any): The input argument (structure) used in the MATLAB function (not used in the Python function).
 
     Returns:
-        None (Modifies the coil_parts list in-place).
-
+        coil_parts (List[CoilPart]): The updated CoilParts list.
     """
     if m_c_part is not None:
         m_top_debug = m_c_part.interconnect_among_groups
