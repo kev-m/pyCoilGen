@@ -293,6 +293,21 @@ def test_interconnect_within_groups():
             c_loop = c_group.opened_loop[index2]
             assert compare(c_loop.uv, m_loop.uv)
             assert compare(c_loop.v, m_loop.v)
+        
+        """
+        shape_name = 'cutshape'
+        for index2, m_shape in enumerate(m_group.cutshape):
+            p_shape = c_group.cutshape[index2]
+            visualize_vertex_connections(p_shape.uv.T, 800, f'images/connected_group_{shape_name}_uv_{index1}_{index2}_p.png')
+            visualize_vertex_connections(m_shape.uv.T, 800, f'images/connected_group_{shape_name}_uv_{index1}_{index2}_m.png')
+
+        shape_name = 'opened_loop'
+        for index2, m_shape in enumerate(m_group.opened_loop):
+            p_shape = c_group.opened_loop[index2]
+            visualize_vertex_connections(p_shape.uv.T, 800, f'images/connected_group_{shape_name}_uv_{index1}_{index2}_p.png')
+            visualize_vertex_connections(m_shape.uv.T, 800, f'images/connected_group_{shape_name}_uv_{index1}_{index2}_m.png')
+        """
+
 
     # Connected Groups
     m_connected_groups = m_c_part.connected_group
@@ -308,10 +323,6 @@ def test_interconnect_within_groups():
         log.debug(" Here: uv values in %s, line %d", __file__, get_linenumber())
 
         # Check....
-        log.debug(" c_connected_group.uv shape: %s", c_connected_group.uv.shape)
-        compare(c_connected_group.return_path.v, m_connected_group.return_path.v) # True
-        compare(c_connected_group.return_path.uv, m_connected_group.return_path.uv)
-
         log.debug(" return_path.v shape: %s", c_connected_group.return_path.v.shape)
         compare(c_connected_group.return_path.v, m_connected_group.return_path.v) # True
         compare(c_connected_group.return_path.uv, m_connected_group.return_path.uv)
@@ -350,7 +361,7 @@ def brute_test_process_raw_loops_brute():
     debug_data = m_coil_part
     ###################################################################################
     # Function under test
-    coil_parts2 = process_raw_loops(p_coil_parts, input_args, target_field, debug_data)
+    coil_parts2 = process_raw_loops(p_coil_parts, input_args, target_field)
     ###################################################################################
 
     # Checks:
@@ -361,6 +372,23 @@ def brute_test_process_raw_loops_brute():
     assert compare(coil_part.loop_significance, m_coil_part.loop_signficance, double_tolerance=0.005)
     assert compare(coil_part.field_by_loops, m_coil_part.field_by_loops, double_tolerance=2e-7) # Pass!
 
+def test_interconnect_among_groups():
+    from sub_functions.interconnect_among_groups import interconnect_among_groups
+    mat_data = load_matlab('debug/ygradient_coil')
+    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
+    m_c_part = m_coil_parts
+    p_coil_parts = np.load('debug/ygradient_coil_python_15_true.npy', allow_pickle=True)
+
+    input_args = DataStructure(interconnection_cut_width=0.1)
+    coil_parts = interconnect_among_groups(p_coil_parts, input_args, m_c_part)
+
+    # Wire path
+    for index1 in range(len(coil_parts)):
+        c_wire_path = coil_parts[index1].wire_path
+        m_wire_path = m_c_part.wire_path
+
+        visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_p.png')
+        visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_m.png')
 
 if __name__ == "__main__":
     # Set up logging
@@ -375,5 +403,6 @@ if __name__ == "__main__":
     # debug5() # Refine a simple 1 face mesh into four.
     # debug6() # Examine cylinder_radius500mm_length1500mm.stl
     #test_add_nearest_ref_point_to_curve()
+    # brute_test_process_raw_loops_brute()
     #test_interconnect_within_groups()
-    brute_test_process_raw_loops_brute()
+    test_interconnect_among_groups()
