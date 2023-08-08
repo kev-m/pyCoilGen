@@ -24,16 +24,20 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
     Returns:
         opened_loop (Shape3D), uv_cut (np.ndarray), cut_points (Shape3D): The opened loop, 2D contour of the cut shape, and cut points.
     """
-    curve_points = curve_points_in.copy()
+    curve_points = curve_points_in.copy() # Copy so that edits of curve_points do not affect source curve_points_in
 
     # Remove doubled points from the curve
-    indices_to_delete = np.where(np.linalg.norm(curve_points.v[:, 1:] - curve_points.v[:, :-1], axis=0) < 1e-10)
-    # Always remove last point
-    curve_points.v = curve_points.v[:, :-1]
-    curve_points.uv = curve_points.uv[:, :-1]
+    diff_array = curve_points.v[:, 1:] - curve_points.v[:, :-1]
+    # Wrap the diff, like MATLAB does
+    wrapped = curve_points.v[:, 0] - curve_points.v[:, -1]
+    wrapped_array = [[wrapped[0]],[wrapped[1]],[wrapped[2]]] # MATLAB shape
+    diff_array = np.hstack((diff_array, wrapped_array))
+    diff_array_norm = np.linalg.norm(diff_array, axis=0)
+    indices_to_delete = np.where(abs(diff_array_norm) < 1e-10)
 
-    np.delete(curve_points.v, indices_to_delete)
-    np.delete(curve_points.uv, indices_to_delete)
+    if len(indices_to_delete[0]) > 0:
+        curve_points.v = np.delete(curve_points.v, indices_to_delete, axis=1)
+        curve_points.uv = np.delete(curve_points.uv, indices_to_delete, axis=1)
     curve_points.number_points = curve_points.v.shape[1]
 
     # Add a point within the curve which has the shortest distance to the sphere
