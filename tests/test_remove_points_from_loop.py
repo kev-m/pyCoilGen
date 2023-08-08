@@ -20,9 +20,6 @@ from sub_functions.remove_points_from_loop import remove_points_from_loop
 def test_remove_points_from_loop():
     result = np.load('tests/test_data/test_remove_points_from_loop1.npy', allow_pickle=True)[0]
 
-    # Detail debug data
-    debug_data = np.load('tests/test_data/test_remove_points_from_loop1_debug.npy', allow_pickle=True)[0]
-
     for index1, level in enumerate(result['levels']):
         for index2, connection in enumerate(level['connections']):
             #log.debug(" Level: %d, connection: %d", index1, index2)
@@ -34,8 +31,7 @@ def test_remove_points_from_loop():
             boundary_threshold = inputs.boundary_threshold
 
             # Function under test
-            connection_debug = debug_data['levels'][index1]
-            loop_out_uv, loop_out_v = remove_points_from_loop(loop, points_to_remove, boundary_threshold, connection_debug['connections'][index2])
+            loop_out_uv, loop_out_v = remove_points_from_loop(loop, points_to_remove, boundary_threshold)
 
             assert compare(np.array(loop_out_uv), outputs.loop_out_uv)
             assert compare(np.array(loop_out_v), outputs.loop_out_v)
@@ -58,16 +54,6 @@ def make_data(filename):
             level_entry['connections'].append(connection_entry)
         result['levels'].append(level_entry)
     np.save('tests/test_data/test_remove_points_from_loop1.npy', [result])
-
-    # Debug data for remove_points_from_loop
-    result = {'levels' : []}
-    for index1, level_debug in enumerate(top_debug.connections):
-        level_entry = {'connections' : []}
-        for index2, remove_debug in enumerate(level_debug.remove_points_debug):
-            level_entry['connections'].append(remove_debug)
-        result['levels'].append(level_entry)
-    np.save('tests/test_data/test_remove_points_from_loop1_debug.npy', [result])
-
 
 if __name__ == "__main__":
     import logging

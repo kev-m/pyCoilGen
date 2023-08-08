@@ -13,8 +13,7 @@ log = logging.getLogger(__name__)
 # TODO: Remove this debug data
 from helpers.visualisation import compare
 
-def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, boundary_threshold: int, debug_data = None):
-#def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, boundary_threshold: int, debug_data = None):
+def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, boundary_threshold: int):
     """
     Remove points with identical uv coordinates from a loop, even with some additional more points around.
 
@@ -34,22 +33,9 @@ def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, bounda
     rep_u2 = np.tile(points_to_remove[0, :], (loop.uv.shape[1], 1))
     rep_v2 = np.tile(points_to_remove[1, :], (loop.uv.shape[1], 1))
 
-    # DEBUG
-    if debug_data is not None:
-        assert compare(rep_u, debug_data.rep_u)
-        assert compare(rep_v, debug_data.rep_v)
-        assert compare(rep_u2, debug_data.rep_u2)
-        assert compare(rep_v2, debug_data.rep_v2)
-
     arr1 = rep_u == rep_u2.T
     arr2 = rep_v == rep_v2.T
     arr3 = arr1 & arr2
-
-    # DEBUG
-    if debug_data is not None:
-        assert compare(arr1.astype(int), debug_data.arr1)
-        assert compare(arr2.astype(int), debug_data.arr2)
-        assert compare(arr3.astype(int), debug_data.arr3)
 
     identical_point_inds1 = np.where(arr3)
     identical_point_inds = identical_point_inds1[1] # Magic number chose to reproduce MATLAB results
