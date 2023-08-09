@@ -136,19 +136,16 @@ def visualize_vertex_connections(vertices2_or_3d, image_x_size, image_path, boun
     """
     if boundaries is not None:
         shape_edges = np.shape(boundaries)
-        log.debug(" faces shape: %s", shape_edges)
+        #log.debug(" faces shape: %s", shape_edges)
         if len(shape_edges) == 3:
             log.debug(" Edges shape: Extracting sub-array")
             boundaries = boundaries[0]
             log.debug(" new edges shape: %s", np.shape(boundaries))
-    else:
-        log.debug(" Edges shape: None")
 
     if vertices2_or_3d.shape[1] == 3:
         vertices_2d = vertices2_or_3d[:, :2]
     else:
         vertices_2d = vertices2_or_3d
-    log.debug(" vertices shape: %s", vertices_2d.shape)
     # Find the midpoint of all vertices
     midpoint = np.mean(vertices_2d, axis=0)
 
