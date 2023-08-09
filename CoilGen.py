@@ -37,8 +37,8 @@ from sub_functions.topological_loop_grouping import topological_loop_grouping
 from sub_functions.calculate_group_centers import calculate_group_centers
 from sub_functions.interconnect_within_groups import interconnect_within_groups
 from sub_functions.interconnect_among_groups import interconnect_among_groups
+from sub_functions.shift_return_paths import shift_return_paths
 """
-from shift_return_paths import shift_return_paths
 from generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
 from create_sweep_along_surface import create_sweep_along_surface
 from calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
@@ -731,6 +731,7 @@ def CoilGen(log, input=None):
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
         coil_parts = interconnect_among_groups(coil_parts, input_args)
+        # np.save('debug/ygradient_coil_python_16_true.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -764,13 +765,13 @@ def CoilGen(log, input=None):
         #
         #####################################################
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
-
         # Connect the groups and shift the return paths over the surface
         print('Shift the return paths over the surface:')
         coil_parts = shift_return_paths(coil_parts, input_args)
+
+        # WIP
+        solution.coil_parts = coil_parts
+        return solution
 
         # Create Cylindrical PCB Print
         print('Create PCB Print:')
