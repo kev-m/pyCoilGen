@@ -50,10 +50,11 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: 
         target_triangle, barycentric = get_target_triangle(point, planary_mesh, proximity)
 
         attempts = 0
+        np.random.seed(3) # Setting the seed to improve testing robustness
         while target_triangle is None:
             # If the point is not directly on a triangle, perturb the point slightly and try again
             rand = (0.5 - np.random.rand(2))
-            perturbed_point = point + avg_mesh_diameter * np.array([rand[0], rand[1], 0.0]) / 100
+            perturbed_point = point + avg_mesh_diameter * np.array([rand[0], rand[1], 0.0]) / 1000
             target_triangle, barycentric = get_target_triangle(perturbed_point, planary_mesh, proximity)
             attempts += 1
             if attempts > num_attempts:

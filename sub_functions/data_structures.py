@@ -61,7 +61,7 @@ class Mesh:
         if trimesh_obj is not None:
             self.trimesh_obj = trimesh_obj
         elif vertices is not None and faces is not None:
-            self.trimesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
+            self.trimesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
         else:
             raise ValueError("Either vertices and faces, or trimesh_obj must be provided.")
 
@@ -346,16 +346,25 @@ class ContourLine(Shape3D):
 
 
 @dataclass
-class TopoGroup(Shape3D):
+class TopoGroup:                        # CoilPart.groups
     loops: List[ContourLine] = None     # Assigned in topological_loop_grouping
-    cutshape: List[Shape2D] = None
-    opened_loop: List[Shape3D] = None
+    cutshape: List[Shape2D] = None      # Assigned in interconnect_within_groups
+    opened_loop: List[Shape3D] = None   # Assigned in interconnect_within_groups
+
+@dataclass
+class ConnectedGroup(Shape3D):          # CoilPart.connected_group
+    # uv: np.ndarray = None             # 2D shape (2,n) Assigned in interconnect_within_groups
+    # v: np.ndarray = None              # 3D shape (3,n) Assigned in interconnect_within_groups
     return_path: Shape3D = None         # Assigned in interconnect_within_groups
     spiral_in: Shape3D = None           # Assigned in interconnect_within_groups
     spiral_out: Shape3D = None          # Assigned in interconnect_within_groups
-    # uv: np.ndarray = None             # 2D shape (2,n) Assigned in interconnect_within_groups
-    # v: np.ndarray = None              # 3D shape (3,n) Assigned in interconnect_within_groups
+    unrolled_coords: np.ndarray = None  # 3D shape (3,n) Assigned in interconnect_among_groups
 
+
+@dataclass
+class Cuts():
+    cut1 : np.ndarray = None            # Cut data (interconnect_among_groups)
+    cut2 : np.ndarray = None            # Cut data (interconnect_among_groups)
 
 @dataclass
 class CoilPart:
@@ -377,6 +386,8 @@ class CoilPart:
     groups: List[TopoGroup] = None          # Topological groups (topological_loop_grouping)
     group_centers: List[Shape3D] = None     # The centre of each group (calculate_group_centers)
     connected_group: List[TopoGroup] = None  # Connected topological groups (interconnect_within_groups)
+    opening_cuts_among_groups:List[Cuts] = None  # ??? (interconnect_among_groups)
+    wire_path : Shape3D = None              # The shape of the wire track (interconnect_among_groups)
 
 
 class CoilSolution:

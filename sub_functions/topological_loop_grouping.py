@@ -13,6 +13,12 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
     """
     Group the contour loops in topological order.
 
+    Initialises the following properties of a CoilPart:
+        - loop_groups: ?
+        - group_levels: 
+        - level_positions: ?
+        - groups: ?
+
     Args:
         coil_parts (List[CoilPart]): List of CoilPart structures, each containing contour_lines.
         input_args: The input arguments (structure).
@@ -116,10 +122,15 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         loop_groups = coil_part.loop_groups # Use the np.array from here on.
 
         # Order the groups based on the number of loops
-        sort_indices = np.argsort([len(group) for group in loop_groups])[::-1]
-        # Sort each group level
-        for group_index, group_level in enumerate(group_levels):
-            group_levels[group_index] = [group_level[sort_idex] for sort_idex in sort_indices]
+        len_array = [len(group) for group in loop_groups]
+        if min(len_array) < max(len_array):
+            sort_indices = np.argsort(len_array)[::-1]
+            # Sort each group level
+            for group_index, group_level in enumerate(group_levels):
+                sorted_group_level =  group_level.copy()
+                for index in range(len(group_level)):
+                    sorted_group_level[index] = group_level[sort_indices[index]]
+                group_levels[group_index] = sorted_group_level
 
         # Renumber (=rename) the groups (also in the levels)
         renamed_group_levels = group_levels.copy()
@@ -128,13 +139,13 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
                 for renamed_index in range(len(loop_groups)):
                     if group_levels[iiii][level_index] in loop_groups[renamed_index]:
                         renamed_group_levels[iiii][level_index] = renamed_index
+                        break
 
-        # Resort parallel_levels to new group names
+        # Re-sort parallel_levels to new group names
         renamed_group_levels = sorted(list(set(tuple(level) for level in renamed_group_levels)))
         group_levels = [list(level) for level in renamed_group_levels]
 
-        assert len(group_levels) == 1 # MATLAB cell is always has 1 element
-        coil_part.group_levels = group_levels[0]
+        coil_part.group_levels = np.array(group_levels)
 
         # Find for each parallel level the groups that contain that level
         loops_per_level = []
