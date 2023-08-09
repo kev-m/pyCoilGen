@@ -252,8 +252,8 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part =
         full_track = connected_group_buff[is_final_ind]
         # Shift the open ends to the boundaries of the coil
         min_ind = np.argmax(full_track.v[2, :])
-        full_track.v = np.roll(full_track.v, -min_ind, axis=1)
-        full_track.uv = np.roll(full_track.uv, -min_ind, axis=1)
+        full_track.v = np.roll(full_track.v, -min_ind-1, axis=1)
+        full_track.uv = np.roll(full_track.uv, -min_ind-1, axis=1)
 
         # Assign the outputs
         coil_part.wire_path = full_track
