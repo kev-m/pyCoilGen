@@ -711,7 +711,6 @@ def CoilGen(log, input=None):
                 visualize_vertex_connections(m_connected_group.uv.T, 800, f'images/connected_group_uv_{index1}_m.png')
 
             # Check....
-            log.debug(" Here: uv values in %s, line %d", __file__, get_linenumber())
             if use_matlab_data:
                 assert compare(c_connected_group.return_path.v, m_connected_group.return_path.v)
                 assert compare(c_connected_group.return_path.uv, m_connected_group.return_path.uv)
@@ -765,10 +764,10 @@ def CoilGen(log, input=None):
 
 
             if use_matlab_data:
-                assert (compare(c_wire_path.uv, m_wire_path.uv))    # Fail
-                assert (compare(c_wire_path.v, m_wire_path.v))      # ???
+                assert (compare(c_wire_path.uv, m_wire_path.uv))    # Pass
+                assert (compare(c_wire_path.v, m_wire_path.v))      # Pass
 
-        # Manual conclusion: Fail, maybe - the Python connections look a bit different to the MATLAB ones in a few places
+        # Manual conclusion: Pass, when using MATLAB data
         #
         #####################################################
 
