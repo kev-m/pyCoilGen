@@ -138,7 +138,7 @@ class Mesh:
         Returns:
             ndarray: An array of vertex normals with shape (num_faces, 3).
         """
-        return self.trimesh_obj.vertex_normals
+        return self.trimesh_obj.vertex_normals.view(np.ndarray)
 
     def display(self):
         """
