@@ -61,7 +61,7 @@ class Mesh:
         if trimesh_obj is not None:
             self.trimesh_obj = trimesh_obj
         elif vertices is not None and faces is not None:
-            self.trimesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
+            self.trimesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
         else:
             raise ValueError("Either vertices and faces, or trimesh_obj must be provided.")
 
