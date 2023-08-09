@@ -676,11 +676,7 @@ def CoilGen(log, input=None):
 
         # Interconnect the single groups
         print('Interconnect the single groups:')
-        log.debug("--- here ---")
-        if use_matlab_data:
-            coil_parts = interconnect_within_groups(coil_parts, input_args, m_c_part)
-        else:
-            coil_parts = interconnect_within_groups(coil_parts, input_args)
+        coil_parts = interconnect_within_groups(coil_parts, input_args)
 
         # np.save('debug/ygradient_coil_python_15_true.npy', coil_parts)
 
@@ -734,10 +730,7 @@ def CoilGen(log, input=None):
 
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
-        if use_matlab_data:
-            coil_parts = interconnect_among_groups(coil_parts, input_args, m_c_part)
-        else:
-            coil_parts = interconnect_among_groups(coil_parts, input_args)
+        coil_parts = interconnect_among_groups(coil_parts, input_args)
 
         #####################################################
         # DEVELOPMENT: Remove this
