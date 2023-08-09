@@ -12,7 +12,7 @@ from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
 
 log = logging.getLogger(__name__)
 
-def interconnect_within_groups(coil_parts: List[CoilPart], input_args, m_c_part = None):
+def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
     """
     Interconnects the loops within each group for each coil part.
 
