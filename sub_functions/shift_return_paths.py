@@ -6,11 +6,14 @@ import logging
 
 # Local imports
 from sub_functions.data_structures import CoilPart
-from sub_functions.uv_to_xyz import uv_to_xyz
+from sub_functions.uv_to_xyz import uv_to_xyz, which_face
 
 log = logging.getLogger(__name__)
 
-def shift_return_paths(coil_parts: List[CoilPart], input_args):
+# TODO: Remove debugging helpers
+from helpers.visualisation import compare
+
+def shift_return_paths(coil_parts: List[CoilPart], input_args, m_c_part = None):
     """
     Shifts and returns wire paths for coil parts while avoiding wire intersections.
 
@@ -25,37 +28,55 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
     if not input_args.skip_normal_shift:
         for part_ind in range(len(coil_parts)):
             coil_part = coil_parts[part_ind]
-            part_mesh = coil_part.coil_mesh.trimesh_obj
-            part_vertices = part_mesh.vertices
-            part_faces = part_mesh.faces
+            coil_mesh = coil_part.coil_mesh
+            part_vertices = coil_mesh.get_vertices()  #part_mesh.vertices
+            part_faces = coil_mesh.get_faces() # part_mesh.faces
             wire_path_out = coil_part.wire_path
+            # part_mesh = coil_mesh.trimesh_obj
 
             # Delete superimposing points
-            points_to_delete = np.concatenate(([True], np.linalg.norm(wire_path_out.v[:, 1:] - wire_path_out.v[:, :-1], axis=0) == 0, [True]))
-            wire_path_out.uv[:, points_to_delete] = []
-            wire_path_out.v[:, points_to_delete] = []
+            diff = np.diff(wire_path_out.v, axis=1)
+            points_to_delete = np.concatenate((np.linalg.norm(diff, axis=0), [1]))
+            indices_to_delete = np.where(points_to_delete == 0)
+            wire_path_out.uv = np.delete(wire_path_out.uv, indices_to_delete, axis=1)
+            wire_path_out.v = np.delete(wire_path_out.v, indices_to_delete, axis=1)
 
-            if input_args.smooth_flag:
+            if m_c_part is not None:
+                m_debug_base = m_c_part.shift_return_paths
+                assert compare(wire_path_out.uv, m_debug_base.wire_path_out.uv)
+
+            if input_args.smooth_flag and input_args.smooth_factor > 1:
                 # Apply smoothing to the wire path
                 wire_path_out.uv = smooth_track_by_folding(wire_path_out.uv, input_args.smooth_factor)
                 wire_path_out.v, wire_path_out.uv = uv_to_xyz(wire_path_out.uv, part_faces, part_vertices)
 
             if np.all(wire_path_out.uv[:, -1] == wire_path_out.uv[:, 0]):
-                wire_path_out.uv = np.hstack((wire_path_out.uv, wire_path_out.uv[:, :1]))
-                wire_path_out.v = np.hstack((wire_path_out.v, wire_path_out.v[:, :1]))
+                wire_path_out.add_uv(wire_path_out.uv[:, :1])
+                wire_path_out.add_v(wire_path_out.v[:, :1])
 
             # Detect wire crossings
-            cross_points, cross_segments = InterX(wire_path_out.uv)
+            cross_points, cross_segments = InterX(wire_path_out.uv, m_debug=m_debug_base.debug_out_interex)
+
+            if m_c_part is not None:
+                assert compare(cross_points, m_debug_base.cross_points)         # Pass
+                assert compare(cross_segments, m_debug_base.cross_segments-1)   # Pass
+
 
             if cross_segments.size != 0:
                 sorted_crossed_segments = np.sort(np.concatenate((cross_segments[:, 0], cross_segments[:, 1])))
                 neighbors_weight = np.zeros(sorted_crossed_segments.shape)
                 scale_factor = np.sum(sorted_crossed_segments**4)
 
+                if m_c_part is not None:
+                    assert compare(sorted_crossed_segments, m_debug_base.sorted_crossed_segments - 1)
+
                 for crossed_seg_ind in range(sorted_crossed_segments.size):
                     check_dists = np.abs(sorted_crossed_segments - sorted_crossed_segments[crossed_seg_ind])
                     check_dists = check_dists[check_dists != 0]
                     neighbors_weight[crossed_seg_ind] = np.min(check_dists)
+
+                if m_c_part is not None:
+                    log.debug(" Weights: %s", compare(neighbors_weight, m_debug_base.neighours_weight2))
 
                 segment_to_shift = np.zeros(wire_path_out.uv.shape[1] - 1, dtype=bool)
 
@@ -77,15 +98,18 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
                 points_to_shift = np.zeros(wire_path_out.uv.shape[1])
                 points_to_shift[np.unique(np.concatenate((np.where(segment_to_shift)[0], np.where(segment_to_shift)[0] + 1)))] = 1
 
-                vertex_normal = vertexNormal(part_faces, part_vertices)
+                vertex_normal = coil_mesh.vertex_normals() # vertexNormal(part_faces, part_vertices)
 
-                if np.mean(np.dot(vertex_normal, part_vertices - np.mean(part_vertices, axis=0))) < 0:
+                if np.mean(np.dot(vertex_normal.T, part_vertices - np.mean(part_vertices, axis=0))) < 0:
                     vertex_normal = -vertex_normal
 
                 normal_vectors_wire_path = np.zeros((3, wire_path_out.uv.shape[1]))
 
                 for point_ind in range(wire_path_out.uv.shape[1]):
-                    target_triangle_normal, _ = pointLocation(part_faces, wire_path_out.uv[0, point_ind], wire_path_out.uv[1, point_ind])
+                    #target_triangle_normal, _ = pointLocation(part_faces, wire_path_out.uv[0, point_ind], wire_path_out.uv[1, point_ind])
+                    point = wire_path_out.uv[:, point_ind]
+                    log.debug("---- here ----")
+                    target_triangle_normal = which_face(point, planar_faces, planar_vertices)
 
                     if not np.isnan(target_triangle_normal):
                         nodes_target_triangle = part_faces[target_triangle_normal]
@@ -141,7 +165,7 @@ def smooth_track_by_folding(points, smooth_factor):
 
     return smoothed_points
 
-def InterX(L1, *varargin):
+def InterX(L1, *varargin, m_debug=None):
     if len(varargin) == 0:
         L2 = L1
         hF = np.less # Avoid the inclusion of common points
@@ -158,42 +182,147 @@ def InterX(L1, *varargin):
     # Determine 'signed distances'
     S1 = dx1 * y1[:-1] - dy1 * x1[:-1]
     S2 = dx2 * y2[:-1] - dy2 * x2[:-1]
+
+    if m_debug is not None:
+        assert compare(x1, m_debug.x1)
+        assert compare(x2, m_debug.x2)
+        assert compare(dx1, m_debug.dx1)
+        assert compare(dx2, m_debug.dx2)
+        assert compare(S1, m_debug.S1)
+        assert compare(S2, m_debug.S2)
     
-    C1 = hF(D(np.multiply.outer(dx1, y2) - np.multiply.outer(dy1, x2), S1), 0)
-    C2 = hF(D(np.multiply.outer(y1, dx2) - np.multiply.outer(x1, dy2), S2), 0)
+    P10 = np.multiply.outer(dx1, y2)
+    P11 = np.multiply.outer(dy1, x2)
+    P12 = Diff(P10 - P11, S1, [m_debug.diff_x1, m_debug.diff_y1])
+
+    P20 = np.multiply.outer(y1, dx2)
+    P21 = np.multiply.outer(x1, dy2)
+    P22 = Diff((P20 - P21).T, S2.T, [m_debug.diff_x2, m_debug.diff_y2])
+
+    if m_debug is not None:
+        assert compare(P10, m_debug.P10)
+        assert compare(P11, m_debug.P11)
+        assert compare(P12, m_debug.P12)
+        assert compare(P20, m_debug.P20)
+        assert compare(P21, m_debug.P21)
+        assert compare(P22, m_debug.P22)
+
+
+
+    C1 = hF(P12, 0).astype(int)
+    C2 = hF(P22, 0).T.astype(int)
+
+    if m_debug is not None:
+        # assert compare(C1, m_debug.C1) # Fail at index 25
+        # assert compare(C2, m_debug.C2) # Fail at index 26
+        log.debug("C1: %s", compare(C1, m_debug.C1)) # Fail at index 25
+        log.debug("C2: %s", compare(C2, m_debug.C2)) # Fail at index 26
+
+
+    #C1 = hF(Diff(np.multiply(dx1, y2) - np.multiply(dy1, x2), S1), 0)
+    #C2 = hF(Diff(np.multiply(y1, dx2) - np.multiply(x1, dy2), S2), 0)
     
     # Obtain segments where an intersection is expected
-    i, j = np.where(C1 & C2)
-    
+    j, i = np.where(C1 & C2)
+
+    if m_debug is not None:
+        assert compare(i, m_debug.i1-1) # Pass
+
     if len(i) == 0:
         P = np.zeros((2, 0))
         intersect_edge_inds = []
         return P, intersect_edge_inds
     
     # Transpose and prepare for output
-    i = i.reshape(-1, 1)
-    dx2 = dx2.reshape(-1, 1); dy2 = dy2.reshape(-1, 1); S2 = S2.reshape(-1, 1)
+    #i = i.reshape(-1, 1)
+    #dx2 = dx2.reshape(-1, 1); dy2 = dy2.reshape(-1, 1); S2 = S2.reshape(-1, 1)
+    if m_debug is not None:
+        assert compare(i, m_debug.it-1)     # Pass
+        assert compare(dx2, m_debug.dx2t)   # Pass
+        assert compare(dy2, m_debug.dy2t)   # Pass
+        assert compare(S2, m_debug.S2t)     # Pass
+
     L = dy2[j] * dx1[i] - dy1[i] * dx2[j]
+    if m_debug is not None:
+        assert compare(L, m_debug.L) # 
     
     # Filter out non-zero entries to avoid divisions by zero
     non_zero_indices = L.nonzero()
     i = i[non_zero_indices]
     j = j[non_zero_indices]
     L = L[non_zero_indices]
-    
+
+    if m_debug is not None:
+        assert compare(i, m_debug.i3-1)     # Pass
+        assert compare(j, m_debug.j3-1)     # Pass
+        assert compare(L, m_debug.L3)       # Pass
+
     # Find unique pairs of indices for intersected edges
-    intersect_edge_inds = np.unique(np.sort(np.concatenate((i, j), axis=1)), axis=0)
-    
+    # axis 1 is out of bounds for array of dimension 1
+    edges = np.vstack((i, j)).T
+    if m_debug is not None:
+        assert compare(edges, m_debug.edges-1)     # Pass
+
+    sorted_edges = np.sort(edges, axis=1)
+    if m_debug is not None:
+        assert compare(sorted_edges, m_debug.sorted_edges-1)     # ???
+
+    #intersect_edge_inds = np.unique(np.sort(np.concatenate((i, j), axis=1)), axis=0)
+    intersect_edge_inds = np.unique(sorted_edges, axis=0)
+
+    if m_debug is not None:
+        assert compare(intersect_edge_inds, m_debug.output.intersect_edge_inds-1)     # ??
+
     # Solve system of equations to get the common points
-    P = np.unique(
-        np.concatenate((
-            (dx2[j] * S1[i] - dx1[i] * S2[j]) / L,
-            (dy2[j] * S1[i] - dy1[i] * S2[j]) / L
-        ), axis=1),
-        axis=0
-    )
-    
+    arr1 = (dx2[j] * S1[i] - dx1[i] * S2[j]) / L
+    arr2 = (dy2[j] * S1[i] - dy1[i] * S2[j]) / L
+    # M: combined_arr	82x2 double	82x2	double
+    # combined_arr =
+    #    -0.0079    0.9301
+    #     1.2016    0.2877
+    #     1.9488    0.1045
+    #     1.9208    0.1018
+    #     1.8929    0.0977
+    #     1.8649    0.0931
+    #     1.8355    0.0894
+    #     1.8003    0.0835    
+    #     ...       ...    
+    combined_arr = np.vstack((arr1, arr2)).T
+    P = np.unique(combined_arr,axis=0).T
+
+    if m_debug is not None:
+        assert compare(combined_arr, m_debug.combined_arr)     # ??
+        assert compare(P, m_debug.output.P)     # ??
+
     return P, intersect_edge_inds
 
-def D(x, y):
-    return np.multiply.outer(x[:, :-1], y) - np.multiply.outer(y, x[:, 1:])
+def Diff(x, y, m_debug=None):
+    """
+    Calculate the element-wise differences and products of two input arrays.
+
+    Parameters:
+    x (ndarray): Input array with shape (N, M).
+    y (ndarray): Input array with shape (N, M-1).
+
+    Returns:
+    ndarray: Array with shape (N, M-1) containing element-wise differences and products.
+    """
+    # Unable to allocate 27.1 GiB for an array with shape (1538, 1538, 1538) and data type float64
+    try:
+        diff_x = x[:, :-1] - y
+        diff_y = x[:, 1:] - y
+        u = np.multiply.outer(diff_x, diff_y)
+        return u
+    except Exception as e:
+        log.debug(" Memory error: iterating manually")
+        u = np.empty((x.shape[0], y.shape[0]))    
+        for i in range(u.shape[0]):
+            diff_x = x[i, :-1] - y[i]
+            diff_y = x[i, 1:] - y[i]
+
+            #if m_debug is not None and i < 10: # Pass
+            #    assert compare(diff_x, m_debug[0][i])
+            #    assert compare(diff_y, m_debug[1][i])
+
+            u[i] = diff_x * diff_y
+        return u
