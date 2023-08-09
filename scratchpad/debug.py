@@ -14,7 +14,7 @@ print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
-from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber
+from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, visualize_compare_vertices
 from helpers.extraction import load_matlab
 from sub_functions.data_structures import DataStructure, Mesh, CoilPart
 from sub_functions.read_mesh import create_unique_noded_mesh
@@ -324,8 +324,8 @@ def test_interconnect_within_groups():
 
         # Check....
         log.debug(" return_path.v shape: %s", c_connected_group.return_path.v.shape)
-        compare(c_connected_group.return_path.v, m_connected_group.return_path.v) # True
-        compare(c_connected_group.return_path.uv, m_connected_group.return_path.uv)
+        log.debug(" c_connected_group.return_path.v: %s", compare(c_connected_group.return_path.v, m_connected_group.return_path.v)) # True
+        log.debug(" c_connected_group.return_path.v: %s", compare(c_connected_group.return_path.uv, m_connected_group.return_path.uv))
 
         # Not the same shape: (3, 373) is not (3, 379)
         log.debug(" spiral_in.v shape: %s", c_connected_group.spiral_in.v.shape)
@@ -339,8 +339,6 @@ def test_interconnect_within_groups():
         # Not the same shape: (3, 384) is not (3, 390)
         log.debug(" compare uv: %s", compare(c_connected_group.uv, m_connected_group.uv))
         log.debug(" compare v: %s", compare(c_connected_group.v, m_connected_group.v)) 
-
-        break
 
 
 def brute_test_process_raw_loops_brute():
@@ -389,6 +387,13 @@ def test_interconnect_among_groups():
 
         visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_p.png')
         visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_m.png')
+
+        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_diff.png')
+
+        # Check....
+        assert (compare(c_wire_path.v, m_wire_path.v)) # Pass!
+        assert (compare(c_wire_path.uv, m_wire_path.uv)) # Pass!
+
 
 if __name__ == "__main__":
     # Set up logging
