@@ -394,20 +394,31 @@ def test_interconnect_among_groups():
         assert (compare(c_wire_path.v, m_wire_path.v)) # Pass!
         assert (compare(c_wire_path.uv, m_wire_path.uv)) # Pass!
 
+def develop_shift_return_paths():
+    from sub_functions.shift_return_paths import shift_return_paths
+    mat_data = load_matlab('debug/ygradient_coil')
+    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
+    m_c_part = m_coil_parts
+    p_coil_parts = np.load('debug/ygradient_coil_python_16_true.npy', allow_pickle=True)
+
+    input_args = DataStructure(interconnection_cut_width=0.1, skip_normal_shift=0, smooth_flag=1, smooth_factor=1,normal_shift_smooth_factors=[2, 3, 2])
+    coil_parts = shift_return_paths(p_coil_parts, input_args, m_c_part)
+
 
 if __name__ == "__main__":
     # Set up logging
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
 
-    #debug1() # Planar mesh
+    # debug1() # Planar mesh
     # debug1b() # Planar mesh
     # debug2() # Planar mesh with a hole
     # debug3() # Planar mesh from file
     # debug4() # Cylindrical mesh
     # debug5() # Refine a simple 1 face mesh into four.
     # debug6() # Examine cylinder_radius500mm_length1500mm.stl
-    #test_add_nearest_ref_point_to_curve()
+    # test_add_nearest_ref_point_to_curve()
     # brute_test_process_raw_loops_brute()
-    #test_interconnect_within_groups()
-    test_interconnect_among_groups()
+    # test_interconnect_within_groups()
+    # test_interconnect_among_groups()
+    develop_shift_return_paths()
