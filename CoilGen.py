@@ -769,6 +769,31 @@ def CoilGen(log, input=None):
         print('Shift the return paths over the surface:')
         coil_parts = shift_return_paths(coil_parts, input_args)
 
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: shift_array, points_to_shift, wire_path
+        for index1 in range(len(coil_parts)):
+            c_part = coil_parts[index1]
+            c_wire_path = c_part.wire_path
+            m_wire_path = m_c_part.wire_path
+
+            visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_p.png')
+            visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_m.png')
+
+            visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_diff.png')
+
+            # Check....
+            assert (compare(c_part.shift_array, m_c_part.shift_array))          # Pass
+            assert (compare(c_part.points_to_shift, m_c_part.points_to_shift))  # Pass
+
+            assert (compare(c_wire_path.v, m_wire_path.v, double_tolerance=0.03))  # Pass, with this coarse tolerance!
+            assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass
+
+        # Manual conclusion: Pass, when using MATLAB data
+        #
+        #####################################################
+
         # WIP
         solution.coil_parts = coil_parts
         return solution
