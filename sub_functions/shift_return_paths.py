@@ -221,11 +221,17 @@ def InterX(L1, *varargin, m_debug=None):
 
     P10 = np.multiply.outer(dx1, y2)
     P11 = np.multiply.outer(dy1, x2)
-    P12 = Diff(P10 - P11, S1, [m_debug.diff_x1, m_debug.diff_y1])
+    if m_debug is not None:
+        P12 = Diff(P10 - P11, S1, [m_debug.diff_x1, m_debug.diff_y1])
+    else:
+        P12 = Diff(P10 - P11, S1)
 
     P20 = np.multiply.outer(y1, dx2)
     P21 = np.multiply.outer(x1, dy2)
-    P22 = Diff((P20 - P21).T, S2.T, [m_debug.diff_x2, m_debug.diff_y2])
+    if m_debug is not None:
+        P22 = Diff((P20 - P21).T, S2.T, [m_debug.diff_x2, m_debug.diff_y2])
+    else:
+        P22 = Diff((P20 - P21).T, S2.T)
 
     if m_debug is not None:
         assert compare(P10, m_debug.P10)

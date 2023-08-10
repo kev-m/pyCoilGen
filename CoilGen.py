@@ -239,7 +239,7 @@ def CoilGen(log, input=None):
 
         # =================================================
         # HACK: Use MATLAB's one_ring_list, etc.
-        use_matlab_data = True
+        use_matlab_data = False
         if use_matlab_data:
             log.warning("Using MATLAB's one_ring_list in %s, line %d", __file__, get_linenumber())
             coil_part.one_ring_list = m_or_one_ring_list
@@ -781,14 +781,14 @@ def CoilGen(log, input=None):
             visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_p.png')
             visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_m.png')
 
-            visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_diff.png')
+            if use_matlab_data:
+                visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_diff.png')
+                # Check....
+                assert (compare(c_part.shift_array, m_c_part.shift_array))          # Pass
+                assert (compare(c_part.points_to_shift, m_c_part.points_to_shift))  # Pass
 
-            # Check....
-            assert (compare(c_part.shift_array, m_c_part.shift_array))          # Pass
-            assert (compare(c_part.points_to_shift, m_c_part.points_to_shift))  # Pass
-
-            assert (compare(c_wire_path.v, m_wire_path.v, double_tolerance=0.03))  # Pass, with this coarse tolerance!
-            assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass
+                assert (compare(c_wire_path.v, m_wire_path.v, double_tolerance=0.03))  # Pass, with this coarse tolerance!
+                assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass
 
         # Manual conclusion: Pass, when using MATLAB data
         #
