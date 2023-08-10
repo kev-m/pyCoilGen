@@ -12,13 +12,16 @@ from sub_functions.remove_points_from_loop import remove_points_from_loop
 
 log = logging.getLogger(__name__)
 
-# TODO: DEBUG remove debug imports
-from helpers.visualisation import compare
-
-# TODO: DEBUG remove reference to m_c_part
 def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
     """
     Interconnects groups to generate a single wire track.
+
+    Initialises the following properties of a CoilPart:
+        - wire_path
+
+    Updates the following properties of a CoilPart:
+        - None
+
 
     Parameters:
         coil_parts (List[CoilPart]): List of CoilPart structures, each containing a coil_mesh.
