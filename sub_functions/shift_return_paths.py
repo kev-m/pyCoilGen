@@ -6,7 +6,7 @@ import logging
 
 # Local imports
 from sub_functions.data_structures import CoilPart
-from sub_functions.uv_to_xyz import uv_to_xyz, which_face
+from sub_functions.uv_to_xyz import uv_to_xyz, pointLocation
 
 log = logging.getLogger(__name__)
 
@@ -17,6 +17,13 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args, m_c_part = None):
     """
     Shifts and returns wire paths for coil parts while avoiding wire intersections.
 
+    Initialises the following properties of a CoilPart:
+        - shift_array
+        - points_to_shift
+
+    Updates the following properties of a CoilPart:
+        - wire_path
+
     Args:
         coil_parts (List[CoilPart]): List of CoilPart structures containing coil_mesh.
         input_args: Input arguments structure.
@@ -26,6 +33,8 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args, m_c_part = None):
     """
     
     if not input_args.skip_normal_shift:
+        smooth_factors = input_args.normal_shift_smooth_factors
+        normal_shift_length = input_args.normal_shift_length
         for part_ind in range(len(coil_parts)):
             coil_part = coil_parts[part_ind]
             coil_mesh = coil_part.coil_mesh
@@ -108,11 +117,10 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args, m_c_part = None):
                 for point_ind in range(wire_path_out.uv.shape[1]):
                     #target_triangle_normal, _ = pointLocation(part_faces, wire_path_out.uv[0, point_ind], wire_path_out.uv[1, point_ind])
                     point = wire_path_out.uv[:, point_ind]
-                    log.debug("---- here ----")
-                    target_triangle_normal = which_face(point, planar_faces, planar_vertices)
+                    face_index, barycentric = pointLocation(point, part_faces, coil_mesh.uv)
 
-                    if not np.isnan(target_triangle_normal):
-                        nodes_target_triangle = part_faces[target_triangle_normal]
+                    if face_index is not None:
+                        nodes_target_triangle = part_faces[face_index]
                         node_normals_target_triangle = vertex_normal[nodes_target_triangle]
                         normal_vectors_wire_path[:, point_ind] = np.mean(node_normals_target_triangle, axis=0)
                     else:
@@ -120,19 +128,23 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args, m_c_part = None):
                             normal_vectors_wire_path[:, point_ind] = normal_vectors_wire_path[:, point_ind + 1]
                         else:
                             normal_vectors_wire_path[:, point_ind] = normal_vectors_wire_path[:, point_ind - 1]
-
-                shift_array = np.convolve(points_to_shift, np.concatenate(([1], np.ones(input_args.normal_shift_smooth_factors[1]) * input_args.normal_shift_smooth_factors[2], np.arange(input_args.normal_shift_smooth_factors[2], 0, -1) / input_args.normal_shift_smooth_factors[2])) / np.sum(np.concatenate(([1], np.ones(input_args.normal_shift_smooth_factors[1]) * input_args.normal_shift_smooth_factors[2], np.arange(input_args.normal_shift_smooth_factors[2], 0, -1) / input_args.normal_shift_smooth_factors[2]))), mode='same')
+                # shift_array = conv(points_to_shift, [1:input.normal_shift_smooth_factors(2) ones(1, input.normal_shift_smooth_factors(1)) .* input.normal_shift_smooth_factors(2) (input.normal_shift_smooth_factors(2) - 1):-1:1] ./ input.normal_shift_smooth_factors(2), 'same');
+                arr1 = np.ones(smooth_factors[1]) * smooth_factors[2]
+                arr2 = np.arange(smooth_factors[2], 0, -1) / smooth_factors[2]
+                arr3 = np.concatenate(([1], arr1, arr2))
+                shift_array = np.convolve(points_to_shift, arr3 / np.sum(arr3), mode='same')
                 shift_array[shift_array > 1] = 1
 
                 for point_ind in range(wire_path_out.uv.shape[1]):
-                    if input_args.normal_shift_smooth_factors[3] < point_ind < wire_path_out.uv.shape[1] - input_args.normal_shift_smooth_factors[3]:
-                        shift_vec = np.mean(normal_vectors_wire_path[:, point_ind - input_args.normal_shift_smooth_factors[3] // 2 : point_ind + input_args.normal_shift_smooth_factors[3] // 2 + 1], axis=1) * shift_array[point_ind] * input_args['normal_shift_length']
+                    if smooth_factors[2] < point_ind < wire_path_out.uv.shape[1] - smooth_factors[2]:
+                        arr4 = normal_vectors_wire_path[:, point_ind - smooth_factors[2] // 2 : point_ind + smooth_factors[2] // 2 + 1]
+                        shift_vec = np.mean(arr4, axis=1) * shift_array[point_ind] * normal_shift_length
                     else:
-                        shift_vec = normal_vectors_wire_path[:, point_ind] * shift_array[point_ind] * input_args.normal_shift_length
+                        shift_vec = normal_vectors_wire_path[:, point_ind] * shift_array[point_ind] * normal_shift_length
 
                     wire_path_out.v[:, point_ind] += shift_vec
 
-                coil_part.shift_array = shift_array
+                coil_part.shift_array = shift_array.astype(int)
                 coil_part.points_to_shift = points_to_shift
                 coil_part.wire_path.uv = wire_path_out.uv
                 coil_part.wire_path.v = wire_path_out.v
