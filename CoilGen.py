@@ -37,8 +37,8 @@ from sub_functions.topological_loop_grouping import topological_loop_grouping
 from sub_functions.calculate_group_centers import calculate_group_centers
 from sub_functions.interconnect_within_groups import interconnect_within_groups
 from sub_functions.interconnect_among_groups import interconnect_among_groups
+from sub_functions.shift_return_paths import shift_return_paths
 """
-from shift_return_paths import shift_return_paths
 from generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
 from create_sweep_along_surface import create_sweep_along_surface
 from calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
@@ -731,6 +731,7 @@ def CoilGen(log, input=None):
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
         coil_parts = interconnect_among_groups(coil_parts, input_args)
+        # np.save('debug/ygradient_coil_python_16_true.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -764,13 +765,38 @@ def CoilGen(log, input=None):
         #
         #####################################################
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
-
         # Connect the groups and shift the return paths over the surface
         print('Shift the return paths over the surface:')
         coil_parts = shift_return_paths(coil_parts, input_args)
+
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: shift_array, points_to_shift, wire_path
+        for index1 in range(len(coil_parts)):
+            c_part = coil_parts[index1]
+            c_wire_path = c_part.wire_path
+            m_wire_path = m_c_part.wire_path
+
+            visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_p.png')
+            visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_m.png')
+
+            if use_matlab_data:
+                visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_diff.png')
+                # Check....
+                assert (compare(c_part.shift_array, m_c_part.shift_array))          # Pass
+                assert (compare(c_part.points_to_shift, m_c_part.points_to_shift))  # Pass
+
+                assert (compare(c_wire_path.v, m_wire_path.v, double_tolerance=0.03))  # Pass, with this coarse tolerance!
+                assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass
+
+        # Manual conclusion: Pass, when using MATLAB data
+        #
+        #####################################################
+
+        # WIP
+        solution.coil_parts = coil_parts
+        return solution
 
         # Create Cylindrical PCB Print
         print('Create PCB Print:')

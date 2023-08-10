@@ -138,7 +138,7 @@ class Mesh:
         Returns:
             ndarray: An array of vertex normals with shape (num_faces, 3).
         """
-        return self.trimesh_obj.vertex_normals
+        return self.trimesh_obj.vertex_normals.view(np.ndarray)
 
     def display(self):
         """
@@ -385,9 +385,11 @@ class CoilPart:
     level_positions: np.ndarray = None      # ??? (topological_loop_grouping)
     groups: List[TopoGroup] = None          # Topological groups (topological_loop_grouping)
     group_centers: List[Shape3D] = None     # The centre of each group (calculate_group_centers)
-    connected_group: List[TopoGroup] = None  # Connected topological groups (interconnect_within_groups)
+    connected_group: List[TopoGroup] = None # Connected topological groups (interconnect_within_groups)
     opening_cuts_among_groups:List[Cuts] = None  # ??? (interconnect_among_groups)
     wire_path : Shape3D = None              # The shape of the wire track (interconnect_among_groups)
+    shift_array: np.ndarray = None          # ??? (shift_return_paths) (,)
+    points_to_shift: np.ndarray = None      # Array of which points to shift (shift_return_paths) (m,)
 
 
 class CoilSolution:
