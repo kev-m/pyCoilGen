@@ -239,7 +239,7 @@ def CoilGen(log, input=None):
 
         # =================================================
         # HACK: Use MATLAB's one_ring_list, etc.
-        use_matlab_data = False
+        use_matlab_data = True
         if use_matlab_data:
             log.warning("Using MATLAB's one_ring_list in %s, line %d", __file__, get_linenumber())
             coil_part.one_ring_list = m_or_one_ring_list
