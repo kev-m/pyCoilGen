@@ -90,7 +90,7 @@ def point_inside_triangle(point, triangle_vertices):
 
     Returns:
         bool: True if the point is inside or on the triangle, False otherwise.
-        barycentric (ndarray): The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
+        barycentric (list): The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
     """
 
     [alpha, beta, gamma] = barycentric_coordinates(point, triangle_vertices)
@@ -101,12 +101,12 @@ def point_inside_triangle(point, triangle_vertices):
 
 def which_face(point, face_indices, face_vertices):
     """
-    Determine which face contains the point.
+    Determine which of the provided faces contains a given point.
 
     Args:
-        point (xyz): The input 2D points with shape (2,n).
-        face_indices (ndarray): The indices of the possible faces.
-        face_vertices (Trimesh): The vertices of the possible faces.
+        point (xyz): The input 2D points with shape (3,).
+        face_indices (ndarray): The indices of the possible faces (n,3).
+        face_vertices (ndarray): The vertices of the possible faces (n,3,3).
 
     Returns:
         index (int): The index of the possible face or None if the point intersects multiple faces.
@@ -121,6 +121,29 @@ def which_face(point, face_indices, face_vertices):
     result_index = np.where(results)[0][0]
     coords = [sublist[1] for sublist in combined_results]
     return face_indices[result_index], combined_results[result_index][1]
+
+def pointLocation(point_2D: np.ndarray, face_indices: np.ndarray, mesh_vertices: np.ndarray):
+    """
+    Determine which of the provided faces contains a given point.
+
+    If the point lies on an edge, i.e. multiple faces, the largest face index is returned.
+
+    Args:
+        point (xy): The input 2D points with shape (2,n).
+        face_indices (ndarray): The indices of the possible faces (n,3).
+        mesh_vertices (ndarray): The vertices of the mesh (m,3).
+
+    Returns:
+        index (int): The index of the possible face or None if the point intersects multiple faces.
+        barycentric (list): The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
+    """
+    for index in range(len(face_indices)-1, -1,-1):
+        face = face_indices[index]
+        triangle_vertices = mesh_vertices[face]
+        found, barycentric = point_inside_triangle(point_2D, triangle_vertices)
+        if found:
+            return index, barycentric
+    return None, None
 
 def get_target_triangle_def(point, planary_mesh: Trimesh):
     """
