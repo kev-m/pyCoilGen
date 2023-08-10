@@ -43,12 +43,12 @@ def debug1():
                              center_position_x, center_position_y, center_position_z)
 
     # Create debug data
-    planar_mesh = {'vertices': mesh.vertices.tolist(), 'faces' : mesh.faces.tolist(), 'normal' : mesh.normal.tolist()}
+    planar_mesh = {'vertices': mesh.vertices.tolist(), 'faces': mesh.faces.tolist(), 'normal': mesh.normal.tolist()}
     with open('tests/test_data/planar_mesh.json', 'w') as file:
         json.dump(planar_mesh, file)
 
     mesh = Mesh(vertices=mesh.vertices, faces=mesh.faces)
-    print (mesh.trimesh_obj.is_watertight)
+    print(mesh.trimesh_obj.is_watertight)
 
     vertices = mesh.get_vertices()
     faces = mesh.get_faces()
@@ -59,7 +59,6 @@ def debug1():
     visualize_vertex_connections(vertices, 800, 'images/debug1_planar_0.png')
     # mesh.display()
 
-
     coil_parts = [CoilPart(coil_mesh=mesh)]
     input_args = DataStructure(sf_source_file='none', iteration_num_mesh_refinement=1)
     coil_parts = refine_mesh(coil_parts, input_args)
@@ -67,10 +66,12 @@ def debug1():
     vertices2 = mesh.get_vertices()
     visualize_vertex_connections(vertices2, 800, 'images/debug1_planar_1.png')
 
-    #input_params = DataStructure(surface_is_cylinder_flag=False, circular_diameter_factor=0.0)
-    #result = parameterize_mesh(parts, input_params)
+    # input_params = DataStructure(surface_is_cylinder_flag=False, circular_diameter_factor=0.0)
+    # result = parameterize_mesh(parts, input_params)
 
 # Save a small bi-planar mesh to file
+
+
 def debug1b():
     print("Bi-planar mesh")
     from sub_functions.build_biplanar_mesh import build_biplanar_mesh
@@ -88,11 +89,11 @@ def debug1b():
     plane_distance = 0.5
 
     mesh = build_biplanar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions,
-                             target_normal_x, target_normal_y, target_normal_z,
-                             center_position_x, center_position_y, center_position_z, plane_distance)
+                               target_normal_x, target_normal_y, target_normal_z,
+                               center_position_x, center_position_y, center_position_z, plane_distance)
 
     # Create debug data
-    planar_mesh = {'vertices': mesh.vertices.tolist(), 'faces' : mesh.faces.tolist(), 'normal' : mesh.normal.tolist()}
+    planar_mesh = {'vertices': mesh.vertices.tolist(), 'faces': mesh.faces.tolist(), 'normal': mesh.normal.tolist()}
     with open('tests/test_data/biplanar_mesh.json', 'w') as file:
         json.dump(planar_mesh, file)
 
@@ -155,7 +156,7 @@ def debug2():
     log.debug(" Original vertices shape: %s", vertices.shape)
     log.debug(" Original faces shape: %s", faces.shape)
 
-    planar_mesh = DataStructure(vertices=vertices, faces=faces, normal=np.array([0,0,1]))
+    planar_mesh = DataStructure(vertices=vertices, faces=faces, normal=np.array([0, 0, 1]))
 
     mesh = create_unique_noded_mesh(planar_mesh)
     # mesh.display()
@@ -175,7 +176,6 @@ def debug2():
     coil_parts = parameterize_mesh(parts, input_params)
     mesh_part = coil_parts[0].coil_mesh
     visualize_vertex_connections(mesh_part.uv, 800, 'images/planar_hole_projected2.png')
-
 
 
 # Planar mesh from a file
@@ -208,18 +208,17 @@ def debug4():
     rotation_vector_x = 0.0
     rotation_vector_y = 1.0
     rotation_vector_z = 0.0
-    rotation_angle = np.pi/4.0 # 0.0
+    rotation_angle = np.pi/4.0  # 0.0
 
     # cylinder_mesh_parameter_list
 
     cylinder_mesh = build_cylinder_mesh(cylinder_height, cylinder_radius, num_circular_divisions,
-                               num_longitudinal_divisions, rotation_vector_x, rotation_vector_y,
-                               rotation_vector_z, rotation_angle)
-
+                                        num_longitudinal_divisions, rotation_vector_x, rotation_vector_y,
+                                        rotation_vector_z, rotation_angle)
 
     mesh = create_unique_noded_mesh(cylinder_mesh)
     log.debug(" Normal: %s", mesh.normal_rep)
-    print (mesh.trimesh_obj.is_watertight)
+    print(mesh.trimesh_obj.is_watertight)
     vertices = mesh.get_vertices()
     faces = mesh.get_faces()
     log.debug(" Vertices shape: %s", vertices.shape)
@@ -236,6 +235,8 @@ def debug4():
     visualize_vertex_connections(mesh_part.uv, 800, 'images/cylinder_projected2.png')
 
 # Test Mesh refinement
+
+
 def debug5():
     # Test 1: Trivial case: A single face
     vertices = np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0]])
@@ -254,7 +255,7 @@ def debug5():
     coil_parts = [CoilPart(coil_mesh=mesh)]
     input_args = DataStructure(sf_source_file='none', iteration_num_mesh_refinement=1)
     coil_parts = refine_mesh(coil_parts, input_args)
-    
+
     mesh = coil_parts[0].coil_mesh
     mesh.display()
 
@@ -264,11 +265,14 @@ def debug5():
     log.debug(" New vertices: %s -> %s", new_vertices.shape, new_vertices)
     log.debug(" New faces: %s -> %s", new_faces.shape, new_faces)
 
+
 def debug6():
     # Load mesh
     from sub_functions.read_mesh import stlread_local
     output = stlread_local('Geometry_Data/cylinder_radius500mm_length1500mm.stl')
-    log.debug(" cylinder_radius500mm_length1500mm: vertices: %s, faces: %s, normals: %s", np.shape(output.vertices), np.shape(output.faces), np.shape(output.normals) )
+    log.debug(" cylinder_radius500mm_length1500mm: vertices: %s, faces: %s, normals: %s",
+              np.shape(output.vertices), np.shape(output.faces), np.shape(output.normals))
+
 
 def test_interconnect_within_groups():
     from sub_functions.interconnect_within_groups import interconnect_within_groups
@@ -293,7 +297,7 @@ def test_interconnect_within_groups():
             c_loop = c_group.opened_loop[index2]
             assert compare(c_loop.uv, m_loop.uv)
             assert compare(c_loop.v, m_loop.v)
-        
+
         """
         shape_name = 'cutshape'
         for index2, m_shape in enumerate(m_group.cutshape):
@@ -308,7 +312,6 @@ def test_interconnect_within_groups():
             visualize_vertex_connections(m_shape.uv.T, 800, f'images/connected_group_{shape_name}_uv_{index1}_{index2}_m.png')
         """
 
-
     # Connected Groups
     m_connected_groups = m_c_part.connected_group
     c_connected_groups = coil_part.connected_group
@@ -318,14 +321,17 @@ def test_interconnect_within_groups():
 
         # MATLAB shape
         visualize_vertex_connections(c_connected_group.uv.T, 800, f'images/connected_group_uv1_{index1}_p.png')
-        visualize_vertex_connections(m_connected_group.group_debug.uv.T, 800, f'images/connected_group_uv1_{index1}_m.png')
+        visualize_vertex_connections(m_connected_group.group_debug.uv.T, 800,
+                                     f'images/connected_group_uv1_{index1}_m.png')
 
         log.debug(" Here: uv values in %s, line %d", __file__, get_linenumber())
 
         # Check....
         log.debug(" return_path.v shape: %s", c_connected_group.return_path.v.shape)
-        log.debug(" c_connected_group.return_path.v: %s", compare(c_connected_group.return_path.v, m_connected_group.return_path.v)) # True
-        log.debug(" c_connected_group.return_path.v: %s", compare(c_connected_group.return_path.uv, m_connected_group.return_path.uv))
+        log.debug(" c_connected_group.return_path.v: %s", compare(
+            c_connected_group.return_path.v, m_connected_group.return_path.v))  # True
+        log.debug(" c_connected_group.return_path.v: %s", compare(
+            c_connected_group.return_path.uv, m_connected_group.return_path.uv))
 
         # Not the same shape: (3, 373) is not (3, 379)
         log.debug(" spiral_in.v shape: %s", c_connected_group.spiral_in.v.shape)
@@ -334,11 +340,12 @@ def test_interconnect_within_groups():
 
         # Not the same shape: (3, 321) is not (3, 379)
         log.debug(" spiral_out.v: %s", compare(c_connected_group.spiral_out.v, m_connected_group.group_debug.spiral_out.v))
-        log.debug(" spiral_out.uv: %s", compare(c_connected_group.spiral_out.uv, m_connected_group.group_debug.spiral_out.uv))
+        log.debug(" spiral_out.uv: %s", compare(c_connected_group.spiral_out.uv,
+                  m_connected_group.group_debug.spiral_out.uv))
 
         # Not the same shape: (3, 384) is not (3, 390)
         log.debug(" compare uv: %s", compare(c_connected_group.uv, m_connected_group.uv))
-        log.debug(" compare v: %s", compare(c_connected_group.v, m_connected_group.v)) 
+        log.debug(" compare v: %s", compare(c_connected_group.v, m_connected_group.v))
 
 
 def brute_test_process_raw_loops_brute():
@@ -351,7 +358,7 @@ def brute_test_process_raw_loops_brute():
     m_coil_part = m_coil_parts
 
     # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
-    p_coil_parts = np.load('debug/ygradient_coil_python_10.npy', allow_pickle=True) 
+    p_coil_parts = np.load('debug/ygradient_coil_python_10.npy', allow_pickle=True)
 
     input_args = DataStructure(smooth_flag=1, smooth_factor=1, min_loop_significance=1)
     target_field = mat_data_out.target_field
@@ -365,10 +372,11 @@ def brute_test_process_raw_loops_brute():
     # Checks:
     coil_part = coil_parts2[0]
     assert len(coil_part.contour_lines) == len(m_coil_part.contour_lines)
-    assert abs(coil_part.combined_loop_length - m_coil_part.combined_loop_length) < 0.0005 # Pass
-    assert compare(coil_part.combined_loop_field, m_coil_part.combined_loop_field, double_tolerance=5e-7) # Pass
+    assert abs(coil_part.combined_loop_length - m_coil_part.combined_loop_length) < 0.0005  # Pass
+    assert compare(coil_part.combined_loop_field, m_coil_part.combined_loop_field, double_tolerance=5e-7)  # Pass
     assert compare(coil_part.loop_significance, m_coil_part.loop_signficance, double_tolerance=0.005)
-    assert compare(coil_part.field_by_loops, m_coil_part.field_by_loops, double_tolerance=2e-7) # Pass!
+    assert compare(coil_part.field_by_loops, m_coil_part.field_by_loops, double_tolerance=2e-7)  # Pass!
+
 
 def test_interconnect_among_groups():
     from sub_functions.interconnect_among_groups import interconnect_among_groups
@@ -391,8 +399,9 @@ def test_interconnect_among_groups():
         visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_diff.png')
 
         # Check....
-        assert (compare(c_wire_path.v, m_wire_path.v)) # Pass!
-        assert (compare(c_wire_path.uv, m_wire_path.uv)) # Pass!
+        assert (compare(c_wire_path.v, m_wire_path.v))  # Pass!
+        assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass!
+
 
 def develop_shift_return_paths():
     from sub_functions.shift_return_paths import shift_return_paths
@@ -401,8 +410,32 @@ def develop_shift_return_paths():
     m_c_part = m_coil_parts
     p_coil_parts = np.load('debug/ygradient_coil_python_16_true.npy', allow_pickle=True)
 
-    input_args = DataStructure(interconnection_cut_width=0.1, skip_normal_shift=0, smooth_flag=1, smooth_factor=1,normal_shift_smooth_factors=[2, 3, 2])
+    input_args = DataStructure(interconnection_cut_width=0.1,
+                               skip_normal_shift=0,
+                               smooth_flag=1,
+                               smooth_factor=1,
+                               normal_shift_smooth_factors=[2, 3, 2],
+                               normal_shift_length=0.025)
     coil_parts = shift_return_paths(p_coil_parts, input_args, m_c_part)
+
+
+    # Verify: shift_array, points_to_shift, wire_path
+    for index1 in range(len(coil_parts)):
+        c_part = coil_parts[index1]
+        c_wire_path = c_part.wire_path
+        m_wire_path = m_c_part.wire_path
+
+        visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_p.png')
+        visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_m.png')
+
+        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_diff.png')
+
+        # Check....
+        #assert (compare(c_part.shift_array, m_c_part.shift_array))  # ???
+        assert (compare(c_part.points_to_shift, m_c_part.points_to_shift))  # Pass
+
+        assert (compare(c_wire_path.v, m_wire_path.v))  # ???
+        assert (compare(c_wire_path.uv, m_wire_path.uv))  # ???
 
 
 if __name__ == "__main__":
