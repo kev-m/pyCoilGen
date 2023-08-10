@@ -128,11 +128,14 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args, m_c_part = None):
                             normal_vectors_wire_path[:, point_ind] = normal_vectors_wire_path[:, point_ind + 1]
                         else:
                             normal_vectors_wire_path[:, point_ind] = normal_vectors_wire_path[:, point_ind - 1]
-                # shift_array = conv(points_to_shift, [1:input.normal_shift_smooth_factors(2) ones(1, input.normal_shift_smooth_factors(1)) .* input.normal_shift_smooth_factors(2) (input.normal_shift_smooth_factors(2) - 1):-1:1] ./ input.normal_shift_smooth_factors(2), 'same');
-                arr1 = np.ones(smooth_factors[1]) * smooth_factors[2]
-                arr2 = np.arange(smooth_factors[2], 0, -1) / smooth_factors[2]
-                arr3 = np.concatenate(([1], arr1, arr2))
-                shift_array = np.convolve(points_to_shift, arr3 / np.sum(arr3), mode='same')
+                # arr1 = ones(1, smooth_factors(1)) .* smooth_factors(2)
+                # arr2 = (smooth_factors(2) - 1):-1:1
+                # arr3 = [1:smooth_factors(2) arr1 arr2]
+                # shift_array = conv(points_to_shift, arr3 ./ smooth_factors(2), 'same');
+                arr1 = np.ones(smooth_factors[0]) * smooth_factors[1]
+                arr2 = np.arange(smooth_factors[1] - 1, 0, -1) 
+                arr3 = np.concatenate((np.arange(1, smooth_factors[1] + 1), arr1, arr2))
+                shift_array = np.convolve(points_to_shift, arr3 / smooth_factors[1], mode='same')
                 shift_array[shift_array > 1] = 1
 
                 for point_ind in range(wire_path_out.uv.shape[1]):
@@ -144,8 +147,8 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args, m_c_part = None):
 
                     wire_path_out.v[:, point_ind] += shift_vec
 
-                coil_part.shift_array = shift_array.astype(int)
-                coil_part.points_to_shift = points_to_shift
+                coil_part.shift_array = shift_array
+                coil_part.points_to_shift = points_to_shift.astype(int)
                 coil_part.wire_path.uv = wire_path_out.uv
                 coil_part.wire_path.v = wire_path_out.v
 
