@@ -416,7 +416,7 @@ def develop_shift_return_paths():
                                smooth_factor=1,
                                normal_shift_smooth_factors=[2, 3, 2],
                                normal_shift_length=0.025)
-    coil_parts = shift_return_paths(p_coil_parts, input_args, m_c_part)
+    coil_parts = shift_return_paths(p_coil_parts, input_args)#, m_c_part)
 
 
     # Verify: shift_array, points_to_shift, wire_path
