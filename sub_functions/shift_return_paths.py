@@ -65,7 +65,11 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args, m_c_part=None):
                 wire_path_out.add_v(wire_path_out.v[:, :1])
 
             # Detect wire crossings
-            cross_points, cross_segments = InterX(wire_path_out.uv, m_debug=m_debug_base.debug_out_interex)
+            if m_c_part is not None:
+                cross_points, cross_segments = InterX(wire_path_out.uv, m_debug=m_debug_base.debug_out_interex)
+            else:
+                cross_points, cross_segments = InterX(wire_path_out.uv)
+
 
             if m_c_part is not None:
                 assert compare(cross_points, m_debug_base.cross_points)         # Pass
