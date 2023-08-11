@@ -254,8 +254,7 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                         pcb_parts = [None] * (len(full_wrap_spart_inds) - 1)
                         for point_ind in range(len(full_wrap_spart_inds) - 1):
                             pcb_part = PCBPart(
-                                # layout_2d(:, full_wrap_spart_inds(point_ind) + 1:full_wrap_spart_inds(point_ind + 1));
-                                uv = layout_2d[:, full_wrap_spart_inds[point_ind] + 1:full_wrap_spart_inds[point_ind + 1]],
+                                uv = layout_2d[:, full_wrap_spart_inds[point_ind] + 1:full_wrap_spart_inds[point_ind + 1]+1],
                                 ind1 = full_wrap_spart_inds[point_ind] + 1,
                                 ind2 = full_wrap_spart_inds[point_ind + 1]
                             )
