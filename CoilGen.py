@@ -38,8 +38,8 @@ from sub_functions.calculate_group_centers import calculate_group_centers
 from sub_functions.interconnect_within_groups import interconnect_within_groups
 from sub_functions.interconnect_among_groups import interconnect_among_groups
 from sub_functions.shift_return_paths import shift_return_paths
+from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
 """
-from generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
 from create_sweep_along_surface import create_sweep_along_surface
 from calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
 from evaluate_field_errors import evaluate_field_errors
@@ -794,13 +794,13 @@ def CoilGen(log, input=None):
         #
         #####################################################
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
-
         # Create Cylindrical PCB Print
         print('Create PCB Print:')
         coil_parts = generate_cylindrical_pcb_print(coil_parts, input_args)
+
+        # WIP
+        solution.coil_parts = coil_parts
+        return solution
 
         # Create Sweep Along Surface
         print('Create sweep along surface:')
