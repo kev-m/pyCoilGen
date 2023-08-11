@@ -367,6 +367,18 @@ class Cuts():
     cut2 : np.ndarray = None            # Cut data (interconnect_among_groups)
 
 @dataclass
+class PCBPart():
+    track_shape: np.ndarray = None      # Array of co-ordinates of the PCB track (generate_cylindrical_pcb_print) (2,m)
+    polygon_track = None                # ??? (generate_cylindrical_pcb_print) (?,?)
+
+@dataclass
+class PCBTrack():
+    # coil_part.pcb_tracks.upper_layer.group_layouts.wire_parts = pcb_parts
+    upper_layer = None                  # ((generate_cylindrical_pcb_print))
+    lower_layer = None                  # ((generate_cylindrical_pcb_print))
+    
+
+@dataclass
 class CoilPart:
     coil_mesh: Mesh = None
     basis_elements: List[BasisElement] = None
@@ -390,6 +402,7 @@ class CoilPart:
     wire_path : Shape3D = None              # The shape of the wire track (interconnect_among_groups)
     shift_array: np.ndarray = None          # ??? (shift_return_paths) (,)
     points_to_shift: np.ndarray = None      # Array of which points to shift (shift_return_paths) (m,)
+    pcb_tracks: List[PCBTrack] = None       # (generate_cylindrical_pcb_print)
 
 
 class CoilSolution:
