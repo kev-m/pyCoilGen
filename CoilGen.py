@@ -768,6 +768,7 @@ def CoilGen(log, input=None):
         # Connect the groups and shift the return paths over the surface
         print('Shift the return paths over the surface:')
         coil_parts = shift_return_paths(coil_parts, input_args)
+        # np.save('debug/ygradient_coil_python_17_true.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -797,6 +798,7 @@ def CoilGen(log, input=None):
         # Create Cylindrical PCB Print
         print('Create PCB Print:')
         coil_parts = generate_cylindrical_pcb_print(coil_parts, input_args)
+        #np.save('debug/ygradient_coil_python_18_true.npy', coil_parts)
 
         # WIP
         solution.coil_parts = coil_parts
