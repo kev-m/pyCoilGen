@@ -262,7 +262,8 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                             if m_c_part is not None:
                                 assert pcb_part.ind1 == wire_debug.ind1 - 1
                                 assert pcb_part.ind2 == wire_debug.ind2 - 1 # Pass
-                                assert compare(pcb_part.uv, wire_debug.point_debug.uv1) # Fail
+                                log.debug(" ---- here --- !")
+                                assert compare(pcb_part.uv, wire_debug.point_debug.uv1) # Fail on the lower one!?
 
                         # ... Previous code ...
                         for wrap_ind in range(len(pcb_parts)):
@@ -293,6 +294,7 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                                     pcb_parts[wrap_ind].uv
                                 ))
 
+                        # pcb_parts(arrayfun(@(x) size(pcb_parts(x).uv, 2), 1:numel(pcb_parts)) < 2) = []; %delete fragments
                         pcb_parts = [part for part in pcb_parts if part.uv.shape[1] >= 2]  # delete fragments
 
                         # Generate the track shapes for the individual wire parts
