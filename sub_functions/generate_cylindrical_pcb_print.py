@@ -262,13 +262,31 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                             if m_c_part is not None:
                                 assert pcb_part.ind1 == wire_debug.ind1 - 1
                                 assert pcb_part.ind2 == wire_debug.ind2 - 1 # Pass
-                                log.debug(" ---- here --- !")
                                 assert compare(pcb_part.uv, wire_debug.point_debug.uv1) # Fail on the lower one!?
 
                         # ... Previous code ...
                         for wrap_ind in range(len(pcb_parts)):
                             intersection_cut = find_segment_intersections(pcb_parts[wrap_ind].uv, cut_rectangle)
-                            is_real_cut_ind = np.where(~np.isnan([intersection_cut[0].segment_inds]))[0]
+
+                            if m_c_part is not None:
+                                for debug_index, m_cut in enumerate(wire_debug.point_debug.intersection_cut):
+                                    if np.isnan(intersection_cut[debug_index].segment_inds):
+                                        assert np.isnan(m_cut.segment_inds)
+                                    else:
+                                        # Some weirdness: MATLAB returns a single number, not an array
+                                        if len(intersection_cut[debug_index].segment_inds) == 1:
+                                            assert intersection_cut[debug_index].segment_inds[0] == m_cut.segment_inds-1
+                                            assert compare(intersection_cut[debug_index].uv.reshape(2), m_cut.uv)
+                                        else:
+                                            assert compare(intersection_cut[debug_index].segment_inds, m_cut.segment_inds-1)
+                                            assert compare(intersection_cut[debug_index].uv, m_cut.uv)
+
+                            real_cuts = [np.any(~np.isnan(cut.segment_inds)) for cut in intersection_cut]
+                            is_real_cut_ind = np.where(real_cuts)[0]
+
+                            if m_c_part is not None:
+                                assert is_real_cut_ind[0] == wire_debug.point_debug.is_real_cut_ind - 1
+
 
                             if len(is_real_cut_ind) > 0:
                                 wire_part_points = pcb_parts[wrap_ind].uv
@@ -281,6 +299,7 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                                         uv_point.reshape(-1, 1),
                                         wire_part_points[:, cut_segment_ind:-1]
                                     ))
+                                    
 
                         for wrap_ind in range(1, len(pcb_parts)):
                             if pcb_parts[wrap_ind - 1].uv[0, -1] > 0:
