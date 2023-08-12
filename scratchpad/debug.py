@@ -403,6 +403,19 @@ def test_interconnect_among_groups():
         assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass!
 
 
+def test_smooth_track_by_folding():
+    from sub_functions.smooth_track_by_folding import smooth_track_by_folding # 1
+    mat_data = load_matlab('debug/ygradient_coil')
+    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
+    m_c_part = m_coil_parts
+
+    for index1, m_group_layout in enumerate(m_c_part.pcb_tracks.upper_layer.group_layouts):
+        m_wire_part = m_group_layout.wire_parts
+        input = m_wire_part.point_debug.uv2[:, 1:-1]
+        m_debug = m_wire_part.wire_debug
+        arr2 = smooth_track_by_folding(input, 3, m_debug)
+        assert (compare(arr2, m_debug.arr2))  # Pass
+
 def develop_shift_return_paths():
     from sub_functions.shift_return_paths import shift_return_paths
     mat_data = load_matlab('debug/ygradient_coil')
@@ -437,6 +450,47 @@ def develop_shift_return_paths():
         assert (compare(c_wire_path.v, m_wire_path.v, double_tolerance=0.03))  # Pass, with this coarse tolerance!
         assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass
 
+def develop_generate_cylindrical_pcb_print():
+    from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
+    mat_data = load_matlab('debug/ygradient_coil')
+    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
+    m_c_part = m_coil_parts
+    p_coil_parts = np.load('debug/ygradient_coil_python_17_true.npy', allow_pickle=True)
+
+    input_args = DataStructure(conductor_cross_section_width=0.015,
+                               cylinder_mesh_parameter_list=[0.8, 0.3, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
+                               surface_is_cylinder_flag=1,
+                               make_cylindrical_pcb=1,
+                               pcb_interconnection_method='spiral_in_out',
+                               pcb_spiral_end_shift_factor=10)
+    coil_parts = generate_cylindrical_pcb_print(p_coil_parts, input_args, m_c_part)
+
+    # Verify: pcb_tracks.{lower_layer/upper_layer}[0].group_layouts[0..n].wire_parts[0].{ind1,ind2,polygon_track.data,track_shape,uv}
+    for index1 in range(len(coil_parts)):
+        c_part = coil_parts[index1]
+        c_upper_group_layouts = c_part.pcb_tracks.upper_layer.group_layouts
+        m_upper_group_layouts = m_c_part.pcb_tracks.upper_layer.group_layouts
+
+        layer = 'upper'
+        for index2, m_group_layout in enumerate(m_upper_group_layouts):
+            log.debug(" Checking upper %d", index2)
+            c_group_layout = c_upper_group_layouts[index2]
+            c_wire_part = c_group_layout.wire_parts[0]
+            m_wire_part = m_group_layout.wire_parts
+
+            visualize_vertex_connections(c_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index2}_uv_p.png')
+            visualize_vertex_connections(m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index2}_uv_m.png')
+
+            visualize_compare_vertices(c_wire_part.uv.T, m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index2}_uv__diff.png')
+
+            # Check....
+            assert c_wire_part.ind1 == m_wire_part.ind1 - 1 # MATLAB base 1
+            assert c_wire_part.ind2 == m_wire_part.ind2 - 1 # MATLAB base 1
+
+            assert compare(c_wire_part.uv, m_wire_part.uv)
+            assert compare(c_wire_part.track_shape, m_wire_part.track_shape)
+
+
 
 if __name__ == "__main__":
     # Set up logging
@@ -454,4 +508,7 @@ if __name__ == "__main__":
     # brute_test_process_raw_loops_brute()
     # test_interconnect_within_groups()
     # test_interconnect_among_groups()
-    develop_shift_return_paths()
+    # develop_shift_return_paths()
+    
+    # test_smooth_track_by_folding()
+    develop_generate_cylindrical_pcb_print()

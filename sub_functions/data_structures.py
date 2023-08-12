@@ -332,6 +332,7 @@ class Shape3D(Shape2D):  # Used in topological_loop_grouping
     def copy(self):
         return Shape3D(uv=self.uv.copy(), v=self.v.copy())
 
+
 @dataclass
 class ContourLine(Shape3D):
     """
@@ -351,6 +352,7 @@ class TopoGroup:                        # CoilPart.groups
     cutshape: List[Shape2D] = None      # Assigned in interconnect_within_groups
     opened_loop: List[Shape3D] = None   # Assigned in interconnect_within_groups
 
+
 @dataclass
 class ConnectedGroup(Shape3D):          # CoilPart.connected_group
     # uv: np.ndarray = None             # 2D shape (2,n) Assigned in interconnect_within_groups
@@ -363,8 +365,37 @@ class ConnectedGroup(Shape3D):          # CoilPart.connected_group
 
 @dataclass
 class Cuts():
-    cut1 : np.ndarray = None            # Cut data (interconnect_among_groups)
-    cut2 : np.ndarray = None            # Cut data (interconnect_among_groups)
+    cut1: np.ndarray = None            # Cut data (interconnect_among_groups)
+    cut2: np.ndarray = None            # Cut data (interconnect_among_groups)
+
+
+@dataclass
+class Polygon():              # Placeholder class (generate_cylindrical_pcb_print) (2,n)
+    data: np.ndarray = None
+
+@dataclass
+class PCBPart(Shape2D):
+    ind1: np.ndarray = None             # (generate_cylindrical_pcb_print) (2,n)
+    ind2: np.ndarray = None             # (generate_cylindrical_pcb_print) (2,n)
+    track_shape: np.ndarray = None      # (generate_cylindrical_pcb_print) (2,n)
+    polygon_track: Polygon = None       # (generate_cylindrical_pcb_print) (2,n)
+
+
+@dataclass
+class GroupLayout():
+    wire_parts: List[PCBPart] = None    # (generate_cylindrical_pcb_print)
+
+
+@dataclass
+class PCBLayer():
+    group_layouts: GroupLayout = None
+
+
+@dataclass
+class PCBTrack():
+    upper_layer: PCBLayer = None        # (generate_cylindrical_pcb_print)
+    lower_layer: PCBLayer = None        # (generate_cylindrical_pcb_print)
+
 
 @dataclass
 class CoilPart:
@@ -386,10 +417,11 @@ class CoilPart:
     groups: List[TopoGroup] = None          # Topological groups (topological_loop_grouping)
     group_centers: List[Shape3D] = None     # The centre of each group (calculate_group_centers)
     connected_group: List[TopoGroup] = None # Connected topological groups (interconnect_within_groups)
-    opening_cuts_among_groups:List[Cuts] = None  # ??? (interconnect_among_groups)
-    wire_path : Shape3D = None              # The shape of the wire track (interconnect_among_groups)
+    opening_cuts_among_groups: List[Cuts] = None  # ??? (interconnect_among_groups)
+    wire_path: Shape3D = None               # The shape of the wire track (interconnect_among_groups)
     shift_array: np.ndarray = None          # ??? (shift_return_paths) (,)
     points_to_shift: np.ndarray = None      # Array of which points to shift (shift_return_paths) (m,)
+    pcb_tracks: PCBTrack = None             # (generate_cylindrical_pcb_print)
 
 
 class CoilSolution:
@@ -437,9 +469,8 @@ class LayoutGradient:
     mean_gradient_in_target_direction: float = None
     std_gradient_in_target_direction: float = None
 
+
 # Used by process_raw_loops
-
-
 @dataclass
 class WirePart:
     """
