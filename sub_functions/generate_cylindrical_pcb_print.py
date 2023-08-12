@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 #TODO DEBUG: remove this
 from helpers.visualisation import compare
 
-def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_part=None):
+def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
     """
     Generate a 2D pattern that can be rolled around a cylinder.
 
@@ -30,12 +30,6 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
     Returns:
         coil_parts (List[CoilPart]): The updated CoilParts list.
     """
-
-    if m_c_part is not None:
-        base_debug = m_c_part.pcb_tracks
-        debug_out = m_c_part.generate_cylindrical_pcb_print
-        m_upper_group_layouts = base_debug.upper_layer.group_layouts
-        m_lower_group_layouts = base_debug.lower_layer.group_layouts
 
     pcb_track_width = input_args.conductor_cross_section_width
     cylinder_radius = input_args.cylinder_mesh_parameter_list[1]
@@ -116,9 +110,6 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                     lower_layer.group_layouts.append(lgl)
 
                 for group_ind, connected_group in enumerate(coil_part.connected_group):
-                    if m_c_part is not None:
-                        group_debug = m_c_part.connected_group[group_ind].group_debug
-
                     track_spiral_in = connected_group.spiral_in.v
                     track_spiral_out = connected_group.spiral_out.v
                     aligned_wire_path_spiral_in = np.dot(rot_mat, track_spiral_in)
@@ -140,23 +131,8 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                     center_position = (layout_2d_spiral_in[:, 0] + layout_2d_spiral_in[:, -1] +
                                       layout_2d_spiral_out[:, 0] + layout_2d_spiral_out[:, -1]) / 4
 
-                    if m_c_part is not None:
-                        assert compare(aligned_wire_path_spiral_in, group_debug.aligned_wire_path_spiral_in)
-                        assert compare(aligned_wire_path_spiral_out, group_debug.aligned_wire_path_spiral_out)
-                        assert compare(phi_coord_spiral_in, group_debug.phi_coord_spiral_in)
-                        assert compare(phi_coord_spiral_out, group_debug.phi_coord_spiral_out)
-                        assert compare(layout_2d_spiral_in, group_debug.layout_2d_spiral_in1)
-                        assert compare(layout_2d_spiral_out, group_debug.layout_2d_spiral_out1)
-                        assert compare(point_1, group_debug.point_1a)
-                        assert compare(point_2, group_debug.point_2a)
-                        assert compare(center_position, group_debug.center_position)
-
                     point_1 = point_1 + (point_1 - center_position) * (input_args.pcb_spiral_end_shift_factor / 100)
                     point_2 = point_2 + (point_2 - center_position) * (input_args.pcb_spiral_end_shift_factor / 100)
-
-                    if m_c_part is not None:
-                        assert compare(point_1, group_debug.point_1b)
-                        assert compare(point_2, group_debug.point_2b)
 
                     layout_2d_spiral_in = np.column_stack((
                         point_1,
@@ -174,60 +150,29 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                         point_1
                     ))
 
-                    if m_c_part is not None:
-                        assert compare(layout_2d_spiral_in, group_debug.layout_2d_spiral_in2)
-                        assert compare(layout_2d_spiral_out, group_debug.layout_2d_spiral_out2)
-
-
                     for group_layer in ['upper', 'lower']:
                         if group_layer == 'upper':
                             layout_2d = layout_2d_spiral_in
-                            if m_c_part is not None:
-                                wire_debug = m_upper_group_layouts[group_ind].wire_parts
-                                part_debug = wire_debug.part_debug
                         else:
                             layout_2d = layout_2d_spiral_out
-                            if m_c_part is not None:
-                                wire_debug = m_lower_group_layouts[group_ind].wire_parts
-                                part_debug = wire_debug.part_debug
-
                         positive_wrap = np.where(np.diff(layout_2d[0, :]) > 1.75 * np.pi)[0]
                         negative_wrap = np.where(np.diff(layout_2d[0, :]) < (1.75 * np.pi) * (-1))[0]
-
-                        if m_c_part is not None:
-                            assert group_layer == part_debug.layer_label
-                            assert compare(positive_wrap, part_debug.positive_wrap1)
-                            assert compare(negative_wrap, part_debug.negative_wrap1)
-
                         positive_wrap = positive_wrap[positive_wrap != layout_2d.shape[1] - 1]
                         negative_wrap = negative_wrap[negative_wrap != layout_2d.shape[1] - 1]
-
-                        if m_c_part is not None:
-                            assert compare(positive_wrap, part_debug.positive_wrap2)
-                            assert compare(negative_wrap, part_debug.negative_wrap2)
 
                         full_wrap_spart_inds = np.sort(
                             np.concatenate(([0], [layout_2d.shape[1] - 1], positive_wrap + 1, negative_wrap + 1))
                         )
-
-                        if m_c_part is not None:
-                            assert compare(full_wrap_spart_inds, part_debug.full_wrap_spart_inds-1)
 
                         layout_2d[:, positive_wrap + 1] -= np.vstack((
                             np.ones(len(positive_wrap)) * 2 * np.pi,
                             np.zeros(len(positive_wrap))
                         ))
 
-                        if m_c_part is not None:
-                            assert compare(layout_2d, part_debug.layout_2d1)
-
                         layout_2d[:, negative_wrap + 1] += np.vstack((
                             np.ones(len(negative_wrap)) * 2 * np.pi,
                             np.zeros(len(negative_wrap))
                         ))
-
-                        if m_c_part is not None:
-                            assert compare(layout_2d, part_debug.layout_2d2)
 
                         cut_rectangle = np.array([
                             [-np.pi, np.pi, np.pi, -np.pi],
@@ -239,21 +184,10 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                             ]
                         ])
 
-                        if m_c_part is not None:
-                            assert compare(cut_rectangle, part_debug.cut_rectangle1)
-
                         cut_rectangle = np.column_stack((cut_rectangle, cut_rectangle[:, 0]))
-
-                        if m_c_part is not None:
-                            assert compare(cut_rectangle, part_debug.cut_rectangle2)
 
                         layout_2d[0, :] *= cylinder_radius
                         cut_rectangle[0, :] *= cylinder_radius
-
-                        if m_c_part is not None:
-                            assert compare(layout_2d, part_debug.layout_2d3)
-                            assert compare(cut_rectangle, part_debug.cut_rectangle3)
-
 
                         pcb_parts = [None] * (len(full_wrap_spart_inds) - 1)
                         for point_ind in range(len(full_wrap_spart_inds) - 1):
@@ -263,38 +197,14 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                                 ind2 = full_wrap_spart_inds[point_ind + 1]
                             )
                             pcb_parts[point_ind] = pcb_part
-                            if m_c_part is not None:
-                                assert pcb_part.ind1 == wire_debug.ind1 - 1
-                                assert pcb_part.ind2 == wire_debug.ind2 - 1 # Pass
-                                assert compare(pcb_part.uv, wire_debug.point_debug.uv1) # Pass upper, Pass lower
 
-                        # ... Previous code ...
                         for wrap_ind in range(len(pcb_parts)):
                             intersection_cut = find_segment_intersections(pcb_parts[wrap_ind].uv, cut_rectangle)
-
-                            if m_c_part is not None:
-                                for debug_index, m_cut in enumerate(wire_debug.point_debug.intersection_cut):
-                                    if np.isnan(intersection_cut[debug_index].segment_inds):
-                                        assert np.isnan(m_cut.segment_inds)
-                                    else:
-                                        # Some weirdness: MATLAB returns a single number, not an array
-                                        if len(intersection_cut[debug_index].segment_inds) == 1:
-                                            assert intersection_cut[debug_index].segment_inds[0] == m_cut.segment_inds-1
-                                            assert compare(intersection_cut[debug_index].uv.reshape(2), m_cut.uv)
-                                        else:
-                                            assert compare(intersection_cut[debug_index].segment_inds, m_cut.segment_inds-1)
-                                            assert compare(intersection_cut[debug_index].uv, m_cut.uv)
-
                             real_cuts = [np.any(~np.isnan(cut.segment_inds)) for cut in intersection_cut]
                             is_real_cut_ind = np.where(real_cuts)[0]
 
                             if len(is_real_cut_ind) > 0:
-
-                                if m_c_part is not None:
-                                    assert is_real_cut_ind[0] == wire_debug.point_debug.is_real_cut_ind - 1
-
                                 wire_part_points = pcb_parts[wrap_ind].uv
-                                # 'DataStructure' object is not subscriptable
                                 uv_point = intersection_cut[is_real_cut_ind[0]].uv
                                 cut_segment_ind = intersection_cut[is_real_cut_ind[0]].segment_inds
 
@@ -302,25 +212,12 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                                 assert len(cut_segment_ind) == 1
                                 cut_segment_ind = cut_segment_ind[0]
 
-                                if m_c_part is not None:
-                                    assert compare(wire_part_points, wire_debug.point_debug.wire_part_points)
-                                    assert compare(uv_point.reshape(2), wire_debug.point_debug.uv_point)
-                                    assert cut_segment_ind == wire_debug.point_debug.cut_segment_ind-1
-
-
-                                if m_c_part is not None:
-                                    assert compare(pcb_parts[wrap_ind].uv, wire_debug.point_debug.uv1) # ??
-
                                 if cut_segment_ind != 0:
                                     pcb_parts[wrap_ind].uv = np.hstack((
                                         wire_part_points[:, :cut_segment_ind+1],
                                         uv_point.reshape(-1, 1),
                                         wire_part_points[:, cut_segment_ind+1:-1]
                                     ))
-
-                                if m_c_part is not None:
-                                    assert compare(pcb_parts[wrap_ind].uv, wire_debug.point_debug.uv2) # Pass upper, Fail lower (2, 378) is not (2, 380)
-
 
                         for wrap_ind in range(1, len(pcb_parts)):
                             if pcb_parts[wrap_ind - 1].uv[0, -1] > 0:
@@ -334,15 +231,10 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                                     pcb_parts[wrap_ind].uv
                                 ))
 
-                            if m_c_part is not None:
-                                assert compare(pcb_parts[wrap_ind].uv, wire_debug.point_debug.uv3)
-
-                        # pcb_parts(arrayfun(@(x) size(pcb_parts(x).uv, 2), 1:numel(pcb_parts)) < 2) = []; %delete fragments
                         pcb_parts = [part for part in pcb_parts if part.uv.shape[1] >= 2]  # delete fragments
 
                         # Generate the track shapes for the individual wire parts
                         # np.warnings.filterwarnings('ignore')
-                        # ... Previous code ...
                         for wire_part_ind in range(len(pcb_parts)):
                             if pcb_parts[wire_part_ind].uv.shape[1] > 5:
                                 arr1 = pcb_parts[wire_part_ind].uv[:, 0].reshape(-1, 1)
@@ -356,51 +248,20 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                             else:
                                 smoothed_track = pcb_parts[wire_part_ind].uv
 
-                            if m_c_part is not None:
-                                assert compare(smoothed_track, wire_debug.wire_debug.smoothed_track) # Pass 0
-
                             long_vecs = smoothed_track[:, 1:] - smoothed_track[:, :-1]
-
-                            if m_c_part is not None:
-                                assert compare(long_vecs, wire_debug.wire_debug.long_vecs1) # 
-
                             long_vecs = np.hstack((long_vecs, long_vecs[:, -1].reshape(-1, 1)))
-
-                            if m_c_part is not None:
-                                assert compare(long_vecs, wire_debug.wire_debug.long_vecs2) # 
-
                             long_vecs = long_vecs / np.tile(np.linalg.norm(long_vecs, axis=0), (2, 1))
 
-                            if m_c_part is not None:
-                                assert compare(long_vecs, wire_debug.wire_debug.long_vecs3) # 
-
                             ortho_vecs = np.vstack((long_vecs[1, :], -long_vecs[0, :]))
-
-                            if m_c_part is not None:
-                                assert compare(ortho_vecs, wire_debug.wire_debug.ortho_vecs1) # 
-
                             ortho_vecs = ortho_vecs / np.tile(np.linalg.norm(ortho_vecs, axis=0), (2, 1))
-
-                            if m_c_part is not None:
-                                assert compare(ortho_vecs, wire_debug.wire_debug.ortho_vecs2) # 
-
                             arr4 = smoothed_track + ortho_vecs * (pcb_track_width / 2)
                             arr5 = np.fliplr(smoothed_track) - np.fliplr(ortho_vecs) * (pcb_track_width / 2)
-
-                            if m_c_part is not None:
-                                assert compare(arr4, wire_debug.wire_debug.arr4) # 
-                                assert compare(arr5, wire_debug.wire_debug.arr5) # 
-
                             pcb_parts[wire_part_ind].track_shape = np.hstack((
                                 arr4,
                                 arr5
                             ))
 
                             arr6 = pcb_parts[wire_part_ind].track_shape[:, [0]]
-
-                            if m_c_part is not None:
-                                assert compare(arr6.reshape(2), wire_debug.wire_debug.arr6) # 
-
                             pcb_parts[wire_part_ind].track_shape = np.hstack((
                                 pcb_parts[wire_part_ind].track_shape,
                                 arr6
