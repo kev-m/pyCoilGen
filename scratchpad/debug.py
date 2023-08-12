@@ -468,19 +468,20 @@ def develop_generate_cylindrical_pcb_print():
     # Verify: pcb_tracks.{lower_layer/upper_layer}[0].group_layouts[0..n].wire_parts[0].{ind1,ind2,polygon_track.data,track_shape,uv}
     for index1 in range(len(coil_parts)):
         c_part = coil_parts[index1]
-        c_upper_group_layouts = c_part.pcb_tracks.upper_layer[0].group_layouts
+        c_upper_group_layouts = c_part.pcb_tracks.upper_layer.group_layouts
         m_upper_group_layouts = m_c_part.pcb_tracks.upper_layer.group_layouts
 
         layer = 'upper'
-        for index1, m_group_layout in enumerate(m_upper_group_layouts):
-            c_group_layout = c_upper_group_layouts[index1]
+        for index2, m_group_layout in enumerate(m_upper_group_layouts):
+            log.debug(" Checking upper %d", index2)
+            c_group_layout = c_upper_group_layouts[index2]
             c_wire_part = c_group_layout.wire_parts[0]
             m_wire_part = m_group_layout.wire_parts
 
-            visualize_vertex_connections(c_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index1}_uv_p.png')
-            visualize_vertex_connections(m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index1}_uv_m.png')
+            visualize_vertex_connections(c_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index2}_uv_p.png')
+            visualize_vertex_connections(m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index2}_uv_m.png')
 
-            visualize_compare_vertices(c_wire_part.uv.T, m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index1}_uv__diff.png')
+            visualize_compare_vertices(c_wire_part.uv.T, m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index2}_uv__diff.png')
 
             # Check....
             assert c_wire_part.ind1 == m_wire_part.ind1 - 1 # MATLAB base 1
