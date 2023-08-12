@@ -403,6 +403,19 @@ def test_interconnect_among_groups():
         assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass!
 
 
+def test_smooth_track_by_folding():
+    from sub_functions.smooth_track_by_folding import smooth_track_by_folding # 1
+    mat_data = load_matlab('debug/ygradient_coil')
+    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
+    m_c_part = m_coil_parts
+
+    for index1, m_group_layout in enumerate(m_c_part.pcb_tracks.upper_layer.group_layouts):
+        m_wire_part = m_group_layout.wire_parts
+        input = m_wire_part.point_debug.uv2[:, 1:-1]
+        m_debug = m_wire_part.wire_debug
+        arr2 = smooth_track_by_folding(input, 3, m_debug)
+        assert (compare(arr2, m_debug.arr2))  # Pass
+
 def develop_shift_return_paths():
     from sub_functions.shift_return_paths import shift_return_paths
     mat_data = load_matlab('debug/ygradient_coil')
@@ -495,4 +508,6 @@ if __name__ == "__main__":
     # test_interconnect_within_groups()
     # test_interconnect_among_groups()
     # develop_shift_return_paths()
+    
+    # test_smooth_track_by_folding()
     develop_generate_cylindrical_pcb_print()
