@@ -809,36 +809,36 @@ def CoilGen(log, input=None):
             c_part = coil_parts[index1]
 
             layer = 'upper'
-            c_upper_group_layouts = c_part.pcb_tracks.upper_layer[0].group_layouts
+            c_upper_group_layouts = c_part.pcb_tracks.upper_layer.group_layouts
             m_upper_group_layouts = m_c_part.pcb_tracks.upper_layer.group_layouts
-            for index1, m_group_layout in enumerate(m_upper_group_layouts):
-                c_group_layout = c_upper_group_layouts[index1]
+            for index2, m_group_layout in enumerate(m_upper_group_layouts):
+                c_group_layout = c_upper_group_layouts[index2]
                 c_wire_part = c_group_layout.wire_parts[0]
                 m_wire_part = m_group_layout.wire_parts
 
-                visualize_vertex_connections(c_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index1}_uv_p.png')
-                visualize_vertex_connections(m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index1}_uv_m.png')
+                visualize_vertex_connections(c_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index2}_uv_p.png')
+                visualize_vertex_connections(m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index2}_uv_m.png')
 
                 # visualize_compare_vertices(c_wire_part.uv.T, m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index1}_uv_diff.png')
 
                 # Check....
-                # assert c_wire_part.ind1 == m_wire_part.ind1 - 1 # MATLAB base 1
-                # assert c_wire_part.ind2 == m_wire_part.ind2 - 1 # MATLAB base 1
+                assert c_wire_part.ind1 == m_wire_part.ind1 - 1 # MATLAB base 1
+                assert c_wire_part.ind2 == m_wire_part.ind2 - 1 # MATLAB base 1
 
-                # assert compare(c_wire_part.uv, m_wire_part.uv)
-                # assert compare(c_wire_part.track_shape, m_wire_part.track_shape)
+                assert compare(c_wire_part.uv, m_wire_part.uv)
+                assert compare(c_wire_part.track_shape, m_wire_part.track_shape)
 
 
             layer = 'lower'
-            c_lower_group_layouts = c_part.pcb_tracks.lower_layer[0].group_layouts
+            c_lower_group_layouts = c_part.pcb_tracks.lower_layer.group_layouts
             m_lower_group_layouts = m_c_part.pcb_tracks.lower_layer.group_layouts
-            for index1, m_group_layout in enumerate(m_lower_group_layouts):
-                c_group_layout = c_lower_group_layouts[index1]
+            for index2, m_group_layout in enumerate(m_lower_group_layouts):
+                c_group_layout = c_lower_group_layouts[index2]
                 c_wire_part = c_group_layout.wire_parts[0]
                 m_wire_part = m_group_layout.wire_parts
 
-                visualize_vertex_connections(c_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index1}_uv_p.png')
-                visualize_vertex_connections(m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index1}_uv_m.png')
+                visualize_vertex_connections(c_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index2}_uv_p.png')
+                visualize_vertex_connections(m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index2}_uv_m.png')
 
         # Manual conclusion: Pass, when using MATLAB data
         #
