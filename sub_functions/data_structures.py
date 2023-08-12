@@ -388,8 +388,7 @@ class GroupLayout():
 
 @dataclass
 class PCBLayer():
-    # coil_part.pcb_tracks.upper_layer.group_layouts.wire_parts = pcb_parts
-    group_layouts: List[GroupLayout] = None
+    group_layouts: GroupLayout = None
 
 
 @dataclass
