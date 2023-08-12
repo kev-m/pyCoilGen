@@ -797,8 +797,8 @@ def CoilGen(log, input=None):
 
         # Create Cylindrical PCB Print
         print('Create PCB Print:')
-        coil_parts = generate_cylindrical_pcb_print(coil_parts, input_args, m_c_part)
-        np.save('debug/ygradient_coil_python_18_true.npy', coil_parts)
+        coil_parts = generate_cylindrical_pcb_print(coil_parts, input_args)
+        # np.save('debug/ygradient_coil_python_18_true.npy', coil_parts)
 
 
         #####################################################
