@@ -262,7 +262,7 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                             if m_c_part is not None:
                                 assert pcb_part.ind1 == wire_debug.ind1 - 1
                                 assert pcb_part.ind2 == wire_debug.ind2 - 1 # Pass
-                                assert compare(pcb_part.uv, wire_debug.point_debug.uv1) # Fail on the lower one!?
+                                assert compare(pcb_part.uv, wire_debug.point_debug.uv1) # Pass upper, Fail lower
 
                         # ... Previous code ...
                         for wrap_ind in range(len(pcb_parts)):
@@ -290,8 +290,18 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
 
                             if len(is_real_cut_ind) > 0:
                                 wire_part_points = pcb_parts[wrap_ind].uv
-                                uv_point = intersection_cut[0][is_real_cut_ind[0]].uv
-                                cut_segment_ind = intersection_cut[0][is_real_cut_ind[0]].segment_inds
+                                # 'DataStructure' object is not subscriptable
+                                uv_point = intersection_cut[is_real_cut_ind[0]].uv
+                                cut_segment_ind = intersection_cut[is_real_cut_ind[0]].segment_inds
+
+                                # Experience shows that this should be true
+                                assert len(cut_segment_ind) == 1
+                                cut_segment_ind = cut_segment_ind[0]
+
+                                if m_c_part is not None:
+                                    assert compare(wire_part_points, wire_debug.point_debug.wire_part_points)
+                                    assert compare(uv_point.reshape(2), wire_debug.point_debug.uv_point)
+                                    assert cut_segment_ind == wire_debug.point_debug.cut_segment_ind-1
 
                                 if cut_segment_ind != 0:
                                     pcb_parts[wrap_ind].uv = np.hstack((
@@ -299,7 +309,10 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                                         uv_point.reshape(-1, 1),
                                         wire_part_points[:, cut_segment_ind:-1]
                                     ))
-                                    
+
+                                if m_c_part is not None:
+                                    assert compare(pcb_parts[wrap_ind].uv, wire_debug.point_debug.uv2)
+
 
                         for wrap_ind in range(1, len(pcb_parts)):
                             if pcb_parts[wrap_ind - 1].uv[0, -1] > 0:
@@ -313,6 +326,9 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                                     pcb_parts[wrap_ind].uv
                                 ))
 
+                            if m_c_part is not None:
+                                assert compare(pcb_parts[wrap_ind].uv, wire_debug.point_debug.uv3)
+
                         # pcb_parts(arrayfun(@(x) size(pcb_parts(x).uv, 2), 1:numel(pcb_parts)) < 2) = []; %delete fragments
                         pcb_parts = [part for part in pcb_parts if part.uv.shape[1] >= 2]  # delete fragments
 
@@ -321,27 +337,67 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args, m_c_p
                         # ... Previous code ...
                         for wire_part_ind in range(len(pcb_parts)):
                             if pcb_parts[wire_part_ind].uv.shape[1] > 5:
+                                arr1 = pcb_parts[wire_part_ind].uv[:, 0].reshape(-1, 1)
+                                arr2 = smooth_track_by_folding(pcb_parts[wire_part_ind].uv[:, 1:-1], 3)
+                                arr3 = pcb_parts[wire_part_ind].uv[:, -1].reshape(-1, 1)
                                 smoothed_track = np.hstack((
-                                    pcb_parts[wire_part_ind].uv[:, 0].reshape(-1, 1),
-                                    smooth_track_by_folding(pcb_parts[wire_part_ind].uv[:, 1:-1], 3),
-                                    pcb_parts[wire_part_ind].uv[:, -1].reshape(-1, 1)
+                                    arr1,
+                                    arr2,
+                                    arr3
                                 ))
                             else:
                                 smoothed_track = pcb_parts[wire_part_ind].uv
 
+                            if m_c_part is not None:
+                                assert compare(smoothed_track, wire_debug.wire_debug.smoothed_track) # Pass 0
+
                             long_vecs = smoothed_track[:, 1:] - smoothed_track[:, :-1]
+
+                            if m_c_part is not None:
+                                assert compare(long_vecs, wire_debug.wire_debug.long_vecs1) # 
+
                             long_vecs = np.hstack((long_vecs, long_vecs[:, -1].reshape(-1, 1)))
+
+                            if m_c_part is not None:
+                                assert compare(long_vecs, wire_debug.wire_debug.long_vecs2) # 
+
                             long_vecs = long_vecs / np.tile(np.linalg.norm(long_vecs, axis=0), (2, 1))
+
+                            if m_c_part is not None:
+                                assert compare(long_vecs, wire_debug.wire_debug.long_vecs3) # 
+
                             ortho_vecs = np.vstack((long_vecs[1, :], -long_vecs[0, :]))
+
+                            if m_c_part is not None:
+                                assert compare(ortho_vecs, wire_debug.wire_debug.ortho_vecs1) # 
+
                             ortho_vecs = ortho_vecs / np.tile(np.linalg.norm(ortho_vecs, axis=0), (2, 1))
+
+                            if m_c_part is not None:
+                                assert compare(ortho_vecs, wire_debug.wire_debug.ortho_vecs2) # 
+
+                            arr4 = smoothed_track + ortho_vecs * (pcb_track_width / 2)
+                            arr5 = np.fliplr(smoothed_track) - np.fliplr(ortho_vecs) * (pcb_track_width / 2)
+
+                            if m_c_part is not None:
+                                assert compare(arr4, wire_debug.wire_debug.arr4) # 
+                                assert compare(arr5, wire_debug.wire_debug.arr5) # 
+
                             pcb_parts[wire_part_ind].track_shape = np.hstack((
-                                smoothed_track + ortho_vecs * (pcb_track_width / 2),
-                                np.fliplr(smoothed_track) - np.fliplr(ortho_vecs) * (pcb_track_width / 2)
+                                arr4,
+                                arr5
                             ))
+
+                            arr6 = pcb_parts[wire_part_ind].track_shape[:, [0]]
+
+                            if m_c_part is not None:
+                                assert compare(arr6.reshape(2), wire_debug.wire_debug.arr6) # 
+
                             pcb_parts[wire_part_ind].track_shape = np.hstack((
                                 pcb_parts[wire_part_ind].track_shape,
-                                pcb_parts[wire_part_ind].track_shape[:, [0]]
+                                arr6
                             ))
+
                             pcb_parts[wire_part_ind].polygon_track = Polygon(data=pcb_parts[wire_part_ind].track_shape)
 
                         # np.warnings.filterwarnings('default')
