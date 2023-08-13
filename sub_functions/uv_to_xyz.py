@@ -1,4 +1,5 @@
 import numpy as np
+
 from trimesh import Trimesh
 from trimesh.proximity import ProximityQuery
 
@@ -156,6 +157,7 @@ def get_target_triangle_def(point, planary_mesh: Trimesh):
 
     Returns:
         face (int): The index of the triangle that contains the point else None.
+        barycentric (ndarray): The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
 
     """
     return get_target_triangle(point, planary_mesh, ProximityQuery(planary_mesh))

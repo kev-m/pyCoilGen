@@ -22,6 +22,12 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
     Parameters:
         coil_parts (List[CoilPart]): A list of CoilPart structures, each containing a coil_mesh.
 
+    Initialises the following properties of a CoilPart:
+        - group_centers
+
+    Updates the following properties of a CoilPart:
+        - None
+        
     Returns:
         None. The 'group_centers' attribute is added to each CoilPart in the input list.
 
@@ -74,13 +80,10 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
                                       scale_ind, inner_center[0] - (total_center[0] - inner_center[0]) * scale_ind])
                 cut_line_y = np.array([inner_center[1] + (total_center[1] - inner_center[1]) *
                                       scale_ind, inner_center[1] - (total_center[1] - inner_center[1]) * scale_ind])
-                # M: intersection_points	1x1 struct	1x1	struct
                 intersection_points = find_segment_intersections(
                     coil_group.loops[-1].uv, np.array([cut_line_x, cut_line_y]))
 
-                # M: line_cut_inner_total_x	[-1.5648;-1.6132]	2x1	double
                 line_cut_inner_total_x = intersection_points[0].uv[0, :]
-                # M: line_cut_inner_total_y	[0.0160;0.0165]	2x1	double
                 line_cut_inner_total_y = intersection_points[0].uv[1, :]
 
                 if line_cut_inner_total_x.size == 0:
