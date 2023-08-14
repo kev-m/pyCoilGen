@@ -22,7 +22,6 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
     Updates the following properties of a CoilPart:
         - None
 
-
     Parameters:
         coil_parts (List[CoilPart]): List of CoilPart structures, each containing a coil_mesh.
         input_args (Any): The input argument (structure) used in the MATLAB function (not used in the Python function).
