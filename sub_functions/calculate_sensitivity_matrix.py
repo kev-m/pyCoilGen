@@ -11,7 +11,7 @@ from sub_functions.gauss_legendre_integration_points_triangle import gauss_legen
 log = logging.getLogger(__name__)
 
 
-def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input) -> List[CoilPart]:
+def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input_args) -> List[CoilPart]:
     """
     Calculate the sensitivity matrix.
 
@@ -24,7 +24,6 @@ def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input
     Args:
         coil_parts (List[CoilPart]): List of coil parts.
         target_field: The target field.
-        optimisation: Optimisation parameters.
 
     Returns:
         List[CoilPart]: Updated list of coil parts with sensitivity matrix.
@@ -34,7 +33,7 @@ def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input
         coil_part = coil_parts[part_ind]
 
         target_points = target_field.coords
-        gauss_order = input.gauss_order
+        gauss_order = input_args.gauss_order
 
         # Calculate the weights and the test point for the Gauss-Legendre integration on each triangle
         u_coord, v_coord, gauss_weight = gauss_legendre_integration_points_triangle(gauss_order)
@@ -52,9 +51,9 @@ def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input
             dCz = np.zeros(num_target_points)
 
             for tri_ind in range(len(basis_element.area)):
-                node_point = basis_element.triangle_points_ABC[tri_ind, 0, :]
-                point_b = basis_element.triangle_points_ABC[tri_ind, 1, :]
-                point_c = basis_element.triangle_points_ABC[tri_ind, 2, :]
+                node_point = basis_element.triangle_points_ABC[tri_ind, :, 0]
+                point_b = basis_element.triangle_points_ABC[tri_ind, :, 1]
+                point_c = basis_element.triangle_points_ABC[tri_ind, :, 2]
 
                 x1, y1, z1 = node_point
                 x2, y2, z2 = point_b
