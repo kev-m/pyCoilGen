@@ -1,3 +1,4 @@
+from inspect import currentframe
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -6,11 +7,11 @@ import logging
 
 log = logging.getLogger(__name__)
 
-from inspect import currentframe
 
 def get_linenumber():
     cf = currentframe()
     return cf.f_back.f_lineno
+
 
 def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True):
     """
@@ -136,7 +137,7 @@ def visualize_vertex_connections(vertices2_or_3d, image_x_size, image_path, boun
     """
     if boundaries is not None:
         shape_edges = np.shape(boundaries)
-        #log.debug(" faces shape: %s", shape_edges)
+        # log.debug(" faces shape: %s", shape_edges)
         if len(shape_edges) == 3:
             log.debug(" Edges shape: Extracting sub-array")
             boundaries = boundaries[0]
@@ -319,6 +320,7 @@ def visualize_compare_vertices(vertices2d1, vertices2d2, image_x_size, image_pat
     # Save the image
     image.save(image_path)
 
+
 def visualize_projected_vertices(vertices3d, image_x_size, image_path):
     """
     Project the provided 3D vertex array onto 2D.
@@ -335,7 +337,7 @@ def visualize_projected_vertices(vertices3d, image_x_size, image_path):
     """
     # Project the 3D onto 2D using:
     # Project the vertices onto the X-Y plane:  [x,y,z] -> [x+x*z, y+y*z, 0]
-    vertices2d = vertices3d[:,:2].copy() # Copy, otherwise modifies source
+    vertices2d = vertices3d[:, :2].copy()  # Copy, otherwise modifies source
     vertices2d[:, 0] += vertices3d[:, 0] * vertices3d[:, 2]
     vertices2d[:, 1] += vertices3d[:, 1] * vertices3d[:, 2]
 
