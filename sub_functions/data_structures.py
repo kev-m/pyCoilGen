@@ -263,7 +263,7 @@ class BasisElement:
     one_ring: np.ndarray                # node_triangles x 1
     area: np.ndarray                    # node_triangles x 1
     face_normal: np.ndarray             # node_triangles x 3
-    triangle_points_ABC: np.ndarray     # node_triangles x 3 (index, [node_point, point_b, point_c]) MATLAB shape
+    triangle_points_ABC: np.ndarray     # node_triangles x 3 (index, [node_point, point_b, point_c].T) MATLAB shape
     current: np.ndarray                 # node_triangles x 3
 
 
@@ -401,13 +401,13 @@ class CoilPart:
     coil_mesh: Mesh = None
     basis_elements: List[BasisElement] = None   # (calculate_basis_functions)
     is_real_triangle_mat: np.ndarray = None     # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
-    triangle_corner_coord_mat: np.ndarray = None# Integer (calculate_basis_functions) (num_vertices,var,3,3) MATLAB
+    triangle_corner_coord_mat: np.ndarray = None# Integer (calculate_basis_functions) (num_vertices,var,3,3) MATLAB shape
     current_mat: np.ndarray = None          # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
     area_mat: np.ndarray = None             # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
     face_normal_mat: np.ndarray = None      # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
     current_density_mat: np.ndarray = None  # (calculate_basis_functions)
     resistance_matrix: np.ndarray = None    # num_vertices x num_vertices
-    one_ring_list: np.ndarray = None        # (calculate_one_ring_by_mesh) (num_vertices,variable)
+    one_ring_list: np.ndarray = None        # (calculate_one_ring_by_mesh) (num_vertices,variable) Python shape
     node_triangles: np.ndarray = None       # (calculate_one_ring_by_mesh) (num_vertices,variable)
     node_triangle_mat: np.ndarray = None    # Integer (calculate_one_ring_by_mesh) (num_vertices,num_faces)
     raw: RawPart = None
