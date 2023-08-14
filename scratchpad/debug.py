@@ -347,8 +347,76 @@ def test_interconnect_within_groups():
         log.debug(" compare uv: %s", compare(c_connected_group.uv, m_connected_group.uv))
         log.debug(" compare v: %s", compare(c_connected_group.v, m_connected_group.v))
 
+def develop_calculate_one_ring_by_mesh():
+    from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 
-def brute_test_process_raw_loops_brute():
+    class MockMesh():
+        def __init__(self, m_coil_part) -> None:
+            self.m_coil_part = m_coil_part
+            self._vertices = self.m_coil_part.coil_mesh.v.copy() # (264,3)
+            m_faces = self.m_coil_part.coil_mesh.faces.copy() - 1
+            self._faces = m_faces.T # (480,3)
+            self._vertex_faces = None
+            self.n = m_coil_part.coil_mesh.n.T.copy()
+
+        def get_vertices(self):
+            return self._vertices
+        
+        def get_faces(self):
+            return self._faces
+        
+        def vertex_faces(self):
+            """
+            Get all the vertex face connections.
+
+            For each vertex, fetch the indices of the faces that it is connected to.
+
+            Returns:
+                ndarray: An array of arrays of vertex indices.
+            """
+            if self._vertex_faces is None:
+                _vertex_faces = np.empty((self.m_coil_part.coil_mesh.v.shape[0]), dtype=object)
+                # For each vertex, find the faces that reference this vertex.
+                for index1 in range(self._vertices.shape[0]):
+                    # Brute force calculation, just iterate of all faces
+                    this_vertex_faces = []
+                    for face_index, face in enumerate(self._faces):
+                        if index1 in face:
+                            this_vertex_faces.append(face_index)
+                    this_vertex_faces.reverse()
+                    _vertex_faces[index1] = this_vertex_faces
+                self._vertex_faces = _vertex_faces
+
+            return self._vertex_faces
+
+    # MATLAB saved data
+    mat_data = load_matlab('debug/ygradient_coil')
+    mat_data_out = mat_data['coil_layouts'].out
+    m_coil_parts = mat_data_out.coil_parts
+    m_coil_part = m_coil_parts
+
+    debug_data = m_coil_part
+    mock_mesh = MockMesh(m_coil_part)
+    p_coil_parts = [DataStructure(coil_mesh=mock_mesh)]
+    ###################################################################################
+    # Function under test
+    coil_parts2 = calculate_one_ring_by_mesh(p_coil_parts)
+    ###################################################################################
+
+    m_or_one_ring_list = m_coil_part.one_ring_list - 1
+    # Transpose the entries
+    for index1 in range(len(m_or_one_ring_list)):
+        m_or_one_ring_list[index1] = m_or_one_ring_list[index1].T
+    m_or_node_triangles = m_coil_part.node_triangles - 1
+    m_or_node_triangle_mat = m_coil_part.node_triangle_mat
+
+    p_coil_part = coil_parts2[0]
+    assert (compare(p_coil_part.node_triangle_mat, m_or_node_triangle_mat)) # Pass
+    assert (compare(p_coil_part.one_ring_list, m_or_one_ring_list))         # Fail: Order is different
+    assert (compare(p_coil_part.node_triangles, m_or_node_triangles))       # Fail: Order is different
+
+
+def develop_process_raw_loops():
     from sub_functions.process_raw_loops import process_raw_loops
 
     # MATLAB saved data
@@ -358,7 +426,8 @@ def brute_test_process_raw_loops_brute():
     m_coil_part = m_coil_parts
 
     # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
-    p_coil_parts = np.load('debug/ygradient_coil_python_10.npy', allow_pickle=True)
+    #p_coil_parts = np.load('debug/ygradient_coil_python_10_False.npy', allow_pickle=True)
+    p_coil_parts = np.load('debug/ygradient_coil_python_10_True.npy', allow_pickle=True)
 
     input_args = DataStructure(smooth_flag=1, smooth_factor=1, min_loop_significance=1)
     target_field = mat_data_out.target_field
@@ -369,9 +438,18 @@ def brute_test_process_raw_loops_brute():
     coil_parts2 = process_raw_loops(p_coil_parts, input_args, target_field)
     ###################################################################################
 
-    # Checks:
+
+    # Verification
     coil_part = coil_parts2[0]
     assert len(coil_part.contour_lines) == len(m_coil_part.contour_lines)
+    assert compare(coil_part.combined_loop_field, m_coil_part.combined_loop_field, double_tolerance=5e-7)  # Pass!
+    assert compare(coil_part.loop_significance, m_coil_part.loop_signficance, double_tolerance=0.005)
+    assert compare(coil_part.field_by_loops, m_coil_part.field_by_loops, double_tolerance=2e-7)  # Pass!
+    
+
+
+    # Checks:
+    coil_part = coil_parts2[0]
     assert abs(coil_part.combined_loop_length - m_coil_part.combined_loop_length) < 0.0005  # Pass
     assert compare(coil_part.combined_loop_field, m_coil_part.combined_loop_field, double_tolerance=5e-7)  # Pass
     assert compare(coil_part.loop_significance, m_coil_part.loop_signficance, double_tolerance=0.005)
@@ -383,7 +461,7 @@ def test_interconnect_among_groups():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    p_coil_parts = np.load('debug/ygradient_coil_python_15_true.npy', allow_pickle=True)
+    p_coil_parts = np.load('debug/ygradient_coil_python_15_True.npy', allow_pickle=True)
 
     input_args = DataStructure(interconnection_cut_width=0.1)
     coil_parts = interconnect_among_groups(p_coil_parts, input_args, m_c_part)
@@ -421,7 +499,7 @@ def develop_shift_return_paths():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    p_coil_parts = np.load('debug/ygradient_coil_python_16_true.npy', allow_pickle=True)
+    p_coil_parts = np.load('debug/ygradient_coil_python_16_True.npy', allow_pickle=True)
 
     input_args = DataStructure(interconnection_cut_width=0.1,
                                skip_normal_shift=0,
@@ -455,7 +533,7 @@ def develop_generate_cylindrical_pcb_print():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    p_coil_parts = np.load('debug/ygradient_coil_python_17_true.npy', allow_pickle=True)
+    p_coil_parts = np.load('debug/ygradient_coil_python_17_True.npy', allow_pickle=True)
 
     input_args = DataStructure(conductor_cross_section_width=0.015,
                                cylinder_mesh_parameter_list=[0.8, 0.3, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
@@ -505,10 +583,11 @@ if __name__ == "__main__":
     # debug5() # Refine a simple 1 face mesh into four.
     # debug6() # Examine cylinder_radius500mm_length1500mm.stl
     # test_add_nearest_ref_point_to_curve()
-    # brute_test_process_raw_loops_brute()
+    develop_calculate_one_ring_by_mesh()
+    # develop_process_raw_loops()
     # test_interconnect_within_groups()
     # test_interconnect_among_groups()
     # develop_shift_return_paths()
     
     # test_smooth_track_by_folding()
-    develop_generate_cylindrical_pcb_print()
+    # develop_generate_cylindrical_pcb_print()
