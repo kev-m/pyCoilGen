@@ -15,6 +15,14 @@ def calculate_one_ring_by_mesh(coil_parts: List[CoilPart]):
     """
     Calculate the one-ring neighborhood of vertices in the coil mesh.
 
+    Initialises the following properties of a CoilPart:
+        - one_ring_list
+        - node_triangles
+        - node_triangle_mat
+
+    Updates the following properties of a CoilPart:
+        - None
+
     Args:
         coil_parts (List[CoilPart]): List of coil parts.
 
