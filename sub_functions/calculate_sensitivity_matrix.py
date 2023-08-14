@@ -11,9 +11,15 @@ from sub_functions.gauss_legendre_integration_points_triangle import gauss_legen
 log = logging.getLogger(__name__)
 
 
-def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input):
+def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input) -> List[CoilPart]:
     """
     Calculate the sensitivity matrix.
+
+    Initialises the following properties of a CoilPart:
+        - sensitivity_matrix: (3, m, n)
+
+    Updates the following properties of a CoilPart:
+        - None
 
     Args:
         coil_parts (List[CoilPart]): List of coil parts.
