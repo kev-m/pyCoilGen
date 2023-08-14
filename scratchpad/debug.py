@@ -438,6 +438,51 @@ def develop_calculate_sensitivity_matrix():
     assert (compare(coil_part.sensitivity_matrix, m_c_part.sensitivity_matrix))  #
 
 
+def develop_calc_contours_by_triangular_potential_cuts():
+    from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
+
+    # MATLAB saved data
+    mat_data = load_matlab('debug/ygradient_coil')
+    mat_data_out = mat_data['coil_layouts'].out
+    m_coil_parts = mat_data_out.coil_parts
+    m_c_part = m_coil_parts
+
+    # Python saved data 09: calc_potential_levels
+    # p_coil_parts = np.load('debug/ygradient_coil_python_09_False.npy', allow_pickle=True)
+    p_coil_parts = np.load('debug/ygradient_coil_python_09_True.npy', allow_pickle=True)
+
+    ###################################################################################
+    # Function under test
+    coil_parts2 = calc_contours_by_triangular_potential_cuts(p_coil_parts)
+    ###################################################################################
+
+    coil_part = coil_parts2[0]
+
+    assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
+    for index1, m_ru_points in enumerate(m_c_part.raw.unsorted_points):
+        c_ru_point = coil_part.raw.unsorted_points[index1]
+        m_ru_point = m_c_part.raw.unsorted_points[index1]
+        assert len(c_ru_point.edge_ind) == len(m_ru_point.edge_ind)
+        assert np.isclose(c_ru_point.potential, m_ru_point.potential)
+        assert c_ru_point.uv.shape[0] == m_ru_point.uv.shape[0]  # Python shape!
+        assert(compare(c_ru_point.edge_ind, m_ru_point.edge_ind)) # Different ordering?
+        assert(compare(c_ru_point.uv, m_ru_point.uv)) # Order is different
+
+    assert len(coil_part.raw.unarranged_loops) == len(m_c_part.raw.unarranged_loops)
+    for index1, m_ru_loops in enumerate(m_c_part.raw.unarranged_loops):
+        c_loops = coil_part.raw.unarranged_loops[index1]
+        m_loops = m_c_part.raw.unarranged_loops[index1]
+        assert len(c_loops.loop) == len(m_loops.loop)
+        # Skip the next section, the loops are different!!
+        # for index2, m_ru_loop in enumerate(m_ru_loops.loop):
+        #    c_ru_loop = c_loops.loop[index2]
+        #    assert c_ru_loop.uv.shape[0] == m_ru_loop.uv.shape[0] # Python shape!
+        #    assert(compare_contains(c_ru_loop.uv, m_ru_loop.uv)) #
+        #    assert len(c_ru_loop.edge_inds) == len(m_ru_loop.edge_inds)
+        #    #assert(compare(c_ru_point.edge_inds, m_ru_point.edge_inds))
+
+
+
 def develop_process_raw_loops():
     from sub_functions.process_raw_loops import process_raw_loops
 
@@ -697,12 +742,12 @@ if __name__ == "__main__":
     # test_add_nearest_ref_point_to_curve()
     # develop_calculate_one_ring_by_mesh()
     # develop_calculate_basis_functions()
-    develop_calculate_sensitivity_matrix()
+    # develop_calculate_sensitivity_matrix()
     ## calculate_gradient_sensitivity_matrix
     ## calculate_resistance_matrix
     ## stream_function_optimization
     ## calc_potential_levels
-    ## calc_contours_by_triangular_potential_cuts
+    develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
     # test_interconnect_within_groups()
     # test_interconnect_among_groups()
