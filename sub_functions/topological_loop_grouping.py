@@ -190,10 +190,17 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         # Build the group container
         coil_part.groups = np.empty((len(loop_groups)), dtype=object)
         for iiii, loop_group in enumerate(loop_groups):
-            # Sort the loops in each group according to the rank
-            # Sort the loop groups based on the number of elements in higher_loops for each group
-            unsorted = [len(higher_loops[x]) for x in loop_group]
-            sort_ind_loops = sorted(unsorted, reverse=True)
+            # Sort the loops in each group according to the rank (the number of elements in higher_loops for each
+            # group)
+            # TODO: Check if higher_loops is correct!
+            # unsorted1 = [len(higher_loops[x]) for x in loop_group]
+            # sort_ind_loops1 = sorted(unsorted1, reverse=True)
+
+            # Alternate:
+            # Sort the loops in each group according to the ordered potentials
+            potentials = [coil_part.contour_lines[x].current_orientation *
+                          coil_part.contour_lines[x].potential for x in coil_part.loop_groups[iiii]]
+            sort_ind_loops = sorted(range(len(potentials)), key=lambda i: potentials[i])
 
             this_group = TopoGroup()    # Create Topopological group container
             this_group.loops = []       # Assign loops member
