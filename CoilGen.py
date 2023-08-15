@@ -7,7 +7,8 @@ import logging
 # Debug and development checking imports
 from helpers.extraction import get_element_by_name, load_matlab, get_and_show_debug
 from helpers.visualisation import compare, compare_contains, visualize_vertex_connections, \
-    visualize_multi_connections, visualize_compare_vertices, visualize_compare_contours, get_linenumber
+    visualize_multi_connections, visualize_compare_vertices, visualize_compare_contours, get_linenumber, \
+    visualize_projected_vertices
 from sub_functions.data_structures import Mesh
 
 # Local imports
@@ -37,9 +38,9 @@ from sub_functions.topological_loop_grouping import topological_loop_grouping
 from sub_functions.calculate_group_centers import calculate_group_centers
 from sub_functions.interconnect_within_groups import interconnect_within_groups
 from sub_functions.interconnect_among_groups import interconnect_among_groups
+from sub_functions.shift_return_paths import shift_return_paths
+from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
 """
-from shift_return_paths import shift_return_paths
-from generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
 from create_sweep_along_surface import create_sweep_along_surface
 from calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
 from evaluate_field_errors import evaluate_field_errors
@@ -130,6 +131,7 @@ def CoilGen(log, input=None):
 
     # Print the input variables
     # DEBUG
+    use_matlab_data = False
     if get_level() >= DEBUG_VERBOSE:
         log.debug('Parse inputs: %s', input_args)
 
@@ -138,7 +140,7 @@ def CoilGen(log, input=None):
     if input_args.sf_source_file == 'none':
         # Read the input mesh
         print('Load geometry:')
-        coil_mesh, target_mesh, secondary_target_mesh = read_mesh(input_args)
+        coil_mesh, target_mesh, secondary_target_mesh = read_mesh(input_args)  # 01
 
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- vertices shape: %s", coil_mesh.get_vertices().shape)  # (264,3)
@@ -155,11 +157,13 @@ def CoilGen(log, input=None):
 
         # Split the mesh and the stream function into disconnected pieces
         print('Split the mesh and the stream function into disconnected pieces.')
-        coil_parts = split_disconnected_mesh(coil_mesh)
+        coil_parts = split_disconnected_mesh(coil_mesh)  # 00
+        # np.save(f'debug/ygradient_coil_python_00_{use_matlab_data}.npy', coil_parts)
 
         # Upsample the mesh density by subdivision
         print('Upsample the mesh by subdivision:')
-        coil_parts = refine_mesh(coil_parts, input_args)
+        coil_parts = refine_mesh(coil_parts, input_args)  # 01
+        # np.save(f'debug/ygradient_coil_python_01_{use_matlab_data}.npy', coil_parts)
         # log.debug("coil_parts: %s", coil_parts)
 
         assert (compare(coil_parts[0].coil_mesh.get_faces(), m_faces))
@@ -167,7 +171,8 @@ def CoilGen(log, input=None):
 
         # Parameterize the mesh
         print('Parameterize the mesh:')
-        coil_parts = parameterize_mesh(coil_parts, input_args)
+        coil_parts = parameterize_mesh(coil_parts, input_args)  # 02
+        # np.save(f'debug/ygradient_coil_python_02_{use_matlab_data}.npy', coil_parts)
         solution.coil_parts = coil_parts
 
         ######################################################
@@ -179,18 +184,21 @@ def CoilGen(log, input=None):
 
         # Plot the two boundaries and see the difference
         if get_level() >= DEBUG_VERBOSE:
-            visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_coil_mesh_boundary.png', coil_mesh.boundary)
-            visualize_vertex_connections(coil_mesh.v, 800, 'images/uv1_m_boundary.png', m_boundary)
+            # visualize_vertex_connections(coil_mesh.v, 800, 'images/04_uv1_coil_mesh_boundary.png', coil_mesh.boundary)
+            # visualize_vertex_connections(coil_mesh.v, 800, 'images/04_uv1_m_boundary.png', m_boundary)
+
+            p2d = visualize_projected_vertices(coil_mesh.v, 800, 'images/02_coil_mesh_v_p.png')
+            m2d = visualize_projected_vertices(m_c_part.coil_mesh.v, 800, 'images/02_coil_mesh_v_m.png')
+
+            # Plot the two UV and see the difference
+            visualize_compare_vertices(p2d, m2d, 800, 'images/04_coil_mesh_v_diff.png')
+            visualize_compare_vertices(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 800, 'images/02_coil_mesh_uv_diff.png')
 
         if get_level() > DEBUG_VERBOSE:
             log.debug(" m_boundary: %s", m_boundary)
             log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
         # Question: Does order matter?
         assert (compare_contains(coil_mesh.boundary, m_boundary, strict=False))  # Pass
-
-        # Plot the two UV and see the difference
-        if get_level() >= DEBUG_VERBOSE:
-            visualize_compare_vertices(m_uv, coil_mesh.uv, 800, 'images/uvdiff_m_uv.png')
         assert (compare(coil_mesh.uv, m_uv, 0.0001))    # Pass
 
         # Define the target field
@@ -220,7 +228,8 @@ def CoilGen(log, input=None):
 
         # Find indices of mesh nodes for one ring basis functions
         print('Calculate mesh one ring:')
-        coil_parts = calculate_one_ring_by_mesh(coil_parts)
+        coil_parts = calculate_one_ring_by_mesh(coil_parts)  # 03
+        # np.save(f'debug/ygradient_coil_python_03_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEBUG
@@ -230,8 +239,8 @@ def CoilGen(log, input=None):
         node_triangles = coil_part.node_triangles
         node_triangle_mat = coil_part.node_triangle_mat
 
-        visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list.png', one_ring_list[0:25])
-        visualize_multi_connections(coil_mesh.uv, 800, 'images/one-1-ring_list_m.png', m_or_one_ring_list[0:25])
+        visualize_multi_connections(coil_mesh.uv, 800, 'images/03_one-1-ring_list.png', one_ring_list[0:25])
+        visualize_multi_connections(coil_mesh.uv, 800, 'images/03_one-1-ring_list_m.png', m_or_one_ring_list[0:25])
 
         assert (compare_contains(one_ring_list, m_or_one_ring_list, strict=False))   # PASS - different order!
         assert (compare_contains(node_triangles, m_or_node_triangles, strict=False))  # PASS - different order!
@@ -239,7 +248,6 @@ def CoilGen(log, input=None):
 
         # =================================================
         # HACK: Use MATLAB's one_ring_list, etc.
-        use_matlab_data = True
         if use_matlab_data:
             log.warning("Using MATLAB's one_ring_list in %s, line %d", __file__, get_linenumber())
             coil_part.one_ring_list = m_or_one_ring_list
@@ -251,7 +259,8 @@ def CoilGen(log, input=None):
 
         # Create the basis function container which represents the current density
         print('Create the basis function container which represents the current density:')
-        coil_parts = calculate_basis_functions(coil_parts)
+        coil_parts = calculate_basis_functions(coil_parts)  # 04
+        np.save(f'debug/ygradient_coil_python_04_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -269,21 +278,22 @@ def CoilGen(log, input=None):
         for top in m_triangle_corner_coord_mat:
             for index1 in range(top.shape[0]):
                 matrix = top[index1]
-                top[index1] = matrix.T
+                # top[index1] = matrix.T
 
         if use_matlab_data:
             assert (compare(coil_part.current_mat, m_current_mat))  # Pass!
             assert (compare(coil_part.face_normal_mat, m_face_normal_mat))  # Pass!
             assert (compare(coil_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat))  # Pass!
         else:
-            assert (compare_contains(coil_part.current_mat, m_current_mat, strict=False))  # Pass
+            # Pass TODO: Check which ordering is off.
+            assert (compare_contains(coil_part.current_mat, m_current_mat, strict=False))
             assert (compare_contains(coil_part.triangle_corner_coord_mat,
                     m_triangle_corner_coord_mat, strict=False))  # Pass, Transposed
             # assert (compare(coil_part.triangle_corner_coord_mat, m_triangle_corner_coord_mat))  # Different order?
+            assert (compare_contains(coil_part.face_normal_mat, m_face_normal_mat, strict=False))  # Pass
 
         assert (compare(coil_part.is_real_triangle_mat, m_is_real_triangle_mat))  # Pass
         assert (compare(coil_part.area_mat, m_area_mat))  # Pass
-        assert (compare_contains(coil_part.face_normal_mat, m_face_normal_mat, strict=False))  # Pass
         assert (compare(coil_part.current_density_mat, m_current_density_mat))  # Pass
 
         # Verify basis_elements
@@ -293,27 +303,27 @@ def CoilGen(log, input=None):
             cg_element = coil_part.basis_elements[index1]
             m_element = m_basis_elements[index1]
 
-            # Tranpose MATLAB matrix
-            for index2 in range(len(m_element.triangle_points_ABC)):
-                m_element.triangle_points_ABC[index2] = m_element.triangle_points_ABC[index2].T
-
             # Verify: triangles, stream_function_potential, area, face_normal, triangle_points_ABC, current
-            assert (compare_contains(cg_element.triangles, m_element.triangles-1))  # Pass
-            # assert (compare(cg_element.triangles, m_element.triangles-1))  # Pass!
-            assert (cg_element.stream_function_potential == m_element.stream_function_potential)  # Pass
             assert (compare(cg_element.area, m_element.area))  # Pass
-            assert (compare_contains(cg_element.face_normal, m_element.face_normal))  # Pass
-            # assert (compare(cg_element.face_normal, m_element.face_normal))  # Pass!
-            assert (compare_contains(cg_element.triangle_points_ABC, m_element.triangle_points_ABC))  # Pass, transposed
-            # assert (compare(cg_element.triangle_points_ABC, m_element.triangle_points_ABC))  # ???, transposed
-            assert (compare_contains(cg_element.current, m_element.current))  # Pass
-            # assert (compare(cg_element.current, m_element.current))  # Pass!
+            assert (cg_element.stream_function_potential == m_element.stream_function_potential)  # Pass
+
+            if use_matlab_data:
+                assert (compare(cg_element.triangles, m_element.triangles-1))  # Pass!
+                assert (compare(cg_element.face_normal, m_element.face_normal))  # Pass!
+                assert (compare(cg_element.current, m_element.current))  # Pass!
+                assert (compare(cg_element.triangle_points_ABC, m_element.triangle_points_ABC))  # Pass
+            else:
+                assert (compare_contains(cg_element.triangles, m_element.triangles-1))  # Pass
+                assert (compare_contains(cg_element.face_normal, m_element.face_normal))  # Pass
+                assert (compare_contains(cg_element.triangle_points_ABC, m_element.triangle_points_ABC))  # Pass
+                assert (compare_contains(cg_element.current, m_element.current))  # Pass
         #
         #####################################################
 
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
-        coil_parts = calculate_sensitivity_matrix(coil_parts, target_field, input_args)
+        coil_parts = calculate_sensitivity_matrix(coil_parts, target_field, input_args)  # 05
+        # np.save(f'debug/ygradient_coil_python_05_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -330,7 +340,8 @@ def CoilGen(log, input=None):
 
         # Calculate the gradient sensitivity matrix Gn
         print('Calculate the gradient sensitivity matrix:')
-        coil_parts = calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args)
+        coil_parts = calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args)  # 06
+        # np.save(f'debug/ygradient_coil_python_06_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -349,7 +360,8 @@ def CoilGen(log, input=None):
 
         # Calculate the resistance matrix Rmn
         print('Calculate the resistance matrix:')
-        coil_parts = calculate_resistance_matrix(coil_parts, input_args)
+        coil_parts = calculate_resistance_matrix(coil_parts, input_args)  # 07
+        # np.save(f'debug/ygradient_coil_python_07_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -368,7 +380,8 @@ def CoilGen(log, input=None):
 
         # Optimize the stream function toward target field and further constraints
         print('Optimize the stream function toward target field and secondary constraints:')
-        coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)
+        coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)  # 08
+        # np.save(f'debug/ygradient_coil_python_08_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -406,7 +419,8 @@ def CoilGen(log, input=None):
 
     # Calculate the potential levels for the discretization
     print('Calculate the potential levels for the discretization:')
-    coil_parts, primary_surface_ind = calc_potential_levels(coil_parts, combined_mesh, input_args)
+    coil_parts, primary_surface_ind = calc_potential_levels(coil_parts, combined_mesh, input_args)  # 09
+    np.save(f'debug/ygradient_coil_python_09_{use_matlab_data}.npy', coil_parts)
 
     #####################################################
     # DEVELOPMENT: Remove this
@@ -432,7 +446,8 @@ def CoilGen(log, input=None):
 
     # Generate the contours
     print('Generate the contours:')
-    coil_parts = calc_contours_by_triangular_potential_cuts(coil_parts)
+    coil_parts = calc_contours_by_triangular_potential_cuts(coil_parts)  # 10
+    np.save(f'debug/ygradient_coil_python_10_{use_matlab_data}.npy', coil_parts)
 
     #####################################################
     # DEVELOPMENT: Remove this
@@ -481,33 +496,45 @@ def CoilGen(log, input=None):
         # log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv))
 
     if get_level() >= DEBUG_VERBOSE:
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/contour1_p.png', coil_part.contour_lines)
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/contour1_m.png', m_contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/10_contour1_p.png', coil_part.contour_lines)
+        visualize_compare_contours(m_c_part.coil_mesh.uv.T, 800, 'images/10_contour1_m.png', m_contour_lines)
+
+        for index1, m_contour in enumerate(m_contour_lines):
+            # MATLAB shape
+            p_contour = coil_part.contour_lines[index1]
+            visualize_vertex_connections(p_contour.uv.T, 800, f'images/10_contour_lines{index1}_p.png')
+            visualize_vertex_connections(m_contour.uv.T, 800, f'images/10_contour_lines{index1}_m.png')
 
     # Manual conclusion: Not identical, but really close.
 
     # =================================================
     # HACK: Use MATLAB's contour_lines
     if use_matlab_data:
-        log.warning("Using MATLAB's contour_lines1 in %s, line %d", __file__, get_linenumber())
+        log.warning("Using MATLAB's contour_lines in %s, line %d", __file__, get_linenumber())
         for index1, m_contour in enumerate(m_contour_lines):
             c_contour = coil_part.contour_lines[index1]
             c_contour.uv = m_contour.uv
     # =================================================
-
-    # np.save('debug/ygradient_coil_python_10.npy', coil_parts)
 
     #
     #####################################################
 
     # Process contours
     print('Process contours: Evaluate loop significance')
-    coil_parts = process_raw_loops(coil_parts, input_args, target_field)
+    coil_parts = process_raw_loops(coil_parts, input_args, target_field)  # 11
+    np.save(f'debug/ygradient_coil_python_11_{use_matlab_data}.npy', coil_parts)
 
     #####################################################
     # DEVELOPMENT: Remove this
     # DEBUG
     # Verify: Coil Part values: field_by_loops, loop_significance, combined_loop_field, combined_loop_length
+
+    m_contour_lines = m_c_part.contour_lines
+    p2d = visualize_projected_vertices(coil_part.combined_loop_field.T, 800, 'images/11_combined_loop_field_p.png')
+    m2d = visualize_projected_vertices(m_c_part.combined_loop_field.T, 800, 'images/11_combined_loop_field_m.png')
+
+    # Plot the two fields and see the difference
+    visualize_compare_vertices(p2d, m2d, 800, 'images/11_combined_loop_field_diff.png')
 
     assert len(coil_part.contour_lines) == len(m_c_part.contour_lines)
     assert abs(coil_part.combined_loop_length - m_c_part.combined_loop_length) < 0.002  # 0.0005 # Pass
@@ -516,9 +543,9 @@ def CoilGen(log, input=None):
         assert compare(coil_part.loop_significance, m_c_part.loop_signficance, double_tolerance=0.005)
         assert compare(coil_part.field_by_loops, m_c_part.field_by_loops, double_tolerance=2e-7)  # Pass!
     else:
+        # assert compare(coil_part.field_by_loops, m_c_part.field_by_loops, double_tolerance=2e-7) # Fail
+        assert compare(coil_part.loop_significance, m_c_part.loop_signficance, double_tolerance=3.89)  # 0.09)  # Eeek!
         # assert compare(coil_part.combined_loop_field, m_c_part.combined_loop_field, double_tolerance=5e-6) # Fails
-        assert compare(coil_part.loop_significance, m_c_part.loop_signficance, double_tolerance=3.9)  # Eeek!
-        # assert compare(coil_part.field_by_loops, m_c_part.field_by_loops, double_tolerance=2e-7) # Pass!
 
     # Compare updated contour lines
     for index1 in range(len(coil_part.contour_lines)):
@@ -535,28 +562,18 @@ def CoilGen(log, input=None):
             log.debug(" -- compare v: %s", compare(c_contour.v, m_contour.v))
 
     if get_level() >= DEBUG_VERBOSE:
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/contour2_p.png', coil_part.contour_lines)
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/contour2_m.png', m_contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/11_contour_lines_p.png', coil_part.contour_lines)
+        visualize_compare_contours(coil_mesh.uv, 800, 'images/11_contour_lines_m.png', m_contour_lines)
 
     # Manual conclusion: Not identical, but close.
-
-    # =================================================
-    # HACK: Use MATLAB's contour_lines.v
-    if use_matlab_data:
-        m_contour_lines = m_c_part.contour_lines
-        log.warning("Using MATLAB's contour_lines1 in %s, line %d", __file__, get_linenumber())
-        for index1, m_contour in enumerate(m_contour_lines):
-            c_contour = coil_part.contour_lines[index1]
-            c_contour.v = m_contour.v
-    # =================================================
-
     #
     #####################################################
 
     if not input_args.skip_postprocessing:
         # Find the minimal distance between the contour lines
         print('Find the minimal distance between the contour lines:')
-        coil_parts = find_minimal_contour_distance(coil_parts, input_args)
+        coil_parts = find_minimal_contour_distance(coil_parts, input_args)  # 12
+        # np.save(f'debug/ygradient_coil_python_12_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -571,7 +588,8 @@ def CoilGen(log, input=None):
 
         # Group the contour loops in topological order
         print('Group the contour loops in topological order:')
-        coil_parts = topological_loop_grouping(coil_parts, input_args)
+        coil_parts = topological_loop_grouping(coil_parts, input_args)  # 13
+        np.save(f'debug/ygradient_coil_python_13_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -598,19 +616,9 @@ def CoilGen(log, input=None):
         m_level_positions = m_c_part.level_positions
         m_group_levels = m_c_part.group_levels - 1  # MATLAB indexing is 1-based
 
-        # assert compare(cp_group_levels[0], m_group_levels)
-
         m_loop_groups = m_c_part.loop_groups
         for index1, loop_group in enumerate(m_loop_groups):
             m_loop_groups[index1] = loop_group - 1  # MATLAB indexing is 1-based
-
-        c_level_positions = coil_part.level_positions
-        c_group_levels = np.array(coil_part.group_levels)
-        c_loop_groups = coil_part.loop_groups
-
-        # assert compare_contains(c_group_levels, m_group_levels)
-        # assert compare_contains(c_loop_groups, m_loop_groups) # Fail: They don't match up exactly
-        # assert compare(c_loop_groups, m_loop_groups) # Fail: They don't match up exactly Pass!
 
         # Compare updated groups and their loops
         m_groups = m_c_part.groups
@@ -619,22 +627,36 @@ def CoilGen(log, input=None):
                 log.debug(" Checking contour group %d", index1)
             m_group = m_groups[index1]  # cutshape, loops, opened_loop
             c_group = coil_part.groups[index1]
-            for index2, m_loops in enumerate(m_group.loops):
-                c_loops = c_group.loops[index2]
+
+            if get_level() >= DEBUG_VERBOSE:
+                visualize_compare_contours(coil_mesh.uv, 800, f'images/13_contour4_{index1}_p.png', c_group.loops)
+                visualize_compare_contours(coil_mesh.uv, 800, f'images/13_contour4_{index1}_m.png', m_group.loops)
+
+            for index2, m_loop in enumerate(m_group.loops):
+                c_loop = c_group.loops[index2]
                 if get_level() > DEBUG_VERBOSE:
                     log.debug(" Checking index %d", index2)
 
-                assert c_loops.current_orientation == m_loops.current_orientation  # Pass
-                # assert np.isclose(c_loop.potential, m_loop.potential) # Fail, group 2, index 0
+                assert c_loop.current_orientation == m_loop.current_orientation  # Pass
+                assert np.isclose(c_loop.potential, m_loop.potential)  # Fail, group 2, index 0
                 # assert compare(c_loop.uv, m_loop.uv) # Fail, different path through mesh
                 # assert compare(c_loop.v, m_loop.v) # Fail, different path through mesh
                 if get_level() > DEBUG_VERBOSE:
-                    log.debug(" -- compare uv: %s", compare(c_loops.uv, m_loops.uv))
-                    log.debug(" -- compare v: %s", compare(c_loops.v, m_loops.v))
+                    log.debug(" -- compare uv: %s", compare(c_loop.uv, m_loop.uv))
+                    log.debug(" -- compare v: %s", compare(c_loop.v, m_loop.v))
 
-            if get_level() >= DEBUG_VERBOSE:
-                visualize_compare_contours(coil_mesh.uv, 800, f'images/countour4_{index1}_p.png', c_group.loops)
-                visualize_compare_contours(coil_mesh.uv, 800, f'images/countour4_{index1}_m.png', m_group.loops)
+        c_level_positions = np.array(coil_part.level_positions[0])
+        c_group_levels = np.array(coil_part.group_levels[0])
+        c_loop_groups = coil_part.loop_groups
+
+        if use_matlab_data:
+            assert compare(c_group_levels, m_group_levels)      # Pass
+            assert compare(c_loop_groups, m_loop_groups)        # Pass
+            assert compare(c_level_positions, m_level_positions)  # Pass
+        else:
+            assert compare(c_group_levels, m_group_levels)      # Pass~
+            assert compare(c_level_positions, m_level_positions)  # Pass~
+            # assert compare(c_loop_groups, m_loop_groups)        # Fail: They don't match up exactly
 
         # Manual conclusion: Not identical, but close. Contour groups in different orders...
 
@@ -651,12 +673,13 @@ def CoilGen(log, input=None):
                 for index2, m_loops in enumerate(m_group.loops):
                     c_group.loops[index2].uv = m_loops.uv
                     c_group.loops[index2].v = m_loops.v
+        np.save(f'debug/ygradient_coil_python_13_{use_matlab_data}_patched.npy', coil_parts)
         # =================================================
 
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
-        calculate_group_centers(coil_parts)
-        # np.save('debug/ygradient_coil_python_14.npy', coil_parts)
+        coil_parts = calculate_group_centers(coil_parts)  # 14
+        np.save(f'debug/ygradient_coil_python_14_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -665,9 +688,14 @@ def CoilGen(log, input=None):
         m_group_centers = m_c_part.group_centers
         c_group_centers = coil_part.group_centers
 
-        if use_matlab_data == True:
-            assert compare(c_group_centers.uv, m_group_centers.uv)  # Fail, different group layout Pass!
-            assert compare(c_group_centers.v, m_group_centers.v)  # Fail, different group layout Pass!
+        if get_level() >= DEBUG_VERBOSE:
+            visualize_compare_contours(coil_mesh.uv, 800, f'images/14_contour_centres_p.png',
+                                       coil_part.contour_lines, c_group_centers.uv)
+            visualize_compare_contours(coil_mesh.uv, 800, f'images/14_contour_centres_m.png',
+                                       m_c_part.contour_lines, m_group_centers.uv)
+
+        assert compare(c_group_centers.uv, m_group_centers.uv)  # Pass (alternate sorting in topological_loop_grouping)
+        assert compare(c_group_centers.v, m_group_centers.v)    # Pass (alternate sorting in topological_loop_grouping)
 
         # Manual conclusion: Not identical, but close. Different paths, different group layouts.
 
@@ -676,21 +704,19 @@ def CoilGen(log, input=None):
 
         # Interconnect the single groups
         print('Interconnect the single groups:')
-        coil_parts = interconnect_within_groups(coil_parts, input_args)
-
-        # np.save('debug/ygradient_coil_python_15_true.npy', coil_parts)
+        coil_parts = interconnect_within_groups(coil_parts, input_args)  # 15
+        np.save(f'debug/ygradient_coil_python_15_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
         # DEBUG
         # Verify: coil_parts(part_ind).groups(group_ind).opened_loop(loop_ind).uv
-        if use_matlab_data:
-            for index1, m_group in enumerate(m_c_part.groups):
-                c_group = coil_part.groups[index1]
-                for index2, m_opened_loop in enumerate(m_group.opened_loop):
-                    c_opened_loop = c_group.opened_loop[index2]
-                    assert compare(c_opened_loop.v, m_opened_loop.v)
-                    assert compare(c_opened_loop.uv, m_opened_loop.uv)
+        for index1, m_group in enumerate(m_c_part.groups):
+            c_group = coil_part.groups[index1]
+            for index2, m_opened_loop in enumerate(m_group.opened_loop):
+                c_opened_loop = c_group.opened_loop[index2]
+                assert compare(c_opened_loop.v, m_opened_loop.v, double_tolerance=0.001)    # Pass
+                assert compare(c_opened_loop.uv, m_opened_loop.uv, double_tolerance=0.003)  # Pass
 
         # Verify: Coil Part connected_group values: return_path, uv, v, spiral_in (uv,v), spiral_out(uv, v)
         m_connected_groups = m_c_part.connected_group
@@ -703,25 +729,19 @@ def CoilGen(log, input=None):
 
             if get_level() >= DEBUG_VERBOSE:
                 # MATLAB shape
-                visualize_vertex_connections(c_connected_group.uv.T, 800, f'images/connected_group_uv_{index1}_p.png')
-                visualize_vertex_connections(m_connected_group.uv.T, 800, f'images/connected_group_uv_{index1}_m.png')
+                visualize_vertex_connections(c_connected_group.uv.T, 800,
+                                             f'images/15_connected_group_uv_{index1}_p.png')
+                visualize_vertex_connections(m_connected_group.uv.T, 800,
+                                             f'images/15_connected_group_uv_{index1}_m.png')
 
             # Check....
-            if use_matlab_data:
-                assert compare(c_connected_group.return_path.v, m_connected_group.return_path.v)
-                assert compare(c_connected_group.return_path.uv, m_connected_group.return_path.uv)
+            assert compare(c_connected_group.return_path.v, m_connected_group.return_path.v,
+                           double_tolerance=0.001)    # Pass
+            assert compare(c_connected_group.return_path.uv,
+                           m_connected_group.return_path.uv, double_tolerance=0.001)  # Pass
 
-                assert compare(c_connected_group.spiral_in.v, m_connected_group.group_debug.spiral_in.v)
-                assert compare(c_connected_group.spiral_in.uv, m_connected_group.group_debug.spiral_in.uv)
-
-                assert compare(c_connected_group.spiral_out.v, m_connected_group.group_debug.spiral_out.v)
-                assert compare(c_connected_group.spiral_out.uv, m_connected_group.group_debug.spiral_out.uv)
-
-                assert compare(c_connected_group.uv, m_connected_group.uv)
-                assert (compare(c_connected_group.v, m_connected_group.v))
-
-                assert compare(c_connected_group.uv, m_connected_group.uv)  # Pass!
-                assert compare(c_connected_group.v, m_connected_group.v)    # Pass!
+            assert compare(c_connected_group.uv, m_connected_group.uv, double_tolerance=0.001)  # Pass
+            assert compare(c_connected_group.v, m_connected_group.v, double_tolerance=0.001)    # Pass
 
         # Manual conclusion: Fail, maybe - the Python connections look a bit different to the MATLAB ones in a few places
 
@@ -730,7 +750,8 @@ def CoilGen(log, input=None):
 
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
-        coil_parts = interconnect_among_groups(coil_parts, input_args)
+        coil_parts = interconnect_among_groups(coil_parts, input_args)  # 16
+        # np.save('debug/ygradient_coil_python_16_true.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -752,13 +773,91 @@ def CoilGen(log, input=None):
             c_wire_path = p_coil_part.wire_path
             m_wire_path = m_c_part.wire_path1
             if get_level() >= DEBUG_VERBOSE:
-                visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_p.png')
-                visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_m.png')
+                visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/16_wire_path_uv_{index1}_p.png')
+                visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/16_wire_path_uv_{index1}_m.png')
 
+            assert (compare(c_wire_path.uv, m_wire_path.uv))    # Fail: (2, 1540) is not (2, 1539)
+            assert (compare(c_wire_path.v, m_wire_path.v))      # Fail: (3, 1540) is not (3, 1539)
+
+        # Manual conclusion: Pass, when using MATLAB data
+        #
+        #####################################################
+
+        # Connect the groups and shift the return paths over the surface
+        print('Shift the return paths over the surface:')
+        coil_parts = shift_return_paths(coil_parts, input_args)  # 17
+        # np.save('debug/ygradient_coil_python_17_true.npy', coil_parts)
+
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: shift_array, points_to_shift, wire_path
+        for index1 in range(len(coil_parts)):
+            c_part = coil_parts[index1]
+            c_wire_path = c_part.wire_path
+            m_wire_path = m_c_part.wire_path
+
+            visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_p.png')
+            visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_m.png')
 
             if use_matlab_data:
-                assert (compare(c_wire_path.uv, m_wire_path.uv))    # Pass
-                assert (compare(c_wire_path.v, m_wire_path.v))      # Pass
+                visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800,
+                                           f'images/17_wire_path2_uv_{index1}_diff.png')
+                # Check....
+                assert (compare(c_part.shift_array, m_c_part.shift_array))          # Pass
+                assert (compare(c_part.points_to_shift, m_c_part.points_to_shift))  # Pass
+
+                # Pass, with this coarse tolerance!
+                assert (compare(c_wire_path.v, m_wire_path.v, double_tolerance=0.03))
+                assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass
+
+        # Manual conclusion: Pass, when using MATLAB data
+        #
+        #####################################################
+
+        # Create Cylindrical PCB Print
+        print('Create PCB Print:')
+        coil_parts = generate_cylindrical_pcb_print(coil_parts, input_args)  # 18
+        # np.save('debug/ygradient_coil_python_18_true.npy', coil_parts)
+
+        #####################################################
+        # DEVELOPMENT: Remove this
+        # DEBUG
+        # Verify: pcb_tracks.{lower_layer/upper_layer}[0].group_layouts[0..n].wire_parts[0].{ind1,ind2,polygon_track.data,track_shape,uv}
+        for index1 in range(len(coil_parts)):
+            c_part = coil_parts[index1]
+
+            layer = 'upper'
+            c_upper_group_layouts = c_part.pcb_tracks.upper_layer.group_layouts
+            m_upper_group_layouts = m_c_part.pcb_tracks.upper_layer.group_layouts
+            for index2, m_group_layout in enumerate(m_upper_group_layouts):
+                c_group_layout = c_upper_group_layouts[index2]
+                c_wire_part = c_group_layout.wire_parts[0]
+                m_wire_part = m_group_layout.wire_parts
+
+                visualize_vertex_connections(c_wire_part.uv.T, 800, f'images/18_pcb_{layer}_group{index2}_uv_p.png')
+                visualize_vertex_connections(m_wire_part.uv.T, 800, f'images/18_pcb_{layer}_group{index2}_uv_m.png')
+
+                # visualize_compare_vertices(c_wire_part.uv.T, m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{index1}_uv_diff.png')
+
+                # Check....
+                if use_matlab_data:
+                    assert c_wire_part.ind1 == m_wire_part.ind1 - 1  # MATLAB base 1
+                    assert c_wire_part.ind2 == m_wire_part.ind2 - 1  # MATLAB base 1
+
+                    assert compare(c_wire_part.uv, m_wire_part.uv)
+                    assert compare(c_wire_part.track_shape, m_wire_part.track_shape)
+
+            layer = 'lower'
+            c_lower_group_layouts = c_part.pcb_tracks.lower_layer.group_layouts
+            m_lower_group_layouts = m_c_part.pcb_tracks.lower_layer.group_layouts
+            for index2, m_group_layout in enumerate(m_lower_group_layouts):
+                c_group_layout = c_lower_group_layouts[index2]
+                c_wire_part = c_group_layout.wire_parts[0]
+                m_wire_part = m_group_layout.wire_parts
+
+                visualize_vertex_connections(c_wire_part.uv.T, 800, f'images/18_pcb_{layer}_group{index2}_uv_p.png')
+                visualize_vertex_connections(m_wire_part.uv.T, 800, f'images/18_pcb_{layer}_group{index2}_uv_m.png')
 
         # Manual conclusion: Pass, when using MATLAB data
         #
@@ -767,14 +866,6 @@ def CoilGen(log, input=None):
         # WIP
         solution.coil_parts = coil_parts
         return solution
-
-        # Connect the groups and shift the return paths over the surface
-        print('Shift the return paths over the surface:')
-        coil_parts = shift_return_paths(coil_parts, input_args)
-
-        # Create Cylindrical PCB Print
-        print('Create PCB Print:')
-        coil_parts = generate_cylindrical_pcb_print(coil_parts, input_args)
 
         # Create Sweep Along Surface
         print('Create sweep along surface:')

@@ -138,7 +138,7 @@ class Mesh:
         Returns:
             ndarray: An array of vertex normals with shape (num_faces, 3).
         """
-        return self.trimesh_obj.vertex_normals
+        return self.trimesh_obj.vertex_normals.view(np.ndarray)
 
     def display(self):
         """
@@ -263,21 +263,27 @@ class BasisElement:
     one_ring: np.ndarray                # node_triangles x 1
     area: np.ndarray                    # node_triangles x 1
     face_normal: np.ndarray             # node_triangles x 3
-    triangle_points_ABC: np.ndarray     # node_triangles x 3
+    triangle_points_ABC: np.ndarray     # node_triangles x 3 (index, [node_point, point_b, point_c].T) MATLAB shape
     current: np.ndarray                 # node_triangles x 3
 
 
-class UnarrangedLoop:
+@dataclass
+class Shape2D:
+    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
+
+    def add_uv(self, uv):
+        append_uv_matlab(self, uv)
+
+
+@dataclass
+class UnarrangedLoop(Shape2D):
     """
     Represents an unarranged loop in the coil mesh.
 
     Used by calc_contours_by_triangular_potential_cuts
     """
-
-    def __init__(self):
-        self.edge_inds = []
-        self.uv = None
-        self.current_orientation: float = None
+    edge_inds: List[int] = None
+    current_orientation: float = None
 
     def add_edge(self, edge):
         self.edge_inds.append(edge)
@@ -286,20 +292,12 @@ class UnarrangedLoop:
         append_uv(self, uv)
 
 
+@dataclass
 class UnarrangedLoopContainer:
-    def __init__(self):
-        self.loop: List[UnarrangedLoop] = []
+    loop: List[UnarrangedLoop] = None
 
 
 # Used in topological_loop_grouping
-@dataclass
-class Shape2D:  # Used in topological_loop_grouping
-    uv: np.ndarray = None  # 2D co-ordinates of the shape (2,n)
-
-    def add_uv(self, uv):
-        append_uv_matlab(self, uv)
-
-
 @dataclass
 class UnsortedPoints(Shape2D):
     """
@@ -332,6 +330,7 @@ class Shape3D(Shape2D):  # Used in topological_loop_grouping
     def copy(self):
         return Shape3D(uv=self.uv.copy(), v=self.v.copy())
 
+
 @dataclass
 class ContourLine(Shape3D):
     """
@@ -351,6 +350,7 @@ class TopoGroup:                        # CoilPart.groups
     cutshape: List[Shape2D] = None      # Assigned in interconnect_within_groups
     opened_loop: List[Shape3D] = None   # Assigned in interconnect_within_groups
 
+
 @dataclass
 class ConnectedGroup(Shape3D):          # CoilPart.connected_group
     # uv: np.ndarray = None             # 2D shape (2,n) Assigned in interconnect_within_groups
@@ -363,18 +363,57 @@ class ConnectedGroup(Shape3D):          # CoilPart.connected_group
 
 @dataclass
 class Cuts():
-    cut1 : np.ndarray = None            # Cut data (interconnect_among_groups)
-    cut2 : np.ndarray = None            # Cut data (interconnect_among_groups)
+    cut1: np.ndarray = None            # Cut data (interconnect_among_groups)
+    cut2: np.ndarray = None            # Cut data (interconnect_among_groups)
+
+
+@dataclass
+class Polygon():              # Placeholder class (generate_cylindrical_pcb_print) (2,n)
+    data: np.ndarray = None
+
+
+@dataclass
+class PCBPart(Shape2D):
+    ind1: np.ndarray = None             # (generate_cylindrical_pcb_print) (2,n)
+    ind2: np.ndarray = None             # (generate_cylindrical_pcb_print) (2,n)
+    track_shape: np.ndarray = None      # (generate_cylindrical_pcb_print) (2,n)
+    polygon_track: Polygon = None       # (generate_cylindrical_pcb_print) (2,n)
+
+
+@dataclass
+class GroupLayout():
+    wire_parts: List[PCBPart] = None    # (generate_cylindrical_pcb_print)
+
+
+@dataclass
+class PCBLayer():
+    group_layouts: GroupLayout = None
+
+
+@dataclass
+class PCBTrack():
+    upper_layer: PCBLayer = None        # (generate_cylindrical_pcb_print)
+    lower_layer: PCBLayer = None        # (generate_cylindrical_pcb_print)
+
 
 @dataclass
 class CoilPart:
     coil_mesh: Mesh = None
-    basis_elements: List[BasisElement] = None
+    basis_elements: List[BasisElement] = None   # (calculate_basis_functions)
+    is_real_triangle_mat: np.ndarray = None     # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
+    triangle_corner_coord_mat: np.ndarray = None# Integer (calculate_basis_functions) (num_vertices,var,3,3) MATLAB shape
+    current_mat: np.ndarray = None          # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
+    area_mat: np.ndarray = None             # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
+    face_normal_mat: np.ndarray = None      # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
+    current_density_mat: np.ndarray = None  # (calculate_basis_functions)
     resistance_matrix: np.ndarray = None    # num_vertices x num_vertices
+    one_ring_list: np.ndarray = None        # (calculate_one_ring_by_mesh) (num_vertices,variable) Python shape
+    node_triangles: np.ndarray = None       # (calculate_one_ring_by_mesh) (num_vertices,variable)
+    node_triangle_mat: np.ndarray = None    # Integer (calculate_one_ring_by_mesh) (num_vertices,num_faces)
     raw: RawPart = None
     contour_lines: List[ContourLine] = None
-    potential_level_list: np.ndarray = None  # Placeholder (calc_potential_levels) (???)
-    contour_step: float = None             # Placeholder (calc_potential_levels) (???)
+    potential_level_list: np.ndarray = None # Placeholder (calc_potential_levels) (???)
+    contour_step: float = None              # Placeholder (calc_potential_levels) (???)
     field_by_loops: np.ndarray = None       # Placeholder (evaluate_loop_significance in process_raw_loops)
     combined_loop_field: np.ndarray = None  # Placeholder (evaluate_loop_significance in process_raw_loops) (3,m)
     loop_significance: np.ndarray = None    # Per contour line (evaluate_loop_significance in process_raw_loops) (n)
@@ -386,8 +425,11 @@ class CoilPart:
     groups: List[TopoGroup] = None          # Topological groups (topological_loop_grouping)
     group_centers: List[Shape3D] = None     # The centre of each group (calculate_group_centers)
     connected_group: List[TopoGroup] = None  # Connected topological groups (interconnect_within_groups)
-    opening_cuts_among_groups:List[Cuts] = None  # ??? (interconnect_among_groups)
-    wire_path : Shape3D = None              # The shape of the wire track (interconnect_among_groups)
+    opening_cuts_among_groups: List[Cuts] = None  # ??? (interconnect_among_groups)
+    wire_path: Shape3D = None               # The shape of the wire track (interconnect_among_groups)
+    shift_array: np.ndarray = None          # ??? (shift_return_paths) (,)
+    points_to_shift: np.ndarray = None      # Array of which points to shift (shift_return_paths) (m,)
+    pcb_tracks: PCBTrack = None             # (generate_cylindrical_pcb_print)
 
 
 class CoilSolution:
@@ -435,9 +477,8 @@ class LayoutGradient:
     mean_gradient_in_target_direction: float = None
     std_gradient_in_target_direction: float = None
 
+
 # Used by process_raw_loops
-
-
 @dataclass
 class WirePart:
     """

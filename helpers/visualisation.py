@@ -1,3 +1,4 @@
+from inspect import currentframe
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -6,11 +7,11 @@ import logging
 
 log = logging.getLogger(__name__)
 
-from inspect import currentframe
 
 def get_linenumber():
     cf = currentframe()
     return cf.f_back.f_lineno
+
 
 def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True):
     """
@@ -136,7 +137,7 @@ def visualize_vertex_connections(vertices2_or_3d, image_x_size, image_path, boun
     """
     if boundaries is not None:
         shape_edges = np.shape(boundaries)
-        #log.debug(" faces shape: %s", shape_edges)
+        # log.debug(" faces shape: %s", shape_edges)
         if len(shape_edges) == 3:
             log.debug(" Edges shape: Extracting sub-array")
             boundaries = boundaries[0]
@@ -320,7 +321,63 @@ def visualize_compare_vertices(vertices2d1, vertices2d2, image_x_size, image_pat
     image.save(image_path)
 
 
-def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_list):
+def visualize_projected_vertices(vertices3d, image_x_size, image_path):
+    """
+    Project the provided 3D vertex array onto 2D.
+
+    The function draws vectors from vertices3d[n] to vertices3d[n+1] for each vertex.
+
+    Args:
+        vertices3d (ndarray): A 3D (m,3) array of the vertices.
+        image_x_size (int): The desired width of the output image.
+        image_path (string): The desired output path where to write the image.
+
+    Returns:
+        vertices2d (ndarray): The projected 2D (m,2) array of vertices.
+    """
+    # Project the 3D onto 2D using:
+    # Project the vertices onto the X-Y plane:  [x,y,z] -> [x+x*z, y+y*z, 0]
+    vertices2d = vertices3d[:, :2].copy()  # Copy, otherwise modifies source
+    vertices2d[:, 0] += vertices3d[:, 0] * vertices3d[:, 2]
+    vertices2d[:, 1] += vertices3d[:, 1] * vertices3d[:, 2]
+
+    # Find the midpoint of all 2D vertices
+    midpoint = np.mean(vertices2d, axis=0)
+
+    v_width = np.max(vertices2d[:, 0]) - np.min(vertices2d[:, 0])
+    v_height = np.max(vertices2d[:, 1]) - np.min(vertices2d[:, 1])
+    minima = np.min(vertices2d, axis=0)
+
+    # Calculate x-scale
+    vertices2d1_scale = (image_x_size / v_width)
+
+    # Translate the scaled vertices based on the midpoint
+    image_y_size = int(image_x_size*v_height/v_width)
+
+    # Create a blank image
+    image = Image.new('RGB', (image_x_size+20, image_y_size+20), color='white')
+    draw = ImageDraw.Draw(image)
+
+    radius_start = 1.5
+    for i in range(vertices2d.shape[0]-1):
+        start_uv = vertices2d[i]
+        stop_uv = vertices2d[i+1]
+
+        start_xy = (start_uv - minima) * vertices2d1_scale
+        stop_xy = (stop_uv - minima) * vertices2d1_scale
+
+        x1 = start_xy[0]
+        y1 = start_xy[1]
+        draw.line([(x1, y1), (stop_xy[0], stop_xy[1])], fill='black')
+        # draw.ellipse((x1 - radius_start, y1 - radius_start, x1 + radius_start, y1 + radius_start), fill='red')
+
+    # Save the image
+    image.save(image_path)
+
+    return vertices2d
+
+
+def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_list, centres=None):
     """
     Draw the given contour_list onto an image of the specified size and save the image to a file.
 
@@ -351,7 +408,7 @@ def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_lis
     image = Image.new('RGB', (image_x_size+20, image_y_size+20), color='white')
     draw = ImageDraw.Draw(image)
 
-    radius_start = 1.6
+    radius_start = 1.8
     radius_stop = 1.4
 
     for contour in contour_list:
@@ -372,6 +429,14 @@ def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_lis
         y1 = stop_xy[1]
         draw.ellipse((x1 - radius_stop, y1 - radius_stop, x1 + radius_stop, y1 + radius_stop), fill='blue')
         # log.debug("-")
+
+    if centres is not None:
+        centres_p = centres.T
+        for center in centres_p:
+            xy = (center - minima) * vertices2d1_scale
+            x1 = xy[0]
+            y1 = xy[1]
+            draw.ellipse((x1 - radius_stop, y1 - radius_stop, x1 + radius_stop, y1 + radius_stop), fill='black')
 
     # Save the image
     image.save(image_path)

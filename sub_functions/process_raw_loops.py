@@ -18,6 +18,15 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
     """
     Process raw loops in the coil mesh.
 
+    Initialises the following properties of a CoilPart:
+        - combined_loop_length
+        - combined_loop_field
+        - loop_significance (double)
+        - field_by_loops (3, # , num contours)
+
+    Updates the following properties of a CoilPart:
+        - contour_lines
+
     Args:
         coil_parts (List[CoilPart]): A list of CoilPart structures.
         input: The input parameters.

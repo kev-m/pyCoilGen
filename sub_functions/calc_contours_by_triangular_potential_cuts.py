@@ -18,8 +18,15 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
     """
     Center the stream function potential around zero and add zeros around the periphery.
 
+    Initialises the following properties of a CoilPart:
+        - contour_lines
+        - raw
+
+    Updates the following properties of a CoilPart:
+        - None
+
     Args:
-        coil_parts (list): List of coil parts.
+        coil_parts (List[CoilPart]): A list of CoilPart structures.
 
     Returns:
         coil_parts (list): Updated list of coil parts.
@@ -122,7 +129,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         empty_potential_groups = [potential_sorted_cut_points[i] == [] for i in range(len(potential_sorted_cut_points))]
         num_false = len(empty_potential_groups) - sum(empty_potential_groups)
         part.raw.unsorted_points = [UnsortedPoints() for _ in range(num_false)]
-        part.raw.unarranged_loops = [UnarrangedLoopContainer() for _ in range(num_false)]
+        part.raw.unarranged_loops = [UnarrangedLoopContainer(loop=[]) for _ in range(num_false)]
         running_ind = 0
 
         for struct_ind in range(len(empty_potential_groups)):
@@ -151,7 +158,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     num_build_loops += 1
                     starting_edge = np.min(np.where(edge_already_used == 0)[0])
 
-                    loop_item = UnarrangedLoop()
+                    loop_item = UnarrangedLoop(edge_inds=[])
                     loop_item.add_uv(all_current_uv_coords[starting_edge])
                     loop_item.add_edge(all_current_edges[starting_edge])
                     group_unarranged_loop.loop.append(loop_item)

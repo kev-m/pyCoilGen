@@ -4,6 +4,7 @@ from typing import List
 # local imports
 from sub_functions.data_structures import DataStructure
 
+
 def find_segment_intersections(loop: np.ndarray, test_polygon: np.ndarray):
     """
     Find intersection points between a loop and a polygon (2D).
@@ -16,6 +17,7 @@ def find_segment_intersections(loop: np.ndarray, test_polygon: np.ndarray):
         List[dict]: A list of dictionaries, each containing 'segment_inds' and 'uv' keys.
                     'segment_inds' holds indices of the segments where intersections occur.
                     'uv' holds the intersection points as a 2xN array.
+                    Values contain np.nan if there is no intersection.
 
     Example:
         # Define the loop and test polygon coordinates as 2D arrays
