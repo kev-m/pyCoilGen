@@ -377,7 +377,7 @@ def visualize_projected_vertices(vertices3d, image_x_size, image_path):
     return vertices2d
 
 
-def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_list):
+def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_list, centres=None):
     """
     Draw the given contour_list onto an image of the specified size and save the image to a file.
 
@@ -408,7 +408,7 @@ def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_lis
     image = Image.new('RGB', (image_x_size+20, image_y_size+20), color='white')
     draw = ImageDraw.Draw(image)
 
-    radius_start = 1.6
+    radius_start = 1.8
     radius_stop = 1.4
 
     for contour in contour_list:
@@ -429,6 +429,14 @@ def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_lis
         y1 = stop_xy[1]
         draw.ellipse((x1 - radius_stop, y1 - radius_stop, x1 + radius_stop, y1 + radius_stop), fill='blue')
         # log.debug("-")
+
+    if centres is not None:
+        centres_p = centres.T
+        for center in centres_p:
+            xy = (center - minima) * vertices2d1_scale
+            x1 = xy[0]
+            y1 = xy[1]
+            draw.ellipse((x1 - radius_stop, y1 - radius_stop, x1 + radius_stop, y1 + radius_stop), fill='black')
 
     # Save the image
     image.save(image_path)
