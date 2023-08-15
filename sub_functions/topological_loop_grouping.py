@@ -68,7 +68,8 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         for i in multi_element_indices:
             if not group_levels[i] in new_group_levels:
                 new_group_levels.append(group_levels[i])
-        top_level_indices = [index for index, cell in enumerate(group_levels) if len(cell) == 1 and is_global_top_loop[cell[0]]]
+        top_level_indices = [index for index, cell in enumerate(
+            group_levels) if len(cell) == 1 and is_global_top_loop[cell[0]]]
         for i in top_level_indices:
             if not group_levels[i] in new_group_levels:
                 new_group_levels.append(group_levels[i])
@@ -119,7 +120,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         coil_part.loop_groups = np.empty((len(overlapping_loop_groups)), dtype=object)
         for index, sub_loop in enumerate(loop_groups):
             coil_part.loop_groups[index] = np.array(sorted(sub_loop))
-        loop_groups = coil_part.loop_groups # Use the np.array from here on.
+        loop_groups = coil_part.loop_groups  # Use the np.array from here on.
 
         # Order the groups based on the number of loops
         len_array = [len(group) for group in loop_groups]
@@ -127,7 +128,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
             sort_indices = np.argsort(len_array)[::-1]
             # Sort each group level
             for group_index, group_level in enumerate(group_levels):
-                sorted_group_level =  group_level.copy()
+                sorted_group_level = group_level.copy()
                 for index in range(len(group_level)):
                     sorted_group_level[index] = group_level[sort_indices[index]]
                 group_levels[group_index] = sorted_group_level
