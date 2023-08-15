@@ -458,15 +458,23 @@ def develop_calc_contours_by_triangular_potential_cuts():
 
     coil_part = coil_parts2[0]
 
-    assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
-    for index1, m_ru_points in enumerate(m_c_part.raw.unsorted_points):
+    # TODO: Check the top-level ordering (20 elements). Can the Python output match the MATLAB output
+    #       if I re-order there?
+
+    for index1, m_ru_point in enumerate(m_c_part.raw.unsorted_points):
         c_ru_point = coil_part.raw.unsorted_points[index1]
-        m_ru_point = m_c_part.raw.unsorted_points[index1]
+        visualize_vertex_connections(c_ru_point.uv, 800, f'images/10_ru_point_uv_{index1}_p.png')
+        visualize_vertex_connections(m_ru_point.uv, 800, f'images/10_ru_point_uv_{index1}_m.png')
+
+
+    assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
+    for index1, m_ru_point in enumerate(m_c_part.raw.unsorted_points):
+        c_ru_point = coil_part.raw.unsorted_points[index1]
         assert len(c_ru_point.edge_ind) == len(m_ru_point.edge_ind)
         assert np.isclose(c_ru_point.potential, m_ru_point.potential)
         assert c_ru_point.uv.shape[0] == m_ru_point.uv.shape[0]  # Python shape!
-        assert(compare(c_ru_point.edge_ind, m_ru_point.edge_ind)) # Different ordering?
         assert(compare(c_ru_point.uv, m_ru_point.uv)) # Order is different
+        assert(compare(c_ru_point.edge_ind, m_ru_point.edge_ind)) # Completely different!!
 
     assert len(coil_part.raw.unarranged_loops) == len(m_c_part.raw.unarranged_loops)
     for index1, m_ru_loops in enumerate(m_c_part.raw.unarranged_loops):
@@ -520,17 +528,37 @@ def develop_process_raw_loops():
     assert compare(coil_part.field_by_loops, m_coil_part.field_by_loops, double_tolerance=2e-7)  # Pass!
 
 
+def develop_calculate_group_centers():
+    from sub_functions.calculate_group_centers import calculate_group_centers
+    mat_data = load_matlab('debug/ygradient_coil')
+    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
+    m_c_part = m_coil_parts
+    p_coil_parts = np.load('debug/ygradient_coil_python_13_False_patched.npy', allow_pickle=True)
+    #p_coil_parts = np.load('debug/ygradient_coil_python_13_True_patched.npy', allow_pickle=True)
+
+    ###################################################################################
+    # Function under test
+    coil_parts = calculate_group_centers(p_coil_parts)
+    ###################################################################################
+
+    # And now!!
+    coil_part = coil_parts[0]
+
+    m_group_centers = m_c_part.group_centers
+    c_group_centers = coil_part.group_centers
+
+    assert compare(c_group_centers.uv, m_group_centers.uv)  # 
+    assert compare(c_group_centers.v, m_group_centers.v)    # 
+
+
 def develop_interconnect_within_groups():
     from sub_functions.interconnect_within_groups import interconnect_within_groups
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    p_coil_parts = np.load('debug/ygradient_coil_python.npy', allow_pickle=True)
+    p_coil_parts = np.load('debug/ygradient_coil_python_14_True.npy', allow_pickle=True)
 
     input_args = DataStructure(force_cut_selection=['high'], b_0_direction=[0, 0, 1], interconnection_cut_width=0.1)
-    # Write back modified values to make debugging easier
-    m_c_part.node_triangles = m_node_triangles
-    m_c_part.one_ring_list = m_or_one_ring_list
 
     ###################################################################################
     # Function under test
@@ -539,6 +567,8 @@ def develop_interconnect_within_groups():
 
     # And now!!
     coil_part = coil_parts[0]
+
+    # Verify: connected_group, groups.opened_loop
 
     # Part groups
     m_groups = m_c_part.groups
@@ -550,20 +580,6 @@ def develop_interconnect_within_groups():
             c_loop = c_group.opened_loop[index2]
             assert compare(c_loop.uv, m_loop.uv)
             assert compare(c_loop.v, m_loop.v)
-
-        """
-        shape_name = 'cutshape'
-        for index2, m_shape in enumerate(m_group.cutshape):
-            p_shape = c_group.cutshape[index2]
-            visualize_vertex_connections(p_shape.uv.T, 800, f'images/connected_group_{shape_name}_uv_{index1}_{index2}_p.png')
-            visualize_vertex_connections(m_shape.uv.T, 800, f'images/connected_group_{shape_name}_uv_{index1}_{index2}_m.png')
-
-        shape_name = 'opened_loop'
-        for index2, m_shape in enumerate(m_group.opened_loop):
-            p_shape = c_group.opened_loop[index2]
-            visualize_vertex_connections(p_shape.uv.T, 800, f'images/connected_group_{shape_name}_uv_{index1}_{index2}_p.png')
-            visualize_vertex_connections(m_shape.uv.T, 800, f'images/connected_group_{shape_name}_uv_{index1}_{index2}_m.png')
-        """
 
     # Connected Groups
     m_connected_groups = m_c_part.connected_group
@@ -661,10 +677,10 @@ def develop_shift_return_paths():
         c_wire_path = c_part.wire_path
         m_wire_path = m_c_part.wire_path
 
-        visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_p.png')
-        visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_m.png')
+        visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_p.png')
+        visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_m.png')
 
-        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/wire_path2_uv_{index1}_diff.png')
+        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_diff.png')
 
         # Check....
         assert (compare(c_part.shift_array, m_c_part.shift_array))          # Pass
@@ -747,9 +763,10 @@ if __name__ == "__main__":
     ## calculate_resistance_matrix
     ## stream_function_optimization
     ## calc_potential_levels
-    develop_calc_contours_by_triangular_potential_cuts()
+    #develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
-    # test_interconnect_within_groups()
+    develop_calculate_group_centers()
+    # develop_interconnect_within_groups()
     # test_interconnect_among_groups()
     # develop_shift_return_paths()
 
