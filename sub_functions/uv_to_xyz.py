@@ -224,10 +224,6 @@ def barycentric_to_cartesian(bary_coords, triangle_vertices):
     Returns:
         ndarray: 3-element array representing the 3D Cartesian coordinates.
     """
-    # Ensure that the input arrays are NumPy arrays
-    bary_coords = np.array(bary_coords)
-    triangle_vertices = np.array(triangle_vertices)
-
     # Calculate the Cartesian coordinates using the Barycentric coordinates
     cartesian_coords = np.dot(bary_coords, triangle_vertices)
     return cartesian_coords
