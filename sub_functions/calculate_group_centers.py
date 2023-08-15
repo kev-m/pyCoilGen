@@ -15,7 +15,7 @@ from sub_functions.uv_to_xyz import get_target_triangle_def, barycentric_to_cart
 log = logging.getLogger(__name__)
 
 
-def calculate_group_centers(coil_parts: List[CoilPart]):
+def calculate_group_centers(coil_parts: List[CoilPart]) -> List[CoilPart]:
     """
     Calculate group centers for each coil part.
 
@@ -29,7 +29,7 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
         - None
         
     Returns:
-        None. The 'group_centers' attribute is added to each CoilPart in the input list.
+        coil_parts (List[CoilPart]): The updated list of CoilParts
 
     Example:
         # Create a list of CoilPart structures with coil_mesh information
@@ -44,7 +44,6 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
         part_mesh = coil_part.coil_mesh
 
         # Calculate the total center of the coil part
-        # M: 
         total_center = np.mean(part_mesh.uv, axis=0)
 
         group_centers_2d = np.zeros((2, len(coil_part.groups)))
@@ -53,9 +52,7 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
 
         for group_ind in range(len(coil_part.groups)):
             coil_group = coil_part.groups[group_ind]
-            # M: point_sum_uv	2x387 double	2x387	double
             point_sum_uv = np.empty((2, len(coil_group.loops)))
-            # M: point_sum_v	3x387 double	3x387	double
             point_sum_v = np.empty((3, len(coil_group.loops)))
             for loop_ind in range(len(coil_group.loops)):
                 loop = coil_group.loops[loop_ind]
@@ -118,6 +115,7 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
         # Set the group centers in the CoilPart structure
         coil_part.group_centers = Shape3D(uv=group_centers_2d, v=group_centers_3d)
 
+    return coil_parts
 
 """
 Please note that the find_segment_intersections, check_mutual_loop_inclusion, triangulation, pointLocation, and
