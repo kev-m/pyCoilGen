@@ -11,9 +11,21 @@ from sub_functions.constants import get_level, DEBUG_VERBOSE
 log = logging.getLogger(__name__)
 
 
-def calculate_basis_functions(coil_parts: List[CoilPart]):
+def calculate_basis_functions(coil_parts: List[CoilPart], m_debug=None) -> List[CoilPart]:
     """
     Calculate the basis functions for the coil mesh.
+
+    Initialises the following properties of a CoilPart:
+        - basis_elements
+        - is_real_triangle_mat
+        - triangle_corner_coord_mat
+        - current_mat
+        - area_mat
+        - face_normal_mat
+        - current_density_mat
+
+    Updates the following properties of a CoilPart:
+        - None
 
     Args:
         coil_parts (list): List of CoilPart objects.
@@ -67,8 +79,7 @@ def calculate_basis_functions(coil_parts: List[CoilPart]):
                 node_basis_element.face_normal[tri_ind] = np.cross(
                     point_c - node_point, point_c - point_b) / np.linalg.norm(np.cross(point_c - node_point, point_c - point_b))
                 # Assign corner points ABC of the triangle
-                node_basis_element.triangle_points_ABC[tri_ind] = np.asarray(
-                    [node_point, point_b, point_c])  # ???.T
+                node_basis_element.triangle_points_ABC[tri_ind] = np.asarray([node_point, point_b, point_c]).T  # Transposed to match MATLAB shape
                 # Calculate the tangential current density of the triangle
                 node_basis_element.current[tri_ind] = (point_c - point_b) / (2 * node_basis_element.area[tri_ind])
                 # Calculate the current density matrix

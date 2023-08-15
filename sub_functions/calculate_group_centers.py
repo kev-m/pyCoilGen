@@ -15,15 +15,21 @@ from sub_functions.uv_to_xyz import get_target_triangle_def, barycentric_to_cart
 log = logging.getLogger(__name__)
 
 
-def calculate_group_centers(coil_parts: List[CoilPart]):
+def calculate_group_centers(coil_parts: List[CoilPart]) -> List[CoilPart]:
     """
     Calculate group centers for each coil part.
 
     Parameters:
         coil_parts (List[CoilPart]): A list of CoilPart structures, each containing a coil_mesh.
 
+    Initialises the following properties of a CoilPart:
+        - group_centers
+
+    Updates the following properties of a CoilPart:
+        - None
+        
     Returns:
-        None. The 'group_centers' attribute is added to each CoilPart in the input list.
+        coil_parts (List[CoilPart]): The updated list of CoilParts
 
     Example:
         # Create a list of CoilPart structures with coil_mesh information
@@ -38,7 +44,6 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
         part_mesh = coil_part.coil_mesh
 
         # Calculate the total center of the coil part
-        # M: 
         total_center = np.mean(part_mesh.uv, axis=0)
 
         group_centers_2d = np.zeros((2, len(coil_part.groups)))
@@ -47,9 +52,7 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
 
         for group_ind in range(len(coil_part.groups)):
             coil_group = coil_part.groups[group_ind]
-            # M: point_sum_uv	2x387 double	2x387	double
             point_sum_uv = np.empty((2, len(coil_group.loops)))
-            # M: point_sum_v	3x387 double	3x387	double
             point_sum_v = np.empty((3, len(coil_group.loops)))
             for loop_ind in range(len(coil_group.loops)):
                 loop = coil_group.loops[loop_ind]
@@ -74,13 +77,10 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
                                       scale_ind, inner_center[0] - (total_center[0] - inner_center[0]) * scale_ind])
                 cut_line_y = np.array([inner_center[1] + (total_center[1] - inner_center[1]) *
                                       scale_ind, inner_center[1] - (total_center[1] - inner_center[1]) * scale_ind])
-                # M: intersection_points	1x1 struct	1x1	struct
                 intersection_points = find_segment_intersections(
                     coil_group.loops[-1].uv, np.array([cut_line_x, cut_line_y]))
 
-                # M: line_cut_inner_total_x	[-1.5648;-1.6132]	2x1	double
                 line_cut_inner_total_x = intersection_points[0].uv[0, :]
-                # M: line_cut_inner_total_y	[0.0160;0.0165]	2x1	double
                 line_cut_inner_total_y = intersection_points[0].uv[1, :]
 
                 if line_cut_inner_total_x.size == 0:
@@ -115,6 +115,7 @@ def calculate_group_centers(coil_parts: List[CoilPart]):
         # Set the group centers in the CoilPart structure
         coil_part.group_centers = Shape3D(uv=group_centers_2d, v=group_centers_3d)
 
+    return coil_parts
 
 """
 Please note that the find_segment_intersections, check_mutual_loop_inclusion, triangulation, pointLocation, and

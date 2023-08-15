@@ -14,13 +14,21 @@ def calc_potential_levels(coil_parts: List[CoilPart], combined_mesh, input):
     """
     Calculate the potential levels for different coil parts based on the stream function values.
     
+    Initialises the following properties of a CoilPart:
+        - contour_step: float
+        - potential_level_list: ndarray
+
+    Updates the following properties of a CoilPart:
+        - None
+
     Args:
         coil_parts (List[CoilPart]): List of coil parts.
         combined_mesh (CombinedMesh): Combined mesh containing stream function values.
         input (InputParameters): Input parameters.
     
     Returns:
-        Tuple[List[CoilPart], int]: Updated list of coil parts and primary surface index.
+        coil_parts (List[CoilPart]): Updated list of coil parts
+        primary_surface_ind (int):  primary surface index.
     """
     num_levels = input.levels
     level_offset = input.pot_offset_factor
