@@ -73,7 +73,7 @@ class Mesh:
         self.fn = None          # (n,3) : The face normals (n, [x,y.z]).
         self.n = None           # (n,3) : The vertex normals (n, [x,y.z]).
         self.uv = None          # Vertices, UV texture matrix (n, [x,y,z=0])
-        self.boundary = None    # List of 1D lists of vertex indices along mesh boundaries (m,[i])
+        self.boundary = None    # List of 1D lists of vertex indices along mesh boundaries (m,[i]) (parameterize_mesh)
 
     def recreate(self, vertices, faces):
         self.trimesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
