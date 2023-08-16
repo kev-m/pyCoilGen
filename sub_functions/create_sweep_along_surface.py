@@ -63,8 +63,12 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
                 P2 = cross_section_triangulation_3d[tri_ind, 1]
                 P3 = cross_section_triangulation_3d[tri_ind, 2]
                 cross_section_area += 0.5 * np.linalg.norm(np.cross(P2 - P1, P3 - P1))
-
             # Continue with Part 1
+            """
+            Conversion comments:
+            In this Python code, NumPy functions are used to perform array operations, and the find_simplex method is 
+            used to find the simplex that contains a point in the triangulation.
+            """
             # Calculate the length of the coil
             wire_path.v_length = np.sum(np.linalg.norm(wire_path.v[:, 1:] - wire_path.v[:, :-1], axis=0))
             # Calculate the ohmic resistance
@@ -102,6 +106,13 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
                     surface_normal_along_wire_path_v[:, point_ind] = parameterized_mesh.fn[node_ind_normals_target]
 
             # Continue with Part 2
+            """
+            Conversion comments:
+            This Python code segment utilizes NumPy to perform vectorized operations, including calculations of 
+            normalized vectors and cross products. The np.column_stack function is used to stack arrays as 
+            columns. The loop constructs in the MATLAB code are translated into NumPy array operations for 
+            efficiency.            
+            """
             # Prepare the track direction
             path_directions = wire_path.v[:, 1:] - wire_path.v[:, :-1]  # edge vectors
             path_directions = np.column_stack((path_directions, path_directions[:, -1]))  # add a repetition at the end for the last face
@@ -132,6 +143,13 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
                     run_ind += 1
 
             # Continue with Part 3
+            """
+            Conversion comments:
+            In this Python code fragment, NumPy arrays are used to handle indexing and vectorized operations. The 
+            np.arange function is used to create arrays with a range of values. The modulo operation % is used to 
+            ensure that the edge indices wrap around when reaching the last corner. The loop constructs in the MATLAB
+            code are translated into NumPy array operations, including array slicing and modulo operations.
+            """
             # Build the 3D mesh by sweeping the surface using only the outer edges
 
             # Building the shell triangles that form the surface of the swept body
@@ -157,7 +175,14 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
                     run_ind += 2
 
             # Part 4, final part
-
+            """
+            Conversion comments:
+            In this translation, the Mesh data structure is used to represent the surface mesh. The os.path.join()
+            function is used to construct file paths in a platform-independent manner. 
+            The trimesh.exchange.export.export_mesh function is used to export the mesh as an STL file in ASCII format.
+            Note that you should make sure that the necessary imports for the trimesh library are included at the 
+            beginning of the code.
+            """
             # Build the final triangles and close the surface
             run_ind = 1
             final_triangles = np.zeros((2 * num_corners, 3), dtype=int)
@@ -194,3 +219,10 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             coil_parts[part_ind].ohmian_resistance = ohmian_resistance
 
         return coil_parts
+"""
+Conversion comments:
+Please note that in this Python code, the Delaunay function from scipy.spatial is used for triangulation
+and the equivalent operations have been adapted accordingly. Also, the np namespace is used for various 
+NumPy operations.
+"""
+    
