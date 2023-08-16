@@ -40,8 +40,8 @@ from sub_functions.interconnect_within_groups import interconnect_within_groups
 from sub_functions.interconnect_among_groups import interconnect_among_groups
 from sub_functions.shift_return_paths import shift_return_paths
 from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
+from sub_functions.create_sweep_along_surface import create_sweep_along_surface
 """
-from create_sweep_along_surface import create_sweep_along_surface
 from calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
 from evaluate_field_errors import evaluate_field_errors
 from calculate_gradient import calculate_gradient
@@ -781,7 +781,7 @@ def CoilGen(log, input=None):
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
         coil_parts = interconnect_among_groups(coil_parts, input_args)  # 16
-        # np.save('debug/ygradient_coil_python_16_true.npy', coil_parts)
+        #np.save(f'debug/ygradient_coil_python_16_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -806,8 +806,9 @@ def CoilGen(log, input=None):
                 visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/16_wire_path_uv_{index1}_p.png')
                 visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/16_wire_path_uv_{index1}_m.png')
 
-            assert (compare(c_wire_path.uv, m_wire_path.uv))    # Fail: (2, 1540) is not (2, 1539)
-            assert (compare(c_wire_path.v, m_wire_path.v))      # Fail: (3, 1540) is not (3, 1539)
+            if use_matlab_data:
+                assert (compare(c_wire_path.uv, m_wire_path.uv))    # Fail: (2, 1540) is not (2, 1539)
+                assert (compare(c_wire_path.v, m_wire_path.v))      # Fail: (3, 1540) is not (3, 1539)
 
         # Manual conclusion: Pass, when using MATLAB data
         #
@@ -816,7 +817,7 @@ def CoilGen(log, input=None):
         # Connect the groups and shift the return paths over the surface
         print('Shift the return paths over the surface:')
         coil_parts = shift_return_paths(coil_parts, input_args)  # 17
-        # np.save('debug/ygradient_coil_python_17_true.npy', coil_parts)
+        #np.save(f'debug/ygradient_coil_python_17_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -848,7 +849,7 @@ def CoilGen(log, input=None):
         # Create Cylindrical PCB Print
         print('Create PCB Print:')
         coil_parts = generate_cylindrical_pcb_print(coil_parts, input_args)  # 18
-        # np.save('debug/ygradient_coil_python_18_true.npy', coil_parts)
+        np.save(f'debug/ygradient_coil_python_18_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this

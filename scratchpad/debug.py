@@ -273,6 +273,18 @@ def debug6():
               np.shape(output.vertices), np.shape(output.faces), np.shape(output.normals))
 
 
+def get_connected_vertices(vertex_index, face_indices):
+    connected_vertices = set()
+
+    for face in face_indices:
+        if vertex_index in face:
+            connected_vertices.update(face)
+
+    connected_vertices.remove(vertex_index)  # Remove the input vertex index itself
+    return list(connected_vertices)
+
+
+
 def develop_calculate_one_ring_by_mesh():  # PAUSED
     from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 
@@ -733,16 +745,12 @@ def develop_generate_cylindrical_pcb_print():
             assert compare(c_wire_part.uv, m_wire_part.uv)
             assert compare(c_wire_part.track_shape, m_wire_part.track_shape)
 
-
-def get_connected_vertices(vertex_index, face_indices):
-    connected_vertices = set()
-
-    for face in face_indices:
-        if vertex_index in face:
-            connected_vertices.update(face)
-
-    connected_vertices.remove(vertex_index)  # Remove the input vertex index itself
-    return list(connected_vertices)
+def develop_create_sweep_along_surface():
+    from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
+    mat_data = load_matlab('debug/ygradient_coil')
+    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
+    m_c_part = m_coil_parts
+    p_coil_parts = np.load('debug/ygradient_coil_python_18_True.npy', allow_pickle=True)
 
 
 if __name__ == "__main__":
@@ -769,8 +777,8 @@ if __name__ == "__main__":
     # develop_process_raw_loops()
     # develop_calculate_group_centers()
     # develop_interconnect_within_groups()
-    develop_interconnect_among_groups()
+    # develop_interconnect_among_groups()
     # develop_shift_return_paths()
-
+    develop_create_sweep_along_surface()
     # test_smooth_track_by_folding()
     # develop_generate_cylindrical_pcb_print()
