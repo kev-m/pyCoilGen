@@ -622,6 +622,8 @@ def develop_interconnect_among_groups():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
+    # The Python paths and the MATLAB paths are close but slightly different. This prevents detailed debugging.
+    # Actually, there is no bug!
     p_coil_parts = np.load('debug/ygradient_coil_python_15_True.npy', allow_pickle=True)
 
     input_args = DataStructure(interconnection_cut_width=0.1)
@@ -635,11 +637,11 @@ def develop_interconnect_among_groups():
         visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_p.png')
         visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_m.png')
 
-        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_diff.png')
-
         # Check....
         assert (compare(c_wire_path.v, m_wire_path.v))  # Pass!
         assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass!
+
+        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_diff.png')
 
 
 def test_smooth_track_by_folding():
@@ -765,9 +767,9 @@ if __name__ == "__main__":
     ## calc_potential_levels
     #develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
-    develop_calculate_group_centers()
+    # develop_calculate_group_centers()
     # develop_interconnect_within_groups()
-    # test_interconnect_among_groups()
+    develop_interconnect_among_groups()
     # develop_shift_return_paths()
 
     # test_smooth_track_by_folding()

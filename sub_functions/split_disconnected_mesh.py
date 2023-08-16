@@ -19,20 +19,28 @@ def compute_connected_face_indices(vertices, faces):
     face_sets = np.ndarray((num_vertices), dtype=object)
     face_sets[0] = faces[0]  # Add the indices of the first face
     face_set_index = 0
+    num_face_sets = 1
 
     # Check intersection of faces with face_sets
     connected_faces = []
     lists_of_connected_faces = [connected_faces]
     for i in range(0, num_faces):
-        intersection = np.intersect1d(face_sets[face_set_index], faces[i])
-        if intersection.size > 0:
+        merge = False
+        for found_face_set in range(num_face_sets):
+            intersection = np.intersect1d(face_sets[found_face_set], faces[i])
+            if intersection.size > 0:
+                merge = True
+                break
+
+        if merge:
             # Merge the sets if faces have a common vertex
-            face_sets[face_set_index] = np.union1d(face_sets[face_set_index], faces[i])
-            face_set_vertices[faces[i]] = face_set_index
+            face_sets[found_face_set] = np.union1d(face_sets[found_face_set], faces[i])
+            face_set_vertices[faces[i]] = found_face_set
             connected_faces.append(faces[i])
         else:
-            log.debug(" %s not in %s", faces[i], face_sets)
+            # log.debug(" %s not in %s", faces[i], face_sets)
             # Start new connected list
+            num_face_sets += 1
             face_set_index += 1
             face_sets[face_set_index] = faces[i]
             face_set_vertices[faces[i]] = face_set_index
@@ -43,7 +51,7 @@ def compute_connected_face_indices(vertices, faces):
     return lists_of_connected_faces, face_set_vertices
 
 
-def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
+def split_disconnected_mesh_old(coil_mesh_in: Mesh) -> List[CoilPart]:
     """
     Split the mesh and the stream function if there are disconnected pieces such as shielded gradients.
 
@@ -71,3 +79,29 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
         index += 1
 
     return coil_parts
+
+def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
+    """
+    Split the mesh and the stream function if there are disconnected pieces such as shielded gradients.
+
+    Args:
+        coil_mesh_in (Mesh): Input mesh object.
+
+    Returns:
+        List[Mesh]: List of coil parts with split mesh.
+
+    """
+    tri_mesh = coil_mesh_in.trimesh_obj
+
+    if tri_mesh.body_count > 1:
+        coil_parts = [None] * tri_mesh.body_count
+        sub_meshes = tri_mesh.split(only_watertight=False)
+        index = 0
+        for sub_mesh in sub_meshes:
+            mesh_part = Mesh(trimesh_obj=sub_mesh)
+            mesh_part.normal_rep = coil_mesh_in.normal_rep
+            coil_parts[index] = CoilPart(coil_mesh=mesh_part)
+            index += 1
+        return coil_parts
+    else:
+        return [CoilPart(coil_mesh=coil_mesh_in)]

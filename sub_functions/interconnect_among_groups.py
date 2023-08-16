@@ -1,3 +1,4 @@
+from helpers.visualisation import compare
 import numpy as np
 
 from typing import List
@@ -12,7 +13,7 @@ from sub_functions.remove_points_from_loop import remove_points_from_loop
 
 log = logging.getLogger(__name__)
 
-def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
+def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=None):
     """
     Interconnects groups to generate a single wire track.
 
@@ -40,13 +41,13 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
         all_cut_points = np.concatenate([group.return_path.uv for group in connected_group_buff], axis=1)
 
         # Group fusions
-        level_hierarchy = [len(coil_part.level_positions[i]) for i in range(len(coil_part.level_positions))] # [Y]
+        level_hierarchy = [len(coil_part.level_positions[i]) for i in range(len(coil_part.level_positions))]  # [Y]
 
         for level_ind in range(max(level_hierarchy), -1, -1):
             levels_to_process = [idx for idx, value in enumerate(level_hierarchy) if value == level_ind]
 
             # Interconnect one level into a single group
-            for single_level_ind in range(len(levels_to_process)): # 1 level
+            for single_level_ind in range(len(levels_to_process)):  # 1 level
 
                 current_level = levels_to_process[single_level_ind]
                 groups_to_connect = coil_part.group_levels[current_level]
@@ -68,12 +69,13 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
 
                     for connect_ind in range(num_connections_to_do): # 3
                         # Get the tracks to connect
-                        # M: In each loop, has 
+                        # M: In each loop, has
                         grouptracks_to_connect = [connected_group_buff[group] for group in groups_to_connect]
 
                         # Remove the return_path for the search of mutual group cuts
                         # Create a copy so that edits do not affect connected_group_buff entries
-                        grouptracks_to_connect_without_returns = [connected_group_buff[group].copy() for group in groups_to_connect]
+                        grouptracks_to_connect_without_returns = [
+                            connected_group_buff[group].copy() for group in groups_to_connect]
 
                         for group_ind in range(group_len):
                             grouptracks_to_connect_without_returns[group_ind].uv, grouptracks_to_connect_without_returns[group_ind].v = remove_points_from_loop(
@@ -88,7 +90,7 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                         min_group_dists = np.zeros((group_len, group_len))
                         min_group_inds = np.zeros((group_len, group_len), dtype=int)
                         min_pos_group = DataStructure(v=[[None for _ in range(group_len)] for _ in range(group_len)],
-                                                uv=[[None for _ in range(group_len)] for _ in range(group_len)])
+                                                      uv=[[None for _ in range(group_len)] for _ in range(group_len)])
 
                         # Find the minimal distance positions between the groups and the points with minimal distance
                         for ind1 in range(group_len):
@@ -96,7 +98,7 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                                 if ind2 != ind1:
                                     group_a = grouptracks_to_connect_without_returns[ind1]
                                     group_b = grouptracks_to_connect_without_returns[ind2]
-                                    near_ind = np.zeros(group_a.v.shape[1])
+                                    near_ind = np.zeros(group_a.v.shape[1], dtype=int)
                                     near_dist = np.zeros(group_a.v.shape[1])
 
                                     for point_ind in range(group_a.v.shape[1]):
@@ -107,8 +109,10 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                                         # Find the minimum distance and its index
                                         near_dist[point_ind] = np.min(distances)
                                         near_ind[point_ind] = np.argmin(distances)
+
                                     total_min_dist, total_min_ind = np.min(near_dist), np.argmin(near_dist)
                                     min_group_inds[ind1, ind2] = total_min_ind
+
                                     min_pos_group.uv[ind1][ind2] = grouptracks_to_connect_without_returns[ind1].uv[:, total_min_ind]
                                     min_pos_group.v[ind1][ind2] = grouptracks_to_connect_without_returns[ind1].v[:, total_min_ind]
                                     min_group_dists[ind1, ind2] = total_min_dist
@@ -121,14 +125,14 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args):
                         couple_group2 = min_dist_couple[0][0]
 
                         # Open the loop
-                        target_point_p = min_pos_group.v[couple_group1][couple_group2] # Python shape
-                        target_point = [[target_point_p[0]], [target_point_p[1]], [target_point_p[2]]] # MATLAB shape
+                        target_point_p = min_pos_group.v[couple_group1][couple_group2]  # Python shape
+                        target_point = [[target_point_p[0]], [target_point_p[1]], [target_point_p[2]]]  # MATLAB shape
 
                         opened_group_1, cut_shape_1, _ = open_loop_with_3d_sphere(
                             grouptracks_to_connect[couple_group1], target_point, input_args.interconnection_cut_width)
 
                         target_point_p = min_pos_group.v[couple_group2][couple_group1]
-                        target_point = [[target_point_p[0]], [target_point_p[1]], [target_point_p[2]]] # MATLAB shape
+                        target_point = [[target_point_p[0]], [target_point_p[1]], [target_point_p[2]]]  # MATLAB shape
                         opened_group_2, cut_shape_2, _ = open_loop_with_3d_sphere(
                             grouptracks_to_connect[couple_group2], target_point, input_args.interconnection_cut_width)
 

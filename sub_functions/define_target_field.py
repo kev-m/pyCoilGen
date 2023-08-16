@@ -17,7 +17,7 @@ from sub_functions.constants import *
 log = logging.getLogger(__name__)
 
 
-def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
+def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args):
     """
     Define the target field.
 
@@ -34,17 +34,17 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
     target_field_out = TargetField()
 
     # Define the target field
-    if input.target_field_definition_file != 'none':
+    if input_args.target_field_definition_file != 'none':
         # Load target field definition file
-        target_field_definition_file = os.path.join("target_fields", input.target_field_definition_file)
+        target_field_definition_file = os.path.join("target_fields", input_args.target_field_definition_file)
         # loaded_target_field = loadmat(target_field_definition_file)
         loaded_target_field = np.load(target_field_definition_file)
         # struct_name = loaded_target_field.keys()[0]
         struct_name = list(loaded_target_field.keys())[0]
         loaded_target_field = loaded_target_field[struct_name]
 
-        if input.target_field_definition_field_name in loaded_target_field:
-            loaded_field = loaded_target_field[input.target_field_definition_field_name]
+        if input_args.target_field_definition_field_name in loaded_target_field:
+            loaded_field = loaded_target_field[input_args.target_field_definition_field_name]
 
             if loaded_field.shape[0] == 1:
                 target_field_out.b = np.vstack((np.zeros_like(loaded_field), np.zeros_like(loaded_field), loaded_field))
@@ -57,11 +57,11 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
             target_field_out.target_field_group_inds = np.ones(target_field_out.b.shape[1])
         else:
             raise ValueError(
-                f"The target field with name '{input.target_field_definition_file}' does not exist in the provided file.")
+                f"The target field with name '{input_args.target_field_definition_file}' does not exist in the provided file.")
 
     else:
         if target_mesh is not None:  # Create evenly distributed points within the surface of the "target mesh"
-            if not input.use_only_target_mesh_verts:
+            if not input_args.use_only_target_mesh_verts:
                 target_mesh_x_bounds = [np.min(target_mesh.get_vertices()[:, 0]),
                                         np.max(target_mesh.get_vertices()[:, 0])]
                 target_mesh_y_bounds = [np.min(target_mesh.get_vertices()[:, 1]),
@@ -73,9 +73,9 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
                 y_size = target_mesh_y_bounds[1] - target_mesh_y_bounds[0]
                 z_size = target_mesh_z_bounds[1] - target_mesh_z_bounds[0]
 
-                num_points_per_x_dim = input.target_region_resolution
-                num_points_per_y_dim = input.target_region_resolution
-                num_points_per_z_dim = input.target_region_resolution
+                num_points_per_x_dim = input_args.target_region_resolution
+                num_points_per_y_dim = input_args.target_region_resolution
+                num_points_per_z_dim = input_args.target_region_resolution
 
                 target_x_coords = np.linspace(target_mesh_x_bounds[0], target_mesh_x_bounds[1], num_points_per_x_dim)
                 target_y_coords = np.linspace(target_mesh_y_bounds[0], target_mesh_y_bounds[1], num_points_per_y_dim)
@@ -93,10 +93,10 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
             else:
                 target_points = target_mesh.get_vertices().T
         else:  # Define target point coordinates as points inside a sphere of a given radius
-            num_points_per_dim = input.target_region_resolution
-            target_x_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input.target_region_radius
-            target_y_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input.target_region_radius
-            target_z_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input.target_region_radius
+            num_points_per_dim = input_args.target_region_resolution
+            target_x_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input_args.target_region_radius
+            target_y_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input_args.target_region_radius
+            target_z_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input_args.target_region_radius
             target_grid_x, target_grid_y, target_grid_z = np.meshgrid(target_x_coords, target_y_coords, target_z_coords)
 
             # For some unknown reason I need to swap y and z coords to match MATLAB
@@ -108,11 +108,11 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
             distances = np.sqrt(np.sum(target_points ** 2, axis=0))
 
             # Filter out points outside the target region radius
-            target_points2 = target_points[:, distances <= input.target_region_radius]
+            target_points2 = target_points[:, distances <= input_args.target_region_radius]
 
             all_verts = np.vstack([part.coil_mesh.get_vertices() for part in coil_parts])
 
-            if input.set_roi_into_mesh_center:
+            if input_args.set_roi_into_mesh_center:
                 mean_pos = np.mean(all_verts, axis=0, keepdims=True)
                 target_points3 = target_points2 - mean_pos.T
             else:
@@ -124,7 +124,7 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
         target_points = target_points3
 
         # Define the target field shape
-        def field_func(x, y, z): return eval(input.field_shape_function)
+        def field_func(x, y, z): return eval(input_args.field_shape_function)
         target_field = np.zeros_like(target_points)
         target_field[2, :] = field_func(target_points[0, :], target_points[1, :], target_points[2, :])
 
@@ -146,18 +146,18 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input):
         max_field_difference = np.max(target_field[2, :]) - np.min(target_field[2, :])
 
         if abs(max_field_difference) > 10**(-10):
-            target_field = target_field / (max_field_difference / max_target_distance) * input.target_gradient_strength
+            target_field = target_field / (max_field_difference / max_target_distance) * input_args.target_gradient_strength
         else:
-            target_field = target_field * input.target_gradient_strength
+            target_field = target_field * input_args.target_gradient_strength
 
         # Define weightings from 0 to 1 that weights the significance of target points
         target_field_weighting = np.ones(target_field.shape[1])
-        target_field_weighting[is_supressed_point] = input.secondary_target_weight
+        target_field_weighting[is_supressed_point] = input_args.secondary_target_weight
         target_field_group_inds = np.ones(target_field.shape[1])
         target_field_group_inds[is_supressed_point] = 2
 
         # Calculate the gradients from the symbolic definition of the target field
-        target_dbzbx, target_dbzby, target_dbzbz = symbolic_calculation_of_gradient(input, target_field)
+        target_dbzbx, target_dbzby, target_dbzbz = symbolic_calculation_of_gradient(input_args, target_field)
 
         if get_level() > DEBUG_BASIC:
             log.debug(" Final target_field:\n%s", target_field[:, :5])

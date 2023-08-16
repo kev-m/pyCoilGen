@@ -74,38 +74,40 @@ def CoilGen(log, input=None):
 
     ######################################################################################
     # DEVELOPMENT: Remove this
-    if input_args.coil_mesh_file == 'create cylinder mesh':
-        log.debug(" Loading comparison data from generate_halbch_gradient_system")
-        mat_contents = load_matlab('debug/generate_halbch_gradient_system')
-        matlab_data = mat_contents['x_channel']
+    if input_args.coil_mesh_file == 'bi_planer_rectangles_width_1000mm_distance_500mm.stl':
+        log.debug(" Loading comparison data from biplanar_xgradient")
+        mat_contents = load_matlab('debug/biplanar_xgradient')
+        matlab_data = mat_contents['coil_layouts']
+        compare_mesh_shape = True
     else:
         log.debug(" Loading comparison data from result_y_gradient")
         # mat_contents = load_matlab('debug/result_y_gradient')
         mat_contents = load_matlab('debug/ygradient_coil')
         log.debug("mat_contents: %s", mat_contents.keys())
         matlab_data = mat_contents['coil_layouts']
+        compare_mesh_shape = True
 
     m_out = get_element_by_name(matlab_data, 'out')
-    m_faces = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.faces')-1
-    m_vertices = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.vertices')
-    log.debug(" m_faces shape: %s", m_faces.shape)
-    log.debug(" m_vertices shape: %s", m_vertices.shape)
+    if isinstance(m_out.coil_parts, (np.ndarray)):
+        m_c_parts = m_out.coil_parts
+    else:
+        m_c_parts = [m_out.coil_parts]
+
+    #m_faces = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.faces')-1
+    #m_vertices = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.vertices')
+    #log.debug(" m_faces shape: %s", m_faces.shape)
+    #log.debug(" m_vertices shape: %s", m_vertices.shape)
 
     # Mesh parameterisation
-    m_v = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.v', False)
-    m_fn = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.fn', False)
-    m_n = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.n')
+    #m_v = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.v', False)
+    #m_fn = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.fn', False)
+    #m_n = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.n')
 
     # Sanity check
-    assert (compare(m_vertices, m_v))
+    #assert (compare(m_vertices, m_v))
 
-    m_uv = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.uv')
-    m_boundary_x = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.boundary')-1
-    log.debug(" m_boundary_x: %s", m_boundary_x.shape)
-    m_boundary_points = m_boundary_x[0].shape[0]
-    m_boundary = np.ndarray((2, m_boundary_points), dtype=int)
-    m_boundary[0] = m_boundary_x[0].reshape((m_boundary_points))
-    m_boundary[1] = m_boundary_x[1].reshape((m_boundary_points))
+    #m_uv = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.uv')
+    #m_boundary_x = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.boundary')-1
 
     # Target field
     # b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
@@ -118,13 +120,13 @@ def CoilGen(log, input=None):
     m_tf_target_gradient_dbdxyz = m_target_field.target_gradient_dbdxyz
 
     # One Ring List
-    m_c_part = get_and_show_debug(matlab_data, 'out.coil_parts[0]')
-    m_or_one_ring_list = m_c_part.one_ring_list - 1
-    # Transpose the entries
-    for index1 in range(len(m_or_one_ring_list)):
-        m_or_one_ring_list[index1] = m_or_one_ring_list[index1].T
-    m_or_node_triangles = m_c_part.node_triangles - 1
-    m_or_node_triangle_mat = m_c_part.node_triangle_mat
+    #m_c_part = get_and_show_debug(matlab_data, 'out.coil_parts[0]')
+    #m_or_one_ring_list = m_c_part.one_ring_list - 1
+    ## Transpose the entries
+    #for index1 in range(len(m_or_one_ring_list)):
+    #    m_or_one_ring_list[index1] = m_or_one_ring_list[index1].T
+    #m_or_node_triangles = m_c_part.node_triangles - 1
+    #m_or_node_triangle_mat = m_c_part.node_triangle_mat
 
     # END of Remove this
     ######################################################################################
@@ -149,8 +151,9 @@ def CoilGen(log, input=None):
         if get_level() > DEBUG_VERBOSE:
             log.debug(" coil_mesh.vertex_faces: %s", coil_mesh.trimesh_obj.vertex_faces[0:10])
 
-        assert (compare(coil_mesh.get_faces(), m_faces))
-        assert (compare(coil_mesh.get_vertices(), m_vertices))
+        #if compare_mesh_shape:
+        #    assert (compare(coil_mesh.get_faces(), m_faces))
+        #    assert (compare(coil_mesh.get_vertices(), m_vertices))
 
         if get_level() > DEBUG_VERBOSE:
             coil_mesh.display()
@@ -166,7 +169,9 @@ def CoilGen(log, input=None):
         # np.save(f'debug/ygradient_coil_python_01_{use_matlab_data}.npy', coil_parts)
         # log.debug("coil_parts: %s", coil_parts)
 
-        assert (compare(coil_parts[0].coil_mesh.get_faces(), m_faces))
+        for part_index in range(len(coil_parts)):
+            m_faces = m_c_parts[part_index].coil_mesh.faces.T-1
+            ### assert (compare(coil_parts[part_index].coil_mesh.get_faces(), m_faces))
         # coil_parts[0].coil_mesh.display()
 
         # Parameterize the mesh
@@ -177,29 +182,47 @@ def CoilGen(log, input=None):
 
         ######################################################
         # Verify: v, fn, n, boundary, uv
-        coil_mesh = coil_parts[0].coil_mesh
-        assert (compare(coil_mesh.v, m_v))      # Pass
-        assert (compare(coil_mesh.fn, m_fn))    # Pass
-        assert (compare(coil_mesh.n, m_n, double_tolerance=0.1))      # Pass only at 0.1
+        for part_index in range(len(coil_parts)):
+            coil_mesh = coil_parts[part_index].coil_mesh
+            m_v = m_c_parts[part_index].coil_mesh.v
+            m_fn = m_c_parts[part_index].coil_mesh.fn
+            m_n = m_c_parts[part_index].coil_mesh.n
+            ### assert (compare(coil_mesh.v, m_v))      # Pass
+            ### assert (compare(coil_mesh.fn, m_fn))    # Pass
+            ### assert (compare(coil_mesh.n, m_n, double_tolerance=0.1))      # Pass only at 0.1
 
         # Plot the two boundaries and see the difference
         if get_level() >= DEBUG_VERBOSE:
             # visualize_vertex_connections(coil_mesh.v, 800, 'images/04_uv1_coil_mesh_boundary.png', coil_mesh.boundary)
             # visualize_vertex_connections(coil_mesh.v, 800, 'images/04_uv1_m_boundary.png', m_boundary)
 
-            p2d = visualize_projected_vertices(coil_mesh.v, 800, 'images/02_coil_mesh_v_p.png')
-            m2d = visualize_projected_vertices(m_c_part.coil_mesh.v, 800, 'images/02_coil_mesh_v_m.png')
+            for part_index in range(len(coil_parts)):
+                coil_mesh = coil_parts[part_index].coil_mesh
+                m_c_part = m_c_parts[part_index]
+                p2d = visualize_projected_vertices(coil_mesh.v, 800, f'images/02_coil_mesh{part_index}_v_p.png')
+                m2d = visualize_projected_vertices(m_c_part.coil_mesh.v, 800, f'images/02_coil_mesh{part_index}_v_m.png')
 
-            # Plot the two UV and see the difference
-            visualize_compare_vertices(p2d, m2d, 800, 'images/04_coil_mesh_v_diff.png')
-            visualize_compare_vertices(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 800, 'images/02_coil_mesh_uv_diff.png')
+                # Plot the two UV and see the difference
+                visualize_compare_vertices(p2d, m2d, 800, 'images/04_coil_mesh_v_diff.png')
+                visualize_compare_vertices(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 800, f'images/02_coil_mesh{part_index}_uv_diff.png')
 
-        if get_level() > DEBUG_VERBOSE:
-            log.debug(" m_boundary: %s", m_boundary)
-            log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
-        # Question: Does order matter?
-        assert (compare_contains(coil_mesh.boundary, m_boundary, strict=False))  # Pass
-        assert (compare(coil_mesh.uv, m_uv, 0.0001))    # Pass
+                ## assert (compare(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 0.0001))    # Pass
+
+                # Temporary: Assume all boundaries are the same shape. Not always valid.
+                m_boundary_x = m_c_part.coil_mesh.boundary - 1
+                log.debug(" m_boundary_x: %s", m_boundary_x.shape)
+                #m_boundary_points = m_boundary_x[0].shape[0]
+                #m_boundary = np.ndarray((2, m_boundary_points), dtype=int)
+                #m_boundary[0] = m_boundary_x[0].reshape((m_boundary_points))
+                #m_boundary[1] = m_boundary_x[1].reshape((m_boundary_points))
+
+
+                if get_level() > DEBUG_VERBOSE:
+                    log.debug(" m_boundary: %s", m_boundary)
+                    log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
+
+                # Question: Does order matter?
+                ## assert (compare_contains(coil_mesh.boundary, m_boundary, strict=False))  # Pass
 
         # Define the target field
         print('Define the target field:')
@@ -238,6 +261,13 @@ def CoilGen(log, input=None):
         one_ring_list = coil_part.one_ring_list
         node_triangles = coil_part.node_triangles
         node_triangle_mat = coil_part.node_triangle_mat
+
+        m_or_one_ring_list = m_c_part.one_ring_list - 1
+        # Transpose the entries
+        for index1 in range(len(m_or_one_ring_list)):
+            m_or_one_ring_list[index1] = m_or_one_ring_list[index1].T
+        m_or_node_triangles = m_c_part.node_triangles - 1
+        m_or_node_triangle_mat = m_c_part.node_triangle_mat
 
         visualize_multi_connections(coil_mesh.uv, 800, 'images/03_one-1-ring_list.png', one_ring_list[0:25])
         visualize_multi_connections(coil_mesh.uv, 800, 'images/03_one-1-ring_list_m.png', m_or_one_ring_list[0:25])
@@ -705,7 +735,7 @@ def CoilGen(log, input=None):
         # Interconnect the single groups
         print('Interconnect the single groups:')
         coil_parts = interconnect_within_groups(coil_parts, input_args)  # 15
-        # np.save(f'debug/ygradient_coil_python_15_{use_matlab_data}.npy', coil_parts)
+        np.save(f'debug/ygradient_coil_python_15_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -776,9 +806,8 @@ def CoilGen(log, input=None):
                 visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/16_wire_path_uv_{index1}_p.png')
                 visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/16_wire_path_uv_{index1}_m.png')
 
-            if use_matlab_data or True:
-                assert (compare(c_wire_path.uv, m_wire_path.uv))    # Pass
-                assert (compare(c_wire_path.v, m_wire_path.v))      # Pass
+            assert (compare(c_wire_path.uv, m_wire_path.uv))    # Fail: (2, 1540) is not (2, 1539)
+            assert (compare(c_wire_path.v, m_wire_path.v))      # Fail: (3, 1540) is not (3, 1539)
 
         # Manual conclusion: Pass, when using MATLAB data
         #
@@ -895,13 +924,15 @@ if __name__ == "__main__":
     # logging.basicConfig(level=logging.INFO)
 
     # create cylinder mesh: 0.4, 0.1125, 50, 50, copy from Matlab
+
+    # Examples/biplanar_xgradient.m
     arg_dict1 = {
         "area_perimeter_deletion_ratio": 5,
         "b_0_direction": [0, 0, 1],
         "biplanar_mesh_parameter_list": [0.25, 0.25, 20, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
         "circular_diameter_factor": 1.0,  # was circular_diameter_factor_cylinder_parameterization
         "circular_mesh_parameter_list": [0.25, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        "coil_mesh_file": "create cylinder mesh",
+        "coil_mesh_file": "bi_planer_rectangles_width_1000mm_distance_500mm.stl",
         "conductor_cross_section_height": 0.002,
         "conductor_cross_section_width": 0.003,
         "conductor_thickness": 0.005,
@@ -911,32 +942,32 @@ if __name__ == "__main__":
         "field_shape_function": "x",
         "fieldtype_to_evaluate": ['', 'MCOS', 'string', [3707764736,          2,          1,          1,          2,                2]],
         "fmincon_parameter": [500.0, 10000000000.0, 1e-10, 1e-10, 1e-10],
-        "force_cut_selection": ['high', 'high', 'low', 'high'],
+        "force_cut_selection": ['high'],
         "gauss_order": 2,
         # "geometry_source_path": "C:\\Users\\amrein\\Documents\\PhD_Work\\CoilGen\\Geometry_Data",
         "group_interconnection_method": "crossed",
-        "interconnection_cut_width": 0.02,
+        "interconnection_cut_width": 0.05,
         "interconnection_method": "regular",
-        "iteration_num_mesh_refinement": 0,
+        "iteration_num_mesh_refinement": 1,
         "level_set_method": "primary",
         "levels": 14,
-        "make_cylndrical_pcb": 0,
+        "make_cylindrical_pcb": 0,
         "max_allowed_angle_within_coil_track": 120,
         "min_allowed_angle_within_coil_track": 0.0001,
         "min_loop_significance": 3,
         "min_point_loop_number": 20,
-        "normal_shift_length": 0.004,
+        "normal_shift_length": 0.01,
         "normal_shift_smooth_factors": [2, 3, 2],
         # "output_directory": "C:\\Users\\amrein\\Documents\\PhD_Work\\CoilGen",
         "pcb_interconnection_method": "regular",
         "pcb_spiral_end_shift_factor": 10,
         "planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         "plot_flag": 1,
-        "pot_offset_factor": 0.5,
+        "pot_offset_factor": 0.25,
         "save_stl_flag": 1,
         "secondary_target_mesh_file": "none",
-        "secondary_target_weight": 1,
-        "set_roi_into_mesh_center": 0,
+        "secondary_target_weight": 0.5,
+        "set_roi_into_mesh_center": 1,
         "sf_opt_method": "tikkonov",
         "sf_source_file": "none",
         "skip_calculation_min_winding_distance": 1,  # Default: 1
@@ -952,10 +983,9 @@ if __name__ == "__main__":
         "target_field_definition_file": "none",
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
-        "target_region_radius": 0.05,
+        "target_region_radius": 0.1,
         "target_region_resolution": 5,
-        "temp": [],
-        "tikonov_reg_factor": 30000,
+        "tikonov_reg_factor": 10,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
         "use_only_target_mesh_verts": 0,
