@@ -13,9 +13,6 @@ from sub_functions.remove_points_from_loop import remove_points_from_loop
 
 log = logging.getLogger(__name__)
 
-# TODO: DEBUG remove debug imports
-
-
 def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=None):
     """
     Interconnects groups to generate a single wire track.
@@ -33,11 +30,6 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
     Returns:
         coil_parts (List[CoilPart]): The updated CoilParts list.
     """
-    if m_c_part is not None:
-        m_top_debug = m_c_part.interconnect_among_groups
-        m_level_debug = m_top_debug.level_debug
-        m_level_connections = m_level_debug.connections
-
     # Local parameters
     additional_points_to_remove = 2
 
@@ -47,10 +39,6 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
 
         # Gather all return points to dismiss them for the search of group cut points
         all_cut_points = np.concatenate([group.return_path.uv for group in connected_group_buff], axis=1)
-
-        # DEBUG
-        if m_c_part is not None:
-            assert compare(all_cut_points, m_top_debug.all_cut_points, double_tolerance=0.001)  # Pass
 
         # Group fusions
         level_hierarchy = [len(coil_part.level_positions[i]) for i in range(len(coil_part.level_positions))]  # [Y]
@@ -73,32 +61,16 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                     groups_to_connect.append(current_top_group)
                     is_enclosing.append(1)
 
-                if m_c_part is not None:
-                    assert compare(np.array(is_enclosing), m_level_debug.is_enclosing)  # [Y]
-
                 # Make the n-1 interconnections in an optimal way resulting in one track for that level
                 num_connections_to_do = group_len - 1
-
-                if m_c_part is not None:
-                    assert num_connections_to_do == m_level_debug.num_connections_to_do
 
                 if num_connections_to_do > 0:
                     coil_part.opening_cuts_among_groups = [Cuts() for _ in range(num_connections_to_do)]
 
-                    for connect_ind in range(num_connections_to_do):  # 3
-                        # DEBUG
-                        if m_c_part is not None:
-                            m_connection_debug = m_level_connections[connect_ind]
-
+                    for connect_ind in range(num_connections_to_do): # 3
                         # Get the tracks to connect
                         # M: In each loop, has
                         grouptracks_to_connect = [connected_group_buff[group] for group in groups_to_connect]
-
-                        if m_c_part is not None:
-                            assert len(groups_to_connect) == len(m_connection_debug.grouptracks_to_connect1)
-                            for index, m_track in enumerate(m_connection_debug.grouptracks_to_connect1):
-                                p_track = grouptracks_to_connect[index]
-                                assert compare(p_track.uv, m_track.uv, double_tolerance=0.001)  # [Y]
 
                         # Remove the return_path for the search of mutual group cuts
                         # Create a copy so that edits do not affect connected_group_buff entries
@@ -106,7 +78,6 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                             connected_group_buff[group].copy() for group in groups_to_connect]
 
                         for group_ind in range(group_len):
-                            log.debug(" -- Removing points for: connect_ind: %d, group_ind: %d", connect_ind, group_ind)
                             grouptracks_to_connect_without_returns[group_ind].uv, grouptracks_to_connect_without_returns[group_ind].v = remove_points_from_loop(
                                 grouptracks_to_connect[group_ind], all_cut_points, additional_points_to_remove
                             )
@@ -115,24 +86,11 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                                  grouptracks_to_connect_without_returns[group_ind].v[2, :]]
                             )
 
-                            # DEBUG
-                            if m_c_part is not None:
-                                assert compare(grouptracks_to_connect_without_returns[group_ind].v, m_connection_debug.grouptracks_to_connect_without_returns[group_ind].v, double_tolerance=0.001)
-                                assert compare(grouptracks_to_connect_without_returns[group_ind].uv, m_connection_debug.grouptracks_to_connect_without_returns[group_ind].uv, double_tolerance=0.001)
-
                         # Select the return paths of those interconnected groups for later
                         min_group_dists = np.zeros((group_len, group_len))
                         min_group_inds = np.zeros((group_len, group_len), dtype=int)
                         min_pos_group = DataStructure(v=[[None for _ in range(group_len)] for _ in range(group_len)],
                                                       uv=[[None for _ in range(group_len)] for _ in range(group_len)])
-
-                        # DEBUG
-                        if m_c_part is not None:
-                            # Patch MATLAB value
-                            m_min_group_inds = m_connection_debug.min_group_inds.copy()
-                            m_min_group_inds[m_min_group_inds > 0] -= 1
-
-                            m_loop_debug = m_connection_debug.loop_debug
 
                         # Find the minimal distance positions between the groups and the points with minimal distance
                         for ind1 in range(group_len):
@@ -143,11 +101,6 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                                     near_ind = np.zeros(group_a.v.shape[1], dtype=int)
                                     near_dist = np.zeros(group_a.v.shape[1])
 
-                                    if m_c_part is not None and ind1 == 0 and ind2 == 3:
-                                        m_distances_array = m_connection_debug.distances_debug14
-                                        m_near_ind14 = m_connection_debug.near_ind14 - 1
-
-
                                     for point_ind in range(group_a.v.shape[1]):
                                         # Calculate the distances between group_b.v and each point in group_a.v
                                         distances = np.sqrt((group_b.v[0, :] - group_a.v[0, point_ind])**2 +
@@ -157,37 +110,13 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                                         near_dist[point_ind] = np.min(distances)
                                         near_ind[point_ind] = np.argmin(distances)
 
-                                        if m_c_part is not None and ind1 == 0 and ind2 == 3:
-                                            m_distances = m_distances_array[point_ind]
-
                                     total_min_dist, total_min_ind = np.min(near_dist), np.argmin(near_dist)
                                     min_group_inds[ind1, ind2] = total_min_ind
-
-                                    # DEBUG
-                                    if m_c_part is not None:
-                                        if min_group_inds[ind1, ind2] != m_min_group_inds[ind1, ind2]:
-                                            log.debug("-- Here!! 3")
-                                        m_near_ind = m_loop_debug[ind1, ind2].near_ind-1
-                                        m_near_dist = m_loop_debug[ind1, ind2].near_dist
-                                        m_distances = m_connection_debug.distances_debug14
-
-                                        assert compare(near_ind, m_near_ind)
-                                        assert compare(near_dist, m_near_dist, double_tolerance=0.001)  # [?]
 
                                     min_pos_group.uv[ind1][ind2] = grouptracks_to_connect_without_returns[ind1].uv[:, total_min_ind]
                                     min_pos_group.v[ind1][ind2] = grouptracks_to_connect_without_returns[ind1].v[:, total_min_ind]
                                     min_group_dists[ind1, ind2] = total_min_dist
                                     min_group_dists[min_group_dists == 0] = np.inf
-
-                        # DEBUG
-                        if m_c_part is not None:
-                            # Not the same value at index [0]:
-                            #  [ 0 38 14 30] ... is not
-                            #  [255  38  14  26] ...
-                            # assert compare(min_group_inds, m_min_group_inds)
-                            #assert compare(min_pos_group.uv, m_connection_debug.min_pos_group.uv, double_tolerance=0.001) # Fail 0,3
-                            #assert compare(min_pos_group.v, m_connection_debug.min_pos_group.v, double_tolerance=0.001)
-                            assert compare(min_group_dists, m_connection_debug.min_group_dists, double_tolerance=0.001)
 
                         # Select the pair of groups with the shortest respective distance
                         min_dist_couple1 = min_group_dists == np.min(min_group_dists)
@@ -195,26 +124,9 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                         couple_group1 = min_dist_couple[1][0]
                         couple_group2 = min_dist_couple[0][0]
 
-                        # DEBUG
-                        if m_c_part is not None:
-                            assert couple_group1 == m_connection_debug.couple_group1-1
-                            assert couple_group2 == m_connection_debug.couple_group2-1
-
                         # Open the loop
                         target_point_p = min_pos_group.v[couple_group1][couple_group2]  # Python shape
                         target_point = [[target_point_p[0]], [target_point_p[1]], [target_point_p[2]]]  # MATLAB shape
-
-                        # DEBUG
-                        if m_c_part is not None:
-                            m_sphere_base = m_connection_debug.open_loop_with_3d_sphere
-                            # Not the same value at index [0]: 0.1294095367193222 is not -0.1294095367193222
-                            assert compare(target_point_p, m_sphere_base.debug_open1.input.sphere_centre, double_tolerance=0.001)
-                            assert input_args.interconnection_cut_width == m_sphere_base.debug_open1.input.sphere_diameter
-                            assert compare(grouptracks_to_connect[couple_group1].uv, m_sphere_base.debug_open1.input.curve_in.uv, double_tolerance=0.001)
-                            assert compare(grouptracks_to_connect[couple_group1].v, m_sphere_base.debug_open1.input.curve_in.v, double_tolerance=0.001)
-
-                            assert compare(grouptracks_to_connect[couple_group2].uv, m_sphere_base.debug_open2.input.curve_in.uv, double_tolerance=0.001)
-                            assert compare(grouptracks_to_connect[couple_group2].v, m_sphere_base.debug_open2.input.curve_in.v, double_tolerance=0.001)
 
                         opened_group_1, cut_shape_1, _ = open_loop_with_3d_sphere(
                             grouptracks_to_connect[couple_group1], target_point, input_args.interconnection_cut_width)
@@ -223,16 +135,6 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                         target_point = [[target_point_p[0]], [target_point_p[1]], [target_point_p[2]]]  # MATLAB shape
                         opened_group_2, cut_shape_2, _ = open_loop_with_3d_sphere(
                             grouptracks_to_connect[couple_group2], target_point, input_args.interconnection_cut_width)
-
-                        # DEBUG
-                        if m_c_part is not None:
-                            assert compare(cut_shape_1, m_c_part.opening_cuts_among_groups[connect_ind].cut1, double_tolerance=0.001)
-                            assert compare(cut_shape_2, m_c_part.opening_cuts_among_groups[connect_ind].cut2, double_tolerance=0.001)
-
-                            assert compare(opened_group_1.uv, m_connection_debug.opened_group_1.uv, double_tolerance=0.001)
-                            assert compare(opened_group_1.v, m_connection_debug.opened_group_1.v, double_tolerance=0.001)
-                            assert compare(opened_group_2.uv, m_connection_debug.opened_group_2.uv, double_tolerance=0.001)
-                            assert compare(opened_group_2.v, m_connection_debug.opened_group_2.v, double_tolerance=0.001)
 
                         # Save the cut shapes for later plotting
                         coil_part.opening_cuts_among_groups[connect_ind].cut1 = cut_shape_1
@@ -243,20 +145,10 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                         track_combilength1 = np.concatenate([opened_group_1.v, opened_group_2.v], axis=1)
                         track_combilength2 = np.concatenate([opened_group_2.v, opened_group_1.v], axis=1)
 
-                        # DEBUG
-                        if m_c_part is not None:
-                            assert compare(track_combilength1, m_connection_debug.track_combilength1a, double_tolerance=0.001)
-                            assert compare(track_combilength2, m_connection_debug.track_combilength2a, double_tolerance=0.001)
-
                         track_combilength1 = np.sum(np.linalg.norm(
                             track_combilength1[:, 1:] - track_combilength1[:, :-1], axis=0))
                         track_combilength2 = np.sum(np.linalg.norm(
                             track_combilength2[:, 1:] - track_combilength2[:, :-1], axis=0))
-
-                        # DEBUG
-                        if m_c_part is not None:
-                            assert np.isclose(track_combilength1, m_connection_debug.track_combilength1b, atol=0.001)
-                            assert np.isclose(track_combilength2, m_connection_debug.track_combilength2b, atol=0.001)
 
                         if track_combilength1 < track_combilength2:
                             fused_group = Shape3D(v=np.concatenate([opened_group_1.v, opened_group_2.v], axis=1),
