@@ -622,7 +622,9 @@ def develop_interconnect_among_groups():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    p_coil_parts = np.load('debug/ygradient_coil_python_15_False.npy', allow_pickle=True)
+    # The Python paths and the MATLAB paths are close but slightly different. This prevents detailed debugging.
+    # Actually, there is no bug!
+    p_coil_parts = np.load('debug/ygradient_coil_python_15_True.npy', allow_pickle=True)
 
     input_args = DataStructure(interconnection_cut_width=0.1)
     coil_parts = interconnect_among_groups(p_coil_parts, input_args, m_c_part)

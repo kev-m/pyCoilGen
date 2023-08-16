@@ -126,14 +126,27 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                         min_pos_group = DataStructure(v=[[None for _ in range(group_len)] for _ in range(group_len)],
                                                       uv=[[None for _ in range(group_len)] for _ in range(group_len)])
 
+                        # DEBUG
+                        if m_c_part is not None:
+                            # Patch MATLAB value
+                            m_min_group_inds = m_connection_debug.min_group_inds.copy()
+                            m_min_group_inds[m_min_group_inds > 0] -= 1
+
+                            m_loop_debug = m_connection_debug.loop_debug
+
                         # Find the minimal distance positions between the groups and the points with minimal distance
                         for ind1 in range(group_len):
                             for ind2 in range(group_len):
                                 if ind2 != ind1:
                                     group_a = grouptracks_to_connect_without_returns[ind1]
                                     group_b = grouptracks_to_connect_without_returns[ind2]
-                                    near_ind = np.zeros(group_a.v.shape[1])
+                                    near_ind = np.zeros(group_a.v.shape[1], dtype=int)
                                     near_dist = np.zeros(group_a.v.shape[1])
+
+                                    if m_c_part is not None and ind1 == 0 and ind2 == 3:
+                                        m_distances_array = m_connection_debug.distances_debug14
+                                        m_near_ind14 = m_connection_debug.near_ind14 - 1
+
 
                                     for point_ind in range(group_a.v.shape[1]):
                                         # Calculate the distances between group_b.v and each point in group_a.v
@@ -143,8 +156,24 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                                         # Find the minimum distance and its index
                                         near_dist[point_ind] = np.min(distances)
                                         near_ind[point_ind] = np.argmin(distances)
+
+                                        if m_c_part is not None and ind1 == 0 and ind2 == 3:
+                                            m_distances = m_distances_array[point_ind]
+
                                     total_min_dist, total_min_ind = np.min(near_dist), np.argmin(near_dist)
                                     min_group_inds[ind1, ind2] = total_min_ind
+
+                                    # DEBUG
+                                    if m_c_part is not None:
+                                        if min_group_inds[ind1, ind2] != m_min_group_inds[ind1, ind2]:
+                                            log.debug("-- Here!! 3")
+                                        m_near_ind = m_loop_debug[ind1, ind2].near_ind-1
+                                        m_near_dist = m_loop_debug[ind1, ind2].near_dist
+                                        m_distances = m_connection_debug.distances_debug14
+
+                                        assert compare(near_ind, m_near_ind)
+                                        assert compare(near_dist, m_near_dist, double_tolerance=0.001)  # [?]
+
                                     min_pos_group.uv[ind1][ind2] = grouptracks_to_connect_without_returns[ind1].uv[:, total_min_ind]
                                     min_pos_group.v[ind1][ind2] = grouptracks_to_connect_without_returns[ind1].v[:, total_min_ind]
                                     min_group_dists[ind1, ind2] = total_min_dist
@@ -152,6 +181,12 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
 
                         # DEBUG
                         if m_c_part is not None:
+                            # Not the same value at index [0]:
+                            #  [ 0 38 14 30] ... is not
+                            #  [255  38  14  26] ...
+                            # assert compare(min_group_inds, m_min_group_inds)
+                            #assert compare(min_pos_group.uv, m_connection_debug.min_pos_group.uv, double_tolerance=0.001) # Fail 0,3
+                            #assert compare(min_pos_group.v, m_connection_debug.min_pos_group.v, double_tolerance=0.001)
                             assert compare(min_group_dists, m_connection_debug.min_group_dists, double_tolerance=0.001)
 
                         # Select the pair of groups with the shortest respective distance
@@ -172,6 +207,7 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                         # DEBUG
                         if m_c_part is not None:
                             m_sphere_base = m_connection_debug.open_loop_with_3d_sphere
+                            # Not the same value at index [0]: 0.1294095367193222 is not -0.1294095367193222
                             assert compare(target_point_p, m_sphere_base.debug_open1.input.sphere_centre, double_tolerance=0.001)
                             assert input_args.interconnection_cut_width == m_sphere_base.debug_open1.input.sphere_diameter
                             assert compare(grouptracks_to_connect[couple_group1].uv, m_sphere_base.debug_open1.input.curve_in.uv, double_tolerance=0.001)
