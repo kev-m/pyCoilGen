@@ -19,6 +19,13 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
         coil_parts (List[CoilPart]): List of CoilPart structures containing coil_mesh.
         input_args: Input arguments structure.
 
+    Initialises the following properties of a CoilPart:
+        - layout_surface_mesh
+        - ohmian_resistance
+
+    Updates the following properties of a CoilPart:
+        - None
+        
     Returns:
         List[CoilPart]: List of CoilPart structures with modified properties.
     """
@@ -227,8 +234,8 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
                 stl_file_path_layout = path.join(output_directory, f"swept_layout_part{part_ind}_{filename}.stl")
                 stl_file_path_surface = path.join(output_directory, f"surface_part{part_ind}_{filename}.stl")
 
-                layout_surface_mesh.export(stl_file_path_layout, file_type='stl_ascii')
-                coil_mesh.export(stl_file_path_surface, file_type='stl_ascii')
+                layout_surface_mesh.export(stl_file_path_layout)
+                coil_mesh.export(stl_file_path_surface)
 
             # Assign outputs
             coil_part.layout_surface_mesh = layout_surface_mesh
