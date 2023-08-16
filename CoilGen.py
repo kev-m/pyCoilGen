@@ -894,13 +894,13 @@ def CoilGen(log, input=None):
         #
         #####################################################
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
-
         # Create Sweep Along Surface
         print('Create sweep along surface:')
         coil_parts = create_sweep_along_surface(coil_parts, input_args)
+
+        # WIP
+        solution.coil_parts = coil_parts
+        return solution
 
     # Calculate the inductance by coil layout
     print('Calculate the inductance by coil layout:')
