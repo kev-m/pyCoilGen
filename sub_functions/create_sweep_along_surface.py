@@ -28,6 +28,9 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
 
         for part_ind in range(len(coil_parts)):
 
+            coil_part = coil_parts[part_ind]
+            coil_mesh = coil_part.coil_mesh
+
             # Define the cross section of the conductor
             if all(input_args.cross_sectional_points == 0):
                 circular_resolution = 10
@@ -39,12 +42,8 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             # Center the cross section around the origin [0, 0] for later rotation
             cross_section_points = cross_section_points - np.mean(cross_section_points, axis=1, keepdims=True)
             # Build a triangulation from the cross section
-            cross_section_triangulation = Delaunay(cross_section_points.T)
 
-            parameterized_mesh = coil_parts[part_ind].coil_mesh
-            points_to_shift = coil_parts[part_ind].points_to_shift
-            shift_array = coil_parts[part_ind].shift_array
-            wire_path = coil_parts[part_ind].wire_path
+            wire_path = coil_part.wire_path
             save_mesh = input_args.save_stl_flag
             output_directory = input_args.output_directory
             conductor_conductivity = input_args.specific_conductivity_conductor
@@ -100,10 +99,12 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             wire_path.uv = np.delete(wire_path.uv, point_inds_to_delete, axis=1)
 
             # Calculate the normal vectors along the wire track
-            surface_normal_along_wire_path_v = np.zeros((3, wire_path.v.shape[1]))
+            surface_normal_along_wire_path_v = np.zeros((3, wire_path.v.shape[1])) # MATLAB shape
 
             for point_ind in range(wire_path.v.shape[1]):
-                node_ind_normals_target = planary_mesh_matlab_format.find_simplex(wire_path.uv[:, point_ind])
+                #node_ind_normals_target = planary_mesh_matlab_format.find_simplex(wire_path.uv[:, point_ind])
+                point = wire_path.uv[:, point_ind]
+                node_ind_normals_target = coil_mesh.get_vertex_index(point)
 
                 if node_ind_normals_target == -1:  # Handle exceptions for strange output of pointLocation
                     if point_ind == 0:
@@ -113,7 +114,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
                         surface_normal_along_wire_path_v[:,
                                                          point_ind] = surface_normal_along_wire_path_v[:, point_ind - 1]
                 else:
-                    surface_normal_along_wire_path_v[:, point_ind] = parameterized_mesh.fn[node_ind_normals_target]
+                    surface_normal_along_wire_path_v[:, point_ind] = coil_mesh.fn[node_ind_normals_target]
 
             # Continue with Part 2
             """
@@ -176,7 +177,6 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             run_ind = 1
 
             for track_ind in range(face_points.shape[0] - 1):
-
                 for edge_ind in range(face_points.shape[2]):
                     node_a = track_ind * num_corners + full_edge_inds[edge_ind]
                     node_b = track_ind * num_corners + full_edge_inds[(edge_ind + 1) % num_corners]
@@ -227,14 +227,12 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
                 stl_file_path_layout = path.join(output_directory, f"swept_layout_part{part_ind}_{filename}.stl")
                 stl_file_path_surface = path.join(output_directory, f"surface_part{part_ind}_{filename}.stl")
 
-                trimesh.exchange.export.export_mesh(layout_surface_mesh.trimesh_obj,
-                                                    stl_file_path_layout, file_type='stl_ascii')
-                trimesh.exchange.export.export_mesh(curved_mesh_matlab_format,
-                                                    stl_file_path_surface, file_type='stl_ascii')
+                layout_surface_mesh.export(stl_file_path_layout, file_type='stl_ascii')
+                coil_mesh.export(stl_file_path_surface, file_type='stl_ascii')
 
             # Assign outputs
-            coil_parts[part_ind].layout_surface_mesh = layout_surface_mesh
-            coil_parts[part_ind].ohmian_resistance = ohmian_resistance
+            coil_part.layout_surface_mesh = layout_surface_mesh
+            coil_part.ohmian_resistance = ohmian_resistance
 
         return coil_parts
 
