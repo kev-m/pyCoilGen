@@ -206,6 +206,25 @@ class Mesh:
         node_triangles = np.array([row[row != -1] for row in node_triangles_tri], dtype=object)
         return node_triangles
 
+    def export(self, filename, file_type='stl'):
+        """
+        Export the current mesh to a file object.
+        If file_obj is a filename, file will be written there.
+
+        Supported formats are stl, off, ply, collada, json,
+        dict, glb, dict64, msgpack.
+
+        Parameters
+        ------------
+        file_obj : open writeable file object
+          str, file name where to save the mesh
+          None, return the export blob
+        file_type : str
+          Which file type to export as, if `file_name`
+          is passed this is not required.
+        """
+        self.trimesh_obj.export(filename, file_type)
+
 
 # Helper functions
 def append_uv(uv_container, uv_value):
@@ -430,6 +449,8 @@ class CoilPart:
     shift_array: np.ndarray = None          # ??? (shift_return_paths) (,)
     points_to_shift: np.ndarray = None      # Array of which points to shift (shift_return_paths) (m,)
     pcb_tracks: PCBTrack = None             # (generate_cylindrical_pcb_print)
+    layout_surface_mesh: Mesh = None        # Layout mesh (create_sweep_along_surface)
+    ohmian_resistance: np.ndarray = None    # Surface wire resistance (create_sweep_along_surface)
 
 
 class CoilSolution:
