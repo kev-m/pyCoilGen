@@ -5,7 +5,6 @@ from sympy import symbols, diff, lambdify
 
 
 from scipy.io import loadmat
-from scipy.spatial import Delaunay
 
 # Logging
 import logging
