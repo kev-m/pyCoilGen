@@ -96,7 +96,7 @@ def point_inside_triangle(point, triangle_vertices):
     [alpha, beta, gamma] = barycentric_coordinates(point, triangle_vertices)
 
     # Check if the point is inside the triangle
-    return [0 <= alpha <= 1 and 0 <= beta <= 1 and 0 <= gamma <= 1, [alpha, beta, gamma]]
+    return [(0 <= alpha <= 1.0) and (0 <= beta <= 1.0) and (0 <= gamma <= 1.0), [alpha, beta, gamma]]
 
 
 def which_face(point, face_indices, face_vertices):
@@ -187,6 +187,14 @@ def get_target_triangle(point, planary_mesh: Trimesh, proximity: ProximityQuery)
     log.debug("Unable to find any face for point %s", point)
     return None, None
 
+import numpy.linalg as la
+def barycentric_coords(point, vertices):
+    T = (np.array(vertices[:-1])-vertices[-1]).T
+    v = np.dot(la.inv(T), np.array(point)-vertices[-1])
+    # v.resize(len(vertices)
+    # v[-1] = 1-v.sum()
+    v = np.append(v, 1-v.sum())
+    return v
 
 def barycentric_coordinates(point, triangle_vertices):
     """
@@ -211,7 +219,10 @@ def barycentric_coordinates(point, triangle_vertices):
     beta = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / triangle_area
     gamma = 1 - alpha - beta
 
-    return [alpha, beta, gamma]
+
+    v = barycentric_coords(point, triangle_vertices)
+
+    return v # [alpha, beta, gamma]
 
 def barycentric_to_cartesian(bary_coords, triangle_vertices):
     """
