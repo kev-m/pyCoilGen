@@ -437,6 +437,7 @@ def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_lis
         image_x_size (int): The desired width of the output image.
         image_path (string): The desired output path where to write the image.
         contour_list (list[ContourLine]): The list of contour lines.
+        centres(ndarray): A list of 2D centres to draw in, if provided (nx2)
     """
     # Find the midpoint of all vertices
     midpoint = np.mean(vertices2d, axis=0)
@@ -478,16 +479,81 @@ def visualize_compare_contours(vertices2d, image_x_size, image_path, contour_lis
         # log.debug("-")
 
     if centres is not None:
+        radius_stop = 2
         centres_p = centres.T
         for center in centres_p:
             xy = (center - minima) * vertices2d1_scale
             x1 = xy[0]
             y1 = xy[1]
-            draw.ellipse((x1 - radius_stop, y1 - radius_stop, x1 + radius_stop, y1 + radius_stop), fill='black')
+            draw.ellipse((x1 - radius_stop, y1 - radius_stop, x1 + radius_stop, y1 + radius_stop), fill='green')
 
     # Save the image
     image.save(image_path)
 
+
+def visualize_faces(tri_vertices2d, image_x_size, image_path, centres=None):
+    """
+    Draw the given set of faces onto an image of the specified size and save the image to a file.
+
+    The starting point is drawn with a red circle and the ending point is drawn with a blue circle.
+
+    The vertices2d parameter is only used to compute the image scaling factors.
+
+    Args:
+        tri_vertices2d (ndarray): A list of 2D arrays of the vertices (nx3x2). Each entry describes one face.
+        image_x_size (int): The desired width of the output image.
+        image_path (string): The desired output path where to write the image.
+        contour_list (list[ContourLine]): The list of contour lines.
+        centres(ndarray): A list of 2D centres to draw in, if provided (nx2)
+    """
+    tri_vertices2d = np.asarray(tri_vertices2d)
+    # Find the midpoint of all vertices
+    midpoint = np.mean(np.mean(tri_vertices2d, axis=1), axis=0)
+
+    v_width = np.max(tri_vertices2d[:, :, 0]) - np.min(tri_vertices2d[:, :, 0])
+    v_height = np.max(tri_vertices2d[:, :, 1]) - np.min(tri_vertices2d[:, :, 1])
+    minima = np.min(np.min(tri_vertices2d, axis=1), axis=0)
+
+    # Calculate x-scale
+    vertices2d1_scale = (image_x_size / v_width)
+
+    # Translate the scaled vertices based on the midpoint
+    image_y_size = int(image_x_size*v_height/v_width)
+
+    # Create a blank image
+    image = Image.new('RGB', (image_x_size+20, image_y_size+20), color='white')
+    draw = ImageDraw.Draw(image)
+
+    radius_start = 1.8
+    radius_stop = 1.4
+
+    for face_corners in tri_vertices2d:
+        start_uv = face_corners[0]
+        start_xy = (start_uv - minima) * vertices2d1_scale
+        for index in range(1, len(face_corners)):
+            x1 = start_xy[0]
+            y1 = start_xy[1]
+
+            stop_uv = face_corners[index]
+            stop_xy = (stop_uv - minima) * vertices2d1_scale
+            # log.debug(" %s -> %s", start_xy, stop_xy)
+            draw.line([(start_xy[0], start_xy[1]), (stop_xy[0], stop_xy[1])], fill='black')
+            start_xy = stop_xy
+
+        start_xy = (face_corners[0] - minima) * vertices2d1_scale
+        draw.line([(stop_xy[0], stop_xy[1]), (start_xy[0], start_xy[1])], fill='black')
+
+    if centres is not None:
+        radius_stop = 2
+        centres_p = centres.T
+        for center in centres_p:
+            xy = (center - minima) * vertices2d1_scale
+            x1 = xy[0]
+            y1 = xy[1]
+            draw.ellipse((x1 - radius_stop, y1 - radius_stop, x1 + radius_stop, y1 + radius_stop), fill='green')
+
+    # Save the image
+    image.save(image_path)
 
 def project_vertex_onto_plane(vertex, pov):
     # Extract the coordinates of the vertex and POV
