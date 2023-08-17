@@ -14,13 +14,13 @@ print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
-from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, visualize_compare_vertices
-from helpers.extraction import load_matlab
-from sub_functions.data_structures import DataStructure, Mesh, CoilPart
-from sub_functions.read_mesh import create_unique_noded_mesh
-from sub_functions.parameterize_mesh import parameterize_mesh, get_boundary_loop_nodes
-from sub_functions.refine_mesh import  refine_mesh_delegated as refine_mesh
 from CoilGen import CoilGen
+from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
+from sub_functions.parameterize_mesh import parameterize_mesh, get_boundary_loop_nodes
+from sub_functions.read_mesh import create_unique_noded_mesh
+from sub_functions.data_structures import DataStructure, Mesh, CoilPart
+from helpers.extraction import load_matlab
+from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, visualize_compare_vertices
 
 def debug1():
     print("Planar mesh")
@@ -68,9 +68,8 @@ def debug1():
     # input_params = DataStructure(surface_is_cylinder_flag=False, circular_diameter_factor=0.0)
     # result = parameterize_mesh(parts, input_params)
 
+
 # Save a small bi-planar mesh to file
-
-
 def debug1b():
     print("Bi-planar mesh")
     from sub_functions.build_biplanar_mesh import build_biplanar_mesh
@@ -284,7 +283,6 @@ def get_connected_vertices(vertex_index, face_indices):
     return list(connected_vertices)
 
 
-
 def develop_calculate_one_ring_by_mesh():  # PAUSED
     from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 
@@ -478,15 +476,14 @@ def develop_calc_contours_by_triangular_potential_cuts():
         visualize_vertex_connections(c_ru_point.uv, 800, f'images/10_ru_point_uv_{index1}_p.png')
         visualize_vertex_connections(m_ru_point.uv, 800, f'images/10_ru_point_uv_{index1}_m.png')
 
-
     assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
     for index1, m_ru_point in enumerate(m_c_part.raw.unsorted_points):
         c_ru_point = coil_part.raw.unsorted_points[index1]
         assert len(c_ru_point.edge_ind) == len(m_ru_point.edge_ind)
         assert np.isclose(c_ru_point.potential, m_ru_point.potential)
         assert c_ru_point.uv.shape[0] == m_ru_point.uv.shape[0]  # Python shape!
-        assert(compare(c_ru_point.uv, m_ru_point.uv)) # Order is different
-        assert(compare(c_ru_point.edge_ind, m_ru_point.edge_ind)) # Completely different!!
+        assert (compare(c_ru_point.uv, m_ru_point.uv))  # Order is different
+        assert (compare(c_ru_point.edge_ind, m_ru_point.edge_ind))  # Completely different!!
 
     assert len(coil_part.raw.unarranged_loops) == len(m_c_part.raw.unarranged_loops)
     for index1, m_ru_loops in enumerate(m_c_part.raw.unarranged_loops):
@@ -500,7 +497,6 @@ def develop_calc_contours_by_triangular_potential_cuts():
         #    assert(compare_contains(c_ru_loop.uv, m_ru_loop.uv)) #
         #    assert len(c_ru_loop.edge_inds) == len(m_ru_loop.edge_inds)
         #    #assert(compare(c_ru_point.edge_inds, m_ru_point.edge_inds))
-
 
 
 def develop_process_raw_loops():
@@ -546,7 +542,7 @@ def develop_calculate_group_centers():
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
     p_coil_parts = np.load('debug/ygradient_coil_python_13_False_patched.npy', allow_pickle=True)
-    #p_coil_parts = np.load('debug/ygradient_coil_python_13_True_patched.npy', allow_pickle=True)
+    # p_coil_parts = np.load('debug/ygradient_coil_python_13_True_patched.npy', allow_pickle=True)
 
     ###################################################################################
     # Function under test
@@ -559,8 +555,8 @@ def develop_calculate_group_centers():
     m_group_centers = m_c_part.group_centers
     c_group_centers = coil_part.group_centers
 
-    assert compare(c_group_centers.uv, m_group_centers.uv)  # 
-    assert compare(c_group_centers.v, m_group_centers.v)    # 
+    assert compare(c_group_centers.uv, m_group_centers.uv)  #
+    assert compare(c_group_centers.v, m_group_centers.v)    #
 
 
 def develop_interconnect_within_groups():
@@ -694,7 +690,8 @@ def develop_shift_return_paths():
         visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_p.png')
         visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_m.png')
 
-        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_diff.png')
+        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800,
+                                   f'images/17_wire_path2_uv_{index1}_diff.png')
 
         # Check....
         assert (compare(c_part.shift_array, m_c_part.shift_array))          # Pass
@@ -745,12 +742,42 @@ def develop_generate_cylindrical_pcb_print():
             assert compare(c_wire_part.uv, m_wire_part.uv)
             assert compare(c_wire_part.track_shape, m_wire_part.track_shape)
 
+
 def develop_create_sweep_along_surface():
-    from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
+    from sub_functions.create_sweep_along_surface import create_sweep_along_surface
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
     p_coil_parts = np.load('debug/ygradient_coil_python_18_True.npy', allow_pickle=True)
+
+    points = [[0.0, 0.006427876096865392, 0.00984807753012208, 0.008660254037844387, 0.0034202014332566887, -0.0034202014332566865, -0.008660254037844388, -0.009848077530122082, -0.006427876096865396, -2.4492935982947064e-18],
+              [0.01, 0.007660444431189781, 0.0017364817766693042, -0.0049999999999999975, -0.009396926207859084, -0.009396926207859084, -0.004999999999999997, 0.0017364817766692998, 0.007660444431189778, 0.01]]
+    input_args = DataStructure(skip_sweep=0, cross_sectional_points=points, save_stl_flag=1, 
+                               specific_conductivity_conductor=1.8e-08, output_directory='images', field_shape_function='y')
+    ###################################################################################
+    # Function under development
+    coil_parts = create_sweep_along_surface(p_coil_parts, input_args, m_c_part)
+    ###################################################################################
+
+    # Verify: layout_surface_mesh, ohmian_resistance
+    for index1 in range(len(coil_parts)):
+        c_part = coil_parts[index1]
+        m_ohmian_resistance = m_c_part.ohmian_resistance
+
+        c_surface = c_part.layout_surface_mesh
+        m_surface = m_c_part.layout_surface_mesh
+
+        #visualize_vertex_connections(c_surface.uv.T, 800, f'images/18_layout_surface_{index1}_uv_p.png')
+        #visualize_vertex_connections(m_surface.uv.T, 800, f'images/18_layout_surface_{index1}_uv_m.png')
+
+        #visualize_compare_vertices(c_surface.uv.T, m_surface.uv.T, 800,
+        #                            f'18_layout_surface_{index1}_uv__diff.png')
+
+        # Check....
+        assert c_part.ohmian_resistance == m_ohmian_resistance
+
+        #assert compare(c_surface.uv, m_surface.uv)
+        #assert compare(c_wire_part.track_shape, m_wire_part.track_shape)
 
 
 if __name__ == "__main__":
@@ -769,11 +796,11 @@ if __name__ == "__main__":
     # develop_calculate_one_ring_by_mesh()
     # develop_calculate_basis_functions()
     # develop_calculate_sensitivity_matrix()
-    ## calculate_gradient_sensitivity_matrix
-    ## calculate_resistance_matrix
-    ## stream_function_optimization
-    ## calc_potential_levels
-    #develop_calc_contours_by_triangular_potential_cuts()
+    # calculate_gradient_sensitivity_matrix
+    # calculate_resistance_matrix
+    # stream_function_optimization
+    # calc_potential_levels
+    # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
     # develop_calculate_group_centers()
     # develop_interconnect_within_groups()
