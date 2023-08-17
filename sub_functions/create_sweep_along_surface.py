@@ -45,9 +45,9 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
         for part_ind in range(len(coil_parts)):
             coil_part = coil_parts[part_ind]
             coil_mesh = coil_part.coil_mesh
-            # wire_path = coil_part.wire_path
-            log.warning(" Using MATLAB wirepath")
-            wire_path = Shape3D(v=m_c_part.wire_path.v, uv=m_c_part.wire_path.uv) 
+            wire_path = coil_part.wire_path
+            #log.warning(" Using MATLAB wirepath")
+            #wire_path = Shape3D(v=m_c_part.wire_path.v, uv=m_c_part.wire_path.uv) 
 
             # DEBUG
             if m_c_part is not None:
@@ -260,16 +260,17 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
 
                 if node_ind_normals_target == -1:  # Handle exceptions for strange output of pointLocation
 
-                    if b < zap:
-                        log.debug(" No face found: %d out of %d", point_ind, len(faces_to_try))
-                        centres = point.reshape(1,2).T
-                        p_contour = Shape2D()
-                        x_uv = Shape2D()
-                        face_vertices = []
-                        for face in coil_mesh.uv[faces_to_try]:
-                            face_vertices.append(face)
-                        visualize_faces(face_vertices, 800, f'images/19_get_face_index2_{point_ind}_p.png', centres)
-                        b += 1
+                    if m_c_part is not None:
+                        if b < zap:
+                            log.debug(" No face found: %d out of %d", point_ind, len(faces_to_try))
+                            centres = point.reshape(1,2).T
+                            p_contour = Shape2D()
+                            x_uv = Shape2D()
+                            face_vertices = []
+                            for face in coil_mesh.uv[faces_to_try]:
+                                face_vertices.append(face)
+                            visualize_faces(face_vertices, 800, f'images/19_get_face_index2_{point_ind}_p.png', centres)
+                            b += 1
 
 
                     if point_ind == 0:
