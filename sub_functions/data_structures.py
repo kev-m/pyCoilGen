@@ -226,24 +226,26 @@ class Mesh:
         Returns:
             index (int): The face index or -1 if the point is not within the mesh.
         """
-        diffs = np.abs(self.get_vertices() - vertex)
-        sum_components = np.sum(diffs, axis=1)
-        # Find the closest vertices
-        min_index = np.argmin(sum_components)
-        # For each possible vertex, find the faces that reference it.
         faces = self.get_faces()
+        vertices = self.get_vertices()
+        diffs = np.abs(vertices - vertex)
+        diffs_norm = np.linalg.norm(diffs, axis=1)
+        # Find the closest vertices
+        min_index = np.argmin(diffs_norm)
 
+        # For each possible vertex, find the faces that reference it.
         possible_face_matches = np.any(faces == min_index, axis=1)
+
         # Get the indices of the rows that contain the target_face_index
         possible_face_indices = np.where(possible_face_matches)[0]
         faces_to_try = faces[possible_face_indices]
 
-        face_index, barycentric = pointLocation(vertex, faces_to_try, self.get_vertices())
+        face_index, barycentric = pointLocation(vertex, faces_to_try, vertices)
         if face_index is not None:
-            return possible_face_indices[face_index]
+            return possible_face_indices[face_index], possible_face_indices, faces_to_try
 
-        log.debug("get_face_index(%s), No found face", vertex)
-        return -1
+        #log.debug("get_face_index(%s), No found face", vertex)
+        return -1, possible_face_indices, faces_to_try
 
 
 # Helper functions
