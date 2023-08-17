@@ -11,6 +11,7 @@ import logging
 
 # Local imports
 from sub_functions.constants import *
+from sub_functions.uv_to_xyz import pointLocation
 
 log = logging.getLogger(__name__)
 
@@ -200,24 +201,49 @@ class Mesh:
         node_triangles = np.array([row[row != -1] for row in node_triangles_tri], dtype=object)
         return node_triangles
 
-    def export(self, filename, file_type='stl'):
+    def export(self, file_obj, file_type='stl'):
         """
         Export the current mesh to a file object.
         If file_obj is a filename, file will be written there.
 
-        Supported formats are stl, off, ply, collada, json,
-        dict, glb, dict64, msgpack.
+        Supported formats are stl, off, ply, collada, json, dict, glb, dict64, msgpack.
 
-        Parameters
-        ------------
-        file_obj : open writeable file object
-          str, file name where to save the mesh
-          None, return the export blob
-        file_type : str
-          Which file type to export as, if `file_name`
-          is passed this is not required.
+        Args:
+            file_obj, One of:
+                open writeable file object or 
+                file name (str): where to save the mesh
+                None: return the export blob
+            file_type (str) : Which file type to export as, if `file_name` is passed this is not required.
         """
-        self.trimesh_obj.export(filename, file_type)
+        self.trimesh_obj.export(file_obj, file_type)
+
+    def get_face_index(self, vertex: np.ndarray):
+        """
+        Retrieve the index of the face which contains the provided point.
+
+        If the vertex is on multiple faces, e.g. is an edge, the highest face index is returned.
+
+        Returns:
+            index (int): The face index or -1 if the point is not within the mesh.
+        """
+        diffs = np.abs(self.get_vertices() - vertex)
+        sum_components = np.sum(diffs, axis=1)
+        # Find the closest vertices
+        min_index = np.argmin(sum_components)
+        # For each possible vertex, find the faces that reference it.
+        faces = self.get_faces()
+
+        possible_face_matches = np.any(faces == min_index, axis=1)
+        # Get the indices of the rows that contain the target_face_index
+        possible_face_indices = np.where(possible_face_matches)[0]
+        faces_to_try = faces[possible_face_indices]
+
+        face_index, barycentric = pointLocation(vertex, faces_to_try, self.get_vertices())
+        if face_index is not None:
+            return possible_face_indices[face_index]
+
+        log.debug("get_face_index(%s), No found face", vertex)
+        return -1
 
 
 # Helper functions
