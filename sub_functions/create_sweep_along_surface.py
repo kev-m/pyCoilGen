@@ -3,15 +3,18 @@ from typing import List
 
 from os import path
 # Local functions
-from sub_functions.data_structures import Mesh, CoilPart
+from sub_functions.data_structures import CoilPart, Mesh
+from helpers.triangulation import Triangulate
 
 # Logging
 import logging
 
 log = logging.getLogger(__name__)
 
+# TODO: DEBUG Remove this
+from helpers.visualisation import compare
 
-def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[CoilPart]:
+def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part = None) -> List[CoilPart]:
     """
     Create a volumetric coil body by surface sweep.
 
@@ -22,59 +25,126 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
     Initialises the following properties of a CoilPart:
         - layout_surface_mesh
         - ohmian_resistance
+        - wire_path.v_length
 
     Updates the following properties of a CoilPart:
-        - None
+        - wire_path.uv
+        - wire_path.v
         
     Returns:
         List[CoilPart]: List of CoilPart structures with modified properties.
     """
-    convolutional_vector_length = 1  # For smoothing the curvature along the track
-
+    
     if not input_args.skip_sweep:
 
-        for part_ind in range(len(coil_parts)):
+        save_mesh = input_args.save_stl_flag
+        output_directory = input_args.output_directory
+        conductor_conductivity = input_args.specific_conductivity_conductor
 
+        for part_ind in range(len(coil_parts)):
             coil_part = coil_parts[part_ind]
             coil_mesh = coil_part.coil_mesh
+            wire_path = coil_part.wire_path
+
+            # DEBUG
+            if m_c_part is not None:
+                m_debug_out = m_c_part.create_sweep_along_surface
+                m_connectivity = m_debug_out.ConnectivityList1
+                m_connectivity_points = m_debug_out.ConnectivityPoints
+
 
             # Define the cross section of the conductor
-            if all(input_args.cross_sectional_points == 0):
+            if np.all(input_args.cross_sectional_points == 0):
                 circular_resolution = 10
                 theta = np.linspace(0, 2 * np.pi, circular_resolution, endpoint=False)
                 cross_section_points = np.vstack((np.sin(theta), np.cos(theta))) * input_args.conductor_thickness
             else:
                 cross_section_points = input_args.cross_sectional_points
 
+            # DEBUG
+            if m_c_part is not None:
+                assert(compare(cross_section_points, m_debug_out.cross_section_points1))
+
             # Center the cross section around the origin [0, 0] for later rotation
             cross_section_points = cross_section_points - np.mean(cross_section_points, axis=1, keepdims=True)
-            # Build a triangulation from the cross section
 
-            wire_path = coil_part.wire_path
-            save_mesh = input_args.save_stl_flag
-            output_directory = input_args.output_directory
-            conductor_conductivity = input_args.specific_conductivity_conductor
+            # DEBUG
+            if m_c_part is not None:
+                assert(compare(cross_section_points, m_debug_out.cross_section_points2))
+
+            # Build a triangulation from the cross section
+            cross_section_points = cross_section_points[:, 0:-1]
+
+            # DEBUG
+            if m_c_part is not None:
+                assert(compare(cross_section_points, m_debug_out.cross_section_points3))
+
 
             # Build a 2D mesh of the cross section by the corner points
+            cross_section_points_2d = cross_section_points.T
+            
+            """
+            zeros = np.zeros((cross_section_points_2d.shape[0], 1))
+            cross_section_points_3d = np.concatenate((cross_section_points_2d, zeros), axis=1)
+
             num_cross_section_points = cross_section_points.shape[1]
             cross_section_edges = np.vstack((np.arange(num_cross_section_points),
-                                            np.roll(np.arange(num_cross_section_points), -1)))
-            cross_section_triangulation = Delaunay(cross_section_points.T, qhull_options="QJ")
-            cross_section_points = np.vstack((cross_section_triangulation.points.T, np.zeros(
-                (1, cross_section_triangulation.points.shape[0]))))  # Embed the cross section in 3D
-            is_interior_tri = cross_section_triangulation.find_simplex(cross_section_triangulation.points) >= 0
-            cross_section_triangulation = cross_section_triangulation.simplices[is_interior_tri]
+                                            np.roll(np.arange(num_cross_section_points), -1))) # Python shape
+            
+            # DEBUG
+            if m_c_part is not None:
+                m_cross_section_edges = m_debug_out.cross_section_edges - 1
+                assert(compare(cross_section_edges, m_cross_section_edges))
+
+            # cross_section_triangulation = delaunayTriangulation(cross_section_points', cross_section_edges');
+            cross_section_triangulation = Mesh(vertices=cross_section_points, faces=cross_section_edges)
+
+            points1 = cross_section_triangulation.get_vertices() # Python shape
+            points2 = np.zeros((points1.shape[1]))
+            cross_section_points = np.vstack((points1, points2))  # Embed the cross section in 3D
+
+            # DEBUG
+            if m_c_part is not None:
+                assert(compare(points1, m_debug_out.points1))
+                assert(compare(points2, m_debug_out.points2))
+
+            cross_section_faces = cross_section_triangulation.get_faces()
+            cross_section_vertices = cross_section_triangulation.get_vertices()
+
+            trimesh = cross_section_triangulation.trimesh_obj
+            # facets_boundary
+
+            # is_interior_tri = isInterior(cross_section_triangulation); # Boolean column vector. Each row indicates if the vertex is inside the shape.
+            # Compute the Mesh consisting only of faces inside the cross-section
+            #is_interior_tri = 1
+            # inside_edges = cross_section_triangulation.ConnectivityList(is_interior_tri, :);
+            #inside_faces = cross_section_faces[is_interior_tri]
+            inside_faces = cross_section_faces
+            """
+            # TODO: Create a triangulation mesh from the vertices.
+            # Trimesh can not do it.
+            cross_section_triangulation = Triangulate(cross_section_points_2d)
+            zeros = np.zeros((cross_section_points_2d.shape[0], 1))
+            cross_section_points_3d = np.concatenate((cross_section_points_2d, zeros), axis=1)
+            cross_section_triangulation_3d = Mesh(vertices=cross_section_points_3d, faces=cross_section_triangulation.get_triangles())
 
             # Calculate the area of the cross section
-            cross_section_triangulation_3d = np.hstack(
-                (cross_section_triangulation, np.zeros((cross_section_triangulation.shape[0], 1), dtype=np.int)))
+            # cross_section_triangulation = triangulation(inside_edges, cross_section_triangulation.Points);
             cross_section_area = 0
 
-            for tri_ind in range(cross_section_triangulation_3d.shape[0]):
-                P1 = cross_section_triangulation_3d[tri_ind, 0]
-                P2 = cross_section_triangulation_3d[tri_ind, 1]
-                P3 = cross_section_triangulation_3d[tri_ind, 2]
+            vertices3d = cross_section_triangulation_3d.get_vertices()
+            faces3d = cross_section_triangulation_3d.get_faces()
+
+            for tri_ind, face in enumerate(faces3d):
+                P1 = vertices3d[face[0]]
+                P2 = vertices3d[face[1]]
+                P3 = vertices3d[face[2]]
                 cross_section_area += 0.5 * np.linalg.norm(np.cross(P2 - P1, P3 - P1))
+
+            # DEBUG
+            if m_c_part is not None:
+                assert np.isclose(cross_section_area, m_debug_out.cross_section_area)
+
             # Continue with Part 1
             """
             Conversion comments:
@@ -86,11 +156,21 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             # Calculate the ohmic resistance
             ohmian_resistance = wire_path.v_length / (cross_section_area * conductor_conductivity)
 
+            # DEBUG
+            if m_c_part is not None:
+                assert np.isclose(cross_section_area, m_debug_out.cross_section_area)
+
+
             # Calculate a radius of the conductor cross section which is later
             # important to avoid intersection between angulated faces
             cross_section_center = np.sum(cross_section_points, axis=1) / cross_section_points.shape[1]
             cross_section_radius = np.max(np.linalg.norm(
                 cross_section_points - cross_section_center[:, np.newaxis], axis=0))
+
+            # DEBUG
+            if m_c_part is not None:
+                assert compare(cross_section_center, m_debug_out.cross_section_center[:2])
+
 
             # Remove repeating entries
             diff_norm = np.linalg.norm(np.diff(wire_path.v, axis=1), axis=0)
