@@ -146,12 +146,6 @@ class Mesh:
         """
         return self.trimesh_obj.show()
 
-    def save_to_file(self, filename):
-        """
-        Save this mesh to a file.
-        """
-        raise Exception("Not implemented!")
-
     def refine(self, inplace=False):
         """
         Increase the resolution of the mesh by splitting face.
