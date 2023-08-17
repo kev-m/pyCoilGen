@@ -9,10 +9,10 @@ scipy==1.7.3
 trimesh==3.21.7
 # For mesh visualisation
 pyglet<2
-# Missing Trimesh dependency (no longer needed?)
-##networkx==2.6.3
+# Missing Trimesh dependency
+networkx==2.6.3
 # Missing Trimesh dependency for nearest.on_surface
-rtree==1.0.1
+##rtree==1.0.1
 
 # For target field calculations
 sympy==1.10.1
