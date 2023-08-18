@@ -46,15 +46,12 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
             coil_part = coil_parts[part_ind]
             coil_mesh = coil_part.coil_mesh
             wire_path = coil_part.wire_path
-            #log.warning(" Using MATLAB wirepath")
-            #wire_path = Shape3D(v=m_c_part.wire_path.v, uv=m_c_part.wire_path.uv) 
 
             # DEBUG
             if m_c_part is not None:
                 m_debug_out = m_c_part.create_sweep_along_surface
                 m_connectivity = m_debug_out.ConnectivityList1
                 m_connectivity_points = m_debug_out.ConnectivityPoints
-
 
             # Define the cross section of the conductor
             if np.all(input_args.cross_sectional_points == 0):
@@ -174,7 +171,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
             # DEBUG
             if m_c_part is not None:
                 assert compare(cross_section_center, m_debug_out.cross_section_center[:2])
-                assert compare(wire_path.v.T, m_debug_out.wire_path1.v.T) # 
+                assert compare(wire_path.v.T, m_debug_out.wire_path1.v.T) # , double_tolerance=0.03) # 
                 assert cross_section_radius == m_debug_out.cross_section_radius
 
 
@@ -186,7 +183,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
 
             # DEBUG
             if m_c_part is not None:
-                assert compare(wire_path.v.T, m_debug_out.wire_path2.v.T) # 
+                assert compare(wire_path.v.T, m_debug_out.wire_path2.v.T) # , double_tolerance=0.03) # 
 
             # Open the track if it's not already opened
             diff2_arr = wire_path.v[:, -1][:, np.newaxis] - wire_path.v
@@ -196,8 +193,8 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
 
             # DEBUG
             if m_c_part is not None:
-                assert compare(diff2_arr, m_debug_out.diff2_arr)    # 
-                assert compare(diff2_norm, m_debug_out.diff2_norm)  # 
+                assert compare(diff2_arr, m_debug_out.diff2_arr) # , double_tolerance=0.03)    # 
+                assert compare(diff2_norm, m_debug_out.diff2_norm) # , double_tolerance=0.03)  # 
                 assert compare(arr2, m_debug_out.point_inds_to_delete1) # M 1539 array of 0 or 1
 
             point_inds_to_delete = point_inds_to_delete[:round(len(point_inds_to_delete) / 2)]
@@ -227,6 +224,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
                 b = 0
                 zap = 3
 
+            # TODO: There is something about the wire_mesh2D.get_face_index and pointLocation implementation that returns different results compared to MATLAB.
             for point_ind in range(wire_path.v.shape[1]):
                 #log.debug(" point %d", point_ind)
                 # node_ind_normals_target = pointLocation(planary_mesh_matlab_format, point_x, point_y);
@@ -348,13 +346,13 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
             # Building the shell triangles that form the surface of the swept body
             swept_surface_triangles = np.zeros(((face_points.shape[0] - 1) * face_points.shape[2] * 2, 3), dtype=int)
             swept_surface_vertices = all_node_points
-            full_edge_inds = np.arange(1, face_points.shape[2] + 1)
+            full_edge_inds = np.arange(0, face_points.shape[2])
             full_track_inds = np.arange(1, face_points.shape[0])
             num_corners = face_points.shape[2]
 
             run_ind = 1
 
-            for track_ind in range(face_points.shape[0] - 2):
+            for track_ind in range(face_points.shape[0] - 1):
                 for edge_ind in range(face_points.shape[2]):
                     node_a = track_ind * num_corners + full_edge_inds[edge_ind]
                     node_b = track_ind * num_corners + full_edge_inds[(edge_ind + 1) % num_corners]
@@ -410,9 +408,13 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
                 coil_mesh.export(stl_file_path_surface)
 
                 # DEBUG
-                layout_surface_mesh.display()
-                #swept_vertices=m_debug_out.swept_vertices
-                #swept_faces=m_debug_out.swept_faces-1
+                #layout_surface_mesh.display()
+                m_swept_vertices=m_debug_out.swept_vertices
+                m_swept_faces=m_debug_out.swept_faces-1
+
+                if m_c_part is not None:
+                    assert compare(swept_surface_vertices, m_swept_vertices, double_tolerance=0.003)
+                    assert compare(swept_faces, m_swept_faces)
                 #mat_mesh = Mesh(vertices=swept_vertices, faces=swept_faces)
                 #mat_mesh.display()
 
