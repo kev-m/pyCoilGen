@@ -13,11 +13,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from sub_functions.build_planar_mesh import build_planar_mesh
 from sub_functions.data_structures import Mesh
 # Code under test
-<<<<<<< HEAD
 from sub_functions.uv_to_xyz import uv_to_xyz, which_face, get_target_triangle, pointLocation
-=======
-from sub_functions.uv_to_xyz import uv_to_xyz, which_face, get_target_triangle
->>>>>>> c89b1f1cff49a9685e407f22c881124cab1b1724
 
 def test_uv_to_xyz_planar():
     val = build_planar_mesh(0.30, 0.60, 3, 3, 0, 0, 1, 0, 0, 0, 1.0)
@@ -67,7 +63,6 @@ def test_get_target_triangle():
         # log.debug("face for %s: %s", point, face)
         assert face == test_faces[index]
 
-<<<<<<< HEAD
 def test_pointLocation():
     mesh_faces = np.array([[0, 1, 2], [2, 3, 0], [3, 2, 4]])
     mesh_uv = np.array([[0.1, 0.2], [0.3, 0.2], [0.3, 0.4], [0.1, 0.4], [0.1, 0.6]])
@@ -84,10 +79,8 @@ def test_pointLocation():
     # One of the vertices, return the highest face that has that vertex
     face_index, barycentric = pointLocation(mesh_uv[2], mesh_faces, mesh_uv)
     assert face_index == 2
-    assert barycentric == [0.0, 1.0, 0.0] #100% described by the 2nd co-ordinate
+    assert np.allclose(barycentric, [0.0, 1.0, 0.0]) #100% described by the 2nd co-ordinate
 
-=======
->>>>>>> c89b1f1cff49a9685e407f22c881124cab1b1724
 
 if __name__ == "__main__":
     # Logging
@@ -99,7 +92,4 @@ if __name__ == "__main__":
 
     test_get_target_triangle()
     test_uv_to_xyz_planar()
-<<<<<<< HEAD
     test_pointLocation()
-=======
->>>>>>> c89b1f1cff49a9685e407f22c881124cab1b1724
