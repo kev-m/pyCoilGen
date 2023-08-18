@@ -756,6 +756,10 @@ def develop_create_sweep_along_surface():
                                specific_conductivity_conductor=1.8e-08, output_directory='images', field_shape_function='y')
     ###################################################################################
     # Function under development
+    log.warning(" Using MATLAB wirepath")
+    p_coil_parts[0].wire_path.v = m_c_part.wire_path.v
+    p_coil_parts[0].wire_path.uv=m_c_part.wire_path.uv
+
     coil_parts = create_sweep_along_surface(p_coil_parts, input_args, m_c_part)
     ###################################################################################
 
@@ -809,3 +813,5 @@ if __name__ == "__main__":
     develop_create_sweep_along_surface()
     # test_smooth_track_by_folding()
     # develop_generate_cylindrical_pcb_print()
+    #from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file
+    #test_split_disconnected_mesh_stl_file()
