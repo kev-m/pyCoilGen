@@ -11,6 +11,7 @@ import logging
 
 # Local imports
 from sub_functions.constants import *
+from sub_functions.uv_to_xyz import pointLocation
 
 log = logging.getLogger(__name__)
 
@@ -146,12 +147,6 @@ class Mesh:
         """
         return self.trimesh_obj.show()
 
-    def save_to_file(self, filename):
-        """
-        Save this mesh to a file.
-        """
-        raise Exception("Not implemented!")
-
     def refine(self, inplace=False):
         """
         Increase the resolution of the mesh by splitting face.
@@ -205,6 +200,52 @@ class Mesh:
         # Iterate and create reduced numpy arrays
         node_triangles = np.array([row[row != -1] for row in node_triangles_tri], dtype=object)
         return node_triangles
+
+    def export(self, file_obj, file_type='stl'):
+        """
+        Export the current mesh to a file object.
+        If file_obj is a filename, file will be written there.
+
+        Supported formats are stl, off, ply, collada, json, dict, glb, dict64, msgpack.
+
+        Args:
+            file_obj, One of:
+                open writeable file object or 
+                file name (str): where to save the mesh
+                None: return the export blob
+            file_type (str) : Which file type to export as, if `file_name` is passed this is not required.
+        """
+        self.trimesh_obj.export(file_obj, file_type)
+
+    def get_face_index(self, vertex: np.ndarray):
+        """
+        Retrieve the index of the face which contains the provided point.
+
+        If the vertex is on multiple faces, e.g. is an edge, the highest face index is returned.
+
+        Returns:
+            index (int): The face index or -1 if the point is not within the mesh.
+        """
+        faces = self.get_faces()
+        vertices = self.get_vertices()
+        diffs = np.abs(vertices - vertex)
+        diffs_norm = np.linalg.norm(diffs, axis=1)
+        # Find the closest vertices
+        min_index = np.argmin(diffs_norm)
+
+        # For each possible vertex, find the faces that reference it.
+        possible_face_matches = np.any(faces == min_index, axis=1)
+
+        # Get the indices of the rows that contain the target_face_index
+        possible_face_indices = np.where(possible_face_matches)[0]
+        faces_to_try = faces[possible_face_indices]
+
+        face_index, barycentric = pointLocation(vertex, faces_to_try, vertices)
+        if face_index is not None:
+            return possible_face_indices[face_index], possible_face_indices, faces_to_try
+
+        #log.debug("get_face_index(%s), No found face", vertex)
+        return -1, possible_face_indices, faces_to_try
 
 
 # Helper functions
@@ -430,6 +471,8 @@ class CoilPart:
     shift_array: np.ndarray = None          # ??? (shift_return_paths) (,)
     points_to_shift: np.ndarray = None      # Array of which points to shift (shift_return_paths) (m,)
     pcb_tracks: PCBTrack = None             # (generate_cylindrical_pcb_print)
+    layout_surface_mesh: Mesh = None        # Layout mesh (create_sweep_along_surface)
+    ohmian_resistance: np.ndarray = None    # Surface wire resistance (create_sweep_along_surface)
 
 
 class CoilSolution:
