@@ -20,7 +20,8 @@ from sub_functions.parameterize_mesh import parameterize_mesh, get_boundary_loop
 from sub_functions.read_mesh import create_unique_noded_mesh
 from sub_functions.data_structures import DataStructure, Mesh, CoilPart
 from helpers.extraction import load_matlab
-from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, visualize_compare_vertices
+from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, \
+    visualize_compare_vertices, visualize_projected_vertices
 
 def debug1():
     print("Planar mesh")
@@ -760,7 +761,7 @@ def develop_create_sweep_along_surface():
     p_coil_parts[0].wire_path.v = m_c_part.wire_path.v
     p_coil_parts[0].wire_path.uv=m_c_part.wire_path.uv
 
-    coil_parts = create_sweep_along_surface(p_coil_parts, input_args, m_c_part)
+    coil_parts = create_sweep_along_surface(p_coil_parts, input_args)#, m_c_part)
     ###################################################################################
 
     # Verify: layout_surface_mesh, ohmian_resistance
@@ -771,16 +772,15 @@ def develop_create_sweep_along_surface():
         c_surface = c_part.layout_surface_mesh
         m_surface = m_c_part.layout_surface_mesh
 
-        #visualize_vertex_connections(c_surface.uv.T, 800, f'images/18_layout_surface_{index1}_uv_p.png')
-        #visualize_vertex_connections(m_surface.uv.T, 800, f'images/18_layout_surface_{index1}_uv_m.png')
+        visualize_projected_vertices(c_surface.get_vertices(), 800, f'images/19_layout_surface_{index1}_uv_p.png')
+        visualize_projected_vertices(m_c_part.create_sweep_along_surface.swept_vertices, 800, f'images/19_layout_surface_{index1}_uv_m.png')
 
         #visualize_compare_vertices(c_surface.uv.T, m_surface.uv.T, 800,
-        #                            f'18_layout_surface_{index1}_uv__diff.png')
+        #                            f'19_layout_surface_{index1}_uv_diff.png')
 
         # Check....
         assert c_part.ohmian_resistance == m_ohmian_resistance
-
-        #assert compare(c_surface.uv, m_surface.uv)
+        assert compare(c_surface.get_vertices(), m_c_part.create_sweep_along_surface.swept_vertices, double_tolerance=0.003)
         #assert compare(c_wire_part.track_shape, m_wire_part.track_shape)
 
 
