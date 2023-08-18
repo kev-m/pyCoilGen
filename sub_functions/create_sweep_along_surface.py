@@ -11,11 +11,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-# TODO: DEBUG Remove these
-from helpers.visualisation import compare, visualize_faces
-from sub_functions.data_structures import Shape2D, Shape3D
-
-def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part = None) -> List[CoilPart]:
+def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[CoilPart]:
     """
     Create a volumetric coil body by surface sweep.
 
@@ -47,12 +43,6 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
             coil_mesh = coil_part.coil_mesh
             wire_path = coil_part.wire_path
 
-            # DEBUG
-            if m_c_part is not None:
-                m_debug_out = m_c_part.create_sweep_along_surface
-                m_connectivity = m_debug_out.ConnectivityList1
-                m_connectivity_points = m_debug_out.ConnectivityPoints
-
             # Define the cross section of the conductor
             if np.all(input_args.cross_sectional_points == 0):
                 circular_resolution = 10
@@ -61,24 +51,11 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
             else:
                 cross_section_points = input_args.cross_sectional_points
 
-            # DEBUG
-            if m_c_part is not None:
-                assert(compare(cross_section_points, m_debug_out.cross_section_points1))
-
             # Center the cross section around the origin [0, 0] for later rotation
             cross_section_points = cross_section_points - np.mean(cross_section_points, axis=1, keepdims=True)
 
-            # DEBUG
-            if m_c_part is not None:
-                assert(compare(cross_section_points, m_debug_out.cross_section_points2))
-
             # Build a triangulation from the cross section
             cross_section_points = cross_section_points[:, 0:-1]
-
-            # DEBUG
-            if m_c_part is not None:
-                assert(compare(cross_section_points, m_debug_out.cross_section_points3))
-
 
             # Build a 2D mesh of the cross section by the corner points
             cross_section_points_2d = cross_section_points.T
@@ -91,22 +68,12 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
             cross_section_edges = np.vstack((np.arange(num_cross_section_points),
                                             np.roll(np.arange(num_cross_section_points), -1))) # Python shape
             
-            # DEBUG
-            if m_c_part is not None:
-                m_cross_section_edges = m_debug_out.cross_section_edges - 1
-                assert(compare(cross_section_edges, m_cross_section_edges))
-
             # cross_section_triangulation = delaunayTriangulation(cross_section_points', cross_section_edges');
             cross_section_triangulation = Mesh(vertices=cross_section_points, faces=cross_section_edges)
 
             points1 = cross_section_triangulation.get_vertices() # Python shape
             points2 = np.zeros((points1.shape[1]))
             cross_section_points = np.vstack((points1, points2))  # Embed the cross section in 3D
-
-            # DEBUG
-            if m_c_part is not None:
-                assert(compare(points1, m_debug_out.points1))
-                assert(compare(points2, m_debug_out.points2))
 
             cross_section_faces = cross_section_triangulation.get_faces()
             cross_section_vertices = cross_section_triangulation.get_vertices()
@@ -116,10 +83,9 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
 
             # is_interior_tri = isInterior(cross_section_triangulation); # Boolean column vector. Each row indicates if the vertex is inside the shape.
             # Compute the Mesh consisting only of faces inside the cross-section
-            #is_interior_tri = 1
+
             # inside_edges = cross_section_triangulation.ConnectivityList(is_interior_tri, :);
-            #inside_faces = cross_section_faces[is_interior_tri]
-            inside_faces = cross_section_faces
+            inside_faces = cross_section_faces[is_interior_tri]
             """
             cross_section_triangulation = Triangulate(cross_section_points_2d)
             zeros = np.zeros((cross_section_points_2d.shape[0], 1))
@@ -139,10 +105,6 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
                 P3 = vertices3d[face[2]]
                 cross_section_area += 0.5 * np.linalg.norm(np.cross(P2 - P1, P3 - P1))
 
-            # DEBUG
-            if m_c_part is not None:
-                assert np.isclose(cross_section_area, m_debug_out.cross_section_area)
-
             # Continue with Part 1
             """
             Conversion comments:
@@ -154,24 +116,11 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
             # Calculate the ohmic resistance
             ohmian_resistance = wire_path.v_length / (cross_section_area * conductor_conductivity)
 
-            # DEBUG
-            if m_c_part is not None:
-                assert np.isclose(cross_section_area, m_debug_out.cross_section_area)
-                assert np.isclose(wire_path.v_length, m_debug_out.wire_path1.v_length)
-
-
             # Calculate a radius of the conductor cross section which is later
             # important to avoid intersection between angulated faces
             cross_section_center = np.sum(cross_section_points, axis=1) / cross_section_points.shape[1]
             cross_section_radius = np.max(np.linalg.norm(
                 cross_section_points - cross_section_center[:, np.newaxis], axis=0))
-
-            # DEBUG
-            if m_c_part is not None:
-                assert compare(cross_section_center, m_debug_out.cross_section_center[:2])
-                assert compare(wire_path.v.T, m_debug_out.wire_path1.v.T) # , double_tolerance=0.03) # 
-                assert cross_section_radius == m_debug_out.cross_section_radius
-
 
             # Remove repeating entries
             diff_norm = np.linalg.norm(np.diff(wire_path.v, axis=1), axis=0)
@@ -179,27 +128,13 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
             wire_path.v = np.delete(wire_path.v, repeat_point_indices, axis=1)
             wire_path.uv = np.delete(wire_path.uv, repeat_point_indices, axis=1)
 
-            # DEBUG
-            if m_c_part is not None:
-                assert compare(wire_path.v.T, m_debug_out.wire_path2.v.T) # , double_tolerance=0.03) # 
-
             # Open the track if it's not already opened
             diff2_arr = wire_path.v[:, -1][:, np.newaxis] - wire_path.v
             diff2_norm = np.linalg.norm(diff2_arr, axis=0)
             arr2 =(diff2_norm < cross_section_radius / 2).astype(int)
             point_inds_to_delete = np.where(diff2_norm < cross_section_radius / 2)[0]
 
-            # DEBUG
-            if m_c_part is not None:
-                assert compare(diff2_arr, m_debug_out.diff2_arr) # , double_tolerance=0.03)    # 
-                assert compare(diff2_norm, m_debug_out.diff2_norm) # , double_tolerance=0.03)  # 
-                assert compare(arr2, m_debug_out.point_inds_to_delete1) # M 1539 array of 0 or 1
-
             point_inds_to_delete = point_inds_to_delete[:round(len(point_inds_to_delete) / 2)]
-
-            # DEBUG
-            if m_c_part is not None:
-                assert compare(point_inds_to_delete, m_debug_out.point_inds_to_delete2) # Y
 
             wire_path.v = np.delete(wire_path.v, point_inds_to_delete, axis=1)
             wire_path.uv = np.delete(wire_path.uv, point_inds_to_delete, axis=1)
@@ -210,22 +145,9 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
             # planary_mesh_matlab_format = triangulation(parameterized_mesh.faces', parameterized_mesh.uv');
             wire_mesh2D = Mesh(vertices=coil_mesh.uv, faces=coil_mesh.get_faces())
 
-            # DEBUG
-            if m_c_part is not None:
-                assert compare(wire_path.v.T, m_debug_out.wire_path3.v.T, double_tolerance=0.001) # Y
-                assert compare(coil_mesh.uv, m_c_part.coil_mesh.uv.T) # ???
-                assert compare(coil_mesh.get_faces(), m_c_part.coil_mesh.faces.T-1) # ???
-
-                m_found_normals = m_debug_out.found_normals - 1
-                m_found_points = m_debug_out.found_points.T
-
             for point_ind in range(wire_path.v.shape[1]):
                 point = wire_path.uv[:, point_ind]
                 node_ind_normals_target, possible_face_indices, faces_to_try = wire_mesh2D.get_face_index(point)
-
-                # DEBUG
-                if m_c_part is not None:
-                    assert compare(point, m_found_points[point_ind])
 
                 if node_ind_normals_target == -1:  # Handle exceptions for strange output of pointLocation
                     if point_ind == 0:
@@ -236,12 +158,6 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
                                                          point_ind] = surface_normal_along_wire_path_v[:, point_ind - 1]
                 else:
                     surface_normal_along_wire_path_v[:, point_ind] = coil_mesh.fn[node_ind_normals_target]
-
-            # DEBUG
-            if m_c_part is not None:
-                assert compare(coil_mesh.fn, m_c_part.coil_mesh.fn)
-                ## FAIL The face search above yields different faces... continuing.
-                # assert compare(surface_normal_along_wire_path_v.T, m_debug_out.surface_normal_alonge_wire_path.v.T, double_tolerance=0.01)
 
             # Continue with Part 2
             """
@@ -355,15 +271,9 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
                 stl_file_path_layout = path.join(output_directory, f"swept_layout_part{part_ind}_{filename}.stl")
                 stl_file_path_surface = path.join(output_directory, f"surface_part{part_ind}_{filename}.stl")
 
-                layout_surface_mesh.cleanup()
+                #layout_surface_mesh.cleanup()
                 layout_surface_mesh.export(stl_file_path_layout)
                 coil_mesh.export(stl_file_path_surface)
-
-                if m_c_part is not None:
-                    m_swept_vertices=m_debug_out.swept_vertices
-                    m_swept_faces=m_debug_out.swept_faces-1
-                    assert compare(swept_surface_vertices, m_swept_vertices, double_tolerance=0.003)
-                    assert compare(swept_faces, m_swept_faces)
 
             # Assign outputs
             coil_part.layout_surface_mesh = layout_surface_mesh
