@@ -171,7 +171,7 @@ def CoilGen(log, input=None):
 
         for part_index in range(len(coil_parts)):
             m_faces = m_c_parts[part_index].coil_mesh.faces.T-1
-            ### assert (compare(coil_parts[part_index].coil_mesh.get_faces(), m_faces))
+            assert (compare(coil_parts[part_index].coil_mesh.get_faces(), m_faces))
         # coil_parts[0].coil_mesh.display()
 
         # Parameterize the mesh
@@ -186,10 +186,10 @@ def CoilGen(log, input=None):
             coil_mesh = coil_parts[part_index].coil_mesh
             m_v = m_c_parts[part_index].coil_mesh.v
             m_fn = m_c_parts[part_index].coil_mesh.fn
-            m_n = m_c_parts[part_index].coil_mesh.n
-            ### assert (compare(coil_mesh.v, m_v))      # Pass
-            ### assert (compare(coil_mesh.fn, m_fn))    # Pass
-            ### assert (compare(coil_mesh.n, m_n, double_tolerance=0.1))      # Pass only at 0.1
+            m_n = m_c_parts[part_index].coil_mesh.n.T
+            assert (compare(coil_mesh.v, m_v))      # Pass
+            assert (compare(coil_mesh.fn, m_fn))    # Pass
+            assert (compare(coil_mesh.n, m_n, double_tolerance=0.1))      # Pass only at 0.1
 
         # Plot the two boundaries and see the difference
         if get_level() >= DEBUG_VERBOSE:
