@@ -121,8 +121,6 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
             #inside_faces = cross_section_faces[is_interior_tri]
             inside_faces = cross_section_faces
             """
-            # TODO: Create a triangulation mesh from the vertices.
-            # Trimesh can not do it.
             cross_section_triangulation = Triangulate(cross_section_points_2d)
             zeros = np.zeros((cross_section_points_2d.shape[0], 1))
             cross_section_points_3d = np.concatenate((cross_section_points_2d, zeros), axis=1)
@@ -220,57 +218,16 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
 
                 m_found_normals = m_debug_out.found_normals - 1
                 m_found_points = m_debug_out.found_points.T
-                a = 0
-                b = 0
-                zap = 3
 
-            # TODO: There is something about the wire_mesh2D.get_face_index and pointLocation implementation that returns different results compared to MATLAB.
             for point_ind in range(wire_path.v.shape[1]):
-                #log.debug(" point %d", point_ind)
-                # node_ind_normals_target = pointLocation(planary_mesh_matlab_format, point_x, point_y);
                 point = wire_path.uv[:, point_ind]
                 node_ind_normals_target, possible_face_indices, faces_to_try = wire_mesh2D.get_face_index(point)
 
                 # DEBUG
                 if m_c_part is not None:
                     assert compare(point, m_found_points[point_ind])
-                    if node_ind_normals_target != m_found_normals[point_ind]:
-                        if a < zap:
-                            log.debug(" faces don't match: %s, %s <> %s - %s", point_ind, node_ind_normals_target, m_found_normals[point_ind], possible_face_indices)
-                            p_id = node_ind_normals_target
-                            p_face_indices = coil_mesh.get_faces()[p_id]
-                            p_vertices = coil_mesh.uv[p_face_indices]
-
-                            m_id = m_found_normals[point_ind]
-                            m_face_indices = (m_c_part.coil_mesh.faces.T-1)[m_id]
-                            m_vertices = coil_mesh.uv[m_face_indices]
-
-                            p_faces = [p_vertices]
-                            m_faces = [m_vertices]
-
-                            centres = point.reshape(1,2).T
-                            
-                            visualize_faces(p_faces, 800, f'images/19_get_face_index1_{point_ind}_p.png', centres)
-                            visualize_faces(m_faces, 800, f'images/19_get_face_index1_{point_ind}_m.png', centres)
-
-                            a += 1
-
 
                 if node_ind_normals_target == -1:  # Handle exceptions for strange output of pointLocation
-
-                    if m_c_part is not None:
-                        if b < zap:
-                            log.debug(" No face found: %d out of %d", point_ind, len(faces_to_try))
-                            centres = point.reshape(1,2).T
-                            p_contour = Shape2D()
-                            x_uv = Shape2D()
-                            face_vertices = []
-                            for face in coil_mesh.uv[faces_to_try]:
-                                face_vertices.append(face)
-                            visualize_faces(face_vertices, 800, f'images/19_get_face_index2_{point_ind}_p.png', centres)
-                            b += 1
-
-
                     if point_ind == 0:
                         surface_normal_along_wire_path_v[:,
                                                          point_ind] = surface_normal_along_wire_path_v[:, point_ind + 1]
@@ -280,16 +237,11 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
                 else:
                     surface_normal_along_wire_path_v[:, point_ind] = coil_mesh.fn[node_ind_normals_target]
 
-
             # DEBUG
             if m_c_part is not None:
                 assert compare(coil_mesh.fn, m_c_part.coil_mesh.fn)
                 ## FAIL The face search above yields different faces... continuing.
                 # assert compare(surface_normal_along_wire_path_v.T, m_debug_out.surface_normal_alonge_wire_path.v.T, double_tolerance=0.01)
-
-            # DEBUG
-            #log.warning(" Using MATLAB surface normals")
-            #surface_normal_along_wire_path_v = m_debug_out.surface_normal_alonge_wire_path.v
 
             # Continue with Part 2
             """
@@ -407,16 +359,11 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args, m_c_part 
                 layout_surface_mesh.export(stl_file_path_layout)
                 coil_mesh.export(stl_file_path_surface)
 
-                # DEBUG
-                #layout_surface_mesh.display()
-                m_swept_vertices=m_debug_out.swept_vertices
-                m_swept_faces=m_debug_out.swept_faces-1
-
                 if m_c_part is not None:
+                    m_swept_vertices=m_debug_out.swept_vertices
+                    m_swept_faces=m_debug_out.swept_faces-1
                     assert compare(swept_surface_vertices, m_swept_vertices, double_tolerance=0.003)
                     assert compare(swept_faces, m_swept_faces)
-                #mat_mesh = Mesh(vertices=swept_vertices, faces=swept_faces)
-                #mat_mesh.display()
 
             # Assign outputs
             coil_part.layout_surface_mesh = layout_surface_mesh
