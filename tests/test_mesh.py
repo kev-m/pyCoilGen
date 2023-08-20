@@ -61,7 +61,8 @@ def test_get_face_index2():
     for index, point in enumerate(points):
         ############################################
         # Function under test
-        face_index, possible_face_indices, faces_to_try = mesh.get_face_index(point)
+        face_index, possible_face_indices, faces_to_try = mesh.get_face_index(point, try_harder=True)
         ############################################
-        if face_index != indices[index]
+        if face_index != indices[index]:
+            print("Fails at index", index)
         assert face_index == indices[index]
