@@ -14,14 +14,15 @@ print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
-from CoilGen import CoilGen
-from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
-from sub_functions.parameterize_mesh import parameterize_mesh, get_boundary_loop_nodes
-from sub_functions.read_mesh import create_unique_noded_mesh
-from sub_functions.data_structures import DataStructure, Mesh, CoilPart
-from helpers.extraction import load_matlab
 from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, \
     visualize_compare_vertices, visualize_projected_vertices
+from helpers.extraction import load_matlab
+from sub_functions.data_structures import DataStructure, Mesh, CoilPart
+from sub_functions.read_mesh import create_unique_noded_mesh
+from sub_functions.parameterize_mesh import parameterize_mesh, get_boundary_loop_nodes
+from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
+from CoilGen import CoilGen
+
 
 def debug1():
     print("Planar mesh")
@@ -749,19 +750,20 @@ def develop_create_sweep_along_surface():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    p_coil_parts = np.load('debug/ygradient_coil_python_18_True.npy', allow_pickle=True)
+    #p_coil_parts = np.load('debug/ygradient_coil_python_18_True.npy', allow_pickle=True)
+    p_coil_parts = np.load('debug/ygradient_coil_python_18_False.npy', allow_pickle=True)
 
     points = [[0.0, 0.006427876096865392, 0.00984807753012208, 0.008660254037844387, 0.0034202014332566887, -0.0034202014332566865, -0.008660254037844388, -0.009848077530122082, -0.006427876096865396, -2.4492935982947064e-18],
               [0.01, 0.007660444431189781, 0.0017364817766693042, -0.0049999999999999975, -0.009396926207859084, -0.009396926207859084, -0.004999999999999997, 0.0017364817766692998, 0.007660444431189778, 0.01]]
-    input_args = DataStructure(skip_sweep=0, cross_sectional_points=points, save_stl_flag=1, 
+    input_args = DataStructure(skip_sweep=0, cross_sectional_points=points, save_stl_flag=1,
                                specific_conductivity_conductor=1.8e-08, output_directory='images', field_shape_function='y')
     ###################################################################################
     # Function under development
     log.warning(" Using MATLAB wirepath")
     p_coil_parts[0].wire_path.v = m_c_part.wire_path.v
-    p_coil_parts[0].wire_path.uv=m_c_part.wire_path.uv
+    p_coil_parts[0].wire_path.uv = m_c_part.wire_path.uv
 
-    coil_parts = create_sweep_along_surface(p_coil_parts, input_args)#, m_c_part)
+    coil_parts = create_sweep_along_surface(p_coil_parts, input_args)  # , m_c_part)
     ###################################################################################
 
     # Verify: layout_surface_mesh, ohmian_resistance
@@ -772,16 +774,18 @@ def develop_create_sweep_along_surface():
         c_surface = c_part.layout_surface_mesh
         m_surface = m_c_part.layout_surface_mesh
 
-        visualize_projected_vertices(c_surface.get_vertices(), 800, f'images/19_layout_surface_{index1}_uv_p.png')
-        visualize_projected_vertices(m_c_part.create_sweep_along_surface.swept_vertices, 800, f'images/19_layout_surface_{index1}_uv_m.png')
+        visualize_projected_vertices(c_surface.get_vertices(), 2048, f'images/19_layout_surface_{index1}_uv_p.png')
+        visualize_projected_vertices(m_c_part.create_sweep_along_surface.swept_vertices,
+                                     2048, f'images/19_layout_surface_{index1}_uv_m.png')
 
-        #visualize_compare_vertices(c_surface.uv.T, m_surface.uv.T, 800,
+        # visualize_compare_vertices(c_surface.uv.T, m_surface.uv.T, 800,
         #                            f'19_layout_surface_{index1}_uv_diff.png')
 
         # Check....
         assert c_part.ohmian_resistance == m_ohmian_resistance
-        assert compare(c_surface.get_vertices(), m_c_part.create_sweep_along_surface.swept_vertices, double_tolerance=0.003)
-        #assert compare(c_wire_part.track_shape, m_wire_part.track_shape)
+        assert compare(c_surface.get_vertices(),
+                       m_c_part.create_sweep_along_surface.swept_vertices, double_tolerance=0.003)
+        # assert compare(c_wire_part.track_shape, m_wire_part.track_shape)
 
 
 if __name__ == "__main__":
@@ -810,8 +814,10 @@ if __name__ == "__main__":
     # develop_interconnect_within_groups()
     # develop_interconnect_among_groups()
     # develop_shift_return_paths()
+    # develop_generate_cylindrical_pcb_print()
     develop_create_sweep_along_surface()
     # test_smooth_track_by_folding()
-    # develop_generate_cylindrical_pcb_print()
-    #from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file
-    #test_split_disconnected_mesh_stl_file()
+    # from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file
+    # test_split_disconnected_mesh_stl_file()
+    # from tests.test_mesh import test_get_face_index2
+    # test_get_face_index2()
