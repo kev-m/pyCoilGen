@@ -217,7 +217,7 @@ class Mesh:
         """
         self.trimesh_obj.export(file_obj, file_type)
 
-    def get_face_index(self, vertex: np.ndarray):
+    def get_face_index(self, vertex: np.ndarray, try_harder=False):
         """
         Retrieve the index of the face which contains the provided point.
 
@@ -238,7 +238,22 @@ class Mesh:
 
         # Get the indices of the rows that contain the target_face_index
         possible_face_indices = np.where(possible_face_matches)[0]
+
+        # Get the corresponding faces
         faces_to_try = faces[possible_face_indices]
+
+        if try_harder:
+            # Add all 2nd degree faces (i.e. faces connected to every vertex)
+            more_face_indices = possible_face_indices.tolist()
+            for vertex_index in faces_to_try.flatten():
+                p2 = np.any(faces == vertex_index, axis=1)
+                p2_inds = np.where(p2)[0]
+                more_face_indices += p2_inds.tolist()
+
+            possible_face_indices = np.unique(more_face_indices)
+
+            # Get the faces that match these vertices
+            faces_to_try = faces[possible_face_indices]
 
         face_index, barycentric = pointLocation(vertex, faces_to_try, vertices)
         if face_index is not None:
