@@ -154,7 +154,6 @@ class Mesh:
         Args:
             inplace (bool): Specify to modify the existing Mesh. If false, returns a new Mesh.
 
-
         Returns:
             Mesh: The refined Mesh.
         """
@@ -217,12 +216,16 @@ class Mesh:
         """
         self.trimesh_obj.export(file_obj, file_type)
 
-    def get_face_index(self, vertex: np.ndarray, try_harder=False):
+    def get_face_index(self, vertex: np.ndarray, try_harder=True):
         """
         Retrieve the index of the face which contains the provided point.
 
         If the vertex is on multiple faces, e.g. is an edge, the highest face index is returned.
 
+        Args:
+            vertex (ndarray): The point to search for
+            try_harder (bool): Whether to also include 2nd order face vertices in the search.
+        
         Returns:
             index (int): The face index or -1 if the point is not within the mesh.
         """
