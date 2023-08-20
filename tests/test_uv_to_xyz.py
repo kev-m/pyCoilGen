@@ -2,7 +2,7 @@
 from trimesh import Trimesh
 from trimesh.proximity import ProximityQuery
 import numpy as np
-
+import json
 
 # Set up paths: Add the project root directory to the Python path
 import sys
@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from sub_functions.build_planar_mesh import build_planar_mesh
 from sub_functions.data_structures import Mesh
 # Code under test
-from sub_functions.uv_to_xyz import uv_to_xyz, which_face, get_target_triangle, pointLocation
+from sub_functions.uv_to_xyz import uv_to_xyz, which_face, get_target_triangle, pointLocation, point_inside_triangle
 
 def test_uv_to_xyz_planar():
     val = build_planar_mesh(0.30, 0.60, 3, 3, 0, 0, 1, 0, 0, 0, 1.0)
@@ -81,6 +81,44 @@ def test_pointLocation():
     assert face_index == 2
     assert np.allclose(barycentric, [0.0, 1.0, 0.0]) #100% described by the 2nd co-ordinate
 
+def test_bug001_pointLocation():
+    point_ind = 5
+    with open(f'tests/test_data/point_locations{point_ind}.json', 'r') as file:
+        test_data = json.load(file)
+
+    offset = min(test_data['face_indices'])
+    point = test_data['point']
+    mesh_faces = np.asarray(test_data['face_indices'])
+    face_vertices = np.asarray(test_data['face_vertices'])
+    mesh_vertices = test_data['vertices']
+
+    ########################################
+    # Function under test
+    face_index, barycentric = pointLocation(point, mesh_faces, mesh_vertices, already_mapped=True)
+    ########################################
+
+    assert face_index == test_data['pass'] - offset
+
+def test_bug001_point_inside_triangle():
+    point_ind = 5
+    with open(f'tests/test_data/point_locations{point_ind}.json', 'r') as file:
+        test_data = json.load(file)
+
+    offset = min(test_data['face_indices'])
+    point = test_data['point']
+    mesh_faces = np.asarray(test_data['face_indices'])
+    face_vertices = np.asarray(test_data['face_vertices'])
+    mesh_vertices = test_data['vertices']
+
+    ########################################
+    # Function under test
+    found1, barycentric1 = point_inside_triangle(point, mesh_vertices[0])
+    found2, barycentric2 = point_inside_triangle(point, mesh_vertices[1])
+    ########################################
+
+    assert found1 == True
+    assert found2 == True
+    
 
 if __name__ == "__main__":
     # Logging
@@ -93,3 +131,5 @@ if __name__ == "__main__":
     test_get_target_triangle()
     test_uv_to_xyz_planar()
     test_pointLocation()
+    test_bug001_point_inside_triangle()
+    test_bug001_pointLocation()
