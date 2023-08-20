@@ -1,12 +1,4 @@
 # System imports
-from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, \
-    visualize_compare_vertices, visualize_projected_vertices
-from helpers.extraction import load_matlab
-from sub_functions.data_structures import DataStructure, Mesh, CoilPart
-from sub_functions.read_mesh import create_unique_noded_mesh
-from sub_functions.parameterize_mesh import parameterize_mesh, get_boundary_loop_nodes
-from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
-from CoilGen import CoilGen
 import sys
 from pathlib import Path
 import numpy as np
@@ -22,6 +14,14 @@ print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
+from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, \
+    visualize_compare_vertices, visualize_projected_vertices
+from helpers.extraction import load_matlab
+from sub_functions.data_structures import DataStructure, Mesh, CoilPart
+from sub_functions.read_mesh import create_unique_noded_mesh
+from sub_functions.parameterize_mesh import parameterize_mesh, get_boundary_loop_nodes
+from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
+from CoilGen import CoilGen
 
 
 def debug1():
@@ -750,7 +750,8 @@ def develop_create_sweep_along_surface():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    p_coil_parts = np.load('debug/ygradient_coil_python_18_True.npy', allow_pickle=True)
+    #p_coil_parts = np.load('debug/ygradient_coil_python_18_True.npy', allow_pickle=True)
+    p_coil_parts = np.load('debug/ygradient_coil_python_18_False.npy', allow_pickle=True)
 
     points = [[0.0, 0.006427876096865392, 0.00984807753012208, 0.008660254037844387, 0.0034202014332566887, -0.0034202014332566865, -0.008660254037844388, -0.009848077530122082, -0.006427876096865396, -2.4492935982947064e-18],
               [0.01, 0.007660444431189781, 0.0017364817766693042, -0.0049999999999999975, -0.009396926207859084, -0.009396926207859084, -0.004999999999999997, 0.0017364817766692998, 0.007660444431189778, 0.01]]
@@ -773,9 +774,9 @@ def develop_create_sweep_along_surface():
         c_surface = c_part.layout_surface_mesh
         m_surface = m_c_part.layout_surface_mesh
 
-        visualize_projected_vertices(c_surface.get_vertices(), 800, f'images/19_layout_surface_{index1}_uv_p.png')
+        visualize_projected_vertices(c_surface.get_vertices(), 2048, f'images/19_layout_surface_{index1}_uv_p.png')
         visualize_projected_vertices(m_c_part.create_sweep_along_surface.swept_vertices,
-                                     800, f'images/19_layout_surface_{index1}_uv_m.png')
+                                     2048, f'images/19_layout_surface_{index1}_uv_m.png')
 
         # visualize_compare_vertices(c_surface.uv.T, m_surface.uv.T, 800,
         #                            f'19_layout_surface_{index1}_uv_diff.png')
