@@ -96,7 +96,10 @@ def point_inside_triangle(point, triangle_vertices):
     [alpha, beta, gamma] = barycentric_coordinates(point, triangle_vertices)
 
     # Check if the point is inside the triangle
-    return [(0 <= alpha <= 1.0) and (0 <= beta <= 1.0) and (0 <= gamma <= 1.0), [alpha, beta, gamma]]
+    close_enough = 1e-10
+    lower = 0.0 - close_enough
+    upper = 1.0 + close_enough
+    return [(lower <= alpha <= upper) and (lower <= beta <= upper) and (lower <= gamma <= upper), [alpha, beta, gamma]]
 
 
 def which_face(point, face_indices, face_vertices):
@@ -122,7 +125,7 @@ def which_face(point, face_indices, face_vertices):
     coords = [sublist[1] for sublist in combined_results]
     return face_indices[result_index], combined_results[result_index][1]
 
-def pointLocation(point_2D: np.ndarray, face_indices: np.ndarray, mesh_vertices: np.ndarray):
+def pointLocation(point_2D: np.ndarray, face_indices: np.ndarray, mesh_vertices: np.ndarray, already_mapped=False):
     """
     Determine which of the provided faces contains a given point.
 
@@ -139,7 +142,10 @@ def pointLocation(point_2D: np.ndarray, face_indices: np.ndarray, mesh_vertices:
     """
     for index in range(len(face_indices)-1, -1,-1):
         face = face_indices[index]
-        triangle_vertices = mesh_vertices[face]
+        if already_mapped == False:
+            triangle_vertices = mesh_vertices[face]
+        else:
+            triangle_vertices = mesh_vertices[index]
         found, barycentric = point_inside_triangle(point_2D, triangle_vertices)
         if found:
             return index, barycentric
