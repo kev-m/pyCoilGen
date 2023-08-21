@@ -29,19 +29,18 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
     mesh_id = 1  # Initialize the mesh ID
     vert_group =[set()]
 
-    faces_temp = faces.tolist()
     changed = True
     while changed:
-        for face_index, face in enumerate(faces_temp):
+        for face_index, face in enumerate(faces):
             changed = False
             # Debug
-            if face_index == 39:
-                log.debug("Start now!")
+            ## if face_index == 39:
+            ##    log.debug("Start now!")
             # If any vertex of face is in the current vertex group, add this face to the current face_group, etc.
             if face_group[face_index] == 0:
                 for vertex in face:
                     if len(vert_group[mesh_id-1]) == 0 or vertex in vert_group[mesh_id-1]:
-                        log.debug("Group: %d => Face %d, adding vertex %d", mesh_id, face_index, vertex)
+                        log.debug("Group: %d => Adding Face %d,  %s", mesh_id, face_index, face)
                         changed = True
                         break
 
@@ -58,6 +57,27 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
             mesh_id += 1
             vert_group.append(set())
             changed = True
+
+    # Having found all the vert_groups, now check for vert_group intersections and merge such groups
+    changed = True
+    while changed:
+        changed = False
+        for index1, group1 in enumerate(vert_group):
+            for index2 in range(index1+1, len(vert_group)):
+                group2 = vert_group[index2]
+                if len(group1.intersection(group2)) > 0:
+                    log.debug("Found intersection between groups %d and %d, merging", index1, index2)
+                    group1 = group1.union(group2)
+                    changed = True
+                    # Assign all faces to index1
+                    which = next(iter(group1))
+                    group1_id = face_group[which] # ??
+                    face_group[list(group2)] = group1_id
+                    # Remove group2 from vert_group
+                    vert_group.pop(index2)
+                    break
+            if changed:
+                break
 
 
 
