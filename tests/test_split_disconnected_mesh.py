@@ -74,7 +74,7 @@ def test_split_disconnected_mesh_biplanar_mesh():
     assert compare(split_mesh1.get_vertices(), part1_vertices)
     assert compare(split_mesh1.get_faces(), part1_faces)
 
-def test_split_disconnected_mesh_stl_file():
+def test_split_disconnected_mesh_stl_file1():
     mesh = Mesh.load_from_file('Geometry_Data/cylinder_radius500mm_length1500mm.stl')
     test_vertices = mesh.get_vertices()
     test_faces = mesh.get_faces()
@@ -88,7 +88,22 @@ def test_split_disconnected_mesh_stl_file():
     split_mesh = parts[0].coil_mesh
     assert compare(split_mesh.get_faces(), test_faces)
     assert compare(split_mesh.get_vertices(), test_vertices)
-    
+
+def test_split_disconnected_mesh_stl_file2():
+    mesh = Mesh.load_from_file('Geometry_Data/bi_planer_rectangles_width_1000mm_distance_500mm.stl')
+    test_vertices = mesh.get_vertices()
+    test_faces = mesh.get_faces()
+
+    ##################################################
+    # Funtion under test
+    parts = split_disconnected_mesh(mesh)
+    ##################################################
+
+    assert len(parts) == 2
+    split_mesh = parts[0].coil_mesh
+    assert compare(split_mesh.get_faces(), test_faces[0:39])
+    assert compare(split_mesh.get_vertices(), test_vertices)
+
 
 if __name__ == "__main__":
     import logging
@@ -116,6 +131,6 @@ if __name__ == "__main__":
     print(len(lists_of_connected_faces[1]) == 40, len(lists_of_connected_faces[1]))
     """    
 
-    test_split_disconnected_mesh_simple_planar_mesh()
+    #test_split_disconnected_mesh_simple_planar_mesh()
     test_split_disconnected_mesh_biplanar_mesh()
-    test_split_disconnected_mesh_stl_file()
+    #test_split_disconnected_mesh_stl_file()
