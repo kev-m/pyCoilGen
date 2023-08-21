@@ -37,28 +37,33 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
                     adjacency_list[face[i]].add(face[j])
                     adjacency_list[face[j]].add(face[i])
         return adjacency_list
-    
+
     def dfs(node, adjacency_list, visited, component):
         visited[node] = True
         component.append(node)
         for neighbor in adjacency_list[node]:
             if not visited[neighbor]:
                 dfs(neighbor, adjacency_list, visited, component)
-    
+
     adjacency_list = build_adjacency_list(vertices, faces)
     visited = [False] * len(vertices)
+    meshes = []
 
-    meshes = []    
     for vertex_index in range(len(vertices)):
         if not visited[vertex_index]:
             new_mesh = []
             dfs(vertex_index, adjacency_list, visited, new_mesh)
             meshes.append(new_mesh)
-    
+
     for mesh_indices in meshes:
-        coil_mesh = Mesh(vertices= [vertices[i] for i in mesh_indices],
-                         faces= [[mesh_indices.index(idx) for idx in face] for face in faces if all(idx in mesh_indices for idx in face)]
-        )
+        face_indices = []
+        for face in faces:
+            if all(idx in mesh_indices for idx in face):
+                new_face = [mesh_indices.index(idx) for idx in face]
+                face_indices.append(new_face)
+        coil_mesh = Mesh(vertices=[vertices[i] for i in mesh_indices],
+                         faces=face_indices
+                         )
         part = CoilPart(coil_mesh=coil_mesh)
         coil_parts.append(part)
 
