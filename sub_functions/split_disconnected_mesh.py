@@ -56,14 +56,14 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
             meshes.append(new_mesh)
 
     for mesh_indices in meshes:
-        face_indices = []
+        new_vertices = [vertices[i] for i in mesh_indices]
+        new_faces = []
         for face in faces:
             if all(idx in mesh_indices for idx in face):
                 new_face = [mesh_indices.index(idx) for idx in face]
-                face_indices.append(new_face)
-        coil_mesh = Mesh(vertices=[vertices[i] for i in mesh_indices],
-                         faces=face_indices
-                         )
+                new_faces.append(new_face)
+
+        coil_mesh = Mesh(vertices=new_vertices, faces=new_faces)
         part = CoilPart(coil_mesh=coil_mesh)
         coil_parts.append(part)
 
