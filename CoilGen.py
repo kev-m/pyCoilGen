@@ -133,7 +133,7 @@ def CoilGen(log, input=None):
 
     # Print the input variables
     # DEBUG
-    use_matlab_data = False
+    use_matlab_data = True
     if get_level() >= DEBUG_VERBOSE:
         log.debug('Parse inputs: %s', input_args)
 
@@ -151,10 +151,6 @@ def CoilGen(log, input=None):
         if get_level() > DEBUG_VERBOSE:
             log.debug(" coil_mesh.vertex_faces: %s", coil_mesh.trimesh_obj.vertex_faces[0:10])
 
-        #if compare_mesh_shape:
-        #    assert (compare(coil_mesh.get_faces(), m_faces))
-        #    assert (compare(coil_mesh.get_vertices(), m_vertices))
-
         if get_level() > DEBUG_VERBOSE:
             coil_mesh.display()
 
@@ -169,10 +165,20 @@ def CoilGen(log, input=None):
         # np.save(f'debug/ygradient_coil_python_01_{use_matlab_data}.npy', coil_parts)
         # log.debug("coil_parts: %s", coil_parts)
 
-        for part_index in range(len(coil_parts)):
-            m_faces = m_c_parts[part_index].coil_mesh.faces.T-1
-            assert (compare(coil_parts[part_index].coil_mesh.get_faces(), m_faces))
         # coil_parts[0].coil_mesh.display()
+
+        ###################################################################
+        # DEBUG
+        if use_matlab_data:
+            log.warning("Using MATLAB's mesh in %s, line %d", __file__, get_linenumber())
+            for n, old_part in enumerate(coil_parts):
+                old_mesh = old_part.coil_mesh
+                old_vec = old_mesh.normal_rep
+                m_vertices = m_c_parts[n].coil_mesh.v
+                m_faces = m_c_parts[n].coil_mesh.faces-1
+                coil_parts[n].coil_mesh = Mesh(vertices=m_vertices, faces=m_faces)
+                coil_parts[n].coil_mesh.normal_rep = old_vec
+        ###################################################################
 
         # Parameterize the mesh
         print('Parameterize the mesh:')
@@ -984,8 +990,8 @@ if __name__ == "__main__":
         "target_field_definition_file": "none",
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
-        "target_region_radius": 0.1,
-        "target_region_resolution": 5,
+        "target_region_radius": 0.15,
+        "target_region_resolution": 10, # From defaults
         "tikonov_reg_factor": 10,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
@@ -1060,4 +1066,4 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    solution = CoilGen(log, arg_dict2)
+    solution = CoilGen(log, arg_dict1)
