@@ -464,7 +464,7 @@ class CoilPart:
     current_mat: np.ndarray = None          # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
     area_mat: np.ndarray = None             # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
     face_normal_mat: np.ndarray = None      # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
-    current_density_mat: np.ndarray = None  # (calculate_basis_functions)
+    current_density_mat: np.ndarray = None  # (calculate_basis_functions) (num_vertices, num_faces, 3)
     resistance_matrix: np.ndarray = None    # num_vertices x num_vertices
     one_ring_list: np.ndarray = None        # (calculate_one_ring_by_mesh) (num_vertices,variable) Python shape
     node_triangles: np.ndarray = None       # (calculate_one_ring_by_mesh) (num_vertices,variable)
