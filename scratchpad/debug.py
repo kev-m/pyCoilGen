@@ -454,18 +454,19 @@ def develop_stream_function_optimization():
     from sub_functions.stream_function_optimization import stream_function_optimization
 
     # MATLAB saved data
-    #mat_data = load_matlab('debug/biplanar_xgradient')
-    mat_data = load_matlab('debug/ygradient_coil')
+    mat_data = load_matlab('debug/biplanar_xgradient')
+    #mat_data = load_matlab('debug/ygradient_coil')
     mat_data_out = mat_data['coil_layouts'].out
     m_coil_parts = mat_data_out.coil_parts
     m_coil_part = m_coil_parts
 
     # Python saved data 07 : After calculate_resistance_matrix
-    # p_coil_parts = np.load('debug/ygradient_coil_python_07_False.npy', allow_pickle=True)
-    p_coil_parts = np.load('debug/ygradient_coil_python_07_True.npy', allow_pickle=True)
+    # [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_07_False.npy', allow_pickle=True)
+    #[target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_07_True.npy', allow_pickle=True)
+    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/biplanar_coil_python_07_False.npy', allow_pickle=True)
 
     input_args = DataStructure(tikonov_reg_factor=10, sf_opt_method='tikkonov', fmincon_parameter=[500.0, 10000000000.0, 1e-10, 1e-10, 1e-10])
-    target_field = mat_data_out.target_field
+    #target_field = mat_data_out.target_field
 
     debug_data = m_coil_part
     ###################################################################################
@@ -486,8 +487,8 @@ def develop_calc_contours_by_triangular_potential_cuts():
     m_c_part = m_coil_parts
 
     # Python saved data 09: calc_potential_levels
-    # p_coil_parts = np.load('debug/ygradient_coil_python_09_False.npy', allow_pickle=True)
-    p_coil_parts = np.load('debug/ygradient_coil_python_09_True.npy', allow_pickle=True)
+    # [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_09_False.npy', allow_pickle=True)
+    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_09_True.npy', allow_pickle=True)
 
     ###################################################################################
     # Function under test
@@ -537,8 +538,8 @@ def develop_process_raw_loops():
     m_coil_part = m_coil_parts
 
     # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
-    # p_coil_parts = np.load('debug/ygradient_coil_python_10_False.npy', allow_pickle=True)
-    p_coil_parts = np.load('debug/ygradient_coil_python_10_True.npy', allow_pickle=True)
+    # [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_10_False.npy', allow_pickle=True)
+    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_10_True.npy', allow_pickle=True)
 
     input_args = DataStructure(smooth_flag=1, smooth_factor=1, min_loop_significance=1)
     target_field = mat_data_out.target_field
@@ -569,8 +570,8 @@ def develop_calculate_group_centers():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    p_coil_parts = np.load('debug/ygradient_coil_python_13_False_patched.npy', allow_pickle=True)
-    # p_coil_parts = np.load('debug/ygradient_coil_python_13_True_patched.npy', allow_pickle=True)
+    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_13_False_patched.npy', allow_pickle=True)
+    # [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_13_True_patched.npy', allow_pickle=True)
 
     ###################################################################################
     # Function under test
@@ -592,7 +593,7 @@ def develop_interconnect_within_groups():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    p_coil_parts = np.load('debug/ygradient_coil_python_14_True.npy', allow_pickle=True)
+    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_14_True.npy', allow_pickle=True)
 
     input_args = DataStructure(force_cut_selection=['high'], b_0_direction=[0, 0, 1], interconnection_cut_width=0.1)
 
@@ -660,7 +661,7 @@ def develop_interconnect_among_groups():
     m_c_part = m_coil_parts
     # The Python paths and the MATLAB paths are close but slightly different. This prevents detailed debugging.
     # Actually, there is no bug!
-    p_coil_parts = np.load('debug/ygradient_coil_python_15_True.npy', allow_pickle=True)
+    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_15_True.npy', allow_pickle=True)
 
     input_args = DataStructure(interconnection_cut_width=0.1)
     coil_parts = interconnect_among_groups(p_coil_parts, input_args, m_c_part)
@@ -699,7 +700,7 @@ def develop_shift_return_paths():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    p_coil_parts = np.load('debug/ygradient_coil_python_16_True.npy', allow_pickle=True)
+    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_16_True.npy', allow_pickle=True)
 
     input_args = DataStructure(interconnection_cut_width=0.1,
                                skip_normal_shift=0,
@@ -734,7 +735,7 @@ def develop_generate_cylindrical_pcb_print():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    p_coil_parts = np.load('debug/ygradient_coil_python_17_True.npy', allow_pickle=True)
+    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_17_True.npy', allow_pickle=True)
 
     input_args = DataStructure(conductor_cross_section_width=0.015,
                                cylinder_mesh_parameter_list=[0.8, 0.3, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
@@ -776,8 +777,8 @@ def develop_create_sweep_along_surface():
     mat_data = load_matlab('debug/ygradient_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    #p_coil_parts = np.load('debug/ygradient_coil_python_18_True.npy', allow_pickle=True)
-    p_coil_parts = np.load('debug/ygradient_coil_python_18_False.npy', allow_pickle=True)
+    #[target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_18_True.npy', allow_pickle=True)
+    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/ygradient_coil_python_18_False.npy', allow_pickle=True)
 
     points = [[0.0, 0.006427876096865392, 0.00984807753012208, 0.008660254037844387, 0.0034202014332566887, -0.0034202014332566865, -0.008660254037844388, -0.009848077530122082, -0.006427876096865396, -2.4492935982947064e-18],
               [0.01, 0.007660444431189781, 0.0017364817766693042, -0.0049999999999999975, -0.009396926207859084, -0.009396926207859084, -0.004999999999999997, 0.0017364817766692998, 0.007660444431189778, 0.01]]
