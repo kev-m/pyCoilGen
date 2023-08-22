@@ -450,6 +450,32 @@ def develop_calculate_sensitivity_matrix():
     assert (compare(coil_part.sensitivity_matrix, m_c_part.sensitivity_matrix))  #
 
 
+def develop_stream_function_optimization():
+    from sub_functions.stream_function_optimization import stream_function_optimization
+
+    # MATLAB saved data
+    #mat_data = load_matlab('debug/biplanar_xgradient')
+    mat_data = load_matlab('debug/ygradient_coil')
+    mat_data_out = mat_data['coil_layouts'].out
+    m_coil_parts = mat_data_out.coil_parts
+    m_coil_part = m_coil_parts
+
+    # Python saved data 07 : After calculate_resistance_matrix
+    # p_coil_parts = np.load('debug/ygradient_coil_python_07_False.npy', allow_pickle=True)
+    p_coil_parts = np.load('debug/ygradient_coil_python_07_True.npy', allow_pickle=True)
+
+    input_args = DataStructure(tikonov_reg_factor=10, sf_opt_method='tikkonov', fmincon_parameter=[500.0, 10000000000.0, 1e-10, 1e-10, 1e-10])
+    target_field = mat_data_out.target_field
+
+    debug_data = m_coil_part
+    ###################################################################################
+    # Function under test
+    coil_parts2 = stream_function_optimization(p_coil_parts, target_field, input_args, debug_data)
+    ###################################################################################
+
+
+
+
 def develop_calc_contours_by_triangular_potential_cuts():
     from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 
@@ -806,7 +832,7 @@ if __name__ == "__main__":
     # develop_calculate_sensitivity_matrix()
     # calculate_gradient_sensitivity_matrix
     # calculate_resistance_matrix
-    # stream_function_optimization
+    develop_stream_function_optimization()
     # calc_potential_levels
     # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
@@ -815,9 +841,28 @@ if __name__ == "__main__":
     # develop_interconnect_among_groups()
     # develop_shift_return_paths()
     # develop_generate_cylindrical_pcb_print()
-    develop_create_sweep_along_surface()
+    # develop_create_sweep_along_surface()
     # test_smooth_track_by_folding()
-    # from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file
-    # test_split_disconnected_mesh_stl_file()
+    #from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file1, \
+    #        test_split_disconnected_mesh_stl_file2, test_split_disconnected_mesh_simple_planar_mesh, \
+    #        test_split_disconnected_mesh_biplanar_mesh
+    # test_split_disconnected_mesh_simple_planar_mesh()
+    # test_split_disconnected_mesh_biplanar_mesh()
+    # test_split_disconnected_mesh_stl_file1()
+    #test_split_disconnected_mesh_stl_file2()
     # from tests.test_mesh import test_get_face_index2
     # test_get_face_index2()
+
+    combined_boundary = np.zeros((2), dtype=object)
+    combined_boundary[0] = [1, 2, 3]
+    combined_boundary[1] = [2, 3, 4]
+
+    old_len = len(combined_boundary)
+
+    new_boundary_ind = np.zeros((old_len+3), dtype=object)
+    new_boundary_ind[:old_len] = combined_boundary
+
+    for i in range(3):
+        new_list = [5, 6, 7]
+        new_boundary_ind[old_len+i] = new_list
+        pass
