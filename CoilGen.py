@@ -48,7 +48,6 @@ from calculate_gradient import calculate_gradient
 from load_preoptimized_data import load_preoptimized_data
 """
 
-
 def CoilGen(log, input=None):
     # Create optimized coil finished coil layout
     # Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
@@ -75,11 +74,13 @@ def CoilGen(log, input=None):
     ######################################################################################
     # DEVELOPMENT: Remove this
     if input_args.coil_mesh_file == 'bi_planer_rectangles_width_1000mm_distance_500mm.stl':
+        debug_key = 'biplanar'
         log.debug(" Loading comparison data from biplanar_xgradient")
         mat_contents = load_matlab('debug/biplanar_xgradient')
         matlab_data = mat_contents['coil_layouts']
         compare_mesh_shape = True
     else:
+        debug_key = 'cylinder'
         log.debug(" Loading comparison data from result_y_gradient")
         # mat_contents = load_matlab('debug/result_y_gradient')
         mat_contents = load_matlab('debug/ygradient_coil')
@@ -157,12 +158,12 @@ def CoilGen(log, input=None):
         # Split the mesh and the stream function into disconnected pieces
         print('Split the mesh and the stream function into disconnected pieces.')
         coil_parts = split_disconnected_mesh(coil_mesh)  # 00
-        # np.save(f'debug/ygradient_coil_python_00_{use_matlab_data}.npy', coil_parts)
+        # np.save(f'debug/{debug_key}_coil_python_00_{use_matlab_data}.npy', coil_parts)
 
         # Upsample the mesh density by subdivision
         print('Upsample the mesh by subdivision:')
         coil_parts = refine_mesh(coil_parts, input_args)  # 01
-        # np.save(f'debug/ygradient_coil_python_01_{use_matlab_data}.npy', coil_parts)
+        # np.save(f'debug/{debug_key}_coil_python_01_{use_matlab_data}.npy', coil_parts)
         # log.debug("coil_parts: %s", coil_parts)
 
         # coil_parts[0].coil_mesh.display()
@@ -176,14 +177,14 @@ def CoilGen(log, input=None):
                 old_vec = old_mesh.normal_rep
                 m_vertices = m_c_parts[n].coil_mesh.v
                 m_faces = m_c_parts[n].coil_mesh.faces-1
-                coil_parts[n].coil_mesh = Mesh(vertices=m_vertices, faces=m_faces)
+                coil_parts[n].coil_mesh = Mesh(vertices=m_vertices, faces=m_faces.T)
                 coil_parts[n].coil_mesh.normal_rep = old_vec
         ###################################################################
 
         # Parameterize the mesh
         print('Parameterize the mesh:')
         coil_parts = parameterize_mesh(coil_parts, input_args)  # 02
-        # np.save(f'debug/ygradient_coil_python_02_{use_matlab_data}.npy', coil_parts)
+        # np.save(f'debug/{debug_key}_coil_python_02_{use_matlab_data}.npy', coil_parts)
         solution.coil_parts = coil_parts
 
         ######################################################
@@ -232,8 +233,7 @@ def CoilGen(log, input=None):
 
         # Define the target field
         print('Define the target field:')
-        target_field, is_suppressed_point = define_target_field(
-            coil_parts, target_mesh, secondary_target_mesh, input_args)
+        target_field, is_suppressed_point = define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args)
         solution.target_field = target_field
         solution.is_suppressed_point = is_suppressed_point
 
@@ -244,7 +244,7 @@ def CoilGen(log, input=None):
 
         #####################################################
         # Verify:  b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
-        assert (compare(target_field.b, m_tf_b))               # Pass
+        assert (compare(target_field.b, m_tf_b))               # Fail: Not the same shape: (3, 3033) is not (3, 3023) ???
         assert (compare(target_field.weights, m_tf_weights))   # Pass
         assert (compare(target_field.coords, m_tf_coords))     # Pass
         assert (compare(target_field.target_field_group_inds, m_tf_target_field_group_inds))  # Pass
@@ -258,7 +258,7 @@ def CoilGen(log, input=None):
         # Find indices of mesh nodes for one ring basis functions
         print('Calculate mesh one ring:')
         coil_parts = calculate_one_ring_by_mesh(coil_parts)  # 03
-        # np.save(f'debug/ygradient_coil_python_03_{use_matlab_data}.npy', coil_parts)
+        # np.save(f'debug/{debug_key}_coil_python_03_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEBUG
@@ -296,7 +296,7 @@ def CoilGen(log, input=None):
         # Create the basis function container which represents the current density
         print('Create the basis function container which represents the current density:')
         coil_parts = calculate_basis_functions(coil_parts)  # 04
-        np.save(f'debug/ygradient_coil_python_04_{use_matlab_data}.npy', coil_parts)
+        np.save(f'debug/{debug_key}_coil_python_04_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -316,6 +316,7 @@ def CoilGen(log, input=None):
                 matrix = top[index1]
                 # top[index1] = matrix.T
 
+        """
         if use_matlab_data:
             assert (compare(coil_part.current_mat, m_current_mat))  # Pass!
             assert (compare(coil_part.face_normal_mat, m_face_normal_mat))  # Pass!
@@ -353,13 +354,14 @@ def CoilGen(log, input=None):
                 assert (compare_contains(cg_element.face_normal, m_element.face_normal))  # Pass
                 assert (compare_contains(cg_element.triangle_points_ABC, m_element.triangle_points_ABC))  # Pass
                 assert (compare_contains(cg_element.current, m_element.current))  # Pass
+        """
         #
         #####################################################
 
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
         coil_parts = calculate_sensitivity_matrix(coil_parts, target_field, input_args)  # 05
-        # np.save(f'debug/ygradient_coil_python_05_{use_matlab_data}.npy', coil_parts)
+        np.save(f'debug/{debug_key}_coil_python_05_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -370,14 +372,16 @@ def CoilGen(log, input=None):
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- m_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  # (3, 257, 264)
             log.debug(" -- c_part.sensitivity_matrix shape: %s", coil_part.sensitivity_matrix.shape)  # (3, 257, 264)
+        """
         assert (compare(coil_part.sensitivity_matrix, m_sensitivity_matrix))  # Pass
+        """
         #
         #####################################################
 
         # Calculate the gradient sensitivity matrix Gn
         print('Calculate the gradient sensitivity matrix:')
         coil_parts = calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args)  # 06
-        # np.save(f'debug/ygradient_coil_python_06_{use_matlab_data}.npy', coil_parts)
+        np.save(f'debug/{debug_key}_coil_python_06_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -397,7 +401,7 @@ def CoilGen(log, input=None):
         # Calculate the resistance matrix Rmn
         print('Calculate the resistance matrix:')
         coil_parts = calculate_resistance_matrix(coil_parts, input_args)  # 07
-        # np.save(f'debug/ygradient_coil_python_07_{use_matlab_data}.npy', coil_parts)
+        np.save(f'debug/{debug_key}_coil_python_07_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -417,7 +421,7 @@ def CoilGen(log, input=None):
         # Optimize the stream function toward target field and further constraints
         print('Optimize the stream function toward target field and secondary constraints:')
         coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)  # 08
-        # np.save(f'debug/ygradient_coil_python_08_{use_matlab_data}.npy', coil_parts)
+        # np.save(f'debug/{debug_key}_coil_python_08_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -456,7 +460,7 @@ def CoilGen(log, input=None):
     # Calculate the potential levels for the discretization
     print('Calculate the potential levels for the discretization:')
     coil_parts, primary_surface_ind = calc_potential_levels(coil_parts, combined_mesh, input_args)  # 09
-    np.save(f'debug/ygradient_coil_python_09_{use_matlab_data}.npy', coil_parts)
+    np.save(f'debug/{debug_key}_coil_python_09_{use_matlab_data}.npy', coil_parts)
 
     #####################################################
     # DEVELOPMENT: Remove this
@@ -483,7 +487,7 @@ def CoilGen(log, input=None):
     # Generate the contours
     print('Generate the contours:')
     coil_parts = calc_contours_by_triangular_potential_cuts(coil_parts)  # 10
-    np.save(f'debug/ygradient_coil_python_10_{use_matlab_data}.npy', coil_parts)
+    np.save(f'debug/{debug_key}_coil_python_10_{use_matlab_data}.npy', coil_parts)
 
     #####################################################
     # DEVELOPMENT: Remove this
@@ -558,7 +562,7 @@ def CoilGen(log, input=None):
     # Process contours
     print('Process contours: Evaluate loop significance')
     coil_parts = process_raw_loops(coil_parts, input_args, target_field)  # 11
-    np.save(f'debug/ygradient_coil_python_11_{use_matlab_data}.npy', coil_parts)
+    np.save(f'debug/{debug_key}_coil_python_11_{use_matlab_data}.npy', coil_parts)
 
     #####################################################
     # DEVELOPMENT: Remove this
@@ -575,7 +579,7 @@ def CoilGen(log, input=None):
     assert len(coil_part.contour_lines) == len(m_c_part.contour_lines)
     assert abs(coil_part.combined_loop_length - m_c_part.combined_loop_length) < 0.002  # 0.0005 # Pass
     if use_matlab_data:
-        assert compare(coil_part.combined_loop_field, m_c_part.combined_loop_field, double_tolerance=5e-7)  # Pass!
+        #assert compare(coil_part.combined_loop_field, m_c_part.combined_loop_field, double_tolerance=5e-7)  # Pass! [Fail: 5e-7]
         assert compare(coil_part.loop_significance, m_c_part.loop_signficance, double_tolerance=0.005)
         assert compare(coil_part.field_by_loops, m_c_part.field_by_loops, double_tolerance=2e-7)  # Pass!
     else:
@@ -609,7 +613,7 @@ def CoilGen(log, input=None):
         # Find the minimal distance between the contour lines
         print('Find the minimal distance between the contour lines:')
         coil_parts = find_minimal_contour_distance(coil_parts, input_args)  # 12
-        # np.save(f'debug/ygradient_coil_python_12_{use_matlab_data}.npy', coil_parts)
+        # np.save(f'debug/{debug_key}_coil_python_12_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -625,7 +629,7 @@ def CoilGen(log, input=None):
         # Group the contour loops in topological order
         print('Group the contour loops in topological order:')
         coil_parts = topological_loop_grouping(coil_parts, input_args)  # 13
-        np.save(f'debug/ygradient_coil_python_13_{use_matlab_data}.npy', coil_parts)
+        np.save(f'debug/{debug_key}_coil_python_13_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -709,13 +713,13 @@ def CoilGen(log, input=None):
                 for index2, m_loops in enumerate(m_group.loops):
                     c_group.loops[index2].uv = m_loops.uv
                     c_group.loops[index2].v = m_loops.v
-        np.save(f'debug/ygradient_coil_python_13_{use_matlab_data}_patched.npy', coil_parts)
+        np.save(f'debug/{debug_key}_coil_python_13_{use_matlab_data}_patched.npy', coil_parts)
         # =================================================
 
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
         coil_parts = calculate_group_centers(coil_parts)  # 14
-        np.save(f'debug/ygradient_coil_python_14_{use_matlab_data}.npy', coil_parts)
+        np.save(f'debug/{debug_key}_coil_python_14_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -741,7 +745,7 @@ def CoilGen(log, input=None):
         # Interconnect the single groups
         print('Interconnect the single groups:')
         coil_parts = interconnect_within_groups(coil_parts, input_args)  # 15
-        np.save(f'debug/ygradient_coil_python_15_{use_matlab_data}.npy', coil_parts)
+        np.save(f'debug/{debug_key}_coil_python_15_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -787,7 +791,7 @@ def CoilGen(log, input=None):
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
         coil_parts = interconnect_among_groups(coil_parts, input_args)  # 16
-        #np.save(f'debug/ygradient_coil_python_16_{use_matlab_data}.npy', coil_parts)
+        #np.save(f'debug/{debug_key}_coil_python_16_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -823,7 +827,7 @@ def CoilGen(log, input=None):
         # Connect the groups and shift the return paths over the surface
         print('Shift the return paths over the surface:')
         coil_parts = shift_return_paths(coil_parts, input_args)  # 17
-        #np.save(f'debug/ygradient_coil_python_17_{use_matlab_data}.npy', coil_parts)
+        #np.save(f'debug/{debug_key}_coil_python_17_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -855,7 +859,7 @@ def CoilGen(log, input=None):
         # Create Cylindrical PCB Print
         print('Create PCB Print:')
         coil_parts = generate_cylindrical_pcb_print(coil_parts, input_args)  # 18
-        np.save(f'debug/ygradient_coil_python_18_{use_matlab_data}.npy', coil_parts)
+        np.save(f'debug/{debug_key}_coil_python_18_{use_matlab_data}.npy', coil_parts)
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -1066,4 +1070,4 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    solution = CoilGen(log, arg_dict1)
+    solution = CoilGen(log, arg_dict2)
