@@ -27,7 +27,7 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
 
     face_group = np.zeros((faces.shape[0]), dtype=np.int32)
     mesh_id = 1  # Initialize the mesh ID
-    vert_group =[set()]
+    vert_groups =[set()]
 
     changed = True
     while changed:
@@ -39,7 +39,7 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
             # If any vertex of face is in the current vertex group, add this face to the current face_group, etc.
             if face_group[face_index] == 0:
                 for vertex in face:
-                    if len(vert_group[mesh_id-1]) == 0 or vertex in vert_group[mesh_id-1]:
+                    if len(vert_groups[mesh_id-1]) == 0 or vertex in vert_groups[mesh_id-1]:
                         log.debug("Group: %d => Adding Face %d,  %s", mesh_id, face_index, face)
                         changed = True
                         break
@@ -47,7 +47,7 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
             if changed:
                 # Add vertices to list
                 for vertex in face:
-                    vert_group[mesh_id-1].add(vertex)
+                    vert_groups[mesh_id-1].add(vertex)
                 # Mark this face as processed
                 face_group[face_index] = mesh_id
 
@@ -55,16 +55,19 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
         if changed == False and np.any(face_group == 0):
             log.debug("Starting new group: %d", mesh_id+1)
             mesh_id += 1
-            vert_group.append(set())
+            vert_groups.append(set())
             changed = True
 
     # Having found all the vert_groups, now check for vert_group intersections and merge such groups
     changed = True
     while changed:
         changed = False
-        for index1, group1 in enumerate(vert_group):
-            for index2 in range(index1+1, len(vert_group)):
-                group2 = vert_group[index2]
+        for index1, group1 in enumerate(vert_groups):
+            # DEBUG
+            if 4 in group1:
+                log.debug(" 4 is here")
+            for index2 in range(len(vert_groups)-1, index1, -1):
+                group2 = vert_groups[index2]
                 if len(group1.intersection(group2)) > 0:
                     log.debug("Found intersection between groups %d and %d, merging", index1, index2)
                     group1 = group1.union(group2)
@@ -74,8 +77,8 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
                     group1_id = face_group[which] # ??
                     face_group[list(group2)] = group1_id
                     # Remove group2 from vert_group
-                    vert_group.pop(index2)
-                    break
+                    vert_groups.pop(index2)
+                    #break
             if changed:
                 break
 
