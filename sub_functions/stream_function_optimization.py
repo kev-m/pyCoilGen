@@ -283,8 +283,7 @@ def reduce_matrices_for_boundary_nodes(full_mat, coil_mesh, set_zero_flag):
                     Index1[dim_to_reduce_ind] = boundary_nodes[boundary_ind][0]
                     Index2 = [slice(None)] * np.ndim(full_mat)
                     Index2[dim_to_reduce_ind] = boundary_nodes[boundary_ind]  # [:-1]
-                    #reduced_mat[tuple(Index1)] = np.sum(tuple(reduced_mat[tuple(Index2)]), axis=dim_to_reduce_ind)
-                    reduced_mat[Index1] = np.sum(tuple(reduced_mat[Index2]), axis=dim_to_reduce_ind)
+                    reduced_mat[tuple(Index1)] = np.sum(tuple(reduced_mat[tuple(Index2)]), axis=dim_to_reduce_ind)
 
         boundary_nodes_first_inds = [
             boundary_nodes[x][0] for x in range(num_boundaries)
@@ -343,5 +342,5 @@ def reexpand_stream_function_for_boundary_nodes(reduced_sf, boundary_nodes, is_n
 
     # Assign the stream function values for the non-boundary nodes
     sf[is_not_boundary_node] = reduced_sf[len(boundary_nodes):]
-
+    # ValueError: shape mismatch: value array of shape (1928,) could not be broadcast to indexing result of shape (1954,)
     return sf
