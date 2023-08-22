@@ -134,6 +134,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         sensitivity_matrix_single, combined_mesh, set_zero_flag
     )
 
+    """
     reduced_gradient_sensitivity_matrix_x, _, _ = reduce_matrices_for_boundary_nodes(
         gradient_sensitivity_matrix[0], combined_mesh, set_zero_flag)
     reduced_gradient_sensitivity_matrix_y, _, _ = reduce_matrices_for_boundary_nodes(
@@ -153,6 +154,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     red_current_density_mat_w, _, _ = reduce_matrices_for_boundary_nodes(
         current_density_mat[:, :, 2].T, combined_mesh, set_zero_flag
     )
+    """
 
     # Scale the tikonov regularization factor with the number of target points and mesh vertices
     tikonov_reg_factor = tikonov_reg_factor * (
