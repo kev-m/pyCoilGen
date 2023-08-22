@@ -27,75 +27,68 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
 
     face_group = np.zeros((faces.shape[0]), dtype=np.int32)
     mesh_id = 1  # Initialize the mesh ID
-    vert_groups =[set()]
+    vert_groups = {mesh_id: set()}
 
     changed = True
     while changed:
         for face_index, face in enumerate(faces):
             changed = False
             # Debug
-            ## if face_index == 39:
-            ##    log.debug("Start now!")
+            # if face_index == 39:
+            # log.debug("Start now!")
             # If any vertex of face is in the current vertex group, add this face to the current face_group, etc.
             if face_group[face_index] == 0:
                 for vertex in face:
-                    if len(vert_groups[mesh_id-1]) == 0 or vertex in vert_groups[mesh_id-1]:
-                        log.debug("Group: %d => Adding Face %d,  %s", mesh_id, face_index, face)
+                    if len(vert_groups[mesh_id]) == 0 or vertex in vert_groups[mesh_id]:
                         changed = True
                         break
 
             if changed:
                 # Add vertices to list
                 for vertex in face:
-                    vert_groups[mesh_id-1].add(vertex)
+                    vert_groups[mesh_id].add(vertex)
                 # Mark this face as processed
                 face_group[face_index] = mesh_id
 
-
         if changed == False and np.any(face_group == 0):
-            log.debug("Starting new group: %d", mesh_id+1)
             mesh_id += 1
-            vert_groups.append(set())
+            vert_groups[mesh_id] = set()
             changed = True
 
     # Having found all the vert_groups, now check for vert_group intersections and merge such groups
     changed = True
     while changed:
         changed = False
-        for index1, group1 in enumerate(vert_groups):
-            # DEBUG
-            if 4 in group1:
-                log.debug(" 4 is here")
-            for index2 in range(len(vert_groups)-1, index1, -1):
+        for index1, group1 in vert_groups.items():
+            # for index2 in range(len(vert_groups)-1, index1, -1):
+            for index2, group2 in vert_groups.items():
+                if index1 == index2:
+                    continue
                 group2 = vert_groups[index2]
                 if len(group1.intersection(group2)) > 0:
-                    log.debug("Found intersection between groups %d and %d, merging", index1, index2)
-                    group1 = group1.union(group2)
+                    group1 |= group2  # Merge in place, to also update the vert_groups entry!
                     changed = True
-                    # Assign all faces to index1
-                    which = next(iter(group1))
-                    group1_id = face_group[which] # ??
-                    face_group[list(group2)] = group1_id
+
+                    # Assign all faces of group2 (index2) to group1 (index1)
+                    face_group[face_group == index2] = index1
+
                     # Remove group2 from vert_group
-                    vert_groups.pop(index2)
-                    #break
+                    del vert_groups[index2]
+                    break
             if changed:
                 break
-
-
 
     # Initialize a list to store the split mesh parts
     coil_parts = []
     # Create parts based on the discovered groups
-    num_vert_groups = mesh_id
-    for current_group in range(1, num_vert_groups + 1):
+    for mesh_id, mesh_group in vert_groups.items():
         # Extract the faces of "this" group.
-        group_vert_faces = face_group.flatten() == current_group
+        group_vert_faces = face_group.flatten() == mesh_id
         faces_of_group = faces[group_vert_faces, :]
 
         # Extract the unique faces
-        sortedUniqueFaces, unique_indices = np.unique(faces_of_group, return_inverse=True, axis=0)
-        face_min = np.min(sortedUniqueFaces[0]) # Lowest vertex ID
+        sortedUniqueFaces, unique_indices = np.unique(faces_of_group, return_index=True, axis=0)
+        face_min = np.min(sortedUniqueFaces[0])  # Lowest vertex ID
         group_indices = np.sort(unique_indices)  # Don't change the original order
         uniqueFaces = faces_of_group[group_indices]
 
@@ -104,6 +97,20 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
         # Now extract the used vertex indices from the unique faces.
         uniqueVertIndices = np.unique(sortedUniqueFaces.flatten(), axis=0)
         uniqueVerts = vertices_in[uniqueVertIndices, :]
+
+        if np.max(sortedUniqueFaces)-face_min >= len(uniqueVerts):
+            # The unique_indices has gaps. The 'faces' array contains IDs that are larger than the number of vertices.
+            # Thus the mesh is invalid.
+            log.debug("Faces need be adjusted")
+
+            true_index = 0
+            for apparent_index in uniqueVertIndices:
+                if apparent_index != true_index:
+                    uniqueFaces[uniqueFaces == apparent_index] = true_index
+
+                true_index += 1
+
+            face_min = 0
 
         # Create the new Mesh and add it to the coil_parts list.
         coil_mesh = Mesh(faces=uniqueFaces-face_min, vertices=uniqueVerts)
