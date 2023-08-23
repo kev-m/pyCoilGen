@@ -20,6 +20,13 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     """
     Performs stream function optimization on coil parts.
 
+    Initialises the following properties of a CoilPart:
+        - current_density: (3, m, num vertices)
+        - stream_function: ()
+
+    Updates the following properties of a CoilPart:
+        - None
+
     Args:
         coil_parts (List[CoilPart]): List of coil parts.
         target_field: Target field.
@@ -43,7 +50,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         coil_part = coil_parts[part_ind]
         if part_ind == 0:
             resistance_matrix = coil_part.resistance_matrix     # 1: 264,264,   2:
-            current_density_mat = coil_part.current_density_mat  # 1: 264,480,3  2: 1089,2048,3
+            current_density_mat = coil_part.current_density_mat # 1: 264,480,3  2: 1089,2048,3
             sensitivity_matrix = coil_part.sensitivity_matrix   # 1: 3,257,264  2:
             gradient_sensitivity_matrix = sensitivity_matrix    # 1: 3,257,264  2:
         else:
@@ -268,7 +275,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     # Separate the optimized stream function again onto the different mesh parts
     for part_ind in range(len(coil_parts)):
         coil_part = coil_parts[part_ind]
-        coil_part.stream_function = opt_stream_func[(combined_mesh.mesh_part_vertex_ind == (part_ind+1))[0]]
+        coil_part.stream_function = opt_stream_func[(combined_mesh.mesh_part_vertex_ind == (part_ind+1))[0]] # DEBUG_003!
         # ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 289 is different from 578)
         jx = coil_part.stream_function @ coil_parts[part_ind].current_density_mat[:, :, 0]
         jy = coil_part.stream_function @ coil_parts[part_ind].current_density_mat[:, :, 1]
