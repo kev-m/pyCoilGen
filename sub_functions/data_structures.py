@@ -498,20 +498,22 @@ class PCBTrack():
 @dataclass
 class CoilPart:
     coil_mesh: Mesh = None
-    basis_elements: List[BasisElement] = None   # (calculate_basis_functions)
-    is_real_triangle_mat: np.ndarray = None     # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
+    one_ring_list: np.ndarray = None        # (calculate_one_ring_by_mesh) (num_vertices,variable) Python shape
+    node_triangles: np.ndarray = None       # (calculate_one_ring_by_mesh) (num_vertices,variable)
+    node_triangle_mat: np.ndarray = None    # Integer (calculate_one_ring_by_mesh) (num_vertices,num_faces)
+    basis_elements: List[BasisElement] = None# (calculate_basis_functions)
+    is_real_triangle_mat: np.ndarray = None # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
     triangle_corner_coord_mat: np.ndarray = None# Integer (calculate_basis_functions) (num_vertices,var,3,3) MATLAB shape
     current_mat: np.ndarray = None          # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
     area_mat: np.ndarray = None             # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
     face_normal_mat: np.ndarray = None      # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
     current_density_mat: np.ndarray = None  # (calculate_basis_functions) (num_vertices, num_faces, 3)
-    resistance_matrix: np.ndarray = None    # (calculate_resistance_matrix) (num_vertices, num_vertices)
     sensitivity_matrix: np.ndarray = None   # (calculate_sensitivity_matrix) (3, target field, num basis)
-    one_ring_list: np.ndarray = None        # (calculate_one_ring_by_mesh) (num_vertices,variable) Python shape
-    node_triangles: np.ndarray = None       # (calculate_one_ring_by_mesh) (num_vertices,variable)
-    node_triangle_mat: np.ndarray = None    # Integer (calculate_one_ring_by_mesh) (num_vertices,num_faces)
-    raw: RawPart = None
-    contour_lines: List[ContourLine] = None
+    resistance_matrix: np.ndarray = None    # (calculate_resistance_matrix) (num_vertices, num_vertices)
+    current_density: np.ndarray = None      # (stream_function_optimization) (3, n, num_vertices)
+    stream_function: np.ndarray = None      # (stream_function_optimization) (?,?)
+    raw: RawPart = None                     # (calc_contours_by_triangular_potential_cuts)
+    contour_lines: List[ContourLine] = None # (process_raw_loops)
     potential_level_list: np.ndarray = None # Placeholder (calc_potential_levels) (???)
     contour_step: float = None              # Placeholder (calc_potential_levels) (???)
     field_by_loops: np.ndarray = None       # Placeholder (evaluate_loop_significance in process_raw_loops)
