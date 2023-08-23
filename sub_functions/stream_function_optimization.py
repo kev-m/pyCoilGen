@@ -85,7 +85,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
 
     # Generate a combined mesh container
     c_mesh = coil_parts[0].coil_mesh
-    combined_mesh_part_vertex_ind = np.ones((1, c_mesh.get_vertices().shape[0]), dtype=int)
+    combined_mesh_part_vertex_ind = np.ones((c_mesh.get_vertices().shape[0]), dtype=int)
     combined_boundary = c_mesh.boundary.copy()
 
     combined_faces = c_mesh.get_faces()
@@ -107,7 +107,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         combined_mesh_part_vertex_ind = np.concatenate(
             [
                 combined_mesh_part_vertex_ind,
-                np.ones((1, coil_mesh.get_vertices().shape[0])) * (part_ind+1),
+                np.ones((coil_mesh.get_vertices().shape[0]), dtype=int) * (part_ind+1),
             ],
             axis=0,
         )
@@ -115,16 +115,13 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         # Compute combined boundary DEBUG_003
         # m_debug_out.combined_mesh.boundary
         # Cylinder: (2, [25 and 25]) 
-        # BiPlanar: (2, [65 and 65]) 
-        HERE!!
+        # BiPlanar: (2, [65 and 65])         
         c_boundary = coil_mesh.boundary # (1,65) or (2,25)
-        old_len = len(combined_boundary)
-        new_boundary_ind = np.zeros((1, len(combined_boundary)+len(c_boundary)), dtype=object)
-        new_boundary_ind[0, :old_len] = combined_boundary[0] # DEBUG_003: Here, it shows up here!!
+        offset = combined_vertices.shape[0]
         for boundary_ind in range(len(c_boundary)):
-            add_len = combined_vertices.shape[0]
-            new_boundary_ind[old_len+boundary_ind] = [x + add_len for x in c_boundary[boundary_ind]]
-        combined_boundary = new_boundary_ind
+            combined_boundary = np.append(combined_boundary, [None])
+            new_array = coil_mesh.boundary[boundary_ind]+offset
+            combined_boundary[-1] = new_array
 
         combined_vertices = np.concatenate([combined_vertices, coil_mesh.get_vertices()], axis=0)
 
@@ -292,7 +289,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     # Separate the optimized stream function again onto the different mesh parts
     for part_ind in range(len(coil_parts)):
         coil_part = coil_parts[part_ind]
-        coil_part.stream_function = opt_stream_func[(combined_mesh.mesh_part_vertex_ind == (part_ind+1))[0]] # DEBUG_003!
+        coil_part.stream_function = opt_stream_func[(combined_mesh.mesh_part_vertex_ind == (part_ind+1))] # DEBUG_003!
         # ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 289 is different from 578)
         jx = coil_part.stream_function @ coil_parts[part_ind].current_density_mat[:, :, 0]
         jy = coil_part.stream_function @ coil_parts[part_ind].current_density_mat[:, :, 1]
