@@ -73,7 +73,10 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     #######################################
     # DEBUG: Verifications
     if m_debug is not None:
-        m_c_part = m_debug.coil_parts[0]
+        if isinstance(m_debug.coil_parts, np.ndarray):
+            m_c_part = m_debug.coil_parts[0]
+        else:
+            m_c_part = m_debug.coil_parts
         m_debug_out = m_c_part.stream_function_optimization
         assert compare(sensitivity_matrix, m_debug_out.sensitivity_matrix)
         assert compare(resistance_matrix, m_debug_out.resistance_matrix)
@@ -82,7 +85,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
 
     # Generate a combined mesh container
     c_mesh = coil_parts[0].coil_mesh
-    combined_mesh_part_vertex_ind = np.ones((c_mesh.get_vertices().shape[0]), dtype=int)
+    combined_mesh_part_vertex_ind = np.ones((1, c_mesh.get_vertices().shape[0]), dtype=int)
     combined_boundary = c_mesh.boundary.copy()
 
     combined_faces = c_mesh.get_faces()
@@ -97,19 +100,27 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         )
         combined_n = np.concatenate([combined_n, coil_mesh.n], axis=0)
         combined_uv = np.concatenate((combined_uv, coil_mesh.uv))
+
+        # m_debug_out.combined_mesh.mesh_part_vertex_ind
+        # Cylinder: (264,) all = 1
+        # BiPlanar: (578,) 1st half = 1, 2nd half = 2
         combined_mesh_part_vertex_ind = np.concatenate(
             [
                 combined_mesh_part_vertex_ind,
-                np.ones((coil_mesh.get_vertices().shape[0])) * (part_ind+1),
+                np.ones((1, coil_mesh.get_vertices().shape[0])) * (part_ind+1),
             ],
             axis=0,
         )
 
         # Compute combined boundary DEBUG_003
-        c_boundary = coil_mesh.boundary # (1,65)
+        # m_debug_out.combined_mesh.boundary
+        # Cylinder: (2, [25 and 25]) 
+        # BiPlanar: (2, [65 and 65]) 
+        HERE!!
+        c_boundary = coil_mesh.boundary # (1,65) or (2,25)
         old_len = len(combined_boundary)
-        new_boundary_ind = np.zeros((len(combined_boundary)+len(c_boundary)), dtype=object)
-        new_boundary_ind[:old_len] = combined_boundary # DEBUG_003: Here, it shows up here!!
+        new_boundary_ind = np.zeros((1, len(combined_boundary)+len(c_boundary)), dtype=object)
+        new_boundary_ind[0, :old_len] = combined_boundary[0] # DEBUG_003: Here, it shows up here!!
         for boundary_ind in range(len(c_boundary)):
             add_len = combined_vertices.shape[0]
             new_boundary_ind[old_len+boundary_ind] = [x + add_len for x in c_boundary[boundary_ind]]
@@ -124,13 +135,11 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
             [np.min(combined_vertices[:, 2]), np.max(combined_vertices[:, 2])],
         )
     )
-    #combined_bounding_box = combined_bounding_box.reshape(combined_vertices.shape[0])
-
 
     combined_mesh = DataStructure(vertices=combined_vertices, faces=combined_faces)
     combined_mesh.uv = combined_uv
     combined_mesh.n = combined_n
-    combined_mesh.boundary = combined_boundary # Cylinder: (2,25), BiPlanar()
+    combined_mesh.boundary = combined_boundary # Cylinder: (2,25), BiPlanar(2,[65 and 65])
     combined_mesh.bounding_box = combined_bounding_box
     combined_mesh.mesh_part_vertex_ind = combined_mesh_part_vertex_ind
 
@@ -138,7 +147,11 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     #######################################
     # DEBUG: Verifications
     if m_debug is not None:
-        m_c_part = m_debug.coil_parts[0]
+        if isinstance(m_debug.coil_parts, np.ndarray):
+            m_c_part = m_debug.coil_parts[0]
+        else:
+            m_c_part = m_debug.coil_parts
+
         m_debug_out = m_c_part.stream_function_optimization
         assert compare(sensitivity_matrix, m_debug_out.sensitivity_matrix)
         assert compare(resistance_matrix, m_debug_out.resistance_matrix)
@@ -177,7 +190,11 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     #######################################
     # DEBUG: Verifications
     if m_debug is not None:
-        m_c_part = m_debug.coil_parts[0]
+        if isinstance(m_debug.coil_parts, np.ndarray):
+            m_c_part = m_debug.coil_parts[0]
+        else:
+            m_c_part = m_debug.coil_parts
+
         m_debug_out = m_c_part.stream_function_optimization
         for index, m_boundary in enumerate(m_debug_out.boundary_nodes1):
             p_boundary = boundary_nodes[index]
