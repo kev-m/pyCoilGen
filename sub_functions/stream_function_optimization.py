@@ -98,11 +98,11 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
             axis=0,
         )
 
-        # Compute combined boundary
-        c_boundary = coil_mesh.boundary
+        # Compute combined boundary DEBUG_003
+        c_boundary = coil_mesh.boundary # (1,65)
         old_len = len(combined_boundary)
         new_boundary_ind = np.zeros((len(combined_boundary)+len(c_boundary)), dtype=object)
-        new_boundary_ind[:old_len] = combined_boundary
+        new_boundary_ind[:old_len] = combined_boundary # DEBUG_003: Here, it shows up here!!
         for boundary_ind in range(len(c_boundary)):
             add_len = combined_vertices.shape[0]
             new_boundary_ind[old_len+boundary_ind] = [x + add_len for x in c_boundary[boundary_ind]]
@@ -123,7 +123,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     combined_mesh = DataStructure(vertices=combined_vertices, faces=combined_faces)
     combined_mesh.uv = combined_uv
     combined_mesh.n = combined_n
-    combined_mesh.boundary = combined_boundary
+    combined_mesh.boundary = combined_boundary # Cylinder: (2,25), BiPlanar()
     combined_mesh.bounding_box = combined_bounding_box
     combined_mesh.mesh_part_vertex_ind = combined_mesh_part_vertex_ind
 
