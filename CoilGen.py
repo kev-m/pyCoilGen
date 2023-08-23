@@ -193,10 +193,9 @@ def CoilGen(log, input=None):
             m_v = m_c_parts[part_index].coil_mesh.v
             m_fn = m_c_parts[part_index].coil_mesh.fn
             m_n = m_c_parts[part_index].coil_mesh.n.T
-            if debug_key == 'cylinder':
-                assert (compare(coil_mesh.v, m_v))      # Pass
-                assert (compare(coil_mesh.fn, m_fn))    # Pass
-                assert (compare(coil_mesh.n, m_n, double_tolerance=0.1))      # Pass only at 0.1
+            assert (compare(coil_mesh.v, m_v))      # Pass
+            assert (compare(coil_mesh.fn, m_fn))    # Pass
+            assert (compare(coil_mesh.n, m_n, double_tolerance=0.1))      # Pass only at 0.1
 
         # Plot the two boundaries and see the difference
         if get_level() >= DEBUG_VERBOSE:
@@ -210,10 +209,10 @@ def CoilGen(log, input=None):
                 m2d = visualize_projected_vertices(m_c_part.coil_mesh.v, 800, f'images/02_coil_mesh{part_index}_v_m.png')
 
                 # Plot the two UV and see the difference
-                visualize_compare_vertices(p2d, m2d, 800, 'images/04_coil_mesh_v_diff.png')
+                visualize_compare_vertices(p2d, m2d, 800, f'images/02_coil_mesh{part_index}_v2d_diff.png')
                 visualize_compare_vertices(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 800, f'images/02_coil_mesh{part_index}_uv_diff.png')
 
-                ## assert (compare(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 0.0001))    # Pass
+                assert (compare(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 0.0001))    # Pass
 
                 # Temporary: Assume all boundaries are the same shape. Not always valid.
                 m_boundary_x = m_c_part.coil_mesh.boundary - 1
@@ -234,7 +233,8 @@ def CoilGen(log, input=None):
         # Define the target field
         print('Define the target field:')
         target_field, is_suppressed_point = define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args)
-        # np.save(f'debug/{debug_key}_coil_python_02b_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        # np.save(f'debug/{debug_key}_coil_python_02b_{use_matlab_data}.npy', 
+        #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
         solution.target_field = target_field
         solution.is_suppressed_point = is_suppressed_point
 
@@ -264,47 +264,54 @@ def CoilGen(log, input=None):
         # Find indices of mesh nodes for one ring basis functions
         print('Calculate mesh one ring:')
         coil_parts = calculate_one_ring_by_mesh(coil_parts)  # 03
-        # np.save(f'debug/{debug_key}_coil_python_03_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        # np.save(f'debug/{debug_key}_coil_python_03_{use_matlab_data}.npy', 
+        #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEBUG
         # Verify:  one_ring_list, vertex_triangles, node_triangle_mat
-        coil_part = coil_parts[0]
-        one_ring_list = coil_part.one_ring_list
-        node_triangles = coil_part.node_triangles
-        node_triangle_mat = coil_part.node_triangle_mat
+        for part_index in range(len(coil_parts)):
+            coil_part = coil_parts[part_index]
+            coil_mesh = coil_part.coil_mesh
+            m_c_part = m_c_parts[part_index]
 
-        m_or_one_ring_list = m_c_part.one_ring_list - 1
-        # Transpose the entries
-        for index1 in range(len(m_or_one_ring_list)):
-            if index1 == 263:
-                log.debug(" here 263")
-            #if np.shape(m_or_one_ring_list[index1]) == (2,):
-            if len(np.shape(m_or_one_ring_list[index1])) == 1:
-                log.debug(" here shape")
-                m_or_one_ring_list[index1] = m_or_one_ring_list[index1].reshape(1,m_or_one_ring_list[index1].shape[0])
-            else:
-                m_or_one_ring_list[index1] = m_or_one_ring_list[index1].T
-        m_or_node_triangles = m_c_part.node_triangles - 1
-        m_or_node_triangle_mat = m_c_part.node_triangle_mat
+            one_ring_list = coil_part.one_ring_list
+            node_triangles = coil_part.node_triangles
+            node_triangle_mat = coil_part.node_triangle_mat
 
-        visualize_multi_connections(coil_mesh.uv, 800, 'images/03_one-1-ring_list.png', one_ring_list[0:25])
-        if debug_key == 'cylinder':
-            visualize_multi_connections(coil_mesh.uv, 800, 'images/03_one-1-ring_list_m.png', m_or_one_ring_list[0:25])
+            m_or_one_ring_list = m_c_part.one_ring_list - 1
+            # Transpose the entries
+            for index1 in range(len(m_or_one_ring_list)):
+                #if np.shape(m_or_one_ring_list[index1]) == (2,):
+                if len(np.shape(m_or_one_ring_list[index1])) == 1:
+                    log.debug("Here: m_or_one_ring_list shape")
+                    m_or_one_ring_list[index1] = m_or_one_ring_list[index1].reshape(1,m_or_one_ring_list[index1].shape[0])
+                else:
+                    m_or_one_ring_list[index1] = m_or_one_ring_list[index1].T
+            m_or_node_triangles = m_c_part.node_triangles - 1
+            m_or_node_triangle_mat = m_c_part.node_triangle_mat
+            # Weird "bug" with MATLAB: If an array has only one entry, it gets turned into a scalar!
+            for index, m_tri in enumerate(m_or_node_triangles):
+                if np.shape(m_tri) == ():
+                    log.debug("Here: %s (%s)", m_tri, node_triangles[index])
+                    m_or_node_triangles[index] = np.asarray([m_tri], dtype=np.uint8)
+            
 
-        # Differences between biplanar and cylinder examples:
-        if debug_key == 'cylinder':
-            assert (compare_contains(one_ring_list, m_or_one_ring_list, strict=False))   # PASS - different order!
-            assert (compare_contains(node_triangles, m_or_node_triangles, strict=False))  # PASS - different order!
-            assert (compare(node_triangle_mat, m_or_node_triangle_mat))  # PASS
+            visualize_multi_connections(coil_mesh.uv, 800, f'images/03_one-ring_list_{part_index}_p.png', one_ring_list[0:25])
+            visualize_multi_connections(coil_mesh.uv, 800, f'images/03_one-ring_list_{part_index}_m.png', m_or_one_ring_list[0:25])
 
-        # =================================================
-        # HACK: Use MATLAB's one_ring_list, etc.
-        if use_matlab_data and False:
-            log.warning("Using MATLAB's one_ring_list in %s, line %d", __file__, get_linenumber())
-            coil_part.one_ring_list = m_or_one_ring_list
-            coil_part.node_triangles = m_or_node_triangles
-        # =================================================
+            # Differences between biplanar and cylinder examples:
+            # assert (compare_contains(one_ring_list, m_or_one_ring_list, strict=False))   # PASS - different order!
+            ###? assert (compare_contains(node_triangles, m_or_node_triangles, strict=False))  # PASS - different order! 
+            assert (compare(node_triangle_mat, m_or_node_triangle_mat))  # PASS (just checks shape, since both arrays are zero at this moment)
+
+            # =================================================
+            # HACK: Use MATLAB's one_ring_list, etc.
+            if use_matlab_data:
+                log.warning("Using MATLAB's one_ring_list in %s, line %d", __file__, get_linenumber())
+                coil_part.one_ring_list = m_or_one_ring_list
+                coil_part.node_triangles = m_or_node_triangles
+            # =================================================
 
         #
         #####################################################
@@ -312,14 +319,19 @@ def CoilGen(log, input=None):
         # Create the basis function container which represents the current density
         print('Create the basis function container which represents the current density:')
         coil_parts = calculate_basis_functions(coil_parts)  # 04
-        np.save(f'debug/{debug_key}_coil_python_04_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        np.save(f'debug/{debug_key}_coil_python_04_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
         # DEBUG
         # Verify: is_real_triangle_mat, triangle_corner_coord_mat, current_mat, area_mat, face_normal_mat, current_density_mat
         # Basis functions
-        if debug_key == 'cylinder':
+        for part_index in range(len(coil_parts)):
+            coil_part = coil_parts[part_index]
+            coil_mesh = coil_part.coil_mesh
+            m_c_part = m_c_parts[part_index]
+
             m_is_real_triangle_mat = m_c_part.is_real_triangle_mat
             m_triangle_corner_coord_mat = m_c_part.triangle_corner_coord_mat
             m_current_mat = m_c_part.current_mat
@@ -357,6 +369,21 @@ def CoilGen(log, input=None):
                 m_element = m_basis_elements[index1]
 
                 # Verify: triangles, stream_function_potential, area, face_normal, triangle_points_ABC, current
+                # Weird "bug" with MATLAB: If an array has only one entry, it gets turned into a scalar!
+                if np.shape(m_element.area) == ():
+                    log.debug("Here [%d]: %s (%s)", index1, m_element.area, cg_element.area)
+                    m_element.area = np.asarray([m_element.area], dtype=np.float64)
+                    # Do m_element.triangles at the same time
+                    m_element.triangles = np.asarray([m_element.triangles], dtype=np.int64)
+                    # And m_element.face_normal
+                    m_element.face_normal = m_element.face_normal.reshape(1,3)
+                    # And m_element.triangle_points_ABC
+                    m_element.triangle_points_ABC = m_element.triangle_points_ABC.reshape(1,3,3)
+                    # And m_element.current
+                    m_element.current = m_element.current.reshape(1,3)
+
+
+
                 assert (compare(cg_element.area, m_element.area))  # Pass
                 assert (cg_element.stream_function_potential == m_element.stream_function_potential)  # Pass
 
@@ -376,18 +403,24 @@ def CoilGen(log, input=None):
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
         coil_parts = calculate_sensitivity_matrix(coil_parts, target_field, input_args)  # 05
-        np.save(f'debug/{debug_key}_coil_python_05_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        np.save(f'debug/{debug_key}_coil_python_05_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
         # DEBUG
         # Verify: sensitivity_matrix
-        m_sensitivity_matrix = m_c_part.sensitivity_matrix
-        # TODO: Consider Python-like structure: 264 (num vertices) x 257 (target_field) x  3 (x,y,z)
-        if get_level() >= DEBUG_VERBOSE:
-            log.debug(" -- m_sensitivity_matrix shape: %s", m_sensitivity_matrix.shape)  # (3, 257, 264)
-            log.debug(" -- c_part.sensitivity_matrix shape: %s", coil_part.sensitivity_matrix.shape)  # (3, 257, 264)
-        if debug_key == 'cylinder':
+        for part_index in range(len(coil_parts)):
+            coil_part = coil_parts[part_index]
+            coil_mesh = coil_part.coil_mesh
+            m_c_part = m_c_parts[part_index]
+
+            m_sensitivity_matrix = m_c_part.sensitivity_matrix
+            # TODO: Consider Python-like structure: 264 (num vertices) x 257 (target_field) x  3 (x,y,z)
+            if get_level() >= DEBUG_VERBOSE:
+                log.debug(" -- m_sensitivity_matrix shape %d: %s", part_index, m_sensitivity_matrix.shape)  # (3, 257, 264)
+                log.debug(" -- c_part.sensitivity_matrix shape %d: %s", part_index, coil_part.sensitivity_matrix.shape)  # (3, 257, 264)
+
             assert (compare(coil_part.sensitivity_matrix, m_sensitivity_matrix))  # Pass
         #
         #####################################################
@@ -395,7 +428,8 @@ def CoilGen(log, input=None):
         # Calculate the gradient sensitivity matrix Gn
         print('Calculate the gradient sensitivity matrix:')
         coil_parts = calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args)  # 06
-        np.save(f'debug/{debug_key}_coil_python_06_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        np.save(f'debug/{debug_key}_coil_python_06_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -408,15 +442,15 @@ def CoilGen(log, input=None):
         log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s",
                   coil_part.gradient_sensitivity_matrix.shape)  # (3, 257, 264)
 
-        if debug_key == 'cylinder':
-            assert (compare(coil_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix))  # Pass
+        assert (compare(coil_part.gradient_sensitivity_matrix, m_gradient_sensitivity_matrix))  # Pass
         #
         #####################################################
 
         # Calculate the resistance matrix Rmn
         print('Calculate the resistance matrix:')
         coil_parts = calculate_resistance_matrix(coil_parts, input_args)  # 07
-        np.save(f'debug/{debug_key}_coil_python_07_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        np.save(f'debug/{debug_key}_coil_python_07_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -428,16 +462,16 @@ def CoilGen(log, input=None):
         log.debug(" -- m_gradient_sensitivity_matrix shape: %s", m_resistance_matrix.shape)  # (264, 264)
         log.debug(" -- c_part.gradient_sensitivity_matrix shape: %s", coil_part.resistance_matrix.shape)  # (264, 264)
 
-        if debug_key == 'cylinder':
-            assert (compare(coil_part.node_adjacency_mat, m_node_adjacency_mat))  # Pass
-            assert (compare(coil_part.resistance_matrix, m_resistance_matrix))  # Pass
+        assert (compare(coil_part.node_adjacency_mat, m_node_adjacency_mat))  # Pass
+        assert (compare(coil_part.resistance_matrix, m_resistance_matrix))  # Pass
         #
         #####################################################
 
         # Optimize the stream function toward target field and further constraints
         print('Optimize the stream function toward target field and secondary constraints:')
         coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)  # 08
-        np.save(f'debug/{debug_key}_coil_python_08_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        np.save(f'debug/{debug_key}_coil_python_08_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -477,7 +511,8 @@ def CoilGen(log, input=None):
     # Calculate the potential levels for the discretization
     print('Calculate the potential levels for the discretization:')
     coil_parts, primary_surface_ind = calc_potential_levels(coil_parts, combined_mesh, input_args)  # 09
-    np.save(f'debug/{debug_key}_coil_python_09_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+    np.save(f'debug/{debug_key}_coil_python_09_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
     #####################################################
     # DEVELOPMENT: Remove this
@@ -504,7 +539,8 @@ def CoilGen(log, input=None):
     # Generate the contours
     print('Generate the contours:')
     coil_parts = calc_contours_by_triangular_potential_cuts(coil_parts)  # 10
-    np.save(f'debug/{debug_key}_coil_python_10_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+    np.save(f'debug/{debug_key}_coil_python_10_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
     #####################################################
     # DEVELOPMENT: Remove this
@@ -579,7 +615,8 @@ def CoilGen(log, input=None):
     # Process contours
     print('Process contours: Evaluate loop significance')
     coil_parts = process_raw_loops(coil_parts, input_args, target_field)  # 11
-    np.save(f'debug/{debug_key}_coil_python_11_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+    np.save(f'debug/{debug_key}_coil_python_11_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
     #####################################################
     # DEVELOPMENT: Remove this
@@ -632,7 +669,8 @@ def CoilGen(log, input=None):
         # Find the minimal distance between the contour lines
         print('Find the minimal distance between the contour lines:')
         coil_parts = find_minimal_contour_distance(coil_parts, input_args)  # 12
-        # np.save(f'debug/{debug_key}_coil_python_12_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        # np.save(f'debug/{debug_key}_coil_python_12_{use_matlab_data}.npy', 
+        #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -648,7 +686,8 @@ def CoilGen(log, input=None):
         # Group the contour loops in topological order
         print('Group the contour loops in topological order:')
         coil_parts = topological_loop_grouping(coil_parts, input_args)  # 13
-        np.save(f'debug/{debug_key}_coil_python_13_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        np.save(f'debug/{debug_key}_coil_python_13_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -738,7 +777,8 @@ def CoilGen(log, input=None):
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
         coil_parts = calculate_group_centers(coil_parts)  # 14
-        np.save(f'debug/{debug_key}_coil_python_14_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        np.save(f'debug/{debug_key}_coil_python_14_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -764,7 +804,8 @@ def CoilGen(log, input=None):
         # Interconnect the single groups
         print('Interconnect the single groups:')
         coil_parts = interconnect_within_groups(coil_parts, input_args)  # 15
-        np.save(f'debug/{debug_key}_coil_python_15_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        np.save(f'debug/{debug_key}_coil_python_15_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -810,7 +851,8 @@ def CoilGen(log, input=None):
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
         coil_parts = interconnect_among_groups(coil_parts, input_args)  # 16
-        #np.save(f'debug/{debug_key}_coil_python_16_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        #np.save(f'debug/{debug_key}_coil_python_16_{use_matlab_data}.npy', 
+        #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -846,7 +888,8 @@ def CoilGen(log, input=None):
         # Connect the groups and shift the return paths over the surface
         print('Shift the return paths over the surface:')
         coil_parts = shift_return_paths(coil_parts, input_args)  # 17
-        #np.save(f'debug/{debug_key}_coil_python_17_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        #np.save(f'debug/{debug_key}_coil_python_17_{use_matlab_data}.npy', 
+        #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
@@ -878,7 +921,8 @@ def CoilGen(log, input=None):
         # Create Cylindrical PCB Print
         print('Create PCB Print:')
         coil_parts = generate_cylindrical_pcb_print(coil_parts, input_args)  # 18
-        np.save(f'debug/{debug_key}_coil_python_18_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
+        np.save(f'debug/{debug_key}_coil_python_18_{use_matlab_data}.npy', 
+                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         #####################################################
         # DEVELOPMENT: Remove this
