@@ -89,14 +89,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 else:
                     input_vertices = mesh_vertices.copy()
 
-                # Project the vertices onto the X-Y plane:  [x,y,z] -> [x+x*z, y+y*z, 0]
-                projected_vertices[:, 0] += input_vertices[:, 0] * input_vertices[:, 2]
-                projected_vertices[:, 1] += input_vertices[:, 1] * input_vertices[:, 2]
-                projected_vertices[:, 2] = 0  # Set z-coordinate to zero (projection onto x-y plane)
-                mesh_2d = Mesh(vertices=projected_vertices, faces=mesh_faces)
-
-                # Retrieve the vertices and the boundary loops of the projected cylinder
-                boundary_loop_nodes = get_boundary_loop_nodes(mesh_2d)
+                boundary_loop_nodes = mesh_part.boundary_indices()
 
                 # MATLAB
                 opening_mean = np.mean(mesh_vertices[boundary_loop_nodes[0], :], axis=0)  # -0.0141, -0.0141, -0.75
@@ -156,7 +149,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
             if input.debug >= DEBUG_BASIC:
                 log.debug(" - mesh_part.uv shape: %s", mesh_part.uv.shape)
 
-            mesh_part.boundary = get_boundary_loop_nodes(mesh_part)
+            mesh_part.boundary = mesh_part.boundary_indices() # get_boundary_loop_nodes(mesh_part)
 
     return coil_parts
 
