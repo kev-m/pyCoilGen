@@ -215,20 +215,23 @@ def CoilGen(log, input=None):
                 assert (compare(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 0.0001))    # Pass
 
                 # Temporary: Assume all boundaries are the same shape. Not always valid.
-                m_boundary_x = m_c_part.coil_mesh.boundary - 1
-                log.debug(" m_boundary_x: %s", m_boundary_x.shape)
+                m_boundary = m_c_part.coil_mesh.boundary - 1
+                log.debug(" m_boundary_x: %s", m_boundary.shape)
+
                 #m_boundary_points = m_boundary_x[0].shape[0]
                 #m_boundary = np.ndarray((2, m_boundary_points), dtype=int)
                 #m_boundary[0] = m_boundary_x[0].reshape((m_boundary_points))
                 #m_boundary[1] = m_boundary_x[1].reshape((m_boundary_points))
 
 
+                m_boundary = m_c_part.coil_mesh.boundary - 1
+
                 if get_level() > DEBUG_VERBOSE:
                     log.debug(" m_boundary: %s", m_boundary)
                     log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
 
                 # Question: Does order matter?
-                ## assert (compare_contains(coil_mesh.boundary, m_boundary, strict=False))  # Pass
+                assert (compare_contains(coil_mesh.boundary, m_boundary, strict=False))  # Pass
 
         # Define the target field
         print('Define the target field:')
