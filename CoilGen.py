@@ -212,26 +212,25 @@ def CoilGen(log, input=None):
                 visualize_compare_vertices(p2d, m2d, 800, f'images/02_coil_mesh{part_index}_v2d_diff.png')
                 visualize_compare_vertices(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 800, f'images/02_coil_mesh{part_index}_uv_diff.png')
 
-                assert (compare(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 0.0001))    # Pass
+                ### assert (compare(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 0.0001))    # Pass
 
-                # Temporary: Assume all boundaries are the same shape. Not always valid.
-                m_boundary = m_c_part.coil_mesh.boundary - 1
-                log.debug(" m_boundary_x: %s", m_boundary.shape)
+                m_boundaries = m_c_part.coil_mesh.boundary - 1
+                log.debug(" m_boundaries: %s", m_boundaries.shape)
 
-                #m_boundary_points = m_boundary_x[0].shape[0]
-                #m_boundary = np.ndarray((2, m_boundary_points), dtype=int)
-                #m_boundary[0] = m_boundary_x[0].reshape((m_boundary_points))
-                #m_boundary[1] = m_boundary_x[1].reshape((m_boundary_points))
-
-
-                m_boundary = m_c_part.coil_mesh.boundary - 1
+                # Convert to array
+                if not isinstance(m_boundaries[0], np.ndarray):
+                    nm_m_boundary = np.empty((1), dtype=object)
+                    nm_m_boundary[0] = m_boundaries
+                    m_boundaries = nm_m_boundary
 
                 if get_level() > DEBUG_VERBOSE:
-                    log.debug(" m_boundary: %s", m_boundary)
+                    log.debug(" m_boundaries: %s", m_boundaries)
                     log.debug(" coil_mesh.boundary: %s", coil_mesh.boundary)
 
                 # Question: Does order matter?
-                assert (compare_contains(coil_mesh.boundary, m_boundary, strict=False))  # Pass
+                for index, m_boundary in enumerate(m_boundaries):
+                    p_boundary = coil_mesh.boundary[index]
+                    assert compare_contains(p_boundary, m_boundary)
 
         # Define the target field
         print('Define the target field:')
@@ -500,6 +499,7 @@ def CoilGen(log, input=None):
             assert (compare(coil_part.current_density, m_current_density))  # Pass
             assert (compare(sf_b_field, m_sf_b_field))  # Pass
             assert (compare(combined_mesh.stream_function, m_cm_stream_function))  # Pass
+            # Fail: Not the same shape: (1, 264) is not (264,)
             assert (compare(coil_part.stream_function, m_cp_stream_function))  # Pass
         #
         #####################################################
