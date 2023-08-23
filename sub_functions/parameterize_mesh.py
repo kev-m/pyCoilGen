@@ -277,4 +277,4 @@ def get_boundary_loop_nodes(mesh_part: Mesh):
     # total_elements = sum(len(sublist) for sublist in reduced_loops)
     # log.debug(" - new_loops shape: len(%s) -> %s", total_elements, reduced_loops)
 
-    return np.asarray(reduced_loops)
+    return np.asarray(reduced_loops, dtype=object)
