@@ -113,7 +113,6 @@ def CoilGen(log, input=None):
     # Target field
     # b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
     m_target_field = get_and_show_debug(matlab_data, 'out.target_field')
-    log.debug("m_target_field :%s", m_target_field._fieldnames)
     m_tf_b = m_target_field.b
     m_tf_coords = m_target_field.coords
     m_tf_weights = m_target_field.weights
@@ -235,6 +234,7 @@ def CoilGen(log, input=None):
         # Define the target field
         print('Define the target field:')
         target_field, is_suppressed_point = define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args)
+        # np.save(f'debug/{debug_key}_coil_python_02b_{use_matlab_data}.npy', [target_field, is_suppressed_point, coil_parts])
         solution.target_field = target_field
         solution.is_suppressed_point = is_suppressed_point
 
@@ -246,12 +246,15 @@ def CoilGen(log, input=None):
         #####################################################
         # Verify:  b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
         # Differences between biplanar and cylinder examples:
-        if debug_key == 'cylinder':
-            assert (compare(target_field.b, m_tf_b))               # Fail: Not the same shape: (3, 3033) is not (3, 3023) ???
-            assert (compare(target_field.weights, m_tf_weights))   # Pass
-            assert (compare(target_field.coords, m_tf_coords))     # Pass
-            assert (compare(target_field.target_field_group_inds, m_tf_target_field_group_inds))  # Pass
-            assert (compare(target_field.target_gradient_dbdxyz, m_tf_target_gradient_dbdxyz))  # Pass
+
+        #visualize_projected_vertices(target_field.b, 800, f'images/02b_target_field_p.png')
+        #visualize_projected_vertices(m_tf_b, 800, f'images/02b_target_field_p.png')
+
+        assert (compare(target_field.b, m_tf_b))               # Fail: Not the same shape: (3, 3033) is not (3, 3023) ???
+        assert (compare(target_field.weights, m_tf_weights))   # Pass
+        assert (compare(target_field.coords, m_tf_coords))     # Pass
+        assert (compare(target_field.target_field_group_inds, m_tf_target_field_group_inds))  # Pass
+        assert (compare(target_field.target_gradient_dbdxyz, m_tf_target_gradient_dbdxyz))  # Pass
         #####################################################
 
         # Evaluate the temp data; check whether precalculated values can be used from previous iterations
@@ -961,9 +964,9 @@ if __name__ == "__main__":
         "circular_mesh_parameter_list": [0.25, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         "coil_mesh_file": "bi_planer_rectangles_width_1000mm_distance_500mm.stl",
         "conductor_cross_section_height": 0.002,
-        "conductor_cross_section_width": 0.003,
+        "conductor_cross_section_width": 0.002,
         "conductor_thickness": 0.005,
-        "cross_sectional_points": [[-0.005, 0.0, 0.0004578154048673232, 0.000878541328365346, 0.0012280930583256696, 0.0014781519924510923, 0.0016084598430565155, 0.0016084598430565157, 0.0014781519924510925, 0.0012280930583256698, 0.0008785413283653464, 0.0004578154048673232, 1.990051048614449e-19, -0.005, -0.005], [0.001625, 0.001625, 0.0015591760821235582, 0.0013670369908506694, 0.0010641486926610882, 0.0006750493961280654, 0.0002312616121940883, -0.00023126161219408811, -0.0006750493961280653, -0.001064148692661088, -0.0013670369908506692, -0.0015591760821235582, -0.001625, -0.001625, 0.001625]],
+        "cross_sectional_points": [0,0],
         "cylinder_mesh_parameter_list": [0.4, 0.1125, 50, 50, 0.0, 1.0, 0.0, 0.0],
         "double_cone_mesh_parameter_list": [0.8, 0.3, 0.3, 0.1, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "field_shape_function": "x",
@@ -981,12 +984,12 @@ if __name__ == "__main__":
         "make_cylindrical_pcb": 0,
         "max_allowed_angle_within_coil_track": 120,
         "min_allowed_angle_within_coil_track": 0.0001,
-        "min_loop_significance": 3,
+        "min_loop_significance": 1,
         "min_point_loop_number": 20,
         "normal_shift_length": 0.01,
         "normal_shift_smooth_factors": [2, 3, 2],
         "output_directory": "images",
-        "pcb_interconnection_method": "regular",
+        "pcb_interconnection_method": "spiral_in_out",
         "pcb_spiral_end_shift_factor": 10,
         "planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         "plot_flag": 1,
@@ -1002,7 +1005,7 @@ if __name__ == "__main__":
         "skip_normal_shift": 0,
         "skip_postprocessing": 0,
         "skip_sweep": 0,
-        "smooth_factor": 0,
+        "smooth_factor": 1,
         "smooth_flag": 1,
         "specific_conductivity_conductor": 1.8e-8,
         "surface_is_cylinder_flag": 1,
@@ -1010,7 +1013,7 @@ if __name__ == "__main__":
         "target_field_definition_file": "none",
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
-        "target_region_radius": 0.15,
+        "target_region_radius": 0.1,
         "target_region_resolution": 5, # MATLAB From defaults, 10
         "tikonov_reg_factor": 10,
         "tiny_segment_length_percentage": 0,
