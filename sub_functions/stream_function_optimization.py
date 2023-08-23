@@ -65,10 +65,11 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
 
     #######################################
     # DEBUG: Verifications
-    m_c_part = m_debug.coil_parts[0]
-    m_debug_out = m_c_part.stream_function_optimization
-    assert compare(sensitivity_matrix, m_debug_out.sensitivity_matrix)
-    assert compare(resistance_matrix, m_debug_out.resistance_matrix)
+    if m_debug is not None:
+        m_c_part = m_debug.coil_parts[0]
+        m_debug_out = m_c_part.stream_function_optimization
+        assert compare(sensitivity_matrix, m_debug_out.sensitivity_matrix)
+        assert compare(resistance_matrix, m_debug_out.resistance_matrix)
     #
     ######################################
 
@@ -129,18 +130,19 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
 
     #######################################
     # DEBUG: Verifications
-    m_c_part = m_debug.coil_parts[0]
-    m_debug_out = m_c_part.stream_function_optimization
-    assert compare(sensitivity_matrix, m_debug_out.sensitivity_matrix)
-    assert compare(resistance_matrix, m_debug_out.resistance_matrix)
+    if m_debug is not None:
+        m_c_part = m_debug.coil_parts[0]
+        m_debug_out = m_c_part.stream_function_optimization
+        assert compare(sensitivity_matrix, m_debug_out.sensitivity_matrix)
+        assert compare(resistance_matrix, m_debug_out.resistance_matrix)
 
-    # Verify combined mesh
-    m_combined_mesh = m_debug_out.combined_mesh
-    assert compare(combined_mesh.uv, m_combined_mesh.uv.T)
-    assert compare(combined_mesh.n, m_combined_mesh.n.T, double_tolerance=2e-7)
-    assert compare(combined_mesh.bounding_box, m_combined_mesh.bounding_box)
-    assert compare(combined_mesh.mesh_part_vertex_ind, m_combined_mesh.mesh_part_vertex_ind)
-    assert compare(combined_mesh.boundary, m_combined_mesh.boundary)
+        # Verify combined mesh
+        m_combined_mesh = m_debug_out.combined_mesh
+        assert compare(combined_mesh.uv, m_combined_mesh.uv.T)
+        assert compare(combined_mesh.n, m_combined_mesh.n.T, double_tolerance=2e-7)
+        assert compare(combined_mesh.bounding_box, m_combined_mesh.bounding_box)
+        assert compare(combined_mesh.mesh_part_vertex_ind, m_combined_mesh.mesh_part_vertex_ind)
+        assert compare(combined_mesh.boundary, m_combined_mesh.boundary-1)
     #
     ######################################
 
@@ -167,10 +169,13 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
 
     #######################################
     # DEBUG: Verifications
-    m_c_part = m_debug.coil_parts[0]
-    m_debug_out = m_c_part.stream_function_optimization
-    assert compare(boundary_nodes, m_debug_out.boundary_nodes1)
-    assert compare(is_not_boundary_node, m_debug_out.is_not_boundary_node1)
+    if m_debug is not None:
+        m_c_part = m_debug.coil_parts[0]
+        m_debug_out = m_c_part.stream_function_optimization
+        for index, m_boundary in enumerate(m_debug_out.boundary_nodes1):
+            p_boundary = boundary_nodes[index]
+            assert compare(p_boundary, m_boundary-1)
+        assert compare(is_not_boundary_node, m_debug_out.is_not_boundary_node1-1)
     #
     ######################################
 
@@ -264,6 +269,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     for part_ind in range(len(coil_parts)):
         coil_part = coil_parts[part_ind]
         coil_part.stream_function = opt_stream_func[(combined_mesh.mesh_part_vertex_ind == (part_ind+1))[0]]
+        # ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 289 is different from 578)
         jx = coil_part.stream_function @ coil_parts[part_ind].current_density_mat[:, :, 0]
         jy = coil_part.stream_function @ coil_parts[part_ind].current_density_mat[:, :, 1]
         jz = coil_part.stream_function @ coil_parts[part_ind].current_density_mat[:, :, 2]
