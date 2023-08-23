@@ -13,6 +13,8 @@ from sub_functions.constants import get_level, DEBUG_VERBOSE
 
 log = logging.getLogger(__name__)
 
+# TODO: DEBUG, remove this
+from helpers.visualisation import compare
 
 def stream_function_optimization(coil_parts: List[CoilPart], target_field, input_args, m_debug=None):
     """
@@ -61,9 +63,18 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
             resistance_matrix = np.block([[resistance_matrix, np.zeros((resistance_matrix.shape[0], coil_part.resistance_matrix.shape[1]))],
                                           [np.zeros((coil_part.resistance_matrix.shape[0], resistance_matrix.shape[1])), coil_part.resistance_matrix]])
 
+    #######################################
+    # DEBUG: Verifications
+    m_c_part = m_debug.coil_parts[0]
+    m_debug_out = m_c_part.stream_function_optimization
+    assert compare(sensitivity_matrix, m_debug_out.sensitivity_matrix)
+    assert compare(resistance_matrix, m_debug_out.resistance_matrix)
+    #
+    ######################################
+
     # Generate a combined mesh container
     c_mesh = coil_parts[0].coil_mesh
-    combined_mesh_part_vertex_ind = np.ones((1, c_mesh.get_vertices().shape[0]))
+    combined_mesh_part_vertex_ind = np.ones((c_mesh.get_vertices().shape[0]), dtype=int)
     combined_boundary = c_mesh.boundary.copy()
 
     combined_faces = c_mesh.get_faces()
@@ -81,38 +92,58 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         combined_mesh_part_vertex_ind = np.concatenate(
             [
                 combined_mesh_part_vertex_ind,
-                np.ones((1, coil_mesh.get_vertices().shape[0])) * part_ind,
+                np.ones((coil_mesh.get_vertices().shape[0])) * (part_ind+1),
             ],
-            axis=1,
+            axis=0,
         )
 
+        # Compute combined boundary
         c_boundary = coil_mesh.boundary
         old_len = len(combined_boundary)
         new_boundary_ind = np.zeros((len(combined_boundary)+len(c_boundary)), dtype=object)
         new_boundary_ind[:old_len] = combined_boundary
-
         for boundary_ind in range(len(c_boundary)):
             add_len = combined_vertices.shape[0]
             new_boundary_ind[old_len+boundary_ind] = [x + add_len for x in c_boundary[boundary_ind]]
-
         combined_boundary = new_boundary_ind
+
         combined_vertices = np.concatenate([combined_vertices, coil_mesh.get_vertices()], axis=0)
 
     combined_bounding_box = np.array(
-        [
+        (
             [np.min(combined_vertices[:, 0]), np.max(combined_vertices[:, 0])],
             [np.min(combined_vertices[:, 1]), np.max(combined_vertices[:, 1])],
             [np.min(combined_vertices[:, 2]), np.max(combined_vertices[:, 2])],
-        ]
+        )
     )
+    #combined_bounding_box = combined_bounding_box.reshape(combined_vertices.shape[0])
+
 
     combined_mesh = DataStructure(vertices=combined_vertices, faces=combined_faces)
     combined_mesh.uv = combined_uv
     combined_mesh.n = combined_n
     combined_mesh.boundary = combined_boundary
     combined_mesh.bounding_box = combined_bounding_box
-    combined_mesh.n = combined_n
     combined_mesh.mesh_part_vertex_ind = combined_mesh_part_vertex_ind
+
+
+    #######################################
+    # DEBUG: Verifications
+    m_c_part = m_debug.coil_parts[0]
+    m_debug_out = m_c_part.stream_function_optimization
+    assert compare(sensitivity_matrix, m_debug_out.sensitivity_matrix)
+    assert compare(resistance_matrix, m_debug_out.resistance_matrix)
+
+    # Verify combined mesh
+    m_combined_mesh = m_debug_out.combined_mesh
+    assert compare(combined_mesh.uv, m_combined_mesh.uv.T)
+    assert compare(combined_mesh.n, m_combined_mesh.n.T, double_tolerance=2e-7)
+    assert compare(combined_mesh.bounding_box, m_combined_mesh.bounding_box)
+    assert compare(combined_mesh.mesh_part_vertex_ind, m_combined_mesh.mesh_part_vertex_ind)
+    assert compare(combined_mesh.boundary, m_combined_mesh.boundary)
+    #
+    ######################################
+
 
     if get_level() >= DEBUG_VERBOSE:
         log.debug(" - combined_mesh.bounding_box: %s", combined_mesh.bounding_box)
@@ -133,6 +164,16 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     reduced_sensitivity_matrix, boundary_nodes, is_not_boundary_node = reduce_matrices_for_boundary_nodes(
         sensitivity_matrix_single, combined_mesh, set_zero_flag
     )
+
+    #######################################
+    # DEBUG: Verifications
+    m_c_part = m_debug.coil_parts[0]
+    m_debug_out = m_c_part.stream_function_optimization
+    assert compare(boundary_nodes, m_debug_out.boundary_nodes1)
+    assert compare(is_not_boundary_node, m_debug_out.is_not_boundary_node1)
+    #
+    ######################################
+
 
     """
     reduced_gradient_sensitivity_matrix_x, _, _ = reduce_matrices_for_boundary_nodes(
