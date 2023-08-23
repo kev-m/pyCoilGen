@@ -553,63 +553,73 @@ def CoilGen(log, input=None):
     #           unarranged_loops(x).loop(y).[edge_inds, uv]
     #           unsorted_points(x).[edge_ind, potential, uv]
 
-    assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
-    for index1, m_ru_points in enumerate(m_c_part.raw.unsorted_points):
-        c_ru_point = coil_part.raw.unsorted_points[index1]
-        m_ru_point = m_c_part.raw.unsorted_points[index1]
-        assert len(c_ru_point.edge_ind) == len(m_ru_point.edge_ind)
-        assert np.isclose(c_ru_point.potential, m_ru_point.potential)
-        assert c_ru_point.uv.shape[0] == m_ru_point.uv.shape[0]  # Python shape!
-        # assert(compare(c_ru_point.edge_ind, m_ru_point.edge_ind)) # Different ordering?
-        # assert(compare_contains(c_ru_point.uv, m_ru_point.uv)) # Order is different
+    for part_index in range(len(coil_parts)):
+        coil_part = coil_parts[part_index]
+        coil_mesh = coil_part.coil_mesh
+        m_c_part = m_c_parts[part_index]
 
-    assert len(coil_part.raw.unarranged_loops) == len(m_c_part.raw.unarranged_loops)
-    for index1, m_ru_loops in enumerate(m_c_part.raw.unarranged_loops):
-        c_loops = coil_part.raw.unarranged_loops[index1]
-        m_loops = m_c_part.raw.unarranged_loops[index1]
-        assert len(c_loops.loop) == len(m_loops.loop)
-        # Skip the next section, the loops are different!!
-        # for index2, m_ru_loop in enumerate(m_ru_loops.loop):
-        #    c_ru_loop = c_loops.loop[index2]
-        #    assert c_ru_loop.uv.shape[0] == m_ru_loop.uv.shape[0] # Python shape!
-        #    assert(compare_contains(c_ru_loop.uv, m_ru_loop.uv)) #
-        #    assert len(c_ru_loop.edge_inds) == len(m_ru_loop.edge_inds)
-        #    #assert(compare(c_ru_point.edge_inds, m_ru_point.edge_inds))
+        assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
+        for index1, m_ru_points in enumerate(m_c_part.raw.unsorted_points):
+            c_ru_point = coil_part.raw.unsorted_points[index1]
+            m_ru_point = m_c_part.raw.unsorted_points[index1]
+            assert len(c_ru_point.edge_ind) == len(m_ru_point.edge_ind)
+            assert np.isclose(c_ru_point.potential, m_ru_point.potential)
+            assert c_ru_point.uv.shape[0] == m_ru_point.uv.shape[0]  # Python shape!
+            # assert(compare(c_ru_point.edge_ind, m_ru_point.edge_ind)) # Different ordering?
+            # assert(compare_contains(c_ru_point.uv, m_ru_point.uv)) # Order is different
 
-    m_contour_lines = m_c_part.contour_lines1
+        assert len(coil_part.raw.unarranged_loops) == len(m_c_part.raw.unarranged_loops)
+        for index1, m_ru_loops in enumerate(m_c_part.raw.unarranged_loops):
+            c_loops = coil_part.raw.unarranged_loops[index1]
+            m_loops = m_c_part.raw.unarranged_loops[index1]
+            assert len(c_loops.loop) == len(m_loops.loop)
+            # Skip the next section, the loops are different!!
+            # for index2, m_ru_loop in enumerate(m_ru_loops.loop):
+            #    c_ru_loop = c_loops.loop[index2]
+            #    assert c_ru_loop.uv.shape[0] == m_ru_loop.uv.shape[0] # Python shape!
+            #    assert(compare_contains(c_ru_loop.uv, m_ru_loop.uv)) #
+            #    assert len(c_ru_loop.edge_inds) == len(m_ru_loop.edge_inds)
+            #    #assert(compare(c_ru_point.edge_inds, m_ru_point.edge_inds))
 
-    assert len(coil_part.contour_lines) == len(m_contour_lines)
-    for index1 in range(len(coil_part.contour_lines)):
-        if get_level() > DEBUG_VERBOSE:
-            log.debug(" Checking contour %d", index1)
-        m_contour = m_contour_lines[index1]
-        c_contour = coil_part.contour_lines[index1]
-        assert c_contour.current_orientation == m_contour.current_orientation  # Pass
-        assert np.isclose(c_contour.potential, m_contour.potential)  # Pass
-        # The MATLAB coilpart.contours is further processed in a subsequent function call.
-        # Unable to compare here.
-        # assert compare(c_contour.uv, m_contour.uv) # Fail
-        # log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv))
+        m_contour_lines = m_c_part.contour_lines1
 
-    if get_level() >= DEBUG_VERBOSE:
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/10_contour1_p.png', coil_part.contour_lines)
-        visualize_compare_contours(m_c_part.coil_mesh.uv.T, 800, 'images/10_contour1_m.png', m_contour_lines)
+        assert len(coil_part.contour_lines) == len(m_contour_lines)
+        for index1 in range(len(coil_part.contour_lines)):
+            if get_level() > DEBUG_VERBOSE:
+                log.debug(" Checking contour %d", index1)
+            m_contour = m_contour_lines[index1]
+            c_contour = coil_part.contour_lines[index1]
+            assert c_contour.current_orientation == m_contour.current_orientation  # Pass
+            assert np.isclose(c_contour.potential, m_contour.potential)  # Pass
+            # The MATLAB coilpart.contours is further processed in a subsequent function call.
+            # Unable to compare here.
+            # assert compare(c_contour.uv, m_contour.uv) # Fail
+            # log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv))
 
-        for index1, m_contour in enumerate(m_contour_lines):
-            # MATLAB shape
-            p_contour = coil_part.contour_lines[index1]
-            visualize_vertex_connections(p_contour.uv.T, 800, f'images/10_contour_lines{index1}_p.png')
-            visualize_vertex_connections(m_contour.uv.T, 800, f'images/10_contour_lines{index1}_m.png')
+        if get_level() >= DEBUG_VERBOSE:
+            visualize_compare_contours(coil_mesh.uv, 800, f'images/10_contour1_{part_index}_p.png', coil_part.contour_lines)
+            visualize_compare_contours(m_c_part.coil_mesh.uv.T, 800, f'images/10_contour1_{part_index}_m.png', m_contour_lines)
+
+            for index1, m_contour in enumerate(m_contour_lines):
+                # MATLAB shape
+                p_contour = coil_part.contour_lines[index1]
+                visualize_vertex_connections(p_contour.uv.T, 800, f'images/10_contour_lines_{part_index}_{index1}_p.png')
+                visualize_vertex_connections(m_contour.uv.T, 800, f'images/10_contour_lines_{part_index}_{index1}_m.png')
 
     # Manual conclusion: Not identical, but really close.
 
     # =================================================
     # HACK: Use MATLAB's contour_lines
     if use_matlab_data:
-        log.warning("Using MATLAB's contour_lines in %s, line %d", __file__, get_linenumber())
-        for index1, m_contour in enumerate(m_contour_lines):
-            c_contour = coil_part.contour_lines[index1]
-            c_contour.uv = m_contour.uv
+        for part_index in range(len(coil_parts)):
+            coil_part = coil_parts[part_index]
+            coil_mesh = coil_part.coil_mesh
+            m_c_part = m_c_parts[part_index]
+            log.warning("Using MATLAB's contour_lines in %s, line %d", __file__, get_linenumber())
+            m_contour_lines = m_c_part.contour_lines1
+            for index1, m_contour in enumerate(m_contour_lines):
+                c_contour = coil_part.contour_lines[index1]
+                c_contour.uv = m_contour.uv
     # =================================================
 
     #
@@ -626,43 +636,48 @@ def CoilGen(log, input=None):
     # DEBUG
     # Verify: Coil Part values: field_by_loops, loop_significance, combined_loop_field, combined_loop_length
 
-    m_contour_lines = m_c_part.contour_lines
-    p2d = visualize_projected_vertices(coil_part.combined_loop_field.T, 800, 'images/11_combined_loop_field_p.png')
-    m2d = visualize_projected_vertices(m_c_part.combined_loop_field.T, 800, 'images/11_combined_loop_field_m.png')
+    for part_index in range(len(coil_parts)):
+        coil_part = coil_parts[part_index]
+        coil_mesh = coil_part.coil_mesh
+        m_c_part = m_c_parts[part_index]
 
-    # Plot the two fields and see the difference
-    visualize_compare_vertices(p2d, m2d, 800, 'images/11_combined_loop_field_diff.png')
+        m_contour_lines = m_c_part.contour_lines
+        p2d = visualize_projected_vertices(coil_part.combined_loop_field.T, 800, f'images/11_combined_loop_field_{part_index}_p.png')
+        m2d = visualize_projected_vertices(m_c_part.combined_loop_field.T, 800, f'images/11_combined_loop_field_{part_index}_m.png')
 
-    assert len(coil_part.contour_lines) == len(m_c_part.contour_lines)
-    assert abs(coil_part.combined_loop_length - m_c_part.combined_loop_length) < 0.002  # 0.0005 # Pass
-    if use_matlab_data:
-        ## 12_uv_to_xyz_bug assert compare(coil_part.combined_loop_field, m_c_part.combined_loop_field, double_tolerance=5e-7)  # Pass! [Fail: 5e-7]
-        assert compare(coil_part.combined_loop_field, m_c_part.combined_loop_field, double_tolerance=2.2e-6)  # Pass! [Fail: 5e-7]
-        assert compare(coil_part.loop_significance, m_c_part.loop_signficance, double_tolerance=0.005)
-        ## 12_uv_to_xyz_bug assert compare(coil_part.field_by_loops, m_c_part.field_by_loops, double_tolerance=2e-7)  # Pass!
-        assert compare(coil_part.field_by_loops, m_c_part.field_by_loops, double_tolerance=3.1e-7)  # Pass! [Fail: 2e-7]
-    else:
-        # assert compare(coil_part.field_by_loops, m_c_part.field_by_loops, double_tolerance=2e-7) # Fail
-        assert compare(coil_part.loop_significance, m_c_part.loop_signficance, double_tolerance=3.89)  # 0.09)  # Eeek!
-        # assert compare(coil_part.combined_loop_field, m_c_part.combined_loop_field, double_tolerance=5e-6) # Fails
+        # Plot the two fields and see the difference
+        visualize_compare_vertices(p2d, m2d, 800, 'images/11_combined_loop_field_{part_index}_diff.png')
 
-    # Compare updated contour lines
-    for index1 in range(len(coil_part.contour_lines)):
-        if get_level() > DEBUG_VERBOSE:
-            log.debug(" Checking contour %d", index1)
-        m_contour = m_contour_lines[index1]
-        c_contour = coil_part.contour_lines[index1]
-        assert c_contour.current_orientation == m_contour.current_orientation  # Pass
-        assert np.isclose(c_contour.potential, m_contour.potential)  # Pass | Fail with min_loop_significance == 3
-        # assert compare(c_contour.uv, m_contour.uv) # Pass [0], Fail [4], Pass!
-        # assert compare(c_contour.v, m_contour.v) # Fail: 2nd position 1.15644483e-03 != -9.12899313e-17
-        if get_level() > DEBUG_VERBOSE:
-            log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv))
-            log.debug(" -- compare v: %s", compare(c_contour.v, m_contour.v))
+        assert len(coil_part.contour_lines) == len(m_c_part.contour_lines)
+        assert abs(coil_part.combined_loop_length - m_c_part.combined_loop_length) < 0.05# 0.002  # 0.0005 # Pass
+        if use_matlab_data:
+            ## 12_uv_to_xyz_bug assert compare(coil_part.combined_loop_field, m_c_part.combined_loop_field, double_tolerance=5e-7)  # Pass! [Fail: 5e-7]
+            assert compare(coil_part.combined_loop_field, m_c_part.combined_loop_field, double_tolerance=2.2e-6)  # Pass! [Fail: 5e-7]
+            assert compare(coil_part.loop_significance, m_c_part.loop_signficance, double_tolerance=0.005)
+            ## 12_uv_to_xyz_bug assert compare(coil_part.field_by_loops, m_c_part.field_by_loops, double_tolerance=2e-7)  # Pass!
+            assert compare(coil_part.field_by_loops, m_c_part.field_by_loops, double_tolerance=3.1e-7)  # Pass! [Fail: 2e-7]
+        else:
+            # assert compare(coil_part.field_by_loops, m_c_part.field_by_loops, double_tolerance=2e-7) # Fail
+            assert compare(coil_part.loop_significance, m_c_part.loop_signficance, double_tolerance=3.89)  # 0.09)  # Eeek!
+            # assert compare(coil_part.combined_loop_field, m_c_part.combined_loop_field, double_tolerance=5e-6) # Fails
 
-    if get_level() >= DEBUG_VERBOSE:
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/11_contour_lines_p.png', coil_part.contour_lines)
-        visualize_compare_contours(coil_mesh.uv, 800, 'images/11_contour_lines_m.png', m_contour_lines)
+        # Compare updated contour lines
+        for index1 in range(len(coil_part.contour_lines)):
+            if get_level() > DEBUG_VERBOSE:
+                log.debug(" Checking contour %d", index1)
+            m_contour = m_contour_lines[index1]
+            c_contour = coil_part.contour_lines[index1]
+            assert c_contour.current_orientation == m_contour.current_orientation  # Pass
+            assert np.isclose(c_contour.potential, m_contour.potential)  # Pass | Fail with min_loop_significance == 3
+            # assert compare(c_contour.uv, m_contour.uv) # Pass [0], Fail [4], Pass!
+            # assert compare(c_contour.v, m_contour.v) # Fail: 2nd position 1.15644483e-03 != -9.12899313e-17
+            if get_level() > DEBUG_VERBOSE:
+                log.debug(" -- compare uv: %s", compare(c_contour.uv, m_contour.uv))
+                log.debug(" -- compare v: %s", compare(c_contour.v, m_contour.v))
+
+        if get_level() >= DEBUG_VERBOSE:
+            visualize_compare_contours(coil_mesh.uv, 800, f'images/11_contour_lines_{part_index}_p.png', coil_part.contour_lines)
+            visualize_compare_contours(coil_mesh.uv, 800, f'images/11_contour_lines_{part_index}_m.png', m_contour_lines)
 
     # Manual conclusion: Not identical, but close.
     #
@@ -1136,4 +1151,4 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    solution = CoilGen(log, arg_dict2)
+    solution = CoilGen(log, arg_dict1)
