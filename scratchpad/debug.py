@@ -468,7 +468,7 @@ def develop_stream_function_optimization():
     input_args = DataStructure(tikonov_reg_factor=10, sf_opt_method='tikkonov', fmincon_parameter=[500.0, 10000000000.0, 1e-10, 1e-10, 1e-10])
     #target_field = mat_data_out.target_field
 
-    debug_data = m_coil_part
+    debug_data = mat_data_out    
     ###################################################################################
     # Function under test
     coil_parts2 = stream_function_optimization(p_coil_parts, target_field, input_args, debug_data)
