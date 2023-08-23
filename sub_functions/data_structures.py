@@ -164,21 +164,59 @@ class Mesh:
 
         return Mesh(mesh)
 
-    def boundary_edges(self):
+    def boundary_indices(self):
         """
-        Get the boundary face indices of the mesh.
+        Get the indices of vertices that are on the boundaries of the mesh.
+
+        For each of n boundaries, return the boundary indices.
 
         Returns:
-            ndarray: An array of boundary face indices.
+            boundaries (ndarray): An (number of boundaries) x (variable) array of boundary face indices.
         """
-        boundary = self.trimesh_obj.facets_boundary
-        # DEBUG
-        log.debug(" - boundary_edges: shape: %s", np.shape(boundary))
-        # if len(np.shape(boundary)) == 3:
-        #    log.debug(" boundary: Extracting sub-array")
-        #    boundary = boundary[0]
+        # Trying solution from StackExchange:
+        # https://stackoverflow.com/questions/76435070/how-do-i-use-python-trimesh-to-get-boundary-vertex-indices/76907565#76907565
+        connections = self.trimesh_obj.edges[trimesh.grouping.group_rows(self.trimesh_obj.edges_sorted, require_count=1)]
 
-        return boundary
+        # Start with the first vertex and then walk the graph of connections
+        if (len(connections) == 0):
+            # No boundaries!
+            log.error("Mesh has no boundary edges!")
+            raise ValueError("Mesh has no boundary edges!")
+
+        # Tweak: Re-order the first entry, lowest first
+        connections[0] = sorted(connections[0])
+
+        # Use ChatGPT to reduce connections to lists of connected vertices
+        adj_dict = {}
+        for conn in connections:
+            for vertex in conn:
+                adj_dict.setdefault(vertex, []).extend(c for c in conn if c != vertex)
+
+        groups = []
+        visited = set()
+
+        def dfs(vertex, group):
+            group.append(vertex)
+            visited.add(vertex)
+            for conn_vertex in adj_dict[vertex]:
+                if conn_vertex not in visited:
+                    dfs(conn_vertex, group)
+
+        for vertex in adj_dict:
+            if vertex in visited:
+                continue
+            group = []
+            dfs(vertex, group)
+            groups.append(group)
+
+        # Convert to numpy arrays
+        boundaries = np.empty((len(groups)), dtype=object)
+        for index, boundary in enumerate(groups):
+            # Close the boundary by add the first element to the end
+            boundary.append(boundary[0])
+            boundaries[index] = np.asarray(boundary)
+
+        return boundaries
 
     def vertex_faces(self):
         """
