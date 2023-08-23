@@ -210,13 +210,12 @@ class Mesh:
             groups.append(group)
 
         # Convert to numpy arrays
-        #boundaries = np.empty((len(groups),len(boundary)), dtype=object)
-        # Currently need square arrays: DEBUG_003
-        boundaries = np.empty((len(groups),len(groups[0])+1), dtype=int)
+        boundaries = np.empty((len(groups)), dtype=object)
         for index, boundary in enumerate(groups):
             # Close the boundary by add the first element to the end
             boundary.append(boundary[0])
-            boundaries[index] = np.asarray(boundary)
+            new_array = np.asarray(boundary, dtype=int)
+            boundaries[index] = new_array
 
         return boundaries
 
