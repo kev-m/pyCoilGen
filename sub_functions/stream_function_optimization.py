@@ -12,6 +12,7 @@ from sub_functions.constants import get_level, DEBUG_VERBOSE
 
 log = logging.getLogger(__name__)
 
+
 def stream_function_optimization(coil_parts: List[CoilPart], target_field, input_args):
     """
     Performs stream function optimization on coil parts.
@@ -46,7 +47,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         coil_part = coil_parts[part_ind]
         if part_ind == 0:
             resistance_matrix = coil_part.resistance_matrix     # 1: 264,264,   2:
-            current_density_mat = coil_part.current_density_mat # 1: 264,480,3  2: 1089,2048,3
+            current_density_mat = coil_part.current_density_mat  # 1: 264,480,3  2: 1089,2048,3
             sensitivity_matrix = coil_part.sensitivity_matrix   # 1: 3,257,264  2:
             gradient_sensitivity_matrix = sensitivity_matrix    # 1: 3,257,264  2:
         else:
@@ -113,7 +114,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     combined_mesh = DataStructure(vertices=combined_vertices, faces=combined_faces)
     combined_mesh.uv = combined_uv
     combined_mesh.n = combined_n
-    combined_mesh.boundary = combined_boundary # Cylinder: (2,25), BiPlanar(2,[65 and 65])
+    combined_mesh.boundary = combined_boundary
     combined_mesh.bounding_box = combined_bounding_box
     combined_mesh.mesh_part_vertex_ind = combined_mesh_part_vertex_ind
 
@@ -136,7 +137,6 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     reduced_sensitivity_matrix, boundary_nodes, is_not_boundary_node = reduce_matrices_for_boundary_nodes(
         sensitivity_matrix_single, combined_mesh, set_zero_flag
     )
-
 
     """
     reduced_gradient_sensitivity_matrix_x, _, _ = reduce_matrices_for_boundary_nodes(
