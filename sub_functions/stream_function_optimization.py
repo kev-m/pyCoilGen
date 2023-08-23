@@ -10,13 +10,9 @@ import logging
 from sub_functions.data_structures import DataStructure, CoilPart
 from sub_functions.constants import get_level, DEBUG_VERBOSE
 
-
 log = logging.getLogger(__name__)
 
-# TODO: DEBUG, remove this
-from helpers.visualisation import compare
-
-def stream_function_optimization(coil_parts: List[CoilPart], target_field, input_args, m_debug=None):
+def stream_function_optimization(coil_parts: List[CoilPart], target_field, input_args):
     """
     Performs stream function optimization on coil parts.
 
@@ -61,7 +57,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
                             [np.zeros_like(c_mat[:, :, 1]), c_mat[:, :, 1]]])
             blk3 = np.block([[current_density_mat[:, :, 2], np.zeros_like(current_density_mat[:, :, 2])],
                             [np.zeros_like(c_mat[:, :, 2]), c_mat[:, :, 2]]])
-            # 2178,4096
+
             current_density_mat = np.stack((blk1, blk2, blk3), axis=-1)
 
             sensitivity_matrix = np.concatenate([sensitivity_matrix, coil_part.sensitivity_matrix], axis=2)
@@ -69,19 +65,6 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
                 [gradient_sensitivity_matrix, coil_part.sensitivity_matrix], axis=2)
             resistance_matrix = np.block([[resistance_matrix, np.zeros((resistance_matrix.shape[0], coil_part.resistance_matrix.shape[1]))],
                                           [np.zeros((coil_part.resistance_matrix.shape[0], resistance_matrix.shape[1])), coil_part.resistance_matrix]])
-
-    #######################################
-    # DEBUG: Verifications
-    if m_debug is not None:
-        if isinstance(m_debug.coil_parts, np.ndarray):
-            m_c_part = m_debug.coil_parts[0]
-        else:
-            m_c_part = m_debug.coil_parts
-        m_debug_out = m_c_part.stream_function_optimization
-        assert compare(sensitivity_matrix, m_debug_out.sensitivity_matrix)
-        assert compare(resistance_matrix, m_debug_out.resistance_matrix)
-    #
-    ######################################
 
     # Generate a combined mesh container
     c_mesh = coil_parts[0].coil_mesh
@@ -101,9 +84,6 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         combined_n = np.concatenate([combined_n, coil_mesh.n], axis=0)
         combined_uv = np.concatenate((combined_uv, coil_mesh.uv))
 
-        # m_debug_out.combined_mesh.mesh_part_vertex_ind
-        # Cylinder: (264,) all = 1
-        # BiPlanar: (578,) 1st half = 1, 2nd half = 2
         combined_mesh_part_vertex_ind = np.concatenate(
             [
                 combined_mesh_part_vertex_ind,
@@ -112,11 +92,8 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
             axis=0,
         )
 
-        # Compute combined boundary DEBUG_003
-        # m_debug_out.combined_mesh.boundary
-        # Cylinder: (2, [25 and 25]) 
-        # BiPlanar: (2, [65 and 65])         
-        c_boundary = coil_mesh.boundary # (1,65) or (2,25)
+        # Compute combined boundary
+        c_boundary = coil_mesh.boundary
         offset = combined_vertices.shape[0]
         for boundary_ind in range(len(c_boundary)):
             combined_boundary = np.append(combined_boundary, [None])
@@ -140,30 +117,6 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     combined_mesh.bounding_box = combined_bounding_box
     combined_mesh.mesh_part_vertex_ind = combined_mesh_part_vertex_ind
 
-
-    #######################################
-    # DEBUG: Verifications
-    if m_debug is not None:
-        if isinstance(m_debug.coil_parts, np.ndarray):
-            m_c_part = m_debug.coil_parts[0]
-        else:
-            m_c_part = m_debug.coil_parts
-
-        m_debug_out = m_c_part.stream_function_optimization
-        assert compare(sensitivity_matrix, m_debug_out.sensitivity_matrix)
-        assert compare(resistance_matrix, m_debug_out.resistance_matrix)
-
-        # Verify combined mesh
-        m_combined_mesh = m_debug_out.combined_mesh
-        assert compare(combined_mesh.uv, m_combined_mesh.uv.T)
-        assert compare(combined_mesh.n, m_combined_mesh.n.T, double_tolerance=2e-7)
-        assert compare(combined_mesh.bounding_box, m_combined_mesh.bounding_box)
-        assert compare(combined_mesh.mesh_part_vertex_ind, m_combined_mesh.mesh_part_vertex_ind)
-        assert compare(combined_mesh.boundary, m_combined_mesh.boundary-1)
-    #
-    ######################################
-
-
     if get_level() >= DEBUG_VERBOSE:
         log.debug(" - combined_mesh.bounding_box: %s", combined_mesh.bounding_box)
     set_zero_flag = False  # Flag to force the potential on the boundary nodes to zero
@@ -183,22 +136,6 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     reduced_sensitivity_matrix, boundary_nodes, is_not_boundary_node = reduce_matrices_for_boundary_nodes(
         sensitivity_matrix_single, combined_mesh, set_zero_flag
     )
-
-    #######################################
-    # DEBUG: Verifications
-    if m_debug is not None:
-        if isinstance(m_debug.coil_parts, np.ndarray):
-            m_c_part = m_debug.coil_parts[0]
-        else:
-            m_c_part = m_debug.coil_parts
-
-        m_debug_out = m_c_part.stream_function_optimization
-        for index, m_boundary in enumerate(m_debug_out.boundary_nodes1):
-            p_boundary = boundary_nodes[index]
-            assert compare(p_boundary, m_boundary-1)
-        assert compare(is_not_boundary_node, m_debug_out.is_not_boundary_node1-1)
-    #
-    ######################################
 
 
     """
@@ -392,6 +329,4 @@ def reexpand_stream_function_for_boundary_nodes(reduced_sf, boundary_nodes, is_n
 
     # Assign the stream function values for the non-boundary nodes
     sf[is_not_boundary_node] = reduced_sf[len(boundary_nodes):]
-    # ValueError: shape mismatch: value array of shape (1928,) could not be broadcast to indexing result of shape (1954,)
-    # ValueError: shape mismatch: value array of shape (452,) could not be broadcast to indexing result of shape (454,)
     return sf
