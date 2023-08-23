@@ -500,7 +500,7 @@ def CoilGen(log, input=None):
             assert (compare(sf_b_field, m_sf_b_field))  # Pass
             assert (compare(combined_mesh.stream_function, m_cm_stream_function))  # Pass
             # Fail: Not the same shape: (1, 264) is not (264,)
-            assert (compare(coil_part.stream_function, m_cp_stream_function))  # Pass
+            assert (compare(coil_part.stream_function, m_cp_stream_function))  # Pass # c_part.stream_function shape: (264,)
         #
         #####################################################
 
@@ -1136,4 +1136,4 @@ if __name__ == "__main__":
         "debug": DEBUG_VERBOSE,
     }
 
-    solution = CoilGen(log, arg_dict1)
+    solution = CoilGen(log, arg_dict2)
