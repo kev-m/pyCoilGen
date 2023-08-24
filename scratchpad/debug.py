@@ -480,8 +480,6 @@ def develop_stream_function_optimization():
     ###################################################################################
 
 
-
-
 def develop_calc_contours_by_triangular_potential_cuts():
     from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 
@@ -595,16 +593,27 @@ def develop_calculate_group_centers():
 
 def develop_interconnect_within_groups():
     from sub_functions.interconnect_within_groups import interconnect_within_groups
-    mat_data = load_matlab('debug/cylinder_coil')
+
+    which = 'biplanar'
+    # MATLAB saved data
+
+    # Python saved data 14 : After calculate_group_centers
+    if which == 'biplanar':
+        mat_data = load_matlab('debug/biplanar_xgradient')
+        [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/biplanar_coil_python_14_False.npy', allow_pickle=True)
+    else:
+        mat_data = load_matlab('debug/ygradient_coil')
+        #[target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_07_True.npy', allow_pickle=True)
+        [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_14_False.npy', allow_pickle=True)
+
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_14_True.npy', allow_pickle=True)
 
     input_args = DataStructure(force_cut_selection=['high'], b_0_direction=[0, 0, 1], interconnection_cut_width=0.1)
 
     ###################################################################################
     # Function under test
-    coil_parts = interconnect_within_groups(p_coil_parts, input_args, m_c_part)
+    coil_parts = interconnect_within_groups(p_coil_parts, input_args)#, m_c_part)
     ###################################################################################
 
     # And now!!
@@ -838,12 +847,12 @@ if __name__ == "__main__":
     # develop_calculate_sensitivity_matrix()
     # calculate_gradient_sensitivity_matrix
     # calculate_resistance_matrix
-    develop_stream_function_optimization()
+    # develop_stream_function_optimization()
     # calc_potential_levels
     # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
     # develop_calculate_group_centers()
-    # develop_interconnect_within_groups()
+    develop_interconnect_within_groups()
     # develop_interconnect_among_groups()
     # develop_shift_return_paths()
     # develop_generate_cylindrical_pcb_print()
@@ -858,17 +867,3 @@ if __name__ == "__main__":
     #test_split_disconnected_mesh_stl_file2()
     # from tests.test_mesh import test_get_face_index2
     # test_get_face_index2()
-
-    combined_boundary = np.zeros((2), dtype=object)
-    combined_boundary[0] = [1, 2, 3]
-    combined_boundary[1] = [2, 3, 4]
-
-    old_len = len(combined_boundary)
-
-    new_boundary_ind = np.zeros((old_len+3), dtype=object)
-    new_boundary_ind[:old_len] = combined_boundary
-
-    for i in range(3):
-        new_list = [5, 6, 7]
-        new_boundary_ind[old_len+i] = new_list
-        pass
