@@ -596,7 +596,7 @@ class WirePart:
 
 
 @dataclass
-class CutPoint:
+class CutPoint(Shape3D):
     """
     Defines .....
 
@@ -604,13 +604,15 @@ class CutPoint:
 
     Assigned in find_group_cut_position
     """
-    uv: np.ndarray = None   # 2D co-ordinates of the shape (n,2)
-    v: np.ndarray = None    # 3D co-ordinates of the shape (n,3)
+    #uv: np.ndarray = None   # 2D co-ordinates of the shape (n,2)
+    #v: np.ndarray = None    # 3D co-ordinates of the shape (n,3)
     segment_ind: List[int] = None  # ???
 
+    # Override to preserve Python shape
     def add_uv(self, uv):
         append_uv(self, uv)
 
+    # Override to preserve Python shape
     def add_v(self, v):
         append_v(self, v)
 
