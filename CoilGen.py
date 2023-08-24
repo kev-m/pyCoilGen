@@ -47,6 +47,11 @@ from load_preoptimized_data import load_preoptimized_data
 """
 
 
+def save(output_dir, project_name, tag, solution):
+    np.save(f'{output_dir}/{project_name}_coil_python_{tag}.npy',
+            np.asarray([solution.target_field, solution.is_suppressed_point, solution.coil_parts], dtype=object))
+
+
 def CoilGen(log, input_args=None):
     # Create optimized coil finished coil layout
     # Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
@@ -72,6 +77,7 @@ def CoilGen(log, input_args=None):
     set_level(input_args.debug)
 
     project_name = input_args.project_name
+    persistence_dir = input_args.output_directory
 
     # Print the input variables
     # DEBUG
@@ -98,27 +104,26 @@ def CoilGen(log, input_args=None):
         # Split the mesh and the stream function into disconnected pieces
         print('Split the mesh and the stream function into disconnected pieces.')
         coil_parts = split_disconnected_mesh(coil_mesh)  # 00
-        # np.save(f'debug/{project_name}_coil_python_00.npy', [None, None, coil_parts])
+        solution.coil_parts = coil_parts
+        save(persistence_dir, project_name, '00', solution)
 
         # Upsample the mesh density by subdivision
         print('Upsample the mesh by subdivision:')
         coil_parts = refine_mesh(coil_parts, input_args)  # 01
-        # np.save(f'debug/{project_name}_coil_python_01.npy', [None, None, coil_parts])
+        save(persistence_dir, project_name, '01', solution)
 
         # Parameterize the mesh
         print('Parameterize the mesh:')
         coil_parts = parameterize_mesh(coil_parts, input_args)  # 02
-        # np.save(f'debug/{project_name}_coil_python_02.npy', [None, None, coil_parts])
-        solution.coil_parts = coil_parts
+        save(persistence_dir, project_name, '02', solution)
 
         # Define the target field
         print('Define the target field:')
         target_field, is_suppressed_point = define_target_field(
             coil_parts, target_mesh, secondary_target_mesh, input_args)
-        # np.save(f'debug/{project_name}_coil_python_02b.npy',
-        #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
         solution.target_field = target_field
         solution.is_suppressed_point = is_suppressed_point
+        save(persistence_dir, project_name, '02b', solution)
 
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- target_field.b shape: %s", target_field.b.shape)  # (3, 257)
@@ -132,38 +137,34 @@ def CoilGen(log, input_args=None):
         # Find indices of mesh nodes for one ring basis functions
         print('Calculate mesh one ring:')
         coil_parts = calculate_one_ring_by_mesh(coil_parts)  # 03
-        # np.save(f'debug/{project_name}_coil_python_03.npy',
-        #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        save(persistence_dir, project_name, '03', solution)
 
         # Create the basis function container which represents the current density
         print('Create the basis function container which represents the current density:')
         coil_parts = calculate_basis_functions(coil_parts)  # 04
-        np.save(f'debug/{project_name}_coil_python_04.npy',
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        save(persistence_dir, project_name, '04', solution)
 
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
         coil_parts = calculate_sensitivity_matrix(coil_parts, target_field, input_args)  # 05
-        np.save(f'debug/{project_name}_coil_python_05.npy',
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        save(persistence_dir, project_name, '05', solution)
 
         # Calculate the gradient sensitivity matrix Gn
         print('Calculate the gradient sensitivity matrix:')
         coil_parts = calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args)  # 06
-        np.save(f'debug/{project_name}_coil_python_06.npy',
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        save(persistence_dir, project_name, '06', solution)
 
         # Calculate the resistance matrix Rmn
         print('Calculate the resistance matrix:')
         coil_parts = calculate_resistance_matrix(coil_parts, input_args)  # 07
-        np.save(f'debug/{project_name}_coil_python_07.npy',
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        save(persistence_dir, project_name, '07', solution)
 
         # Optimize the stream function toward target field and further constraints
         print('Optimize the stream function toward target field and secondary constraints:')
         coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)  # 08
-        np.save(f'debug/{project_name}_coil_python_08.npy',
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        solution.combined_mesh = combined_mesh
+        solution.sf_b_field = sf_b_field
+        save(persistence_dir, project_name, '08', solution)
 
     else:
         # Load the preoptimized data
@@ -175,40 +176,37 @@ def CoilGen(log, input_args=None):
     # Calculate the potential levels for the discretization
     print('Calculate the potential levels for the discretization:')
     coil_parts, primary_surface_ind = calc_potential_levels(coil_parts, combined_mesh, input_args)  # 09
-    np.save(f'debug/{project_name}_coil_python_09.npy',
+    solution.primary_surface_ind = primary_surface_ind
+    save(persistence_dir, project_name, '09.npy',
             np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
     # Generate the contours
     print('Generate the contours:')
     coil_parts = calc_contours_by_triangular_potential_cuts(coil_parts)  # 10
-    np.save(f'debug/{project_name}_coil_python_10.npy',
+    save(persistence_dir, project_name, '10.npy',
             np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
     # Process contours
     print('Process contours: Evaluate loop significance')
     coil_parts = process_raw_loops(coil_parts, input_args, target_field)  # 11
-    np.save(f'debug/{project_name}_coil_python_11.npy',
+    save(persistence_dir, project_name, '11.npy',
             np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
     if not input_args.skip_postprocessing:
         # Find the minimal distance between the contour lines
         print('Find the minimal distance between the contour lines:')
         coil_parts = find_minimal_contour_distance(coil_parts, input_args)  # 12
-        # np.save(f'debug/{project_name}_coil_python_12.npy',
-        #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        save(persistence_dir, project_name, '12', solution)
 
         # Group the contour loops in topological order
         print('Group the contour loops in topological order:')
         coil_parts = topological_loop_grouping(coil_parts, input_args)  # 13
-        np.save(f'debug/{project_name}_coil_python_13.npy',
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        save(persistence_dir, project_name, '13', solution)
 
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
         coil_parts = calculate_group_centers(coil_parts)  # 14
-        np.save(f'debug/{project_name}_coil_python_14.npy',
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
-
+        save(persistence_dir, project_name, '14', solution)
 
         #####################################################
         # Visualisation
@@ -219,28 +217,24 @@ def CoilGen(log, input_args=None):
                 c_group_centers = coil_part.group_centers
 
                 visualize_compare_contours(coil_mesh.uv, 800, f'images/14_contour_centres_{part_index}_p.png',
-                                        coil_part.contour_lines, c_group_centers.uv)
+                                           coil_part.contour_lines, c_group_centers.uv)
         #
         #####################################################
-
 
         # Interconnect the single groups
         print('Interconnect the single groups:')
         coil_parts = interconnect_within_groups(coil_parts, input_args)  # 15
-        np.save(f'debug/{project_name}_coil_python_15.npy',
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        save(persistence_dir, project_name, '15', solution)
 
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
         coil_parts = interconnect_among_groups(coil_parts, input_args)  # 16
-        # np.save(f'debug/{project_name}_coil_python_16.npy',
-        #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        save(persistence_dir, project_name, '16', solution)
 
         # Connect the groups and shift the return paths over the surface
         print('Shift the return paths over the surface:')
         coil_parts = shift_return_paths(coil_parts, input_args)  # 17
-        # np.save(f'debug/{project_name}_coil_python_17.npy',
-        #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        save(persistence_dir, project_name, '17', solution)
 
         #####################################################
         # Visualisation
@@ -253,12 +247,10 @@ def CoilGen(log, input_args=None):
         #
         #####################################################
 
-
         # Create Cylindrical PCB Print
         print('Create PCB Print:')
         coil_parts = generate_cylindrical_pcb_print(coil_parts, input_args)  # 18
-        np.save(f'debug/{project_name}_coil_python_18.npy',
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+        save(persistence_dir, project_name, '18', solution)
 
         # Create Sweep Along Surface
         print('Create sweep along surface:')
