@@ -10,6 +10,9 @@ from sub_functions.data_structures import Mesh
 from sub_functions.constants import *
 from sub_functions.data_structures import DataStructure, CoilSolution, OptimisationParameters
 
+# For visualisation
+from helpers.visualisation import visualize_vertex_connections, visualize_compare_contours
+
 # From original project
 from sub_functions.read_mesh import read_mesh
 from sub_functions.parse_input import parse_input, create_input
@@ -206,6 +209,21 @@ def CoilGen(log, input_args=None):
         np.save(f'debug/{project_name}_coil_python_14.npy',
                 np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
+
+        #####################################################
+        # Visualisation
+        if get_level() > DEBUG_NONE:
+            for part_index in range(len(coil_parts)):
+                coil_part = coil_parts[part_index]
+                coil_mesh = coil_part.coil_mesh
+                c_group_centers = coil_part.group_centers
+
+                visualize_compare_contours(coil_mesh.uv, 800, f'images/14_contour_centres_{part_index}_p.png',
+                                        coil_part.contour_lines, c_group_centers.uv)
+        #
+        #####################################################
+
+
         # Interconnect the single groups
         print('Interconnect the single groups:')
         coil_parts = interconnect_within_groups(coil_parts, input_args)  # 15
@@ -223,6 +241,18 @@ def CoilGen(log, input_args=None):
         coil_parts = shift_return_paths(coil_parts, input_args)  # 17
         # np.save(f'debug/{project_name}_coil_python_17.npy',
         #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+
+        #####################################################
+        # Visualisation
+        if get_level() > DEBUG_NONE:
+            for index1 in range(len(coil_parts)):
+                c_part = coil_parts[index1]
+                c_wire_path = c_part.wire_path
+
+                visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_p.png')
+        #
+        #####################################################
+
 
         # Create Cylindrical PCB Print
         print('Create PCB Print:')
@@ -285,7 +315,7 @@ if __name__ == "__main__":
         "group_interconnection_method": "crossed",
         "interconnection_cut_width": 0.05,
         "interconnection_method": "regular",
-        "iteration_num_mesh_refinement": 0,  # MATLAB 1
+        "iteration_num_mesh_refinement": 1,  # MATLAB 1
         "level_set_method": "primary",
         "levels": 14,
         "make_cylindrical_pcb": 0,
@@ -322,7 +352,7 @@ if __name__ == "__main__":
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.1,
-        "target_region_resolution": 5,  # MATLAB From defaults, 10
+        "target_region_resolution": 10,  # MATLAB From defaults, 10
         "tikonov_reg_factor": 10,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
