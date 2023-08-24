@@ -11,6 +11,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[CoilPart]:
     """
     Create a volumetric coil body by surface sweep.
@@ -27,11 +28,11 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
     Updates the following properties of a CoilPart:
         - wire_path.uv
         - wire_path.v
-        
+
     Returns:
         List[CoilPart]: List of CoilPart structures with modified properties.
     """
-    
+
     if not input_args.skip_sweep:
 
         save_mesh = input_args.save_stl_flag
@@ -44,7 +45,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             wire_path = coil_part.wire_path
 
             # Define the cross section of the conductor
-            if not np.any(input_args.cross_sectional_points): # Define here if all cross_sectional_points are 0
+            if not np.any(input_args.cross_sectional_points):  # Define here if all cross_sectional_points are 0
                 circular_resolution = 10
                 theta = np.linspace(0, 2 * np.pi, circular_resolution, endpoint=False)
                 cross_section_points = np.vstack((np.sin(theta), np.cos(theta))) * input_args.conductor_thickness
@@ -59,7 +60,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
 
             # Build a 2D mesh of the cross section by the corner points
             cross_section_points_2d = cross_section_points.T
-            
+
             """
             zeros = np.zeros((cross_section_points_2d.shape[0], 1))
             cross_section_points_3d = np.concatenate((cross_section_points_2d, zeros), axis=1)
@@ -90,7 +91,8 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             cross_section_triangulation = Triangulate(cross_section_points_2d)
             zeros = np.zeros((cross_section_points_2d.shape[0], 1))
             cross_section_points_3d = np.concatenate((cross_section_points_2d, zeros), axis=1)
-            cross_section_triangulation_3d = Mesh(vertices=cross_section_points_3d, faces=cross_section_triangulation.get_triangles())
+            cross_section_triangulation_3d = Mesh(vertices=cross_section_points_3d,
+                                                  faces=cross_section_triangulation.get_triangles())
 
             # Calculate the area of the cross section
             # cross_section_triangulation = triangulation(inside_edges, cross_section_triangulation.Points);
@@ -131,7 +133,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             # Open the track if it's not already opened
             diff2_arr = wire_path.v[:, -1][:, np.newaxis] - wire_path.v
             diff2_norm = np.linalg.norm(diff2_arr, axis=0)
-            arr2 =(diff2_norm < cross_section_radius / 2).astype(int)
+            arr2 = (diff2_norm < cross_section_radius / 2).astype(int)
             point_inds_to_delete = np.where(diff2_norm < cross_section_radius / 2)[0]
 
             point_inds_to_delete = point_inds_to_delete[:round(len(point_inds_to_delete) / 2)]
@@ -140,7 +142,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             wire_path.uv = np.delete(wire_path.uv, point_inds_to_delete, axis=1)
 
             # Calculate the normal vectors along the wire track
-            surface_normal_along_wire_path_v = np.zeros((3, wire_path.v.shape[1])) # MATLAB shape
+            surface_normal_along_wire_path_v = np.zeros((3, wire_path.v.shape[1]))  # MATLAB shape
 
             # planary_mesh_matlab_format = triangulation(parameterized_mesh.faces', parameterized_mesh.uv');
             wire_mesh2D = Mesh(vertices=coil_mesh.uv, faces=coil_mesh.get_faces())
@@ -269,10 +271,11 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
                 project = input_args.project_name
                 filename = input_args.field_shape_function.replace(
                     '*', '').replace('.', '').replace('^', '').replace(',', '')
-                stl_file_path_layout = path.join(output_directory, f"{project}_swept_layout_part{part_ind}_{filename}.stl")
+                stl_file_path_layout = path.join(
+                    output_directory, f"{project}_swept_layout_part{part_ind}_{filename}.stl")
                 stl_file_path_surface = path.join(output_directory, f"{project}_surface_part{part_ind}_{filename}.stl")
 
-                #layout_surface_mesh.cleanup()
+                # layout_surface_mesh.cleanup()
                 layout_surface_mesh.export(stl_file_path_layout)
                 coil_mesh.export(stl_file_path_surface)
 
