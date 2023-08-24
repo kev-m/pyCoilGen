@@ -48,6 +48,12 @@ from calculate_gradient import calculate_gradient
 from load_preoptimized_data import load_preoptimized_data
 """
 
+
+def save(output_dir, project_name, tag, solution):
+    np.save(f'{output_dir}/{project_name}_coil_python_{tag}.npy',
+            np.asarray([solution.target_field, solution.is_suppressed_point, solution.coil_parts], dtype=object))
+
+
 def CoilGen(log, input=None):
     # Create optimized coil finished coil layout
     # Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
