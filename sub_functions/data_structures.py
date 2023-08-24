@@ -175,7 +175,8 @@ class Mesh:
         """
         # Trying solution from StackExchange:
         # https://stackoverflow.com/questions/76435070/how-do-i-use-python-trimesh-to-get-boundary-vertex-indices/76907565#76907565
-        connections = self.trimesh_obj.edges[trimesh.grouping.group_rows(self.trimesh_obj.edges_sorted, require_count=1)]
+        connections = self.trimesh_obj.edges[trimesh.grouping.group_rows(
+            self.trimesh_obj.edges_sorted, require_count=1)]
 
         # Start with the first vertex and then walk the graph of connections
         if (len(connections) == 0):
@@ -264,7 +265,7 @@ class Mesh:
         Args:
             vertex (ndarray): The point to search for
             try_harder (bool): Whether to also include 2nd order face vertices in the search.
-        
+
         Returns:
             index (int): The face index or -1 if the point is not within the mesh.
         """
@@ -301,7 +302,7 @@ class Mesh:
         if face_index is not None:
             return possible_face_indices[face_index], possible_face_indices, faces_to_try
 
-        #log.debug("get_face_index(%s), No found face", vertex)
+        # log.debug("get_face_index(%s), No found face", vertex)
         return -1, possible_face_indices, faces_to_try
 
 
@@ -500,9 +501,10 @@ class CoilPart:
     one_ring_list: np.ndarray = None        # (calculate_one_ring_by_mesh) (num_vertices,variable) Python shape
     node_triangles: np.ndarray = None       # (calculate_one_ring_by_mesh) (num_vertices,variable)
     node_triangle_mat: np.ndarray = None    # Integer (calculate_one_ring_by_mesh) (num_vertices,num_faces)
-    basis_elements: List[BasisElement] = None# (calculate_basis_functions)
-    is_real_triangle_mat: np.ndarray = None # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
-    triangle_corner_coord_mat: np.ndarray = None# Integer (calculate_basis_functions) (num_vertices,var,3,3) MATLAB shape
+    basis_elements: List[BasisElement] = None  # (calculate_basis_functions)
+    is_real_triangle_mat: np.ndarray = None  # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
+    # Integer (calculate_basis_functions) (num_vertices,var,3,3) MATLAB shape
+    triangle_corner_coord_mat: np.ndarray = None
     current_mat: np.ndarray = None          # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
     area_mat: np.ndarray = None             # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
     face_normal_mat: np.ndarray = None      # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
@@ -512,8 +514,8 @@ class CoilPart:
     current_density: np.ndarray = None      # (stream_function_optimization) (3, n, num_vertices)
     stream_function: np.ndarray = None      # (stream_function_optimization) (?,?)
     raw: RawPart = None                     # (calc_contours_by_triangular_potential_cuts)
-    contour_lines: List[ContourLine] = None # (process_raw_loops)
-    potential_level_list: np.ndarray = None # Placeholder (calc_potential_levels) (???)
+    contour_lines: List[ContourLine] = None  # (process_raw_loops)
+    potential_level_list: np.ndarray = None  # Placeholder (calc_potential_levels) (???)
     contour_step: float = None              # Placeholder (calc_potential_levels) (???)
     field_by_loops: np.ndarray = None       # Placeholder (evaluate_loop_significance in process_raw_loops)
     combined_loop_field: np.ndarray = None  # Placeholder (evaluate_loop_significance in process_raw_loops) (3,m)
@@ -604,8 +606,8 @@ class CutPoint(Shape3D):
 
     Assigned in find_group_cut_position
     """
-    #uv: np.ndarray = None   # 2D co-ordinates of the shape (n,2)
-    #v: np.ndarray = None    # 3D co-ordinates of the shape (n,3)
+    # uv: np.ndarray = None   # 2D co-ordinates of the shape (n,2)
+    # v: np.ndarray = None    # 3D co-ordinates of the shape (n,3)
     segment_ind: List[int] = None  # ???
 
     # Override to preserve Python shape
