@@ -373,7 +373,7 @@ if __name__ == "__main__":
         "group_interconnection_method": "crossed",
         "interconnection_cut_width": 0.1,
         "interconnection_method": "regular",
-        "iteration_num_mesh_refinement": 0,
+        "iteration_num_mesh_refinement": 1,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 20,
         "make_cylindrical_pcb": 1,
@@ -410,12 +410,12 @@ if __name__ == "__main__":
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.15,
-        "target_region_resolution": 5,
+        "target_region_resolution": 10,  # MATLAB 10 is the default but 5 is faster
         "tikonov_reg_factor": 100,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
         "use_only_target_mesh_verts": 0,
         "debug": DEBUG_BASIC,
-    }
+    }  # 2m11
 
     solution = CoilGen(log, arg_dict1)
