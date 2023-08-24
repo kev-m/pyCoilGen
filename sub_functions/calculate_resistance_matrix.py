@@ -18,6 +18,13 @@ def calculate_resistance_matrix(coil_parts: List[CoilPart], input) -> List[CoilP
     """
     Calculate the resistance matrix for coil parts.
 
+    Initialises the following properties of a CoilPart:
+        - resistance_matrix
+        - node_adjacency_mat
+
+    Updates the following properties of a CoilPart:
+        - None
+
     Args:
         coil_parts (list): List of coil parts.
         input: The input parameters.

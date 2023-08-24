@@ -164,21 +164,60 @@ class Mesh:
 
         return Mesh(mesh)
 
-    def boundary_edges(self):
+    def boundary_indices(self):
         """
-        Get the boundary face indices of the mesh.
+        Get the indices of vertices that are on the boundaries of the mesh.
+
+        For each of n boundaries, return the boundary indices.
 
         Returns:
-            ndarray: An array of boundary face indices.
+            boundaries (ndarray): An (number of boundaries) x (variable) array of boundary face indices.
         """
-        boundary = self.trimesh_obj.facets_boundary
-        # DEBUG
-        log.debug(" - boundary_edges: shape: %s", np.shape(boundary))
-        # if len(np.shape(boundary)) == 3:
-        #    log.debug(" boundary: Extracting sub-array")
-        #    boundary = boundary[0]
+        # Trying solution from StackExchange:
+        # https://stackoverflow.com/questions/76435070/how-do-i-use-python-trimesh-to-get-boundary-vertex-indices/76907565#76907565
+        connections = self.trimesh_obj.edges[trimesh.grouping.group_rows(self.trimesh_obj.edges_sorted, require_count=1)]
 
-        return boundary
+        # Start with the first vertex and then walk the graph of connections
+        if (len(connections) == 0):
+            # No boundaries!
+            log.error("Mesh has no boundary edges!")
+            raise ValueError("Mesh has no boundary edges!")
+
+        # Tweak: Re-order the first entry, lowest first
+        connections[0] = sorted(connections[0])
+
+        # Use ChatGPT to reduce connections to lists of connected vertices
+        adj_dict = {}
+        for conn in connections:
+            for vertex in conn:
+                adj_dict.setdefault(vertex, []).extend(c for c in conn if c != vertex)
+
+        groups = []
+        visited = set()
+
+        def dfs(vertex, group):
+            group.append(vertex)
+            visited.add(vertex)
+            for conn_vertex in adj_dict[vertex]:
+                if conn_vertex not in visited:
+                    dfs(conn_vertex, group)
+
+        for vertex in adj_dict:
+            if vertex in visited:
+                continue
+            group = []
+            dfs(vertex, group)
+            groups.append(group)
+
+        # Convert to numpy arrays
+        boundaries = np.empty((len(groups)), dtype=object)
+        for index, boundary in enumerate(groups):
+            # Close the boundary by add the first element to the end
+            boundary.append(boundary[0])
+            new_array = np.asarray(boundary, dtype=int)
+            boundaries[index] = new_array
+
+        return boundaries
 
     def vertex_faces(self):
         """
@@ -458,19 +497,22 @@ class PCBTrack():
 @dataclass
 class CoilPart:
     coil_mesh: Mesh = None
-    basis_elements: List[BasisElement] = None   # (calculate_basis_functions)
-    is_real_triangle_mat: np.ndarray = None     # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
+    one_ring_list: np.ndarray = None        # (calculate_one_ring_by_mesh) (num_vertices,variable) Python shape
+    node_triangles: np.ndarray = None       # (calculate_one_ring_by_mesh) (num_vertices,variable)
+    node_triangle_mat: np.ndarray = None    # Integer (calculate_one_ring_by_mesh) (num_vertices,num_faces)
+    basis_elements: List[BasisElement] = None# (calculate_basis_functions)
+    is_real_triangle_mat: np.ndarray = None # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
     triangle_corner_coord_mat: np.ndarray = None# Integer (calculate_basis_functions) (num_vertices,var,3,3) MATLAB shape
     current_mat: np.ndarray = None          # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
     area_mat: np.ndarray = None             # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node)
     face_normal_mat: np.ndarray = None      # (calculate_basis_functions) (num_vertices, max_triangle_count_per_node, 3)
-    current_density_mat: np.ndarray = None  # (calculate_basis_functions)
-    resistance_matrix: np.ndarray = None    # num_vertices x num_vertices
-    one_ring_list: np.ndarray = None        # (calculate_one_ring_by_mesh) (num_vertices,variable) Python shape
-    node_triangles: np.ndarray = None       # (calculate_one_ring_by_mesh) (num_vertices,variable)
-    node_triangle_mat: np.ndarray = None    # Integer (calculate_one_ring_by_mesh) (num_vertices,num_faces)
-    raw: RawPart = None
-    contour_lines: List[ContourLine] = None
+    current_density_mat: np.ndarray = None  # (calculate_basis_functions) (num_vertices, num_faces, 3)
+    sensitivity_matrix: np.ndarray = None   # (calculate_sensitivity_matrix) (3, target field, num basis)
+    resistance_matrix: np.ndarray = None    # (calculate_resistance_matrix) (num_vertices, num_vertices)
+    current_density: np.ndarray = None      # (stream_function_optimization) (3, n, num_vertices)
+    stream_function: np.ndarray = None      # (stream_function_optimization) (?,?)
+    raw: RawPart = None                     # (calc_contours_by_triangular_potential_cuts)
+    contour_lines: List[ContourLine] = None # (process_raw_loops)
     potential_level_list: np.ndarray = None # Placeholder (calc_potential_levels) (???)
     contour_step: float = None              # Placeholder (calc_potential_levels) (???)
     field_by_loops: np.ndarray = None       # Placeholder (evaluate_loop_significance in process_raw_loops)
@@ -554,7 +596,7 @@ class WirePart:
 
 
 @dataclass
-class CutPoint:
+class CutPoint(Shape3D):
     """
     Defines .....
 
@@ -562,13 +604,15 @@ class CutPoint:
 
     Assigned in find_group_cut_position
     """
-    uv: np.ndarray = None   # 2D co-ordinates of the shape (n,2)
-    v: np.ndarray = None    # 3D co-ordinates of the shape (n,3)
+    #uv: np.ndarray = None   # 2D co-ordinates of the shape (n,2)
+    #v: np.ndarray = None    # 3D co-ordinates of the shape (n,3)
     segment_ind: List[int] = None  # ???
 
+    # Override to preserve Python shape
     def add_uv(self, uv):
         append_uv(self, uv)
 
+    # Override to preserve Python shape
     def add_v(self, v):
         append_v(self, v)
 

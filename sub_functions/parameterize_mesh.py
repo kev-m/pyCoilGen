@@ -89,14 +89,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 else:
                     input_vertices = mesh_vertices.copy()
 
-                # Project the vertices onto the X-Y plane:  [x,y,z] -> [x+x*z, y+y*z, 0]
-                projected_vertices[:, 0] += input_vertices[:, 0] * input_vertices[:, 2]
-                projected_vertices[:, 1] += input_vertices[:, 1] * input_vertices[:, 2]
-                projected_vertices[:, 2] = 0  # Set z-coordinate to zero (projection onto x-y plane)
-                mesh_2d = Mesh(vertices=projected_vertices, faces=mesh_faces)
-
-                # Retrieve the vertices and the boundary loops of the projected cylinder
-                boundary_loop_nodes = get_boundary_loop_nodes(mesh_2d)
+                boundary_loop_nodes = mesh_part.boundary_indices()
 
                 # MATLAB
                 opening_mean = np.mean(mesh_vertices[boundary_loop_nodes[0], :], axis=0)  # -0.0141, -0.0141, -0.75
@@ -156,7 +149,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
             if input.debug >= DEBUG_BASIC:
                 log.debug(" - mesh_part.uv shape: %s", mesh_part.uv.shape)
 
-            mesh_part.boundary = get_boundary_loop_nodes(mesh_part)
+            mesh_part.boundary = mesh_part.boundary_indices() # get_boundary_loop_nodes(mesh_part)
 
     return coil_parts
 
@@ -192,89 +185,3 @@ def align_normals(vertices, original_normal, desired_normal):
 
     return transformed_vertices
 
-
-def get_boundary_loop_nodes(mesh_part: Mesh):
-    """
-    Compute the indices of the vertices on the boundaries of the mesh.
-
-    NOTE: This implementation only works for planar meshes.
-    """
-    # Compute the boundary edges of the mesh
-    boundary_edges = mesh_part.boundary_edges()
-    # log.debug(" - boundary_edges: %s -> %s", np.shape(boundary_edges), boundary_edges)
-
-    # DEBUG
-    # visualize_vertex_connections(mesh_part.uv, 800, 'images/boundary_edges1.png', boundary_edges)
-
-    # Initialize variables
-    boundary_loops = []
-    visited = set()
-
-    # Iterate through the boundary edges
-    for facet in boundary_edges:
-        for edge in facet:
-            # log.debug(" - Edge: %s", edge)
-            # Check if the edge has already been visited
-            if edge[0] in visited or edge[1] in visited:
-                continue
-
-            # Start a new boundary loop
-            boundary_loop = [edge[0]]
-            current_vertex = edge[1]
-
-            # Traverse the boundary loop
-            while current_vertex != edge[0]:
-                # Add the current vertex to the boundary loop
-                boundary_loop.append(current_vertex)
-                visited.add(current_vertex)
-
-                # Find the next boundary edge connected to the current vertex
-                next_edge = None
-                for e in facet:
-                    if e[0] == current_vertex and e[1] not in visited:
-                        next_edge = e
-                        # log.debug(" - next_edge: %s", next_edge)
-                        break
-
-                if next_edge is None:
-                    # log.debug(" - No edge, trying again")
-                    break
-                # Update the current vertex
-                current_vertex = next_edge[1]
-
-            # Add the completed boundary loop to the list
-            boundary_loops.append(boundary_loop)
-
-    # DEBUG
-    # total_elements = sum(len(sublist) for sublist in boundary_loops)
-    # log.debug(" - boundary_loops shape: len(%s) -> %s", total_elements, boundary_loops)
-    # return boundary_loops
-
-    # Boundaries appear to be split into two windings, sharing the first element. Merge linked boundaries:
-    reduced_loops = []
-    boundary_part = boundary_loops[0]
-    for index in range(1, len(boundary_loops)):
-        next_part = boundary_loops[index]
-        # Merge the loops if they share the same start vertex.
-        if boundary_part[0] == next_part[0]:
-            # Reverse the rest
-            next_part.reverse()
-            boundary_part += next_part
-        else:
-            # Make sure that the boundary closes:
-            if boundary_part[-1] != boundary_part[0]:
-                boundary_part.append(boundary_part[0])
-            boundary_part.reverse()  # MATLAB has the boundaries in the opposite direction
-            reduced_loops.append(boundary_part)
-            boundary_part = next_part
-
-    # Make sure that the boundary closes:
-    if boundary_part[-1] != boundary_part[0]:
-        boundary_part.append(boundary_part[0])
-    boundary_part.reverse()  # MATLAB has the boundaries in the opposite direction
-    reduced_loops.append(boundary_part)
-    # DEBUG
-    # total_elements = sum(len(sublist) for sublist in reduced_loops)
-    # log.debug(" - new_loops shape: len(%s) -> %s", total_elements, reduced_loops)
-
-    return np.asarray(reduced_loops)

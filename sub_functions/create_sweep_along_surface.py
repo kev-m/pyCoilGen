@@ -44,7 +44,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             wire_path = coil_part.wire_path
 
             # Define the cross section of the conductor
-            if np.all(input_args.cross_sectional_points == 0):
+            if not np.any(input_args.cross_sectional_points): # Define here if all cross_sectional_points are 0
                 circular_resolution = 10
                 theta = np.linspace(0, 2 * np.pi, circular_resolution, endpoint=False)
                 cross_section_points = np.vstack((np.sin(theta), np.cos(theta))) * input_args.conductor_thickness

@@ -16,7 +16,7 @@ def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input
     Calculate the sensitivity matrix.
 
     Initialises the following properties of a CoilPart:
-        - sensitivity_matrix: (3, m, n)
+        - sensitivity_matrix: (3, m, num vertices)
 
     Updates the following properties of a CoilPart:
         - None

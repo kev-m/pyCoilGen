@@ -84,13 +84,16 @@ def find_group_cut_position(loop_group: TopoGroup, group_center : np.ndarray, me
         # NOTE: cut_point has shape (3,) not (1,3), i.e. Python not MATLAB convention
 
         # Delete repeating degenerate cut points
-        arr_true = [1, 1]
-        arr_abs = np.abs(np.vstack((arr_true, np.diff(cut_position.cut_point.uv, axis=0))))  # Python convention
-        is_repeating_cutpoint = np.all(arr_abs) < 10**(-10)
-        cut_position.cut_point.v = np.delete(cut_position.cut_point.v, np.where(is_repeating_cutpoint), axis=0)
-        cut_position.cut_point.uv = np.delete(cut_position.cut_point.uv, np.where(is_repeating_cutpoint), axis=0)
-        cut_position.cut_point.segment_ind = np.delete(
-            cut_position.cut_point.segment_ind, np.where(is_repeating_cutpoint))
+        #arr_true = [1, 1]
+        #arr_abs = np.abs(np.vstack((arr_true, np.diff(cut_position.cut_point.uv, axis=0))))  # Python convention
+        #is_repeating_cutpoint1 = np.all(arr_abs) < 10**(-10)
+        arr_abs = np.abs(np.diff(cut_position.cut_point.uv, axis=0))  # Python convention
+        repeat_inds = np.where(arr_abs < 1e-10)[0]
+        is_repeating_cutpoint = np.all(repeat_inds)
+        if is_repeating_cutpoint:
+            cut_position.cut_point.v = np.delete(cut_position.cut_point.v, np.where(repeat_inds), axis=0)
+            cut_position.cut_point.uv = np.delete(cut_position.cut_point.uv, np.where(repeat_inds), axis=0)
+            cut_position.cut_point.segment_ind = np.delete(cut_position.cut_point.segment_ind, np.where(repeat_inds))
 
         # Separated into higher and lower cut points:
         # First: use the 2D representation of the loop
