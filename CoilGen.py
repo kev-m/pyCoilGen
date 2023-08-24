@@ -48,11 +48,12 @@ def CoilGen(log, input_args=None):
     # Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
     # 5.10.2021
 
-    # the following external functions were used in modified form:
+    # The following external functions were used in modified form:
     # intreparc@John D'Errico (2010), @matlabcentral/fileexchange
-    # The non-cylindrical parameterization is taken from "matlabmesh @ Ryan
-    # Schmidt rms@dgp.toronto.edu" based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes",
-    # NS (2021). Curve intersections (https://www.mathworks.com/matlabcentral/fileexchange/22441-curve-intersections), MATLAB Central File Exchange.
+    # The non-cylindrical parameterization is taken from "matlabmesh @ Ryan Schmidt rms@dgp.toronto.edu"
+    # based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes", NS (2021). 
+    # Curve intersections (https://www.mathworks.com/matlabcentral/fileexchange/22441-curve-intersections), 
+    # MATLAB Central File Exchange.
 
     # Parse the input variables
     if type(input_args) is dict:
