@@ -273,6 +273,9 @@ def parse_input(parse_cli=True):
     # Add the parameters for the generation of the (default) biplanar mesh
     parser.add_argument('--project_name', type=str, default='CoilGen', help=f"Project name for saved data")
 
+    # Add the parameters for the generation of the (default) biplanar mesh
+    parser.add_argument('--persistence_dir', type=str, default='debug', help=f"Directory to write persistence data")
+
     # Parse the input arguments
     if parse_cli == False:
         input = parser.parse_args([])
