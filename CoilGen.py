@@ -43,7 +43,7 @@ from calculate_gradient import calculate_gradient
 from load_preoptimized_data import load_preoptimized_data
 """
 
-def CoilGen(log, input=None):
+def CoilGen(log, input_args=None):
     # Create optimized coil finished coil layout
     # Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
     # 5.10.2021
@@ -55,14 +55,14 @@ def CoilGen(log, input=None):
     # NS (2021). Curve intersections (https://www.mathworks.com/matlabcentral/fileexchange/22441-curve-intersections), MATLAB Central File Exchange.
 
     # Parse the input variables
-    if type(input) is dict:
-        if input['debug'] >= DEBUG_VERBOSE:
+    if type(input_args) is dict:
+        if input_args['debug'] >= DEBUG_VERBOSE:
             log.debug(" - converting input dict to input type.")
-        input_parser, input_args = create_input(input)
-    elif input is None:
-        input_parser, input_args = parse_input(input)
+        input_parser, input_args = create_input(input_args)
+    elif input_args is None:
+        input_parser, input_args = parse_input(input_args)
     else:
-        input_args = input
+        input_args = input_args
 
     set_level(input_args.debug)
 
