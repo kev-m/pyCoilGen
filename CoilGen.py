@@ -133,7 +133,7 @@ def CoilGen(log, input=None):
 
     # Print the input variables
     # DEBUG
-    use_matlab_data = True
+    use_matlab_data = False
     if get_level() >= DEBUG_VERBOSE:
         log.debug('Parse inputs: %s', input_args)
 
