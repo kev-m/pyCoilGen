@@ -77,7 +77,7 @@ def CoilGen(log, input_args=None):
     set_level(input_args.debug)
 
     project_name = input_args.project_name
-    persistence_dir = 'debug'
+    persistence_dir = input_args.persistence_dir
 
     # Print the input variables
     # DEBUG
@@ -213,7 +213,7 @@ def CoilGen(log, input_args=None):
                 coil_mesh = coil_part.coil_mesh
                 c_group_centers = coil_part.group_centers
 
-                visualize_compare_contours(coil_mesh.uv, 800, f'images/14_contour_centres_{part_index}_p.png',
+                visualize_compare_contours(coil_mesh.uv, 800, f'images/14_{project_name}_contour_centres_{part_index}_p.png',
                                            coil_part.contour_lines, c_group_centers.uv)
         #
         #####################################################
@@ -240,7 +240,8 @@ def CoilGen(log, input_args=None):
                 c_part = coil_parts[index1]
                 c_wire_path = c_part.wire_path
 
-                visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_p.png')
+                visualize_vertex_connections(
+                    c_wire_path.uv.T, 800, f'images/17_{project_name}_wire_path2_uv_{index1}_p.png')
         #
         #####################################################
 
@@ -304,7 +305,7 @@ if __name__ == "__main__":
         "group_interconnection_method": "crossed",
         "interconnection_cut_width": 0.05,
         "interconnection_method": "regular",
-        "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
+        "iteration_num_mesh_refinement": 1,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 14,
         "make_cylindrical_pcb": 0,
@@ -341,7 +342,7 @@ if __name__ == "__main__":
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.1,
-        "target_region_resolution": 10,  # MATLAB 10 is the default but 5 is faster
+        "target_region_resolution": 5,  # MATLAB 10 is the default but 5 is faster
         "tikonov_reg_factor": 10,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
