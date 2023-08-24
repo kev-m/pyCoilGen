@@ -266,10 +266,11 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
 
             # Save the mesh as an .stl file
             if save_mesh:
+                project = input_args.project_name
                 filename = input_args.field_shape_function.replace(
                     '*', '').replace('.', '').replace('^', '').replace(',', '')
-                stl_file_path_layout = path.join(output_directory, f"swept_layout_part{part_ind}_{filename}.stl")
-                stl_file_path_surface = path.join(output_directory, f"surface_part{part_ind}_{filename}.stl")
+                stl_file_path_layout = path.join(output_directory, f"{project}_swept_layout_part{part_ind}_{filename}.stl")
+                stl_file_path_surface = path.join(output_directory, f"{project}_surface_part{part_ind}_{filename}.stl")
 
                 #layout_surface_mesh.cleanup()
                 layout_surface_mesh.export(stl_file_path_layout)
