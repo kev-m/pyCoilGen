@@ -77,7 +77,7 @@ def CoilGen(log, input_args=None):
     set_level(input_args.debug)
 
     project_name = input_args.project_name
-    persistence_dir = input_args.output_directory
+    persistence_dir = 'debug'
 
     # Print the input variables
     # DEBUG
@@ -177,20 +177,17 @@ def CoilGen(log, input_args=None):
     print('Calculate the potential levels for the discretization:')
     coil_parts, primary_surface_ind = calc_potential_levels(coil_parts, combined_mesh, input_args)  # 09
     solution.primary_surface_ind = primary_surface_ind
-    save(persistence_dir, project_name, '09.npy',
-            np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+    save(persistence_dir, project_name, '09', solution)
 
     # Generate the contours
     print('Generate the contours:')
     coil_parts = calc_contours_by_triangular_potential_cuts(coil_parts)  # 10
-    save(persistence_dir, project_name, '10.npy',
-            np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+    save(persistence_dir, project_name, '10', solution)
 
     # Process contours
     print('Process contours: Evaluate loop significance')
     coil_parts = process_raw_loops(coil_parts, input_args, target_field)  # 11
-    save(persistence_dir, project_name, '11.npy',
-            np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+    save(persistence_dir, project_name, '11', solution)
 
     if not input_args.skip_postprocessing:
         # Find the minimal distance between the contour lines
@@ -307,7 +304,7 @@ if __name__ == "__main__":
         "group_interconnection_method": "crossed",
         "interconnection_cut_width": 0.05,
         "interconnection_method": "regular",
-        "iteration_num_mesh_refinement": 1,  # MATLAB 1
+        "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 14,
         "make_cylindrical_pcb": 0,
@@ -344,7 +341,7 @@ if __name__ == "__main__":
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.1,
-        "target_region_resolution": 10,  # MATLAB From defaults, 10
+        "target_region_resolution": 10,  # MATLAB 10 is the default but 5 is faster
         "tikonov_reg_factor": 10,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
