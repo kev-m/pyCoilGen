@@ -57,7 +57,6 @@ def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, bounda
         loop_out_uv = loop.uv[:, inds_to_keep]
         loop_out_v = loop.v[:, inds_to_keep]
     else:
-        log.debug("No points removed!")
         loop_out_uv = loop.uv
         loop_out_v = loop.v
 
