@@ -198,19 +198,6 @@ def CoilGen(log, input_args=None):
         np.save(f'debug/{debug_key}_coil_python_13_{use_matlab_data}.npy',
                 np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
-        # =================================================
-        if use_matlab_data:
-            log.warning("Using MATLAB's loop u and uv values in %s, line %d", __file__, get_linenumber())
-            m_groups = m_c_part.groups
-            for index1 in range(len(coil_part.groups)):
-                m_group = m_groups[index1]  # cutshape, loops, opened_loop
-                c_group = coil_part.groups[index1]
-                for index2, m_loops in enumerate(m_group.loops):
-                    c_group.loops[index2].uv = m_loops.uv
-                    c_group.loops[index2].v = m_loops.v
-        np.save(f'debug/{debug_key}_coil_python_13_{use_matlab_data}_patched.npy', coil_parts)
-        # =================================================
-
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
         coil_parts = calculate_group_centers(coil_parts)  # 14
