@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
 from dataclasses import dataclass
-import trimesh # For face and vertex adjacency
+import trimesh  # For face and vertex adjacency
 
 # Logging
 import logging
@@ -34,19 +34,16 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
     for part_ind in range(len(coil_parts)):
         part = coil_parts[part_ind]
         part_mesh = part.coil_mesh
-        part_vertices = part_mesh.get_vertices()  # .T  # Transpose vertices
-        part_uv = part_mesh.uv  # .T  # Transpose UV coordinates
-        part_faces = part_mesh.get_faces()  # .T  # Transpose faces
+        part_vertices = part_mesh.get_vertices()
+        part_uv = part_mesh.uv
+        part_faces = part_mesh.get_faces()
 
         # For the UV mesh, calculate:
         # 1. edge_nodes: The edges, i.e. the list of connected vertices (array m x 2)
         # 2. edge_attached_triangles: The attached triangles, i.e. the list of triangles that share an edge (array of n).
-        # 3. num_attached_tris: The list of
 
         # Compute edges and attached triangles
-        mesh = trimesh.Trimesh(vertices=part_uv,
-                               faces=part_faces,
-                               process=False)
+        mesh = trimesh.Trimesh(vertices=part_uv, faces=part_faces, process=False)
         # Returns the edges that are shared by the adjacent faces (index into faces array).
         edge_faces = mesh.face_adjacency
         # Returns the edges that are shared by the adjacent faces (index into vertices array).
@@ -63,7 +60,6 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             # Must swap node indices, to correct index order
             # edge_attached_triangles[index] = np.array((part_faces[edges[0]], part_faces[edges[1]]))
             edge_attached_triangles[index] = np.array((part_faces[edges[1]], part_faces[edges[0]]))
-
 
         # Take only the edge opposing nodes of these triangles
         edge_opposed_nodes = np.zeros_like(edge_nodes)
@@ -121,7 +117,6 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             potential_sorted_cut_points[pot_ind] = cut_points
 
         # End of Part 1
-
 
         # Start of Part 2
         # Create the unsorted points structure
@@ -259,19 +254,16 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                         vec_center_node_3 * pot_diff_center_node_3
 
                     # Test the chirality of the segment on the potential gradient on that segment
-                    segment_vec = potential_loop_item.uv[test_edge + 1] - \
-                        potential_loop_item.uv[test_edge]
+                    segment_vec = potential_loop_item.uv[test_edge + 1] - potential_loop_item.uv[test_edge]
 
                     cross_vec = np.cross([segment_vec[0], segment_vec[1], 0], [
                                          pot_gradient_vec[0], pot_gradient_vec[1], 0])
 
-                    potential_loop_item.current_orientation = np.sign(cross_vec[2])
+                    potential_loop_item.current_orientation = int(np.sign(cross_vec[2]))
 
                     if potential_loop_item.current_orientation == -1:
-                        potential_loop_item.uv = np.flipud(
-                            potential_loop_item.uv)
-                        potential_loop_item.edge_inds = np.flipud(
-                            potential_loop_item.edge_inds)
+                        potential_loop_item.uv = np.flipud(potential_loop_item.uv)
+                        potential_loop_item.edge_inds = np.flipud(potential_loop_item.edge_inds)
                 else:
                     raise ValueError('Some loops are too small and contain only 2 points, therefore ill-defined')
         # End of Part 3
@@ -284,7 +276,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             for loop_ind in range(len(potential_loop.loop)):
                 potential_loop_item = potential_loop.loop[loop_ind]
                 contour_line = ContourLine()
-                contour_line.uv = potential_loop_item.uv.T # Tranpose, to match MATLAB code
+                contour_line.uv = potential_loop_item.uv.T  # Tranpose, to match MATLAB code
                 contour_line.potential = part.raw.unsorted_points[pot_ind].potential
 
                 # Find the current orientation (for comparison with other loops)
@@ -296,7 +288,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 uv_vecs = np.concatenate((uv_vecs, np.zeros((1, uv_vecs.shape[1]))), axis=0)
                 rot_vecs = np.cross(uv_to_center_vecs.T, uv_vecs.T)  # Transpose, for Numpy cross product
                 track_orientation = np.sign(np.sum(rot_vecs[:, 2]))
-                contour_line.current_orientation = track_orientation
+                contour_line.current_orientation = int(track_orientation)
 
                 part.contour_lines.append(contour_line)
         # End of Part 4
