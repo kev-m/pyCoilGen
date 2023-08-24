@@ -43,6 +43,7 @@ from calculate_gradient import calculate_gradient
 from load_preoptimized_data import load_preoptimized_data
 """
 
+
 def CoilGen(log, input_args=None):
     # Create optimized coil finished coil layout
     # Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
@@ -51,8 +52,8 @@ def CoilGen(log, input_args=None):
     # The following external functions were used in modified form:
     # intreparc@John D'Errico (2010), @matlabcentral/fileexchange
     # The non-cylindrical parameterization is taken from "matlabmesh @ Ryan Schmidt rms@dgp.toronto.edu"
-    # based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes", NS (2021). 
-    # Curve intersections (https://www.mathworks.com/matlabcentral/fileexchange/22441-curve-intersections), 
+    # based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes", NS (2021).
+    # Curve intersections (https://www.mathworks.com/matlabcentral/fileexchange/22441-curve-intersections),
     # MATLAB Central File Exchange.
 
     # Parse the input variables
@@ -107,8 +108,9 @@ def CoilGen(log, input_args=None):
 
         # Define the target field
         print('Define the target field:')
-        target_field, is_suppressed_point = define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args)
-        # np.save(f'debug/{debug_key}_coil_python_02b_{use_matlab_data}.npy', 
+        target_field, is_suppressed_point = define_target_field(
+            coil_parts, target_mesh, secondary_target_mesh, input_args)
+        # np.save(f'debug/{debug_key}_coil_python_02b_{use_matlab_data}.npy',
         #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
         solution.target_field = target_field
         solution.is_suppressed_point = is_suppressed_point
@@ -125,40 +127,38 @@ def CoilGen(log, input_args=None):
         # Find indices of mesh nodes for one ring basis functions
         print('Calculate mesh one ring:')
         coil_parts = calculate_one_ring_by_mesh(coil_parts)  # 03
-        # np.save(f'debug/{debug_key}_coil_python_03_{use_matlab_data}.npy', 
+        # np.save(f'debug/{debug_key}_coil_python_03_{use_matlab_data}.npy',
         #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         # Create the basis function container which represents the current density
         print('Create the basis function container which represents the current density:')
         coil_parts = calculate_basis_functions(coil_parts)  # 04
-        np.save(f'debug/{debug_key}_coil_python_04_{use_matlab_data}.npy', 
+        np.save(f'debug/{debug_key}_coil_python_04_{use_matlab_data}.npy',
                 np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
-
 
         # Calculate the sensitivity matrix Cn
         print('Calculate the sensitivity matrix:')
         coil_parts = calculate_sensitivity_matrix(coil_parts, target_field, input_args)  # 05
-        np.save(f'debug/{debug_key}_coil_python_05_{use_matlab_data}.npy', 
+        np.save(f'debug/{debug_key}_coil_python_05_{use_matlab_data}.npy',
                 np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         # Calculate the gradient sensitivity matrix Gn
         print('Calculate the gradient sensitivity matrix:')
         coil_parts = calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args)  # 06
-        np.save(f'debug/{debug_key}_coil_python_06_{use_matlab_data}.npy', 
+        np.save(f'debug/{debug_key}_coil_python_06_{use_matlab_data}.npy',
                 np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         # Calculate the resistance matrix Rmn
         print('Calculate the resistance matrix:')
         coil_parts = calculate_resistance_matrix(coil_parts, input_args)  # 07
-        np.save(f'debug/{debug_key}_coil_python_07_{use_matlab_data}.npy', 
+        np.save(f'debug/{debug_key}_coil_python_07_{use_matlab_data}.npy',
                 np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         # Optimize the stream function toward target field and further constraints
         print('Optimize the stream function toward target field and secondary constraints:')
         coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)  # 08
-        np.save(f'debug/{debug_key}_coil_python_08_{use_matlab_data}.npy', 
+        np.save(f'debug/{debug_key}_coil_python_08_{use_matlab_data}.npy',
                 np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
-
 
     else:
         # Load the preoptimized data
@@ -170,37 +170,33 @@ def CoilGen(log, input_args=None):
     # Calculate the potential levels for the discretization
     print('Calculate the potential levels for the discretization:')
     coil_parts, primary_surface_ind = calc_potential_levels(coil_parts, combined_mesh, input_args)  # 09
-    np.save(f'debug/{debug_key}_coil_python_09_{use_matlab_data}.npy', 
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
+    np.save(f'debug/{debug_key}_coil_python_09_{use_matlab_data}.npy',
+            np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
     # Generate the contours
     print('Generate the contours:')
     coil_parts = calc_contours_by_triangular_potential_cuts(coil_parts)  # 10
-    np.save(f'debug/{debug_key}_coil_python_10_{use_matlab_data}.npy', 
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
-
+    np.save(f'debug/{debug_key}_coil_python_10_{use_matlab_data}.npy',
+            np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
     # Process contours
     print('Process contours: Evaluate loop significance')
     coil_parts = process_raw_loops(coil_parts, input_args, target_field)  # 11
-    np.save(f'debug/{debug_key}_coil_python_11_{use_matlab_data}.npy', 
-                np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
-
+    np.save(f'debug/{debug_key}_coil_python_11_{use_matlab_data}.npy',
+            np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
     if not input_args.skip_postprocessing:
         # Find the minimal distance between the contour lines
         print('Find the minimal distance between the contour lines:')
         coil_parts = find_minimal_contour_distance(coil_parts, input_args)  # 12
-        # np.save(f'debug/{debug_key}_coil_python_12_{use_matlab_data}.npy', 
+        # np.save(f'debug/{debug_key}_coil_python_12_{use_matlab_data}.npy',
         #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
-
 
         # Group the contour loops in topological order
         print('Group the contour loops in topological order:')
         coil_parts = topological_loop_grouping(coil_parts, input_args)  # 13
-        np.save(f'debug/{debug_key}_coil_python_13_{use_matlab_data}.npy', 
+        np.save(f'debug/{debug_key}_coil_python_13_{use_matlab_data}.npy',
                 np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
-
 
         # =================================================
         if use_matlab_data:
@@ -218,36 +214,32 @@ def CoilGen(log, input_args=None):
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
         coil_parts = calculate_group_centers(coil_parts)  # 14
-        np.save(f'debug/{debug_key}_coil_python_14_{use_matlab_data}.npy', 
+        np.save(f'debug/{debug_key}_coil_python_14_{use_matlab_data}.npy',
                 np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
 
         # Interconnect the single groups
         print('Interconnect the single groups:')
         coil_parts = interconnect_within_groups(coil_parts, input_args)  # 15
-        np.save(f'debug/{debug_key}_coil_python_15_{use_matlab_data}.npy', 
+        np.save(f'debug/{debug_key}_coil_python_15_{use_matlab_data}.npy',
                 np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
-
 
         # Interconnect the groups to a single wire path
         print('Interconnect the groups to a single wire path:')
         coil_parts = interconnect_among_groups(coil_parts, input_args)  # 16
-        #np.save(f'debug/{debug_key}_coil_python_16_{use_matlab_data}.npy', 
+        # np.save(f'debug/{debug_key}_coil_python_16_{use_matlab_data}.npy',
         #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
-
 
         # Connect the groups and shift the return paths over the surface
         print('Shift the return paths over the surface:')
         coil_parts = shift_return_paths(coil_parts, input_args)  # 17
-        #np.save(f'debug/{debug_key}_coil_python_17_{use_matlab_data}.npy', 
+        # np.save(f'debug/{debug_key}_coil_python_17_{use_matlab_data}.npy',
         #        np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
-
 
         # Create Cylindrical PCB Print
         print('Create PCB Print:')
         coil_parts = generate_cylindrical_pcb_print(coil_parts, input_args)  # 18
-        np.save(f'debug/{debug_key}_coil_python_18_{use_matlab_data}.npy', 
+        np.save(f'debug/{debug_key}_coil_python_18_{use_matlab_data}.npy',
                 np.asarray([target_field, is_suppressed_point, coil_parts], dtype=object))
-
 
         # Create Sweep Along Surface
         print('Create sweep along surface:')
@@ -292,7 +284,7 @@ if __name__ == "__main__":
         "conductor_cross_section_height": 0.002,
         "conductor_cross_section_width": 0.002,
         "conductor_thickness": 0.005,
-        "cross_sectional_points": [0,0],
+        "cross_sectional_points": [0, 0],
         "cylinder_mesh_parameter_list": [0.4, 0.1125, 50, 50, 0.0, 1.0, 0.0, 0.0],
         "double_cone_mesh_parameter_list": [0.8, 0.3, 0.3, 0.1, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "field_shape_function": "x",
@@ -304,7 +296,7 @@ if __name__ == "__main__":
         "group_interconnection_method": "crossed",
         "interconnection_cut_width": 0.05,
         "interconnection_method": "regular",
-        "iteration_num_mesh_refinement": 0, # MATLAB 1
+        "iteration_num_mesh_refinement": 0,  # MATLAB 1
         "level_set_method": "primary",
         "levels": 14,
         "make_cylindrical_pcb": 0,
@@ -340,7 +332,7 @@ if __name__ == "__main__":
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.1,
-        "target_region_resolution": 5, # MATLAB From defaults, 10
+        "target_region_resolution": 5,  # MATLAB From defaults, 10
         "tikonov_reg_factor": 10,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
