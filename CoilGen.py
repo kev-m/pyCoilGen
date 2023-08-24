@@ -327,7 +327,7 @@ if __name__ == "__main__":
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
         "use_only_target_mesh_verts": 0,
-        "debug": DEBUG_VERBOSE,
+        "debug": DEBUG_BASIC,
     }
 
     # cylinder_radius500mm_length1500mm
@@ -395,7 +395,7 @@ if __name__ == "__main__":
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
         "use_only_target_mesh_verts": 0,
-        "debug": DEBUG_VERBOSE,
+        "debug": DEBUG_BASIC,
     }
 
     solution = CoilGen(log, arg_dict1)
