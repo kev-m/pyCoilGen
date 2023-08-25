@@ -221,7 +221,7 @@ def execute_fast_henry_file_script_windows(binary: str, fast_henry_file_name: st
 
 def execute_fast_henry_file_script_linux(binary: str, fast_henry_file_name: str, conductor_width: float, conductor_height: float, sim_freq: float):
     # Run the script
-    ret_code = os.system(f'{binary} {fast_henry_file_name} > ouput.log')
+    ret_code = os.system(f'{binary} {fast_henry_file_name} > output.log')
 
     if ret_code == 0:
         # Read the results
