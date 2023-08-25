@@ -41,8 +41,8 @@ from sub_functions.interconnect_among_groups import interconnect_among_groups
 from sub_functions.shift_return_paths import shift_return_paths
 from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
 from sub_functions.create_sweep_along_surface import create_sweep_along_surface
+from sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
 """
-from calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
 from evaluate_field_errors import evaluate_field_errors
 from calculate_gradient import calculate_gradient
 from load_preoptimized_data import load_preoptimized_data
@@ -1067,14 +1067,14 @@ def CoilGen(log, input=None):
         print('Create sweep along surface:')
         coil_parts = create_sweep_along_surface(coil_parts, input_args)
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
 
     # Calculate the inductance by coil layout
     print('Calculate the inductance by coil layout:')
-    coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance = calculate_inductance_by_coil_layout(
-        coil_parts, input_args)
+    # coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance 
+    solution = calculate_inductance_by_coil_layout(solution, input_args)
+
+    # WIP
+    return solution
 
     # Evaluate the field errors
     print('Evaluate the field errors:')
@@ -1084,7 +1084,7 @@ def CoilGen(log, input=None):
     print('Calculate the gradient:')
     coil_gradient = calculate_gradient(coil_parts, target_field, input_args)
 
-    return coil_parts, combined_mesh, sf_b_field, target_field, coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance, field_errors, coil_gradient, is_suppressed_point
+    return solution
 
 
 if __name__ == "__main__":
