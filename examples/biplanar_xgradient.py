@@ -11,13 +11,13 @@ sub_functions_path = Path(__file__).resolve().parent / '..'
 sys.path.append(str(sub_functions_path))
 
 from CoilGen import CoilGen
-from sub_functions.constants import DEBUG_VERBOSE
+from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
 if __name__ == "__main__":
     # Set up logging
     log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.DEBUG)
-    # logging.basicConfig(level=logging.INFO)
+    # logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     arg_dict = {
         'field_shape_function': 'x',  # definition of the target field
@@ -46,7 +46,10 @@ if __name__ == "__main__":
         'skip_postprocessing': False,
         'skip_inductance_calculation': False,
         'tikonov_reg_factor': 10,  # Tikonov regularization factor for the SF optimization
-        'debug': DEBUG_VERBOSE,
+        "project_name": 'biplanar_xgradient',
+        "fasthenry_bin": '../FastHenry2/bin/fasthenry',
+        "persistence_dir": 'debug',
+        "debug": DEBUG_BASIC,
     }
 
     result = CoilGen(log, arg_dict)
