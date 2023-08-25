@@ -1163,7 +1163,7 @@ if __name__ == "__main__":
         "use_only_target_mesh_verts": 0,
         "debug": DEBUG_BASIC,
         "persistence_dir": 'debug',
-    }  # 4m3
+    }  # 4m3, 6m12.747s
 
     # cylinder_radius500mm_length1500mm
     arg_dict2 = {
