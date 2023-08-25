@@ -17,11 +17,15 @@ sys.path.append(str(sub_functions_path))
 from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, \
     visualize_compare_vertices, visualize_projected_vertices
 from helpers.extraction import load_matlab
-from sub_functions.data_structures import DataStructure, Mesh, CoilPart
+from sub_functions.data_structures import DataStructure, Mesh, CoilPart, CoilSolution
 from sub_functions.read_mesh import create_unique_noded_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh
 from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
 from CoilGen import CoilGen
+
+def load_numpy(filename) -> CoilSolution:
+    [solution] = np.load(filename, allow_pickle=True)
+    return solution
 
 
 def debug1():
@@ -381,7 +385,8 @@ def develop_calculate_basis_functions():
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     # Load Python data
-    p_coil_parts = np.load(f'debug/cylinder_coil_python_03_False.npy', allow_pickle=True)
+    solution = load_numpy('debug/coilgen_cylinder_False_03.npy')
+    p_coil_parts = solution.coil_parts
 
     # Use certain MATLAB inputs:
     p_coil_parts[0].node_triangles = m_node_triangles.copy()
@@ -433,7 +438,8 @@ def develop_calculate_sensitivity_matrix():
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     # Load Python data: calculate_basis_functions
-    p_coil_parts = np.load(f'debug/cylinder_coil_python_04_False.npy', allow_pickle=True)
+    solution = load_numpy('debug/coilgen_cylinder_False_04.npy')
+    p_coil_parts = solution.coil_parts
     # Use certain MATLAB inputs:
     target_field = mat_data_out.target_field
     #
@@ -459,12 +465,14 @@ def develop_stream_function_optimization():
     if which == 'biplanar':
         mat_data = load_matlab('debug/biplanar_xgradient')
         # Python saved data 07 : After calculate_resistance_matrix
-        [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/biplanar_coil_python_07_False.npy', allow_pickle=True)
+        solution = load_numpy('debug/coilgen_biplanar_False_07.npy')
     else:
         mat_data = load_matlab('debug/ygradient_coil')
         # Python saved data 07 : After calculate_resistance_matrix
-        #[target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_07_True.npy', allow_pickle=True)
-        [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_07_False.npy', allow_pickle=True)
+        # solution = load_numpy('debug/coilgen_cylinder_True_07.npy')
+        solution = load_numpy('debug/coilgen_cylinder_False_07.npy')
+    p_coil_parts = solution.coil_parts
+    target_field = solution.target_field
 
     mat_data_out = mat_data['coil_layouts'].out
     m_coil_parts = mat_data_out.coil_parts
@@ -490,8 +498,10 @@ def develop_calc_contours_by_triangular_potential_cuts():
     m_c_part = m_coil_parts
 
     # Python saved data 09: calc_potential_levels
-    # [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_09_False.npy', allow_pickle=True)
-    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_09_True.npy', allow_pickle=True)
+    # solution = load_numpy('debug/coilgen_cylinder_False_09.npy')
+    p_coil_parts = solution.coil_parts
+    solution = load_numpy('debug/coilgen_cylinder_False_09_True.npy')
+    p_coil_parts = solution.coil_parts
 
     ###################################################################################
     # Function under test
@@ -541,8 +551,10 @@ def develop_process_raw_loops():
     m_coil_part = m_coil_parts
 
     # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
-    # [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_10_False.npy', allow_pickle=True)
-    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_10_True.npy', allow_pickle=True)
+    # solution = load_numpy('debug/coilgen_cylinder_False_10.npy')
+    p_coil_parts = solution.coil_parts
+    solution = load_numpy('debug/coilgen_cylinder_False_10_True.npy')
+    p_coil_parts = solution.coil_parts
 
     input_args = DataStructure(smooth_flag=1, smooth_factor=1, min_loop_significance=1)
     target_field = mat_data_out.target_field
@@ -573,8 +585,10 @@ def develop_calculate_group_centers():
     mat_data = load_matlab('debug/cylinder_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_13_False_patched.npy', allow_pickle=True)
-    # [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_13_True_patched.npy', allow_pickle=True)
+    solution = load_numpy('debug/coilgen_cylinder_False_13_False_patched.npy')
+    p_coil_parts = solution.coil_parts
+    # solution = load_numpy('debug/coilgen_cylinder_False_13_True_patched.npy')
+    p_coil_parts = solution.coil_parts
 
     ###################################################################################
     # Function under test
@@ -600,11 +614,13 @@ def develop_interconnect_within_groups():
     # Python saved data 14 : After calculate_group_centers
     if which == 'biplanar':
         mat_data = load_matlab('debug/biplanar_xgradient')
-        [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/biplanar_coil_python_14_False.npy', allow_pickle=True)
+        solution = load_numpy('debug/coilgen_biplanar_False_14.npy')
     else:
         mat_data = load_matlab('debug/ygradient_coil')
-        #[target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_07_True.npy', allow_pickle=True)
-        [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_14_False.npy', allow_pickle=True)
+        #solution = load_numpy('debug/coilgen_cylinder_True_14.npy')
+        solution = load_numpy('debug/coilgen_cylinder_False_14.npy')
+
+    p_coil_parts = solution.coil_parts
 
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
@@ -675,7 +691,8 @@ def develop_interconnect_among_groups():
     m_c_part = m_coil_parts
     # The Python paths and the MATLAB paths are close but slightly different. This prevents detailed debugging.
     # Actually, there is no bug!
-    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_15_True.npy', allow_pickle=True)
+    solution = load_numpy('debug/coilgen_cylinder_False_15_True.npy')
+    p_coil_parts = solution.coil_parts
 
     input_args = DataStructure(interconnection_cut_width=0.1)
     coil_parts = interconnect_among_groups(p_coil_parts, input_args, m_c_part)
@@ -714,7 +731,8 @@ def develop_shift_return_paths():
     mat_data = load_matlab('debug/cylinder_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_16_True.npy', allow_pickle=True)
+    solution = load_numpy('debug/coilgen_cylinder_False_16_True.npy')
+    p_coil_parts = solution.coil_parts
 
     input_args = DataStructure(interconnection_cut_width=0.1,
                                skip_normal_shift=0,
@@ -749,7 +767,8 @@ def develop_generate_cylindrical_pcb_print():
     mat_data = load_matlab('debug/cylinder_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_17_True.npy', allow_pickle=True)
+    solution = load_numpy('debug/coilgen_cylinder_False_17_True.npy')
+    p_coil_parts = solution.coil_parts
 
     input_args = DataStructure(conductor_cross_section_width=0.015,
                                cylinder_mesh_parameter_list=[0.8, 0.3, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
@@ -791,8 +810,10 @@ def develop_create_sweep_along_surface():
     mat_data = load_matlab('debug/cylinder_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    #[target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_18_True.npy', allow_pickle=True)
-    [target_field, is_suppressed_point, p_coil_parts] = np.load('debug/cylinder_coil_python_18_False.npy', allow_pickle=True)
+    #solution = load_numpy('debug/coilgen_cylinder_False_18_True.npy')
+    p_coil_parts = solution.coil_parts
+    solution = load_numpy('debug/coilgen_cylinder_False_18.npy')
+    p_coil_parts = solution.coil_parts
 
     points = [[0.0, 0.006427876096865392, 0.00984807753012208, 0.008660254037844387, 0.0034202014332566887, -0.0034202014332566865, -0.008660254037844388, -0.009848077530122082, -0.006427876096865396, -2.4492935982947064e-18],
               [0.01, 0.007660444431189781, 0.0017364817766693042, -0.0049999999999999975, -0.009396926207859084, -0.009396926207859084, -0.004999999999999997, 0.0017364817766692998, 0.007660444431189778, 0.01]]
