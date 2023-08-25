@@ -478,10 +478,11 @@ def develop_stream_function_optimization():
     m_coil_parts = mat_data_out.coil_parts
     m_coil_part = m_coil_parts
 
-    input_args = DataStructure(tikonov_reg_factor=10, sf_opt_method='tikkonov', fmincon_parameter=[500.0, 10000000000.0, 1e-10, 1e-10, 1e-10])
-    #target_field = mat_data_out.target_field
+    input_args = DataStructure(tikonov_reg_factor=10, sf_opt_method='tikkonov',
+                               fmincon_parameter=[500.0, 10000000000.0, 1e-10, 1e-10, 1e-10])
+    # target_field = mat_data_out.target_field
 
-    debug_data = mat_data_out    
+    debug_data = mat_data_out
     ###################################################################################
     # Function under test
     coil_parts2 = stream_function_optimization(p_coil_parts, target_field, input_args, debug_data)
@@ -617,7 +618,7 @@ def develop_interconnect_within_groups():
         solution = load_numpy('debug/coilgen_biplanar_False_14.npy')
     else:
         mat_data = load_matlab('debug/ygradient_coil')
-        #solution = load_numpy('debug/coilgen_cylinder_True_14.npy')
+        # solution = load_numpy('debug/coilgen_cylinder_True_14.npy')
         solution = load_numpy('debug/coilgen_cylinder_False_14.npy')
 
     p_coil_parts = solution.coil_parts
@@ -629,7 +630,7 @@ def develop_interconnect_within_groups():
 
     ###################################################################################
     # Function under test
-    coil_parts = interconnect_within_groups(p_coil_parts, input_args)#, m_c_part)
+    coil_parts = interconnect_within_groups(p_coil_parts, input_args)  # , m_c_part)
     ###################################################################################
 
     # And now!!
@@ -810,7 +811,7 @@ def develop_create_sweep_along_surface():
     mat_data = load_matlab('debug/cylinder_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
-    #solution = load_numpy('debug/coilgen_cylinder_False_18_True.npy')
+    # solution = load_numpy('debug/coilgen_cylinder_False_18_True.npy')
     p_coil_parts = solution.coil_parts
     solution = load_numpy('debug/coilgen_cylinder_False_18.npy')
     p_coil_parts = solution.coil_parts
@@ -850,6 +851,39 @@ def develop_create_sweep_along_surface():
         # assert compare(c_wire_part.track_shape, m_wire_part.track_shape)
 
 
+def develop_calculate_inductance_by_coil_layout():
+    from sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
+
+    which = 'biplanarX'
+    # MATLAB saved data
+
+    # Python saved data 16 : After interconnect_among_groups (which calculates wire_path)
+    if which == 'biplanar':
+        mat_data = load_matlab('debug/biplanar_xgradient')
+        solution = load_numpy('debug/coilgen_biplanar_False_16.npy')
+        width = 0.002
+    else:
+        mat_data = load_matlab('debug/ygradient_coil')
+        # solution = load_numpy('debug/coilgen_cylinder_True_16.npy')
+        solution = load_numpy('debug/coilgen_cylinder_False_16.npy')
+        width = 0.015
+
+    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
+    m_c_part = m_coil_parts
+
+    input_args = DataStructure(conductor_cross_section_width=width, conductor_cross_section_height=0.002,
+                               skip_inductance_calculation=False, fasthenry_bin='../FastHenry2/bin/fasthenry')
+            
+
+    ###################################################################################
+    # Function under test
+    solution = calculate_inductance_by_coil_layout(solution, input_args)  # , m_c_part)
+    ###################################################################################
+
+    # And now!!
+    coil_part = solution.coil_parts[0]
+
+
 if __name__ == "__main__":
     # Set up logging
     log = logging.getLogger(__name__)
@@ -873,18 +907,20 @@ if __name__ == "__main__":
     # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
     # develop_calculate_group_centers()
-    develop_interconnect_within_groups()
+    # develop_interconnect_within_groups()
     # develop_interconnect_among_groups()
     # develop_shift_return_paths()
     # develop_generate_cylindrical_pcb_print()
     # develop_create_sweep_along_surface()
+    develop_calculate_inductance_by_coil_layout()
+    #
     # test_smooth_track_by_folding()
-    #from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file1, \
+    # from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file1, \
     #        test_split_disconnected_mesh_stl_file2, test_split_disconnected_mesh_simple_planar_mesh, \
     #        test_split_disconnected_mesh_biplanar_mesh
     # test_split_disconnected_mesh_simple_planar_mesh()
     # test_split_disconnected_mesh_biplanar_mesh()
     # test_split_disconnected_mesh_stl_file1()
-    #test_split_disconnected_mesh_stl_file2()
+    # test_split_disconnected_mesh_stl_file2()
     # from tests.test_mesh import test_get_face_index2
     # test_get_face_index2()
