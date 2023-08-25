@@ -854,18 +854,20 @@ def develop_create_sweep_along_surface():
 def develop_calculate_inductance_by_coil_layout():
     from sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
 
-    which = 'biplanarX'
+    which = 'biplanar'
     # MATLAB saved data
 
     # Python saved data 16 : After interconnect_among_groups (which calculates wire_path)
     if which == 'biplanar':
         mat_data = load_matlab('debug/biplanar_xgradient')
-        solution = load_numpy('debug/coilgen_biplanar_False_16.npy')
+        #solution = load_numpy('debug/coilgen_biplanar_False_16.npy')
+        solution = load_numpy('debug/biplanar_16.npy')
         width = 0.002
     else:
         mat_data = load_matlab('debug/ygradient_coil')
         # solution = load_numpy('debug/coilgen_cylinder_True_16.npy')
-        solution = load_numpy('debug/coilgen_cylinder_False_16.npy')
+        # solution = load_numpy('debug/coilgen_cylinder_False_16.npy')
+        solution = load_numpy('debug/cylinder_16.npy')
         width = 0.015
 
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
@@ -881,8 +883,12 @@ def develop_calculate_inductance_by_coil_layout():
     ###################################################################################
 
     # And now!!
-    coil_part = solution.coil_parts[0]
-
+    for coil_part in solution.coil_parts:
+        log.debug("Coil part:")
+        log.debug(" coil_part.coil_resistance    = %f", coil_part.coil_resistance)
+        log.debug(" coil_part.coil_inductance    = %f", coil_part.coil_inductance)
+        log.debug(" coil_part.coil_length        = %f", coil_part.coil_length)
+        log.debug(" coil_part.coil_cross_section = %f", coil_part.coil_cross_section)
 
 if __name__ == "__main__":
     # Set up logging
