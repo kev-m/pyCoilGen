@@ -50,25 +50,26 @@ def calculate_inductance_by_coil_layout(solution: CoilSolution, input_args) -> C
 
         if result == 0:
             for part_ind in range(len(coil_parts)):
-                coil_parts[part_ind].coil_resistance, coil_parts[part_ind].coil_inductance, coil_parts[part_ind].coil_cross_section = create_fast_henry_file(coil_parts[part_ind].wire_path, conductor_width, conductor_height, sim_freq, material_conductivity, down_sample_factor)
+                script_file = create_fast_henry_file(coil_part.wire_path, conductor_width, conductor_height, sim_freq, material_conductivity, down_sample_factor)
+                coil_part.coil_resistance, coil_part.coil_inductance, coil_part.coil_cross_section = create_fast_henry_file(coil_part.wire_path, conductor_width, conductor_height, sim_freq, material_conductivity, down_sample_factor)
         else:
             print(' FastHenry2 is not installed in the Folder- "Program Files (x86)" -", magnetic inductance will not be calculated.. ')
-            for part_ind in range(len(coil_parts)):
+            for coil_part in coil_parts:
                 coil_part.coil_resistance = 0
-                coil_parts[part_ind].coil_inductance = 0
-                coil_parts[part_ind].coil_length = 0
-                coil_parts[part_ind].coil_cross_section = 0
+                coil_part.coil_inductance = 0
+                coil_part.coil_length = 0
+                coil_part.coil_cross_section = 0
     else:
-        for part_ind in range(len(coil_parts)):
-            coil_parts[part_ind].coil_resistance = 0
-            coil_parts[part_ind].coil_inductance = 0
-            coil_parts[part_ind].coil_length = 0
-            coil_parts[part_ind].coil_cross_section = 0
+        for coil_part in coil_parts:
+            coil_part.coil_resistance = 0
+            coil_part.coil_inductance = 0
+            coil_part.coil_length = 0
+            coil_part.coil_cross_section = 0
 
     # Calculate the length of the coil
     for part_ind in range(len(coil_parts)):
-        wire_path = coil_parts[part_ind].wire_path
-        coil_parts[part_ind].coil_length = np.sum(np.linalg.norm(wire_path.v[:, 1:] - wire_path.v[:, :-1], axis=0))
+        wire_path = coil_part.wire_path
+        coil_part.coil_length = np.sum(np.linalg.norm(wire_path.v[:, 1:] - wire_path.v[:, :-1], axis=0))
 
     # Return the modified coil_parts list with calculated attributes
     return coil_parts
@@ -91,7 +92,6 @@ def create_fast_henry_file(wire_path, conductor_width, conductor_height, sim_fre
     """
 
     # Extract downsampled wire_path data
-    wire_path_downsampled_uv = wire_path['uv'][:, ::down_sample_factor]
     wire_path_downsampled_v = wire_path['v'][:, ::down_sample_factor]
 
     # Create the ".inp" input file
@@ -127,7 +127,9 @@ def create_fast_henry_file(wire_path, conductor_width, conductor_height, sim_fre
         fid.write(f"\n\n.freq fmin={sim_freq} fmax={sim_freq} ndec=1")
         fid.write("\n\n.end")
 
-def execute_fast_henry_file_script_windows(fast_henry_file_name):
+        return fast_henry_file_name
+
+def execute_fast_henry_file_script_windows(fast_henry_file_name: str, conductor_width: float, conductor_height: float, sim_freq: float):
     # Create the Windows ".vbs" script file to run the ".inp" automatically
     script_file_name = 'run_FH2.vbs'
     with open(script_file_name, 'w') as fid2:
