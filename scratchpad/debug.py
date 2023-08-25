@@ -861,7 +861,8 @@ def develop_calculate_inductance_by_coil_layout():
     if which == 'biplanar':
         mat_data = load_matlab('debug/biplanar_xgradient')
         #solution = load_numpy('debug/coilgen_biplanar_False_16.npy')
-        solution = load_numpy('debug/biplanar_16.npy')
+        #solution = load_numpy('debug/biplanar_16.npy')
+        solution = load_numpy('debug/biplanar_xgradient_16.npy')
         width = 0.002
     else:
         mat_data = load_matlab('debug/ygradient_coil')
