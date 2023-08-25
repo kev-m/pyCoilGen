@@ -187,8 +187,12 @@ def execute_fast_henry_file_script_windows(binary: str, fast_henry_file_name: st
             values = out[2].strip().split(' ')
             real_str = values[0]
             real_Z = float(real_str)
-            im_str = values[3][:-1]
-            im_Z = float(im_str)
+            for index in range(1, len(values)):
+                a_str = values[index]
+                if 'j' in a_str:
+                    im_str = a_str[:-1]
+                    im_Z = float(im_str)
+                    break
 
             coil_cross_section = conductor_width * conductor_height  # in m²
             coil_inductance = im_Z / (sim_freq * 2 * np.pi)  # in Henry
@@ -197,6 +201,10 @@ def execute_fast_henry_file_script_windows(binary: str, fast_henry_file_name: st
         except Exception as e:
             log.error("Exception: %s", e)
             ret_code = -10
+
+            coil_cross_section = conductor_width * conductor_height  # in m²
+            coil_inductance = np.nan  # in Henry
+            coil_resistance = np.nan  # in Ohm
 
         # Remove the created script files
         try:            
@@ -223,8 +231,12 @@ def execute_fast_henry_file_script_linux(binary: str, fast_henry_file_name: str,
             values = out[2].strip().split(' ')
             real_str = values[0]
             real_Z = float(real_str)
-            im_str = values[3][:-1]
-            im_Z = float(im_str)
+            for index in range(1, len(values)):
+                a_str = values[index]
+                if 'j' in a_str:
+                    im_str = a_str[:-1]
+                    im_Z = float(im_str)
+                    break
 
             coil_cross_section = conductor_width * conductor_height  # in m²
             coil_inductance = im_Z / (sim_freq * 2 * np.pi)  # in Henry
@@ -233,11 +245,16 @@ def execute_fast_henry_file_script_linux(binary: str, fast_henry_file_name: str,
             log.error("Exception: %s", e)
             ret_code = -10
 
+            coil_cross_section = conductor_width * conductor_height  # in m²
+            coil_inductance = np.nan  # in Henry
+            coil_resistance = np.nan  # in Ohm
+
         # Remove the created script files
         try:            
-            os.remove('Zc.mat')
-            os.remove(fast_henry_file_name)
-            os.remove('ouput.log')
+            #os.remove('Zc.mat')
+            #os.remove(fast_henry_file_name)
+            #os.remove('ouput.log')
+            pass
         except FileNotFoundError as e:
             log.info("Exception removing temporary files: %s", e)
 
