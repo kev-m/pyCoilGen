@@ -1,36 +1,52 @@
 # Installation
 ## SciPiy and Dependencies
+SciPy might actually not be needed for the release version. To be checked!!
 Note: Also need BLAS and gfortran to install scipy:
 ```bash
  $ sudo apt-get install libopenblas-dev
  $ sudo apt install gfortran
- ```
+```
 
- ## Trimesh Dependencies
- Need to manually install Trimesh dependencies.
- 1. rtree (for nearest.on_surface)
+## Trimesh Dependencies
+Need to manually install Trimesh dependencies.
+1. rtree (for nearest.on_surface)
 
 I needed to manually install libspatialindex library (for rtree).
- ```bash
- $ sudo apt-get install libspatialindex-dev
- ```
+```bash
+$ sudo apt-get install libspatialindex-dev
+```
 
- # Conversion Notes
- ## Indexing
- Note that Matlab uses base index of 1 for arrays, whereas Numpy uses 0. Adjust all functions that create `faces` arrays accordingly.
+## FastHenry2
+The `FastHenry2` application needs to downloaded and installed.
 
- ## Mesh Geometry
- Confirm: Are mesh normals computed according to the right-hand rule? i.e. defined using the "counter-clockwise" or "anti-clockwise"
- vertex ordering, where the vertices of the face are specified in a counter-clockwise direction when viewed from the outside of the mesh.
+### Windows
+Go to the [download](https://www.fastfieldsolvers.com/download.htm) page, fill out the form, then download the
+`FastFieldSolvers` bundle, e.g. FastFieldSolvers Software Bundle Version 5.2.0
 
- ## Other Weirdnesses
- ### build_cylinder_mesh.py
- I think there may be a fence-post bug in the original MATLAB code. The height of the resulting
- cylinder does not match the cylinder_height parameter. This is especially noticable for small
- values of num_longitudinal_divisions. See test_build_cylinder_mesh.py.
+Under Linux systems, the project should be cloned from [GitHub](https://github.com/ediloren/FastHenry2) and compiled.
+### Linux
+```bash
+$ git clone https://github.com/ediloren/FastHenry2.git
+$ cd FastHenry2/src
+$ make
+```
 
- ### define_target_field.py
- In define_target_field, line 104, I have to swap y and z coords to match MATLAB:
+# Conversion Notes
+## Indexing
+Note that Matlab uses base index of 1 for arrays, whereas Numpy uses 0. Adjust all functions that create `faces` arrays accordingly.
+
+## Mesh Geometry
+Confirm: Are mesh normals computed according to the right-hand rule? i.e. defined using the "counter-clockwise" or "anti-clockwise"
+vertex ordering, where the vertices of the face are specified in a counter-clockwise direction when viewed from the outside of the mesh.
+
+## Other Weirdnesses
+### build_cylinder_mesh.py
+I think there may be a fence-post bug in the original MATLAB code. The height of the resulting
+cylinder does not match the cylinder_height parameter. This is especially noticable for small
+values of num_longitudinal_divisions. See test_build_cylinder_mesh.py.
+
+### define_target_field.py
+In define_target_field, line 104, I have to swap y and z coords to match MATLAB:
 ```python
 target_points = np.vstack((target_grid_x.ravel(), target_grid_z.ravel(), target_grid_y.ravel()))
 ```
@@ -47,7 +63,7 @@ TODO: Check caller implementations and convert appropriately.
 # Runtime Errors
 When target_region_resolution is 10.
 ``` bash
-  File "/home/kevin/Dev/CoilGen-Python/sub_functions/interconnect_within_groups.py", line 77, in interconnect_within_groups
-    part_group.opened_loop = part_group.loops.uv
+File "/home/kevin/Dev/CoilGen-Python/sub_functions/interconnect_within_groups.py", line 77, in interconnect_within_groups
+part_group.opened_loop = part_group.loops.uv
 AttributeError: 'list' object has no attribute 'uv'
 ```
