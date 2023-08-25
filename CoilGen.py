@@ -1066,6 +1066,7 @@ def CoilGen(log, input=None):
         # Create Sweep Along Surface
         print('Create sweep along surface:')
         coil_parts = create_sweep_along_surface(coil_parts, input_args)
+        save(persistence_dir, project_name, '19', solution)
 
 
     # Calculate the inductance by coil layout
@@ -1163,6 +1164,7 @@ if __name__ == "__main__":
         "use_only_target_mesh_verts": 0,
         "debug": DEBUG_BASIC,
         "persistence_dir": 'debug',
+        "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 4m3, 6m12.747s
 
     # cylinder_radius500mm_length1500mm
@@ -1232,6 +1234,7 @@ if __name__ == "__main__":
         "use_only_target_mesh_verts": 0,
         "debug": DEBUG_BASIC,
         "persistence_dir": 'debug',
+        "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 2m11
 
     solution = CoilGen(log, arg_dict1)
