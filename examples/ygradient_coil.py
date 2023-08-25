@@ -50,8 +50,11 @@ if __name__ == "__main__":
         'sf_opt_method': 'tikkonov', # ...
         'fmincon_parameter': [1000.0, 10 ^ 10, 1.000000e-10, 1.000000e-10, 1.000000e-10],
         'tikonov_reg_factor': 100,  # %Tikonov regularization factor for the SF optimization
+        "project_name": 'ygradient_coil',
+        "fasthenry_bin": '../FastHenry2/bin/fasthenry',
+        "persistence_dir": 'debug',
         #'debug': DEBUG_VERBOSE,
-        'debug': DEBUG_BASIC,
+        "debug": DEBUG_BASIC,
     }
 
     result = CoilGen(log, arg_dict)
