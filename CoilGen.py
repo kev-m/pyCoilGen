@@ -48,6 +48,8 @@ from calculate_gradient import calculate_gradient
 from load_preoptimized_data import load_preoptimized_data
 """
 
+log = logging.getLogger(__name__)
+
 
 def save(output_dir, project_name, tag, solution):
     filename = f'{output_dir}/{project_name}_{tag}.npy'
@@ -1090,7 +1092,7 @@ def CoilGen(log, input=None):
 
 if __name__ == "__main__":
     # Set up logging
-    log = logging.getLogger(__name__)
+    # log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
     # logging.basicConfig(level=logging.INFO)
 
