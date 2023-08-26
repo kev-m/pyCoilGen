@@ -260,6 +260,7 @@ def CoilGen(log, input_args=None):
         # Create Sweep Along Surface
         print('Create sweep along surface:')
         coil_parts = create_sweep_along_surface(coil_parts, input_args)
+        save(persistence_dir, project_name, '19', solution)
 
     # Calculate the inductance by coil layout
     print('Calculate the inductance by coil layout:')
@@ -277,7 +278,7 @@ def CoilGen(log, input_args=None):
     print('Calculate the gradient:')
     coil_gradient = calculate_gradient(coil_parts, target_field, input_args)
 
-    return coil_parts, combined_mesh, sf_b_field, target_field, coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance, field_errors, coil_gradient, is_suppressed_point
+    return solution
 
 
 if __name__ == "__main__":
