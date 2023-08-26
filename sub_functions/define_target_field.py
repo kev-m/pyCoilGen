@@ -119,7 +119,7 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
 
         # Remove identical points
         _, unique_inds = np.unique(target_points3, axis=1, return_index=True)
-        target_points = target_points3[:, unique_inds]
+        target_points = target_points3[:, sorted(unique_inds)]
         # target_points = target_points3
 
         # Define the target field shape
