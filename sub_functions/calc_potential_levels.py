@@ -51,6 +51,8 @@ def calc_potential_levels(coil_parts: List[CoilPart], combined_mesh, input):
                 num_pot_steps = int(pot_residual / contour_step)
                 part.potential_level_list = np.arange(num_pot_steps) * contour_step + (np.min(part.stream_function) + level_offset * contour_step)
                 
+                # IndexError: index -1 is out of bounds for axis 0 with size 0
+                #  Because part.potential_level_list is empty!!
                 dist_to_pot_max = np.max(part.stream_function) - part.potential_level_list[-1]
                 dist_to_pot_min = part.potential_level_list[0] - np.min(part.stream_function)
                 if dist_to_pot_max < dist_to_pot_min:
