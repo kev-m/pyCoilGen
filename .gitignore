@@ -18,3 +18,8 @@ workspace.code-workspace
 matlab/
 images/
 debug/
+
+# FastHenry files
+output.log
+coil_track_FH2_input.inp
+Zc*.mat

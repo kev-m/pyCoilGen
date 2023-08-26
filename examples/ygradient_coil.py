@@ -11,11 +11,11 @@ import logging
 sub_functions_path = Path(__file__).resolve().parent / '..'
 print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
-from CoilGen import CoilGen
+from CoilGen_release import CoilGen
 from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Set up logging
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
@@ -36,9 +36,9 @@ if __name__ == "__main__":
         'surface_is_cylinder_flag': True,
         'interconnection_cut_width': 0.1,  # % the width for the interconnections are interconnected; in meter
         'normal_shift_length': 0.025,  # % the length for which overlapping return paths will be shifted along the surface normals; in meter
-        'iteration_num_mesh_refinement': 0,  # % the number of refinements for the mesh;
+        'iteration_num_mesh_refinement': 1,  # % the number of refinements for the mesh;
         'set_roi_into_mesh_center': True,
-        'force_cut_selection': {'high'},  # ...
+        'force_cut_selection': ['high'],  # ...
         'level_set_method': 'primary',  # ... %Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
         'interconnection_method': 'regular',
         'skip_postprocessing': False,
@@ -50,6 +50,9 @@ if __name__ == "__main__":
         'sf_opt_method': 'tikkonov', # ...
         'fmincon_parameter': [1000.0, 10 ^ 10, 1.000000e-10, 1.000000e-10, 1.000000e-10],
         'tikonov_reg_factor': 100,  # %Tikonov regularization factor for the SF optimization
+        'project_name': 'ygradient_coil',
+        'fasthenry_bin': '../FastHenry2/bin/fasthenry',
+        'persistence_dir': 'debug',
         #'debug': DEBUG_VERBOSE,
         'debug': DEBUG_BASIC,
     }

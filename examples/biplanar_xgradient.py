@@ -10,14 +10,14 @@ import logging
 sub_functions_path = Path(__file__).resolve().parent / '..'
 sys.path.append(str(sub_functions_path))
 
-from CoilGen import CoilGen
-from sub_functions.constants import DEBUG_VERBOSE
+from CoilGen_release import CoilGen
+from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Set up logging
     log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
-    # logging.basicConfig(level=logging.INFO)
+    #logging.basicConfig(level=logging.INFO)
 
     arg_dict = {
         'field_shape_function': 'x',  # definition of the target field
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         'interconnection_cut_width': 0.05,
         # the length for which overlapping return paths will be shifted along the surface normals; in meter
         'normal_shift_length': 0.01,
-        'iteration_num_mesh_refinement': 0,  # the number of refinements for the mesh;
+        'iteration_num_mesh_refinement': 1,  # the number of refinements for the mesh;
         'set_roi_into_mesh_center': True,
         'force_cut_selection': ['high'],
         # Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
@@ -46,7 +46,10 @@ if __name__ == "__main__":
         'skip_postprocessing': False,
         'skip_inductance_calculation': False,
         'tikonov_reg_factor': 10,  # Tikonov regularization factor for the SF optimization
-        'debug': DEBUG_VERBOSE,
+        'project_name': 'biplanar_xgradient',
+        'fasthenry_bin': '../FastHenry2/bin/fasthenry',
+        'persistence_dir': 'debug',
+        'debug': DEBUG_BASIC,
     }
 
     result = CoilGen(log, arg_dict)

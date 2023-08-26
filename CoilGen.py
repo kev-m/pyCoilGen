@@ -41,12 +41,14 @@ from sub_functions.interconnect_among_groups import interconnect_among_groups
 from sub_functions.shift_return_paths import shift_return_paths
 from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
 from sub_functions.create_sweep_along_surface import create_sweep_along_surface
+from sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
 """
-from calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
 from evaluate_field_errors import evaluate_field_errors
 from calculate_gradient import calculate_gradient
 from load_preoptimized_data import load_preoptimized_data
 """
+
+log = logging.getLogger(__name__)
 
 
 def save(output_dir, project_name, tag, solution):
@@ -1066,15 +1068,16 @@ def CoilGen(log, input=None):
         # Create Sweep Along Surface
         print('Create sweep along surface:')
         coil_parts = create_sweep_along_surface(coil_parts, input_args)
+        save(persistence_dir, project_name, '19', solution)
 
-        # WIP
-        solution.coil_parts = coil_parts
-        return solution
 
     # Calculate the inductance by coil layout
     print('Calculate the inductance by coil layout:')
-    coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance = calculate_inductance_by_coil_layout(
-        coil_parts, input_args)
+    # coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance 
+    solution = calculate_inductance_by_coil_layout(solution, input_args)
+
+    # WIP
+    return solution
 
     # Evaluate the field errors
     print('Evaluate the field errors:')
@@ -1084,12 +1087,12 @@ def CoilGen(log, input=None):
     print('Calculate the gradient:')
     coil_gradient = calculate_gradient(coil_parts, target_field, input_args)
 
-    return coil_parts, combined_mesh, sf_b_field, target_field, coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance, field_errors, coil_gradient, is_suppressed_point
+    return solution
 
 
 if __name__ == "__main__":
     # Set up logging
-    log = logging.getLogger(__name__)
+    # log = logging.getLogger(__name__)
     logging.basicConfig(level=logging.DEBUG)
     # logging.basicConfig(level=logging.INFO)
 
@@ -1154,16 +1157,16 @@ if __name__ == "__main__":
         "target_field_definition_file": "none",
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
-        "target_region_radius": 0.1,
-        # MATLAB 10 is the default but 5 is faster, 10 causes a runtime error: interconnect_within_groups.py", line 77
-        "target_region_resolution": 5,
+        "target_region_radius": 0.1,        
+        "target_region_resolution": 10, # MATLAB 10 is the default but 5 is faster
         "tikonov_reg_factor": 10,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
-        "use_only_target_mesh_verts": 0,
+        "use_only_target_mesh_verts": False,
         "debug": DEBUG_BASIC,
         "persistence_dir": 'debug',
-    }  # 4m3
+        "fasthenry_bin": '../FastHenry2/bin/fasthenry',
+    }  # 4m3, 6m12.747s
 
     # cylinder_radius500mm_length1500mm
     arg_dict2 = {
@@ -1188,13 +1191,13 @@ if __name__ == "__main__":
         "group_interconnection_method": "crossed",
         "interconnection_cut_width": 0.1,
         "interconnection_method": "regular",
-        "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
+        "iteration_num_mesh_refinement": 1,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 20,
         "make_cylindrical_pcb": 1,
         "max_allowed_angle_within_coil_track": 120,
         "min_allowed_angle_within_coil_track": 0.0001,
-        "min_loop_significance": 1,
+        "min_loop_significance": 0.1,
         "min_point_loop_number": 20,
         "normal_shift_length": 0.025,
         "normal_shift_smooth_factors": [2, 3, 2],
@@ -1208,7 +1211,7 @@ if __name__ == "__main__":
         "save_stl_flag": 1,
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
-        "set_roi_into_mesh_center": 1,
+        "set_roi_into_mesh_center": True,
         "sf_opt_method": "tikkonov",
         "sf_source_file": "none",
         "skip_calculation_min_winding_distance": 1,  # Default 1
@@ -1219,19 +1222,20 @@ if __name__ == "__main__":
         "smooth_factor": 1,
         "smooth_flag": 1,
         "specific_conductivity_conductor": 1.8e-08,
-        "surface_is_cylinder_flag": 1,
+        "surface_is_cylinder_flag": True,
         "target_field_definition_field_name": "none",
         "target_field_definition_file": "none",
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.15,
-        "target_region_resolution": 5,  # MATLAB 10 is the default but 5 is faster
+        "target_region_resolution": 10,  # MATLAB 10 is the default but 5 is faster
         "tikonov_reg_factor": 100,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
-        "use_only_target_mesh_verts": 0,
+        "use_only_target_mesh_verts": False,
         "debug": DEBUG_BASIC,
         "persistence_dir": 'debug',
+        "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 2m11
 
     solution = CoilGen(log, arg_dict1)

@@ -276,6 +276,9 @@ def parse_input(parse_cli=True):
     # Add the parameters for the generation of the (default) biplanar mesh
     parser.add_argument('--persistence_dir', type=str, default='debug', help=f"Directory to write persistence data")
 
+    # Add a parameter for the location of the FastHenry2 executable
+    parser.add_argument('--fasthenry_bin', type=str, default='/usr/bin/fasthenry', help=f"Location of the FastHenry2 binary")
+
     # Parse the input arguments
     if parse_cli == False:
         input = parser.parse_args([])
