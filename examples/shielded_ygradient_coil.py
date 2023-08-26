@@ -31,6 +31,7 @@ if __name__ == '__main__':
         'field_shape_function': 'y',  # definition of the target field
         'coil_mesh_file': 'Double_coaxial_open_cylinder_r1_400mm_r2_600_length_1500mm.stl',
         'target_mesh_file': 'none',
+        'target_region_resolution': 5,  # MATLAB 10 is the default but 5 is faster
         'secondary_target_mesh_file': 'Open_cylinder_r750mm_length_1500mm.stl',
         'secondary_target_weight': 0.5,
         'target_region_radius': 0.15,  # in meter
@@ -42,7 +43,7 @@ if __name__ == '__main__':
         'surface_is_cylinder_flag': True,
         'interconnection_cut_width': 0.05,   # the width for the interconnections are interconnected; in meter
         'normal_shift_length': 0.01,         # the length for which overlapping return paths will be shifted along the surface normals; in meter
-        'iteration_num_mesh_refinement': 1,  # the number of refinements for the mesh;
+        'iteration_num_mesh_refinement': 0,  # the number of refinements for the mesh (Was: 1)
         'set_roi_into_mesh_center': True,
         'force_cut_selection': ['high'],
         # Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
