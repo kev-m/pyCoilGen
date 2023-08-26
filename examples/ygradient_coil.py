@@ -11,7 +11,7 @@ import logging
 sub_functions_path = Path(__file__).resolve().parent / '..'
 print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
-from CoilGen_release import CoilGen
+from CoilGen import CoilGen
 from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
 
