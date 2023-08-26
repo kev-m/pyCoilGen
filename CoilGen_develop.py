@@ -1137,7 +1137,6 @@ if __name__ == "__main__":
         "planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         "plot_flag": 1,
         "pot_offset_factor": 0.25,
-        "project_name": 'biplanar',
         "save_stl_flag": 1,
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
@@ -1158,11 +1157,13 @@ if __name__ == "__main__":
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.1,        
-        "target_region_resolution": 10, # MATLAB 10 is the default but 5 is faster
+        "target_region_resolution": 5, # MATLAB 10 is the default but 5 is faster
         "tikonov_reg_factor": 10,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
         "use_only_target_mesh_verts": False,
+
+        "project_name": 'biplanar',
         "debug": DEBUG_BASIC,
         "persistence_dir": 'debug',
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
