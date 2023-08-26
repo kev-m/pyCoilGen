@@ -251,10 +251,9 @@ def execute_fast_henry_file_script_linux(binary: str, fast_henry_file_name: str,
 
         # Remove the created script files
         try:            
-            #os.remove('Zc.mat')
-            #os.remove(fast_henry_file_name)
-            #os.remove('ouput.log')
-            pass
+            os.remove('Zc.mat')
+            os.remove(fast_henry_file_name)
+            os.remove('ouput.log')
         except FileNotFoundError as e:
             log.info("Exception removing temporary files: %s", e)
 
