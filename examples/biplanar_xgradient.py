@@ -31,7 +31,7 @@ if __name__ == '__main__':
         # the number of potential steps that determines the later number of windings (Stream function discretization)
         'levels': 14,
         # a potential offset value for the minimal and maximal contour potential ; must be between 0 and 1
-        'pot_offset_factor': '0.25',
+        'pot_offset_factor': 0.25,
         'surface_is_cylinder_flag': True,
         # the width for the interconnections are interconnected; in meter
         'interconnection_cut_width': 0.05,
