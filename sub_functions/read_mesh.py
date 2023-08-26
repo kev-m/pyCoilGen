@@ -83,7 +83,8 @@ def read_mesh(input):
     # Read the shielded mesh surface
     if input.secondary_target_mesh_file != 'none':
         shielded_mesh = Mesh.load_from_file(input.geometry_source_path + '/' + input.secondary_target_mesh_file)
-        shielded_mesh = create_unique_noded_mesh(shielded_mesh)
+        # Removing this, it's not required?
+        # shielded_mesh = create_unique_noded_mesh(shielded_mesh)
     else:
         shielded_mesh = None
 
