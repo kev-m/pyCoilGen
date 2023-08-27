@@ -489,6 +489,37 @@ def develop_stream_function_optimization():
     ###################################################################################
 
 
+def develop_calc_potential_levels():
+    from sub_functions.calc_potential_levels import calc_potential_levels
+
+    which = 'shielded_gradient_coil'
+    # MATLAB saved data
+
+    # Python saved data 14 : After calculate_group_centers
+    if which == 'biplanar':
+        mat_data = load_matlab('debug/biplanar_xgradient')
+        solution = load_numpy('debug/coilgen_biplanar_False_14.npy')
+    elif which == 'cylinder':
+        mat_data = load_matlab('debug/ygradient_coil')
+        # solution = load_numpy('debug/coilgen_cylinder_True_14.npy')
+        solution = load_numpy('debug/coilgen_cylinder_False_14.npy')
+    else:
+        mat_data = load_matlab(f'debug/{which}')
+        solution = load_numpy(f'debug/{which}_08.npy')
+        input_args = DataStructure(levels=26, pot_offset_factor=0.25, level_set_method='primary')
+
+    p_coil_parts = solution.coil_parts
+    m_out = mat_data['coil_layouts'].out 
+
+    ###################################################################################
+    # Function under test
+    coil_parts = calc_potential_levels(p_coil_parts, solution.combined_mesh, input_args)  # , m_out)
+    ###################################################################################
+
+    # And now!!
+    coil_part = coil_parts[0]
+
+
 def develop_calc_contours_by_triangular_potential_cuts():
     from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 
@@ -808,23 +839,41 @@ def develop_generate_cylindrical_pcb_print():
 
 def develop_create_sweep_along_surface():
     from sub_functions.create_sweep_along_surface import create_sweep_along_surface
-    mat_data = load_matlab('debug/cylinder_coil')
-    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
-    m_c_part = m_coil_parts
-    # solution = load_numpy('debug/coilgen_cylinder_False_18_True.npy')
-    p_coil_parts = solution.coil_parts
-    solution = load_numpy('debug/coilgen_cylinder_False_18.npy')
+
+
+    which = 'shielded_ygradient_coil'
+    # MATLAB saved data
+
+    # Python saved data 14 : After calculate_group_centers
+    if which == 'biplanar':
+        mat_data = load_matlab('debug/biplanar_xgradient')
+        solution = load_numpy('debug/coilgen_biplanar_False_14.npy')
+    elif which == 'cylinder':
+        mat_data = load_matlab('debug/cylinder_coil')
+        m_coil_parts = mat_data['coil_layouts'].out.coil_parts
+        solution = load_numpy('debug/coilgen_cylinder_False_18.npy')
+        points = [[0.0, 0.006427876096865392, 0.00984807753012208, 0.008660254037844387, 0.0034202014332566887, -0.0034202014332566865, -0.008660254037844388, -0.009848077530122082, -0.006427876096865396, -2.4492935982947064e-18],
+                [0.01, 0.007660444431189781, 0.0017364817766693042, -0.0049999999999999975, -0.009396926207859084, -0.009396926207859084, -0.004999999999999997, 0.0017364817766692998, 0.007660444431189778, 0.01]]
+        input_args = DataStructure(skip_sweep=0, cross_sectional_points=points, save_stl_flag=True,
+                               specific_conductivity_conductor=1.8e-08, output_directory='images', field_shape_function='y')
+    else:
+        mat_data = load_matlab(f'debug/{which}_0_9')
+        m_out = mat_data['coil_layouts'].out
+        solution = load_numpy(f'debug/{which}_18.npy')
+        points = [0.0]
+        input_args = DataStructure(skip_sweep=0, cross_sectional_points=points, save_stl_flag=True, conductor_thickness=0.005,
+                               specific_conductivity_conductor=1.8e-08, output_directory='images', field_shape_function='y',
+                               project_name=which)
+
+
+    m_c_parts = m_out.coil_parts
     p_coil_parts = solution.coil_parts
 
-    points = [[0.0, 0.006427876096865392, 0.00984807753012208, 0.008660254037844387, 0.0034202014332566887, -0.0034202014332566865, -0.008660254037844388, -0.009848077530122082, -0.006427876096865396, -2.4492935982947064e-18],
-              [0.01, 0.007660444431189781, 0.0017364817766693042, -0.0049999999999999975, -0.009396926207859084, -0.009396926207859084, -0.004999999999999997, 0.0017364817766692998, 0.007660444431189778, 0.01]]
-    input_args = DataStructure(skip_sweep=0, cross_sectional_points=points, save_stl_flag=1,
-                               specific_conductivity_conductor=1.8e-08, output_directory='images', field_shape_function='y')
     ###################################################################################
     # Function under development
-    log.warning(" Using MATLAB wirepath")
-    p_coil_parts[0].wire_path.v = m_c_part.wire_path.v
-    p_coil_parts[0].wire_path.uv = m_c_part.wire_path.uv
+    #log.warning(" Using MATLAB wirepath")
+    #p_coil_parts[0].wire_path.v = m_c_part.wire_path.v
+    #p_coil_parts[0].wire_path.uv = m_c_part.wire_path.uv
 
     coil_parts = create_sweep_along_surface(p_coil_parts, input_args)  # , m_c_part)
     ###################################################################################
@@ -832,6 +881,7 @@ def develop_create_sweep_along_surface():
     # Verify: layout_surface_mesh, ohmian_resistance
     for index1 in range(len(coil_parts)):
         c_part = coil_parts[index1]
+        m_c_part = m_c_parts[index1]
         m_ohmian_resistance = m_c_part.ohmian_resistance
 
         c_surface = c_part.layout_surface_mesh
@@ -911,7 +961,7 @@ if __name__ == "__main__":
     # calculate_gradient_sensitivity_matrix
     # calculate_resistance_matrix
     # develop_stream_function_optimization()
-    # calc_potential_levels
+    # develop_calc_potential_levels()
     # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
     # develop_calculate_group_centers()
@@ -919,8 +969,8 @@ if __name__ == "__main__":
     # develop_interconnect_among_groups()
     # develop_shift_return_paths()
     # develop_generate_cylindrical_pcb_print()
-    # develop_create_sweep_along_surface()
-    develop_calculate_inductance_by_coil_layout()
+    develop_create_sweep_along_surface()
+    # develop_calculate_inductance_by_coil_layout()
     #
     # test_smooth_track_by_folding()
     # from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file1, \
