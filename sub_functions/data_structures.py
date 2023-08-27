@@ -546,6 +546,7 @@ class CoilSolution:
         coil_parts (list): A list of mesh parts that make up the coil surface.
         target_field: The target field associated with the CoilSolution.
     """
+    input_args: any = None
     coil_parts: List[CoilPart] = None
     target_field = None
     is_suppressed_point = None
