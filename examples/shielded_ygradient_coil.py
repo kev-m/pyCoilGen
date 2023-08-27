@@ -31,7 +31,7 @@ if __name__ == '__main__':
         'field_shape_function': 'y',  # definition of the target field
         'coil_mesh_file': 'Double_coaxial_open_cylinder_r1_400mm_r2_600_length_1500mm.stl',
         'target_mesh_file': 'none',
-        'target_region_resolution': 5,  # MATLAB 10 is the default but 5 is faster
+        'target_region_resolution': 9,  # MATLAB 10 is the default
         'secondary_target_mesh_file': 'Open_cylinder_r750mm_length_1500mm.stl',
         'secondary_target_weight': 0.5,
         'target_region_radius': 0.15,  # in meter
@@ -53,7 +53,7 @@ if __name__ == '__main__':
         'skip_inductance_calculation': False,
         'tikonov_reg_factor': 10,           # Tikonov regularization factor for the SF optimization
 
-        'project_name': 'shielded_gradient_coil',
+        'project_name': 'shielded_ygradient_coil',
         'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug',
         'debug': DEBUG_BASIC,
