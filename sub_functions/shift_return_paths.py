@@ -254,18 +254,10 @@ def Diff(x, y):
     Returns:
     ndarray: Array with shape (N, M-1) containing element-wise differences and products.
     """
-    # Unable to allocate 27.1 GiB for an array with shape (1538, 1538, 1538) and data type float64
-    try:
-        diff_x = x[:, :-1] - y
-        diff_y = x[:, 1:] - y
-        u = np.multiply.outer(diff_x, diff_y)
-        return u
-    except Exception as e:
-        log.debug(" Memory error: iterating manually")
-        u = np.empty((x.shape[0], y.shape[0]))
-        for i in range(u.shape[0]):
-            diff_x = x[i, :-1] - y[i]
-            diff_y = x[i, 1:] - y[i]
+    u = np.empty((x.shape[0], y.shape[0]))
+    for i in range(u.shape[0]):
+        diff_x = x[i, :-1] - y[i]
+        diff_y = x[i, 1:] - y[i]
 
-            u[i] = diff_x * diff_y
-        return u
+        u[i] = diff_x * diff_y
+    return u
