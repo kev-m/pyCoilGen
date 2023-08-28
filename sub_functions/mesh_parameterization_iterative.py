@@ -26,10 +26,10 @@ def mesh_parameterization_iterative(input_mesh : Mesh):
     mesh_vertices = input_mesh.get_vertices()
     mesh_faces = input_mesh.get_faces()
     mesh = DataStructure(
-        v=mesh_vertices.T,  # Transpose vertices for column-wise storage
+        v=mesh_vertices,  # Transpose vertices for column-wise storage
         n=[],
         u=[],
-        f=mesh_faces.T,  # Transpose faces for column-wise storage
+        f=mesh_faces,  # Transpose faces for column-wise storage
         e=[],
         bounds=[np.min(mesh_vertices), np.max(mesh_vertices),
                 0.5 * (np.min(mesh_vertices) + np.max(mesh_vertices))],
