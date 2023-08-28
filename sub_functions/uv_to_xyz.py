@@ -125,7 +125,7 @@ def which_face(point, face_indices, face_vertices):
     coords = [sublist[1] for sublist in combined_results]
     return face_indices[result_index], combined_results[result_index][1]
 
-def pointLocation(point_2D: np.ndarray, face_indices: np.ndarray, mesh_vertices: np.ndarray, already_mapped=False):
+def pointLocation(point_2D: np.ndarray, face_indices: np.ndarray, mesh_vertices: np.ndarray):
     """
     Determine which of the provided faces contains a given point.
 
@@ -142,10 +142,7 @@ def pointLocation(point_2D: np.ndarray, face_indices: np.ndarray, mesh_vertices:
     """
     for index in range(len(face_indices)-1, -1,-1):
         face = face_indices[index]
-        if already_mapped == False:
-            triangle_vertices = mesh_vertices[face]
-        else:
-            triangle_vertices = mesh_vertices[index]
+        triangle_vertices = mesh_vertices[face]
         found, barycentric = point_inside_triangle(point_2D, triangle_vertices)
         if found:
             return index, barycentric
