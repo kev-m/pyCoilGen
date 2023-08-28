@@ -11,7 +11,7 @@ def test_get_face_index1():
     point = [-1., 0.]
     ############################################
     # Function under test
-    index, possible_face_indices, faces_to_try = mesh.get_face_index(point)
+    index, barycentric = mesh.get_face_index(point)
     ############################################
     assert index == 3
 
@@ -22,7 +22,7 @@ def test_get_face_index1():
     for index, point in enumerate(point2):
         ############################################
         # Function under test
-        face_index, possible_face_indices, faces_to_try = mesh.get_face_index(point)
+        face_index, barycentric = mesh.get_face_index(point)
         ############################################
         assert face_index == indices[index]
 
@@ -33,14 +33,14 @@ def test_get_face_index1():
     for index, point in enumerate(point2):
         ############################################
         # Function under test
-        face_index, possible_face_indices, faces_to_try = mesh.get_face_index(point)
+        face_index, barycentric = mesh.get_face_index(point)
         ############################################
         assert face_index == indices[index]
 
     point = [0., 0.]
     ############################################
     # Function under test
-    index, possible_face_indices, faces_to_try = mesh.get_face_index(point)
+    index, barycentric = mesh.get_face_index(point)
     ############################################
     assert index == 3
 
@@ -61,7 +61,7 @@ def test_get_face_index2():
     for index, point in enumerate(points):
         ############################################
         # Function under test
-        face_index, possible_face_indices, faces_to_try = mesh.get_face_index(point, try_harder=True)
+        face_index, barycentric = mesh.get_face_index(point, try_harder=True)
         ############################################
         if face_index != indices[index]:
             print("Fails at index", index)
