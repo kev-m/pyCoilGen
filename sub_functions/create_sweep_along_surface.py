@@ -149,7 +149,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
 
             for point_ind in range(wire_path.v.shape[1]):
                 point = wire_path.uv[:, point_ind]
-                node_ind_normals_target, possible_face_indices, faces_to_try = wire_mesh2D.get_face_index(point)
+                node_ind_normals_target, barycentric = wire_mesh2D.get_face_index(point)
 
                 if node_ind_normals_target == -1:  # Handle exceptions for strange output of pointLocation
                     if point_ind == 0:
