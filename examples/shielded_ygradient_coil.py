@@ -24,7 +24,7 @@ This scripts generates a shielded y gradient coil
 if __name__ == '__main__':
     # Set up logging
     log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
     # logging.basicConfig(level=logging.INFO)
 
     arg_dict = {
