@@ -760,19 +760,39 @@ def test_smooth_track_by_folding():
 
 def develop_shift_return_paths():
     from sub_functions.shift_return_paths import shift_return_paths
-    mat_data = load_matlab('debug/cylinder_coil')
-    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
-    m_c_part = m_coil_parts
-    solution = load_numpy('debug/coilgen_cylinder_False_16_True.npy')
-    p_coil_parts = solution.coil_parts
 
-    input_args = DataStructure(interconnection_cut_width=0.1,
-                               skip_normal_shift=0,
-                               smooth_flag=1,
-                               smooth_factor=1,
-                               normal_shift_smooth_factors=[2, 3, 2],
-                               normal_shift_length=0.025)
+    # which = 'shielded_ygradient_coil'
+    which = 'cylinder'
+    # MATLAB saved data
+
+    # Python saved data 16 : After interconnect_among_groups
+    if which == 'biplanar':
+        mat_data = load_matlab('debug/biplanar_xgradient')
+        solution = load_numpy('debug/coilgen_biplanar_False_16.npy')
+    elif which == 'cylinder':
+        mat_data = load_matlab('debug/ygradient_coil')
+        m_coil_parts = mat_data['coil_layouts'].out.coil_parts
+        m_c_part = m_coil_parts
+        solution = load_numpy('debug/coilgen_cylinder_True_16.npy')
+        #solution = load_numpy('debug/coilgen_cylinder_False_16.npy')
+    else:
+        mat_data = load_matlab(f'debug/{which}')
+        m_out = mat_data['coil_layouts'].out
+        solution = load_numpy(f'debug/{which}_16.npy')
+
+    input_args = DataStructure(interconnection_cut_width=solution.input_args.interconnection_cut_width,
+                            skip_normal_shift=solution.input_args.skip_normal_shift,
+                            smooth_flag=solution.input_args.smooth_flag,
+                            smooth_factor=solution.input_args.smooth_factor,
+                            normal_shift_smooth_factors=solution.input_args.normal_shift_smooth_factors,
+                            normal_shift_length=solution.input_args.normal_shift_length)
+
+
+    p_coil_parts = solution.coil_parts
+    ######################################################################################################
+    # Function under test
     coil_parts = shift_return_paths(p_coil_parts, input_args)  # , m_c_part)
+    ######################################################################################################
 
     # Verify: shift_array, points_to_shift, wire_path
     for index1 in range(len(coil_parts)):
@@ -839,7 +859,6 @@ def develop_generate_cylindrical_pcb_print():
 
 def develop_create_sweep_along_surface():
     from sub_functions.create_sweep_along_surface import create_sweep_along_surface
-
 
     which = 'shielded_ygradient_coil'
     # MATLAB saved data
@@ -967,9 +986,9 @@ if __name__ == "__main__":
     # develop_calculate_group_centers()
     # develop_interconnect_within_groups()
     # develop_interconnect_among_groups()
-    # develop_shift_return_paths()
+    develop_shift_return_paths()
     # develop_generate_cylindrical_pcb_print()
-    develop_create_sweep_along_surface()
+    # develop_create_sweep_along_surface()
     # develop_calculate_inductance_by_coil_layout()
     #
     # test_smooth_track_by_folding()
