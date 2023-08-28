@@ -268,6 +268,7 @@ class Mesh:
 
         Returns:
             index (int): The face index or -1 if the point is not within the mesh.
+            barycentric (ndarray): The 3 barycentric co-ordinates if the point is within the mesh, else None
         """
         faces = self.get_faces()
         vertices = self.get_vertices()
@@ -300,10 +301,10 @@ class Mesh:
 
         face_index, barycentric = pointLocation(vertex, faces_to_try, vertices)
         if face_index is not None:
-            return possible_face_indices[face_index], possible_face_indices, faces_to_try
+            return possible_face_indices[face_index], barycentric
 
         # log.debug("get_face_index(%s), No found face", vertex)
-        return -1, possible_face_indices, faces_to_try
+        return -1, None
 
 
 # Helper functions
