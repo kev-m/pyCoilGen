@@ -28,6 +28,7 @@ if __name__ == '__main__':
         'secondary_target_mesh_file': 'none',
         'secondary_target_weight': 0.5,
         'target_region_radius': 0.15,  # ...  % in meter
+        # 'target_region_resolution': 10,  # MATLAB 10 is the default
         'use_only_target_mesh_verts': False,
         'sf_source_file': 'none',
         # % the number of potential steps that determines the later number of windings (Stream function discretization)

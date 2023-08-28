@@ -253,7 +253,7 @@ def execute_fast_henry_file_script_linux(binary: str, fast_henry_file_name: str,
         try:            
             os.remove('Zc.mat')
             os.remove(fast_henry_file_name)
-            os.remove('ouput.log')
+            os.remove('output.log')
         except FileNotFoundError as e:
             log.info("Exception removing temporary files: %s", e)
 

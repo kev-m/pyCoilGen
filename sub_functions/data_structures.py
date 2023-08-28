@@ -173,7 +173,7 @@ class Mesh:
         Returns:
             boundaries (ndarray): An (number of boundaries) x (variable) array of boundary face indices.
         """
-        # Trying solution from StackExchange:
+        # Proposed solution from StackExchange:
         # https://stackoverflow.com/questions/76435070/how-do-i-use-python-trimesh-to-get-boundary-vertex-indices/76907565#76907565
         connections = self.trimesh_obj.edges[trimesh.grouping.group_rows(
             self.trimesh_obj.edges_sorted, require_count=1)]
@@ -268,6 +268,7 @@ class Mesh:
 
         Returns:
             index (int): The face index or -1 if the point is not within the mesh.
+            barycentric (ndarray): The 3 barycentric co-ordinates if the point is within the mesh, else None
         """
         faces = self.get_faces()
         vertices = self.get_vertices()
@@ -300,14 +301,17 @@ class Mesh:
 
         face_index, barycentric = pointLocation(vertex, faces_to_try, vertices)
         if face_index is not None:
-            return possible_face_indices[face_index], possible_face_indices, faces_to_try
+            return possible_face_indices[face_index], barycentric
 
         # log.debug("get_face_index(%s), No found face", vertex)
-        return -1, possible_face_indices, faces_to_try
+        return -1, None
 
 
 # Helper functions
 def append_uv(uv_container, uv_value):
+    """
+    Append an (n,2) array or item to the uv_container's uv member.
+    """
     if uv_container.uv is None:
         uv_container.uv = np.zeros((1, 2), dtype=float)
         uv_container.uv[0] = uv_value
@@ -316,6 +320,9 @@ def append_uv(uv_container, uv_value):
 
 
 def append_v(v_container, v_value):
+    """
+    Append an (n,3) array or item to the uv_container's uv member.
+    """
     if v_container.v is None:
         v_container.v = np.zeros((1, 3), dtype=float)
         v_container.v[0] = v_value
@@ -546,6 +553,7 @@ class CoilSolution:
         coil_parts (list): A list of mesh parts that make up the coil surface.
         target_field: The target field associated with the CoilSolution.
     """
+    input_args: any = None
     coil_parts: List[CoilPart] = None
     target_field = None
     is_suppressed_point = None
@@ -558,7 +566,7 @@ class CoilSolution:
 @dataclass
 class TargetField:
     """
-    To be defined.
+    Used by define_target_field.py
     """
     b: np.ndarray = None       # (3,num vertices)
     coords: np.ndarray = None  # (3,num vertices)
@@ -574,6 +582,9 @@ class TargetField:
 
 @dataclass
 class LayoutGradient:
+    """
+    Used by calculate_gradient.py
+    """
     dBxdxyz: np.ndarray
     dBydxyz: np.ndarray
     dBzdxyz: np.ndarray
@@ -642,134 +653,3 @@ class OptimisationParameters:
     optimized_hash = None
     use_preoptimization_temp = False
     use_optimized_temp = False
-
-
-@dataclass
-class UnsortedPoint:
-    """
-    Represents an unsorted point in the coil mesh.
-    """
-    potential: float
-
-
-@dataclass
-class Loop:
-    """
-    Represents a loop in the coil mesh.
-    """
-    uv: np.ndarray
-    edge_inds: np.ndarray
-    current_orientation: int
-
-
-@dataclass
-class ParameterizedMesh:
-    """
-    Represents the parameterized mesh.
-    """
-    f: np.ndarray
-    uv: np.ndarray
-
-
-@dataclass
-class GradientData:
-    """
-    Unknown
-    TODO: find usage.
-    """
-    mean_gradient_strength: float
-    gradient_out: np.ndarray
-
-
-@dataclass
-class LocalOpeningGab:
-    """
-    Unknown, check against LoopCalculationInput
-    TODO: find usage.
-    """
-    point_1: int
-    point_2: int
-    opening_gab: float
-
-
-@dataclass
-class CalcRotationMatrixResult:
-    """
-    Represents the result of the calculation of a rotation matrix.
-    """
-    rot_mat_out: np.ndarray
-
-
-@dataclass
-class CalcLocalOpeningGabResult:
-    """
-    Represents the result of the calculation of local opening gab.
-    """
-    local_opening_gab: float
-
-
-@dataclass
-class CalcLocalOpeningGabOutput:
-    """
-    Unknown, possible duplicate of above.
-    TODO: find usage.
-    """
-    local_opening_gab: float
-
-
-@dataclass
-class LoopCalculationInput:
-    """
-    Represents the input data for loop calculation.
-    """
-    loop: Loop
-    point_1: int
-    point_2: int
-    opening_gab: float
-
-
-@dataclass
-class CalcLocalOpeningGab2Input:
-    """
-    Unknown, might be duplicate of LoopCalculationInput.
-    Possibly use PotentialSortedCutPoints instead and decompose.
-    TODO: find usage.
-    """
-    loop: Loop
-    cut_point: np.ndarray
-    cut_direction: Tuple[float, float, float]
-    opening_gab: float
-
-
-@dataclass
-class PotentialSortedCutPoints:
-    """
-    Unknown. Poosibly use this instead of CalcLocalOpeningGab2Input
-    TODO: find usage.
-    """
-    cut_points: np.ndarray
-    cut_direction: Tuple[float, float, float]
-
-
-@dataclass
-class CalcGradientAlongVectorInput:
-    """
-    Unknown
-    TODO: find usage.
-    """
-    field: np.ndarray
-    field_coords: np.ndarray
-    target_endcoding_function: str
-
-
-# Generated for calc_potential_levels
-@dataclass
-class CombinedMesh:
-    stream_function: List[float]
-
-
-@dataclass
-class InputParameters:
-    levels: int
-    pot_offset_factor: float
-    level_set_method: str

@@ -119,8 +119,8 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
 
         # Remove identical points
         _, unique_inds = np.unique(target_points3, axis=1, return_index=True)
-        target_points = target_points3[:, unique_inds]
-        target_points = target_points3
+        target_points = target_points3[:, sorted(unique_inds)]
+        # target_points = target_points3
 
         # Define the target field shape
         def field_func(x, y, z): return eval(input_args.field_shape_function)
@@ -129,8 +129,8 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
 
         # Add points where the magnetic field should be suppressed (=>0)
         if secondary_target_mesh is not None:
-            num_suppressed_points = secondary_target_mesh.get_vertices().shape[1]
-            target_points = np.hstack((target_points, secondary_target_mesh.get_vertices()))
+            num_suppressed_points = secondary_target_mesh.get_vertices().shape[0]
+            target_points = np.hstack((target_points, secondary_target_mesh.get_vertices().T))
             target_field = np.hstack((target_field, np.zeros((target_field.shape[0], num_suppressed_points))))
             is_supressed_point = np.zeros(target_points.shape[1], dtype=bool)
             is_supressed_point[-num_suppressed_points:] = True

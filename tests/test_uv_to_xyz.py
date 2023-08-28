@@ -89,12 +89,30 @@ def test_bug001_pointLocation():
     offset = min(test_data['face_indices'])
     point = test_data['point']
     mesh_faces = np.asarray(test_data['face_indices'])
-    face_vertices = np.asarray(test_data['face_vertices'])
-    mesh_vertices = test_data['vertices']
+    corner_indices = np.asarray(test_data['face_vertices'])
+    corner_vertices = np.asarray(test_data['vertices'])
+
+    # Need to remap the original bug face v\rtex indices from the sparse 131 ... 141 to a dense 0 to 2
+    # Flatten the input array and get unique values
+    unique_values = np.unique(corner_indices)
+    # Create a mapping dictionary
+    value_to_index = {value: index for index, value in enumerate(unique_values)}
+    # Map the values in the input array to their corresponding indices
+    face_indices = np.vectorize(value_to_index.get)(corner_indices)
+
+    # Now, create the required 5x3 input vertex array:
+    # Flatten the corner_vertices array along the first two dimensions
+    flat_corner_vertices = corner_vertices.reshape(-1, 2)
+
+    _, unique_face_indices = np.unique(face_indices, return_index=True)
+    unique_vertices = flat_corner_vertices[unique_face_indices]
+
+    # Sanity check
+    assert (np.all(unique_vertices[face_indices] == corner_vertices))
 
     ########################################
     # Function under test
-    face_index, barycentric = pointLocation(point, mesh_faces, mesh_vertices, already_mapped=True)
+    face_index, barycentric = pointLocation(point, face_indices, unique_vertices)
     ########################################
 
     assert face_index == test_data['pass'] - offset

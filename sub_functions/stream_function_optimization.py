@@ -9,6 +9,7 @@ import logging
 # Local imports
 from sub_functions.data_structures import DataStructure, CoilPart
 from sub_functions.constants import get_level, DEBUG_VERBOSE
+from helpers.common import blkdiag
 
 log = logging.getLogger(__name__)
 
@@ -52,13 +53,9 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
             gradient_sensitivity_matrix = sensitivity_matrix    # 1: 3,257,264  2:
         else:
             c_mat = coil_part.current_density_mat
-            blk1 = np.block([[current_density_mat[:, :, 0], np.zeros_like(current_density_mat[:, :, 0])],
-                            [np.zeros_like(c_mat[:, :, 0]), c_mat[:, :, 0]]])
-            blk2 = np.block([[current_density_mat[:, :, 1], np.zeros_like(current_density_mat[:, :, 1])],
-                            [np.zeros_like(c_mat[:, :, 1]), c_mat[:, :, 1]]])
-            blk3 = np.block([[current_density_mat[:, :, 2], np.zeros_like(current_density_mat[:, :, 2])],
-                            [np.zeros_like(c_mat[:, :, 2]), c_mat[:, :, 2]]])
-
+            blk1 = blkdiag(current_density_mat[:, :, 0], c_mat[:, :, 0])
+            blk2 = blkdiag(current_density_mat[:, :, 1], c_mat[:, :, 1])
+            blk3 = blkdiag(current_density_mat[:, :, 2], c_mat[:, :, 2])
             current_density_mat = np.stack((blk1, blk2, blk3), axis=-1)
 
             sensitivity_matrix = np.concatenate([sensitivity_matrix, coil_part.sensitivity_matrix], axis=2)

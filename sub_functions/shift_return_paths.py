@@ -5,7 +5,7 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart
+from sub_functions.data_structures import CoilPart, Mesh
 from sub_functions.uv_to_xyz import uv_to_xyz, pointLocation
 
 log = logging.getLogger(__name__)
@@ -40,6 +40,8 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
             part_faces = coil_mesh.get_faces()  # part_mesh.faces
             wire_path_out = coil_part.wire_path
             # part_mesh = coil_mesh.trimesh_obj
+
+            mesh_2d = Mesh(vertices=coil_mesh.uv, faces=part_faces)
 
             # Delete superimposing points
             diff = np.diff(wire_path_out.v, axis=1)
@@ -99,9 +101,8 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
                 normal_vectors_wire_path = np.zeros((3, wire_path_out.uv.shape[1]))
 
                 for point_ind in range(wire_path_out.uv.shape[1]):
-                    # target_triangle_normal, _ = pointLocation(part_faces, wire_path_out.uv[0, point_ind], wire_path_out.uv[1, point_ind])
                     point = wire_path_out.uv[:, point_ind]
-                    face_index, barycentric = pointLocation(point, part_faces, coil_mesh.uv)
+                    face_index, barycentric = mesh_2d.get_face_index(point)
 
                     if face_index is not None:
                         nodes_target_triangle = part_faces[face_index]
@@ -112,10 +113,7 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
                             normal_vectors_wire_path[:, point_ind] = normal_vectors_wire_path[:, point_ind + 1]
                         else:
                             normal_vectors_wire_path[:, point_ind] = normal_vectors_wire_path[:, point_ind - 1]
-                # arr1 = ones(1, smooth_factors(1)) .* smooth_factors(2)
-                # arr2 = (smooth_factors(2) - 1):-1:1
-                # arr3 = [1:smooth_factors(2) arr1 arr2]
-                # shift_array = conv(points_to_shift, arr3 ./ smooth_factors(2), 'same');
+
                 arr1 = np.ones(smooth_factors[0]) * smooth_factors[1]
                 arr2 = np.arange(smooth_factors[1] - 1, 0, -1)
                 arr3 = np.concatenate((np.arange(1, smooth_factors[1] + 1), arr1, arr2))
@@ -254,18 +252,10 @@ def Diff(x, y):
     Returns:
     ndarray: Array with shape (N, M-1) containing element-wise differences and products.
     """
-    # Unable to allocate 27.1 GiB for an array with shape (1538, 1538, 1538) and data type float64
-    try:
-        diff_x = x[:, :-1] - y
-        diff_y = x[:, 1:] - y
-        u = np.multiply.outer(diff_x, diff_y)
-        return u
-    except Exception as e:
-        log.debug(" Memory error: iterating manually")
-        u = np.empty((x.shape[0], y.shape[0]))
-        for i in range(u.shape[0]):
-            diff_x = x[i, :-1] - y[i]
-            diff_y = x[i, 1:] - y[i]
+    u = np.empty((x.shape[0], y.shape[0]))
+    for i in range(u.shape[0]):
+        diff_x = x[i, :-1] - y[i]
+        diff_y = x[i, 1:] - y[i]
 
-            u[i] = diff_x * diff_y
-        return u
+        u[i] = diff_x * diff_y
+    return u
