@@ -43,10 +43,10 @@ from sub_functions.shift_return_paths import shift_return_paths
 from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
 from sub_functions.create_sweep_along_surface import create_sweep_along_surface
 from sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
+from sub_functions.load_preoptimized_data import load_preoptimized_data
 """
 from evaluate_field_errors import evaluate_field_errors
 from calculate_gradient import calculate_gradient
-from load_preoptimized_data import load_preoptimized_data
 """
 
 # Set up logging
