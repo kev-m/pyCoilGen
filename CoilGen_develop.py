@@ -15,6 +15,9 @@ from sub_functions.data_structures import Mesh
 from sub_functions.constants import *
 from sub_functions.data_structures import DataStructure, CoilSolution, OptimisationParameters
 
+# For timing
+from helpers.timing import Timing
+
 # From original project
 from sub_functions.read_mesh import read_mesh
 from sub_functions.parse_input import parse_input, create_input
@@ -151,6 +154,9 @@ def CoilGen(log, input=None):
     project_name = f'coilgen_{debug_key}_{use_matlab_data}'
 
     solution = CoilSolution()
+    solution.input_args = input_args
+    timer = Timing()
+    timer.start()
 
     if input_args.sf_source_file == 'none':
         # Read the input mesh
@@ -1077,6 +1083,7 @@ def CoilGen(log, input=None):
     solution = calculate_inductance_by_coil_layout(solution, input_args)
 
     # WIP
+    timer.stop()
     return solution
 
     # Evaluate the field errors
@@ -1239,4 +1246,4 @@ if __name__ == "__main__":
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 2m11
 
-    solution = CoilGen(log, arg_dict1)
+    solution = CoilGen(log, arg_dict2)
