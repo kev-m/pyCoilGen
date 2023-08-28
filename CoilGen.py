@@ -202,8 +202,11 @@ def CoilGen(log, input_args=None):
         # Load the preoptimized data
         print('Load preoptimized data:')
         raise Exception("Not supported")
-        coil_parts, _, _, combined_mesh, sf_b_field, target_field, is_suppressed_point = load_preoptimized_data(
-            input_args)
+        timer.start()
+        solution = load_preoptimized_data(input_args)
+        timer.stop()
+        #coil_parts, _, _, combined_mesh, sf_b_field, target_field, is_suppressed_point = 
+        # load_preoptimized_data(input_args)
 
     # Calculate the potential levels for the discretization
     print('Calculate the potential levels for the discretization:')
