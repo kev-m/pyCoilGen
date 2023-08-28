@@ -509,7 +509,7 @@ def develop_calc_potential_levels():
         input_args = DataStructure(levels=26, pot_offset_factor=0.25, level_set_method='primary')
 
     p_coil_parts = solution.coil_parts
-    m_out = mat_data['coil_layouts'].out 
+    m_out = mat_data['coil_layouts'].out
 
     ###################################################################################
     # Function under test
@@ -774,19 +774,18 @@ def develop_shift_return_paths():
         m_coil_parts = mat_data['coil_layouts'].out.coil_parts
         m_c_part = m_coil_parts
         solution = load_numpy('debug/coilgen_cylinder_True_16.npy')
-        #solution = load_numpy('debug/coilgen_cylinder_False_16.npy')
+        # solution = load_numpy('debug/coilgen_cylinder_False_16.npy')
     else:
         mat_data = load_matlab(f'debug/{which}')
         m_out = mat_data['coil_layouts'].out
         solution = load_numpy(f'debug/{which}_16.npy')
 
     input_args = DataStructure(interconnection_cut_width=solution.input_args.interconnection_cut_width,
-                            skip_normal_shift=solution.input_args.skip_normal_shift,
-                            smooth_flag=solution.input_args.smooth_flag,
-                            smooth_factor=solution.input_args.smooth_factor,
-                            normal_shift_smooth_factors=solution.input_args.normal_shift_smooth_factors,
-                            normal_shift_length=solution.input_args.normal_shift_length)
-
+                               skip_normal_shift=solution.input_args.skip_normal_shift,
+                               smooth_flag=solution.input_args.smooth_flag,
+                               smooth_factor=solution.input_args.smooth_factor,
+                               normal_shift_smooth_factors=solution.input_args.normal_shift_smooth_factors,
+                               normal_shift_length=solution.input_args.normal_shift_length)
 
     p_coil_parts = solution.coil_parts
     ######################################################################################################
@@ -872,27 +871,26 @@ def develop_create_sweep_along_surface():
         m_coil_parts = mat_data['coil_layouts'].out.coil_parts
         solution = load_numpy('debug/coilgen_cylinder_False_18.npy')
         points = [[0.0, 0.006427876096865392, 0.00984807753012208, 0.008660254037844387, 0.0034202014332566887, -0.0034202014332566865, -0.008660254037844388, -0.009848077530122082, -0.006427876096865396, -2.4492935982947064e-18],
-                [0.01, 0.007660444431189781, 0.0017364817766693042, -0.0049999999999999975, -0.009396926207859084, -0.009396926207859084, -0.004999999999999997, 0.0017364817766692998, 0.007660444431189778, 0.01]]
+                  [0.01, 0.007660444431189781, 0.0017364817766693042, -0.0049999999999999975, -0.009396926207859084, -0.009396926207859084, -0.004999999999999997, 0.0017364817766692998, 0.007660444431189778, 0.01]]
         input_args = DataStructure(skip_sweep=0, cross_sectional_points=points, save_stl_flag=True,
-                               specific_conductivity_conductor=1.8e-08, output_directory='images', field_shape_function='y')
+                                   specific_conductivity_conductor=1.8e-08, output_directory='images', field_shape_function='y')
     else:
         mat_data = load_matlab(f'debug/{which}_0_9')
         m_out = mat_data['coil_layouts'].out
         solution = load_numpy(f'debug/{which}_18.npy')
         points = [0.0]
         input_args = DataStructure(skip_sweep=0, cross_sectional_points=points, save_stl_flag=True, conductor_thickness=0.005,
-                               specific_conductivity_conductor=1.8e-08, output_directory='images', field_shape_function='y',
-                               project_name=which)
-
+                                   specific_conductivity_conductor=1.8e-08, output_directory='images', field_shape_function='y',
+                                   project_name=which)
 
     m_c_parts = m_out.coil_parts
     p_coil_parts = solution.coil_parts
 
     ###################################################################################
     # Function under development
-    #log.warning(" Using MATLAB wirepath")
-    #p_coil_parts[0].wire_path.v = m_c_part.wire_path.v
-    #p_coil_parts[0].wire_path.uv = m_c_part.wire_path.uv
+    # log.warning(" Using MATLAB wirepath")
+    # p_coil_parts[0].wire_path.v = m_c_part.wire_path.v
+    # p_coil_parts[0].wire_path.uv = m_c_part.wire_path.uv
 
     coil_parts = create_sweep_along_surface(p_coil_parts, input_args)  # , m_c_part)
     ###################################################################################
@@ -929,15 +927,15 @@ def develop_calculate_inductance_by_coil_layout():
     # Python saved data 16 : After interconnect_among_groups (which calculates wire_path)
     if which == 'biplanar':
         mat_data = load_matlab('debug/biplanar_xgradient')
-        #solution = load_numpy('debug/coilgen_biplanar_False_16.npy')
-        #solution = load_numpy('debug/biplanar_16.npy')
+        # solution = load_numpy('debug/coilgen_biplanar_False_16.npy')
+        # solution = load_numpy('debug/biplanar_16.npy')
         solution = load_numpy('debug/biplanar_xgradient_16.npy')
         width = 0.002
     else:
         mat_data = load_matlab('debug/ygradient_coil')
         # solution = load_numpy('debug/coilgen_cylinder_True_16.npy')
         # solution = load_numpy('debug/coilgen_cylinder_False_16.npy')
-        #solution = load_numpy('debug/cylinder_16.npy')
+        # solution = load_numpy('debug/cylinder_16.npy')
         solution = load_numpy('debug/ygradient_coil_16.npy')
         width = 0.015
 
@@ -946,7 +944,6 @@ def develop_calculate_inductance_by_coil_layout():
 
     input_args = DataStructure(conductor_cross_section_width=width, conductor_cross_section_height=0.002,
                                skip_inductance_calculation=False, fasthenry_bin='../FastHenry2/bin/fasthenry')
-            
 
     ###################################################################################
     # Function under test
@@ -960,6 +957,17 @@ def develop_calculate_inductance_by_coil_layout():
         log.debug(" coil_part.coil_inductance    = %f", coil_part.coil_inductance)
         log.debug(" coil_part.coil_length        = %f", coil_part.coil_length)
         log.debug(" coil_part.coil_cross_section = %f", coil_part.coil_cross_section)
+
+
+def develop_load_preoptimized_data():
+    from sub_functions.load_preoptimized_data import load_preoptimized_data
+
+    input_args = DataStructure(sf_source_file='source_data_breast_coil.npy', debug=1,
+                               surface_is_cylinder_flag=False, circular_diameter_factor=1)
+    solution = load_preoptimized_data(input_args)
+
+    log.debug(" Here!")
+
 
 if __name__ == "__main__":
     # Set up logging
@@ -986,7 +994,7 @@ if __name__ == "__main__":
     # develop_calculate_group_centers()
     # develop_interconnect_within_groups()
     # develop_interconnect_among_groups()
-    develop_shift_return_paths()
+    # develop_shift_return_paths()
     # develop_generate_cylindrical_pcb_print()
     # develop_create_sweep_along_surface()
     # develop_calculate_inductance_by_coil_layout()
@@ -1001,3 +1009,4 @@ if __name__ == "__main__":
     # test_split_disconnected_mesh_stl_file2()
     # from tests.test_mesh import test_get_face_index2
     # test_get_face_index2()
+    develop_load_preoptimized_data()
