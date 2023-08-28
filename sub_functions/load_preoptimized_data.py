@@ -9,9 +9,10 @@ log = logging.getLogger(__name__)
 
 # Local imports
 from sub_functions.constants import *
-from sub_functions.data_structures import CoilSolution, TargetField
+from sub_functions.data_structures import CoilSolution, TargetField, Mesh, DataStructure
 from sub_functions.split_disconnected_mesh import split_disconnected_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh
+from sub_functions.stream_function_optimization import generate_combined_mesh
 
 # For timing
 from helpers.timing import Timing
@@ -31,7 +32,7 @@ def load_preoptimized_data(input_args) -> CoilSolution:
     load_path = 'Pre_Optimized_Solutions/' + input_args.sf_source_file
     
     # Load data from load_path
-    loaded_data = np.load(load_path)[0]
+    loaded_data = np.load(load_path, allow_pickle=True)[0]
 
     # Extract loaded data
     coil_mesh = loaded_data.coil_mesh
@@ -47,7 +48,9 @@ def load_preoptimized_data(input_args) -> CoilSolution:
     # Split the mesh and the stream function into disconnected pieces
     timer.start()
     log.info('Split the mesh and the stream function into disconnected pieces.')
-    coil_parts = split_disconnected_mesh(coil_mesh)
+    combined_mesh = Mesh(vertices=coil_mesh.vertices, faces=coil_mesh.faces)
+    combined_mesh.normal_rep = [0.0, 0.0, 0.0] # Invalid value, fix this later if needed
+    coil_parts = split_disconnected_mesh(combined_mesh)
     timer.stop()
 
     # Parameterize the mesh
@@ -63,33 +66,7 @@ def load_preoptimized_data(input_args) -> CoilSolution:
     sf_b_field = target_field.b
 
     # Generate a combined mesh container
-    combined_mesh = coil_mesh
-    combined_mesh.bounding_box = [
-        np.min(combined_mesh.vertices[0, :]),
-        np.max(combined_mesh.vertices[0, :]),
-        np.min(combined_mesh.vertices[1, :]),
-        np.max(combined_mesh.vertices[1, :]),
-        np.min(combined_mesh.vertices[2, :]),
-        np.max(combined_mesh.vertices[2, :])
-    ]
-    combined_mesh.stream_function = stream_function
-    combined_mesh.faces = coil_parts[0].coil_mesh.faces
-    combined_mesh.vertices = coil_parts[0].coil_mesh.vertices
-    combined_mesh.n = coil_parts[0].coil_mesh.n
-    combined_mesh.uv = coil_parts[0].coil_mesh.uv
-    combined_mesh.boundary = coil_parts[0].coil_mesh.boundary
-    combined_mesh.mesh_part_vertex_ind = np.ones(combined_mesh.vertices.shape[1])
-
-    for part_ind in range(1, len(coil_parts)):
-        combined_mesh.faces = np.hstack((combined_mesh.faces, coil_parts[part_ind].coil_mesh.faces + combined_mesh.vertices.shape[1]))
-        combined_mesh.n = np.hstack((combined_mesh.n, coil_parts[part_ind].coil_mesh.n))
-        combined_mesh.uv = np.hstack((combined_mesh.uv, coil_parts[part_ind].coil_mesh.uv))
-        combined_mesh.mesh_part_vertex_ind = np.hstack((combined_mesh.mesh_part_vertex_ind, np.ones(coil_parts[part_ind].coil_mesh.vertices.shape[1]) * part_ind))
-
-        for boundary_ind in range(len(coil_parts[part_ind].coil_mesh.boundary)):
-            combined_mesh.boundary.append(coil_parts[part_ind].coil_mesh.boundary[boundary_ind] + combined_mesh.vertices.shape[1])
-
-        combined_mesh.vertices = np.hstack((combined_mesh.vertices, coil_parts[part_ind].coil_mesh.vertices))
+    combined_mesh = generate_combined_mesh(coil_parts)
 
     # Assign the stream function to the different mesh parts
     for part_ind in range(len(coil_parts)):
@@ -103,5 +80,5 @@ def load_preoptimized_data(input_args) -> CoilSolution:
 # Example usage
 if __name__ == "__main__":
     # Load preoptimized data using the defined function
-    input_args = ...
+    input_args = DataStructure(sf_source_file='source_data_breast_coil.npy')
     preoptimized_solution = load_preoptimized_data(input_args)
