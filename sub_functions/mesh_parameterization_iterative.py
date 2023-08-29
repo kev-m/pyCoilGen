@@ -1,6 +1,6 @@
 # System imports
 import numpy as np
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, find, hstack, vstack, linalg
 
 # Logging
 import logging
@@ -11,83 +11,90 @@ from sub_functions.data_structures import DataStructure, Mesh
 log = logging.getLogger(__name__)
 
 
-def mesh_parameterization_iterative(input_mesh : Mesh):
+def mesh_parameterization_iterative(mesh: Mesh):
     """
     Performs iterative mesh parameterization based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes".
 
     Args:
-        mesh_in: Input mesh as a DataStructure object containing 'vertices' and 'faces' attributes.
+        mesh (Mesh): Input mesh.
 
     Returns:
         mesh: Parameterized mesh as a DataStructure object containing 'v', 'n', 'u', 'f', 'e', 'bounds', 'version', 'vidx', and 'fidx' attributes.
     """
+    mesh_vertices = mesh.get_vertices()
+    mesh_faces = mesh.get_faces()
 
     # Initialize mesh properties
-    mesh_vertices = input_mesh.get_vertices()
-    mesh_faces = input_mesh.get_faces()
-    mesh = DataStructure(
-        v=mesh_vertices.T,  # Transpose vertices for column-wise storage
-        n=[],
-        u=[],
-        f=mesh_faces.T,  # Transpose faces for column-wise storage
-        e=[],
-        bounds=[np.min(mesh_vertices), np.max(mesh_vertices),
-                0.5 * (np.min(mesh_vertices) + np.max(mesh_vertices))],
-        version=1,
-        vidx=np.arange(1, mesh_vertices.shape[0] + 1),
-        fidx=np.arange(1, mesh_faces.shape[0] + 1),
-        fn=input_mesh.fn
-    )
+    # v,f,fn,n are already initialised
+    mesh.bounds = [np.min(mesh_vertices, axis=0), np.max(mesh_vertices, axis=0),
+                   0.5 * (np.min(mesh_vertices, axis=0) + np.max(mesh_vertices, axis=0))]
+
+    mesh.version = 1
+    mesh.vidx = np.arange(0, mesh_vertices.shape[0])
+    mesh.fidx = np.arange(0, mesh_faces.shape[0])
+
+    """
+    Computed value is never used.
+    Using Mesh.face_normals()
 
     # Compute face normals
     for iii in range(mesh.f.shape[0]):
         fvv = mesh.v[mesh.f[iii, :], :]
-        log.debug(" fvv: %s", fvv)
-        ee1 = fvv[1, :] - fvv[0, :]
-        ee2 = fvv[2, :] - fvv[0, :]
+        ## log.debug(" fvv: %s", fvv)
+        ee1 = fvv[:,1] - fvv[:,0]
+        ee2 = fvv[:,2] - fvv[:, 0]
         M = np.cross(ee1, ee2)
-        log.debug(" M: %s", M)
+        ## log.debug(" M: %s", M)
         mag = np.array([np.sum(M * M, axis=0)])
-        log.debug(" mag: %s", mag)
+        ## log.debug(" mag: %s", mag)
         z = np.where(mag < np.finfo(float).eps)[0]
         mag[z] = 1
         Mlen = np.sqrt(mag)
-        log.debug(" Mlen: %s", Mlen)
-        temp2 = np.tile(Mlen, (1, M.shape[1]))
+        ## log.debug(" Mlen: %s", Mlen)
+        temp2 = np.tile(Mlen, (1, M.shape[0]))
         temp = M / temp2
-        mesh.fn[iii, :] = temp
+        mesh.fn[iii] = temp
+    """
 
-    e = np.zeros((mesh.f.shape[0] * 3 * 2, 3))
+    # Assuming 'mesh' is a dictionary-like structure containing 'f' and 'v' arrays
+    # mesh.f: Faces array (each row represents a face with vertex indices)
+    # mesh.v: Vertices array (each row represents a vertex)
 
-    # Compute edge list
-    for iii in range(mesh.f.shape[0]):
+    num_faces = mesh.f.shape[0]
+    e = np.zeros((num_faces * 3 * 2, 3), dtype=int)
+
+    for iii in range(num_faces):
         for jjj in range(3):
             t1 = [mesh.f[iii, jjj], mesh.f[iii, (jjj + 1) % 3], 1]
             t2 = [mesh.f[iii, (jjj + 1) % 3], mesh.f[iii, jjj], 1]
-            e[iii * 6 + jjj * 2, :] = t1
-            e[iii * 6 + jjj * 2 + 1, :] = t2
+            e[((iii - 1) * 6) + (jjj * 2) + 1, :] = t1
+            e[((iii - 1) * 6) + (jjj * 2) + 2, :] = t2
 
-    # Update mesh edge attribute
-    mesh.e = e
-
-    # Convert edge list to sparse matrix
-    mesh.e = coo_matrix((e[:, 3], (e[:, 0] - 1, e[:, 1] - 1)),
-                        shape=(mesh.v.shape[0], mesh.v.shape[0]))
+    # Create a sparse matrix from the 'e' array using numpy's coo_matrix
+    mesh.e = coo_matrix((e[:, 2], (e[:, 0], e[:, 1])), shape=(mesh.v.shape[0], mesh.v.shape[0]), dtype=int).tolil()
 
     # Find boundary vertices
-    iiii, jjjj = np.where(mesh.e == 1)
-    mesh.isboundaryv = np.zeros((mesh.v.shape[0],))
+    # mesh.v: Vertices array (each row represents a vertex)
+    # mesh.f: Faces array (each row represents a face with vertex indices)
+
+    # Find non-zero entries in the sparse matrix
+    iiii, jjjj, _ = find(mesh.e == 1)
+    # jjjj, iiii = np.nonzero(mesh.e == 1)
+
+    # Initialize mesh.isboundaryv and set boundary vertices to 1
+    mesh.isboundaryv = np.zeros(mesh.v.shape[0], dtype=int)
     mesh.isboundaryv[iiii] = 1
 
-    # Find boundary edges
+    # Create and sort the boundary edges array 'be'
     be = np.sort(np.hstack((iiii.reshape(-1, 1), jjjj.reshape(-1, 1))), axis=1)
     be = np.unique(be, axis=0)
 
-    # Determine boundary faces
-    mesh.isboundaryf = np.sum(
-        mesh.isboundaryv[mesh.f[:, [0, 1, 2]]], axis=1) > 0
+    # Compute mesh.isboundaryf using the boundary vertex information
+    mesh.isboundaryf = (mesh.isboundaryv[mesh.f[:, 0]] +
+                        mesh.isboundaryv[mesh.f[:, 1]] + mesh.isboundaryv[mesh.f[:, 2]])
+    mesh.isboundaryf = mesh.isboundaryf > 0
 
-    # Initialize variables for boundary loops
+    # Initialize variables for loops
     loops = []
     loopk = 1
     bloop = []
@@ -116,14 +123,16 @@ def mesh_parameterization_iterative(input_mesh : Mesh):
                 bloop.append(b3)
                 a1, a2 = b2, b3
 
-    if len(bloop) > 0:
+    if bloop:
         loops.append(bloop)
         loopk += 1
 
     for kkkk in range(len(loops)):
         loop_sort = loops[kkkk]
         prev_idx = [2, 0, 1]
-        loop1, loop2 = loop_sort[0], loop_sort[1]
+        loop1 = loop_sort[0]
+        loop2 = loop_sort[1]
+
         ffi, fj = np.where(mesh.f == loop1)
 
         for iii in range(len(ffi)):
@@ -131,56 +140,58 @@ def mesh_parameterization_iterative(input_mesh : Mesh):
 
             if mesh.f[ffi[iii], jp] == loop2:
                 nL = len(loop_sort)
-                loop_sort = loop_sort[nL::-1]
+                loop_sort = loop_sort[nL-1::-1]
 
         loops[kkkk] = loop_sort
 
-    if len(loops) > 0:
+    if loops:
         loopsize = [len(loop) for loop in loops]
         idx = np.argsort(loopsize)[::-1]
 
-        for kkkk in range(len(idx)):
-            mesh.loops[kkkk] = loops[idx[kkkk]]
-
+        # mesh.loops does not exist yet
+        mesh.loops = np.asarray([loops[idx[kkkk]] for kkkk in range(len(idx))])
+        # for kkkk in range(len(idx)):
+        #    mesh.loops[kkkk] = loops[idx[kkkk]]
     else:
         mesh.loops = []
 
-    mesh.te = mesh.e
+    mesh.te = mesh.e.copy()  # Try 2, mesh.e is already lil
+    # mesh.te.data[mesh.e.data != 0] = 0
+    # mesh.te = mesh.e.tolil() # To allow index addressing, below
     mesh.te[mesh.e != 0] = 0
-
     for ti in range(len(mesh.f)):
         for kkkk in range(3):
             vv1 = mesh.f[ti, kkkk]
             vv2 = mesh.f[ti, (kkkk + 1) % 3]
 
             if mesh.te[vv1, vv2] != 0:
-                ttmp = vv1
-                vv1 = vv2
-                vv2 = ttmp
+                vv1, vv2 = vv2, vv1
 
-            mesh.te[vv1, vv2] = ti
+            mesh.te[vv1, vv2] = ti + 1  # NB: Subtract 1 when using values from mesh.te!!
 
     mesh.valence = np.zeros(len(mesh.v))
 
     for vi in range(len(mesh.v)):
-        jj = np.where(mesh.e[vi])[0]
+        # ii,jj = np.nonzero(mesh.e[vi])
+        _, jj = mesh.e.getrow(vi).nonzero()
         mesh.valence[vi] = len(jj)
 
-    mesh.unique_vert_inds = mesh_in.unique_vert_inds
-    mesh.n = vertexNormal(triangulation(mesh_faces, mesh_vertices))
-    mesh.fn = faceNormal(triangulation(mesh_faces, mesh_vertices))
+    mesh.unique_vert_inds = mesh.unique_vert_inds.copy()
     iboundary = mesh.vidx[mesh.isboundaryv != 0]
+
     dists = vmag2(vadd(mesh.v[iboundary], -mesh.v[iboundary[0]]))
     maxi = np.argmax(dists)
-    ifixed = [iboundary[0], iboundary[maxi]]
-    fixedUV = [[iboundary[0], 0, 0], [iboundary[maxi], 1, 0]]
+    ifixed = np.array([iboundary[0], iboundary[maxi]])
+    fixedUV = np.array([[iboundary[0], 0, 0], [iboundary[maxi], 1, 0]])  # MATLAB 2,n
+
     N = len(mesh.vidx)
-    W = cotanWeights(mesh)
-    W = -W
+    W = cotanWeights(mesh)  # , m_debug=m_debug)
+
+    W = (-W).tolil()
     W[np.arange(N), np.arange(N)] = -np.sum(W, axis=1)
-    Ld = np.block([[W, np.zeros((N, N))], [np.zeros((N, N)), W]])
+    Ld = coo_matrix(vstack([hstack([W, coo_matrix((N, N))]), hstack([coo_matrix((N, N)), W])])).tolil()  # Hypothesis...
     rhs = np.zeros(2 * N)
-    A = sparse.coo_matrix((2 * N, 2 * N), dtype=float)
+    A = coo_matrix((2 * N, 2 * N), dtype=int).tolil()
 
     for li in range(len(mesh.loops)):
         loop = mesh.loops[li]
@@ -195,30 +206,30 @@ def mesh_parameterization_iterative(input_mesh : Mesh):
 
     A = A + A.T
     Lc = Ld - A
-    LcCons = Lc.copy()
+    LcCons = Lc.tolil()  # Was Lc.copy(), Using lil because of 'SparseEfficiencyWarning', later
     ifixed = np.concatenate((ifixed, ifixed + N))
     LcCons[ifixed, :] = 0
-    LcCons[np.diag_indices_from(Lc)] = 1
+    LcCons[ifixed, ifixed] = 1
     rhs[fixedUV[:, 0]] = fixedUV[:, 1]
     rhs[fixedUV[:, 0] + N] = fixedUV[:, 2]
     rhsadd = np.zeros_like(rhs)
 
     for k in range(len(ifixed)):
         ci = ifixed[k]
-        col = LcCons[:, ci]
+        col = LcCons[:, ci].toarray().flatten()
         col[ci] = 0
         rhsadd += rhs[ci] * col
 
     LcCons[:, ifixed] = 0
-    LcCons[np.diag_indices_from(Lc)] = 1
+    LcCons[ifixed, ifixed] = 1
     rhs -= rhsadd
-    mesh.uv = np.linalg.solve(LcCons, rhs)
-    mesh.uv = np.column_stack((mesh.uv[:N], mesh.uv[N:2 * N]))
 
-    mesh.vertices = mesh.v.T
-    mesh.faces = mesh.f.T
-    mesh.n = mesh.n.T
-    mesh.uv = mesh.uv.T
+    # mesh.uv = np.linalg.solve(LcCons, rhs)
+    # mesh.uv = np.column_stack((mesh.uv[:N], mesh.uv[N:2 * N]))
+    # Solve the sparse linear system using spsolve
+    mesh_uv = linalg.spsolve(LcCons, rhs)
+    N = len(mesh_uv) // 2
+    mesh.uv = np.column_stack((mesh_uv[:N], mesh_uv[N:]))  # .T # MATLAB shape
     mesh.boundary = mesh.loops
 
     return mesh
@@ -278,7 +289,7 @@ def oneringv(mesh, nVertex):
     Returns:
         ndarray: Indices of the one-ring vertices.
     """
-    return np.nonzero(mesh.e[nVertex, :] != 0)[0]
+    return np.nonzero(mesh.e[nVertex, :] != 0)[1]
 
 
 def faceArea(mesh, faces=None):
@@ -341,7 +352,7 @@ def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False):
         vertices = mesh.vidx
 
     n = len(vertices)
-    W = mesh.e[vertices, :]
+    W = mesh.e[vertices, :].astype(float)
     W[W != 0] = -1
 
     if areaWeighted:
@@ -356,16 +367,18 @@ def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False):
         for j in range(len(ov)):
             qj = ov[j]
             faces = [mesh.te[qi, qj], mesh.te[qj, qi]]
-            faces = [f for f in faces if f != 0]
-            verts = np.zeros(len(faces))
-            vertfaces = np.zeros(len(faces))
+            # MATLAB is using 0 as some kind of magic number, since MATLAB indexing starts at 1...
+            faces = np.array([f for f in faces if f != 0])
+            verts = np.zeros(len(faces), dtype=int)
+            vertfaces = np.zeros(len(faces), dtype=int)
 
             for kk in range(len(faces)):
-                f = mesh.f[faces[kk], :]
+                # Remembering to substract 1 from mesh.te -> faces before using...
+                f = mesh.f[faces[kk]-1, :]  # Subtracting 1 from faces before using
                 verts[kk] = f[np.logical_and(f != qi, f != qj)]
-                vertfaces[kk] = faces[kk]
+                vertfaces[kk] = faces[kk]-1  # Subtracting 1 from faces before using
 
-            sumAB = 0
+            sumAB = 0.0
 
             if authalic:
                 for kk in range(len(verts)):
@@ -501,4 +514,4 @@ def ncross(v1, v2):
     Returns:
         ndarray: Normalized cross product.
     """
-    return  np. linalg. norm(np.cross(v1, v2))
+    return np. linalg. norm(np.cross(v1, v2))

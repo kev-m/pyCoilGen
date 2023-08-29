@@ -64,56 +64,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
             resistance_matrix = np.block([[resistance_matrix, np.zeros((resistance_matrix.shape[0], coil_part.resistance_matrix.shape[1]))],
                                           [np.zeros((coil_part.resistance_matrix.shape[0], resistance_matrix.shape[1])), coil_part.resistance_matrix]])
 
-    # Generate a combined mesh container
-    c_mesh = coil_parts[0].coil_mesh
-    combined_mesh_part_vertex_ind = np.ones((c_mesh.get_vertices().shape[0]), dtype=int)
-    combined_boundary = c_mesh.boundary.copy()
-
-    combined_faces = c_mesh.get_faces()
-    combined_vertices = c_mesh.get_vertices()
-    combined_uv = c_mesh.uv.copy()
-    combined_n = c_mesh.n.copy()
-
-    for part_ind in range(1, len(coil_parts)):
-        coil_mesh = coil_parts[part_ind].coil_mesh
-        combined_faces = np.concatenate(
-            [combined_faces, coil_mesh.get_faces() + combined_vertices.shape[1]], axis=0
-        )
-        combined_n = np.concatenate([combined_n, coil_mesh.n], axis=0)
-        combined_uv = np.concatenate((combined_uv, coil_mesh.uv))
-
-        combined_mesh_part_vertex_ind = np.concatenate(
-            [
-                combined_mesh_part_vertex_ind,
-                np.ones((coil_mesh.get_vertices().shape[0]), dtype=int) * (part_ind+1),
-            ],
-            axis=0,
-        )
-
-        # Compute combined boundary
-        c_boundary = coil_mesh.boundary
-        offset = combined_vertices.shape[0]
-        for boundary_ind in range(len(c_boundary)):
-            combined_boundary = np.append(combined_boundary, [None])
-            new_array = coil_mesh.boundary[boundary_ind]+offset
-            combined_boundary[-1] = new_array
-
-        combined_vertices = np.concatenate([combined_vertices, coil_mesh.get_vertices()], axis=0)
-
-    combined_bounding_box = np.array(
-        (
-            [np.min(combined_vertices[:, 0]), np.max(combined_vertices[:, 0])],
-            [np.min(combined_vertices[:, 1]), np.max(combined_vertices[:, 1])],
-            [np.min(combined_vertices[:, 2]), np.max(combined_vertices[:, 2])],
-        )
-    )
-
-    combined_mesh = DataStructure(vertices=combined_vertices, faces=combined_faces)
-    combined_mesh.uv = combined_uv
-    combined_mesh.n = combined_n
-    combined_mesh.boundary = combined_boundary
-    combined_mesh.bounding_box = combined_bounding_box
-    combined_mesh.mesh_part_vertex_ind = combined_mesh_part_vertex_ind
+    combined_mesh = generate_combined_mesh(coil_parts)
 
     if get_level() >= DEBUG_VERBOSE:
         log.debug(" - combined_mesh.bounding_box: %s", combined_mesh.bounding_box)
@@ -327,3 +278,57 @@ def reexpand_stream_function_for_boundary_nodes(reduced_sf, boundary_nodes, is_n
     # Assign the stream function values for the non-boundary nodes
     sf[is_not_boundary_node] = reduced_sf[len(boundary_nodes):]
     return sf
+
+def generate_combined_mesh(coil_parts: List[CoilPart]):
+    # Generate a combined mesh container
+    c_mesh = coil_parts[0].coil_mesh
+    combined_mesh_part_vertex_ind = np.ones((c_mesh.get_vertices().shape[0]), dtype=int)
+    combined_boundary = c_mesh.boundary.copy()
+
+    combined_faces = c_mesh.get_faces()
+    combined_vertices = c_mesh.get_vertices()
+    combined_uv = c_mesh.uv.copy()
+    combined_n = c_mesh.n.copy()
+
+    for part_ind in range(1, len(coil_parts)):
+        coil_mesh = coil_parts[part_ind].coil_mesh
+        combined_faces = np.concatenate(
+            [combined_faces, coil_mesh.get_faces() + combined_vertices.shape[1]], axis=0
+        )
+        combined_n = np.concatenate([combined_n, coil_mesh.n], axis=0)
+        combined_uv = np.concatenate((combined_uv, coil_mesh.uv))
+
+        combined_mesh_part_vertex_ind = np.concatenate(
+            [
+                combined_mesh_part_vertex_ind,
+                np.ones((coil_mesh.get_vertices().shape[0]), dtype=int) * (part_ind+1),
+            ],
+            axis=0,
+        )
+
+        # Compute combined boundary
+        c_boundary = coil_mesh.boundary
+        offset = combined_vertices.shape[0]
+        for boundary_ind in range(len(c_boundary)):
+            combined_boundary = np.append(combined_boundary, [None])
+            new_array = coil_mesh.boundary[boundary_ind]+offset
+            combined_boundary[-1] = new_array
+
+        combined_vertices = np.concatenate([combined_vertices, coil_mesh.get_vertices()], axis=0)
+
+    combined_bounding_box = np.array(
+        (
+            [np.min(combined_vertices[:, 0]), np.max(combined_vertices[:, 0])],
+            [np.min(combined_vertices[:, 1]), np.max(combined_vertices[:, 1])],
+            [np.min(combined_vertices[:, 2]), np.max(combined_vertices[:, 2])],
+        )
+    )
+
+    combined_mesh = DataStructure(vertices=combined_vertices, faces=combined_faces)
+    combined_mesh.uv = combined_uv
+    combined_mesh.n = combined_n
+    combined_mesh.boundary = combined_boundary
+    combined_mesh.bounding_box = combined_bounding_box
+    combined_mesh.mesh_part_vertex_ind = combined_mesh_part_vertex_ind
+
+    return combined_mesh

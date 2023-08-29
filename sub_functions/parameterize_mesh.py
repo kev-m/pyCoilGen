@@ -57,6 +57,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
             log.debug(" - max_face_normal: %s, max_face_normal_std: %s", max_face_normal, max_face_normal_std)
 
         mesh_part.v = mesh_vertices
+        mesh_part.f = mesh_faces
         mesh_part.fn = face_normals
         mesh_part.n = vertex_normals
 
@@ -64,8 +65,8 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
         if not (max_face_normal_std < 1e-6):
             # Go for the parameterization; distinguish between cylinder and non-cylinder
             if not surface_is_cylinder:
-                mesh_part = mesh_parameterization_iterative(mesh_part)
                 # Create a 2D dataset for fit
+                mesh_part = mesh_parameterization_iterative(mesh_part)
             else:
                 # Planarization of cylinder
 
