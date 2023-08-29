@@ -64,8 +64,8 @@ def parameterize_mesh(coil_parts: List[Mesh], input, matlab_data = None) -> List
         if not (max_face_normal_std < 1e-6):
             # Go for the parameterization; distinguish between cylinder and non-cylinder
             if not surface_is_cylinder:
-                mesh_part = mesh_parameterization_iterative(mesh_part, matlab_data)
                 # Create a 2D dataset for fit
+                mesh_part = mesh_parameterization_iterative(mesh_part, matlab_data)
             else:
                 # Planarization of cylinder
 
