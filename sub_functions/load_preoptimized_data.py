@@ -18,7 +18,7 @@ from sub_functions.stream_function_optimization import generate_combined_mesh
 from helpers.timing import Timing
 
 
-def load_preoptimized_data(input_args) -> CoilSolution:
+def load_preoptimized_data(input_args, matlab_data = None) -> CoilSolution:
     """
     Load preoptimized data.
 
@@ -56,7 +56,7 @@ def load_preoptimized_data(input_args) -> CoilSolution:
     # Parameterize the mesh
     timer.start()
     log.info('Parameterize the mesh:')
-    coil_parts = parameterize_mesh(coil_parts, input_args)
+    coil_parts = parameterize_mesh(coil_parts, input_args, matlab_data)
     timer.stop()
 
     # Update additional target field properties
