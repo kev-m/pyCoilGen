@@ -10,8 +10,27 @@ from sub_functions.data_structures import DataStructure, Mesh
 
 log = logging.getLogger(__name__)
 
+# DEBUG
+from helpers.visualisation import compare, compare_contains
 
-def mesh_parameterization_iterative(input_mesh : Mesh, m_data = None):
+def compare_sparse(instance1, instance2):
+    if not instance1.shape == instance2.shape:
+        log.error(" Not the same shape: %s is not %s", np.shape(instance1), np.shape(instance2))
+        return False
+
+    num_rows = instance1.shape[0]
+    for row_idx in range(num_rows):
+        row1 = instance1.getrow(row_idx)
+        row2 = instance2.getrow(row_idx)
+
+        if compare(row1, row2) == False:
+            log.error(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
+                        row_idx, row1[row_idx][:5], row2[row_idx][:5])
+            return False
+
+    return True
+
+def mesh_parameterization_iterative(input_mesh : Mesh, matlab_data = None):
     """
     Performs iterative mesh parameterization based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes".
 
@@ -21,6 +40,14 @@ def mesh_parameterization_iterative(input_mesh : Mesh, m_data = None):
     Returns:
         mesh: Parameterized mesh as a DataStructure object containing 'v', 'n', 'u', 'f', 'e', 'bounds', 'version', 'vidx', and 'fidx' attributes.
     """
+
+    # DEBUG
+    if matlab_data is not None:
+        m_mesh = matlab_data.coil_parts.coil_mesh
+        coil_part = matlab_data.coil_parts
+        m_debug = m_mesh.mesh_parameterization_iterative
+    else:
+        m_debug = None
 
     # Initialize mesh properties
     mesh_vertices = input_mesh.get_vertices()
@@ -185,17 +212,37 @@ def mesh_parameterization_iterative(input_mesh : Mesh, m_data = None):
     mesh.fn = input_mesh.face_normals()     # faceNormal(triangulation(mesh_faces, mesh_vertices))
     iboundary = mesh.vidx[mesh.isboundaryv != 0]
 
+    # DEBUG
+    if matlab_data is not None:
+        assert compare(iboundary, m_debug.iboundary-1)
+
     dists = vmag2(vadd(mesh.v[iboundary], -mesh.v[iboundary[0]]))
     maxi = np.argmax(dists)
     ifixed = np.array([iboundary[0], iboundary[maxi]])
     fixedUV = np.array([[iboundary[0], 0, 0], [iboundary[maxi], 1, 0]]) # MATLAB 2,n
 
     N = len(mesh.vidx)
-    W = cotanWeights(mesh)
+    W = cotanWeights(mesh, m_debug=m_debug)
+
+    # DEBUG
+    if matlab_data is not None:
+        assert compare_sparse(W, m_debug.W1)
+
     W = -W
     W[np.arange(N), np.arange(N)] = -np.sum(W, axis=1)
-    Ld = coo_matrix(vstack([hstack([W, coo_matrix((N, N))]), hstack([coo_matrix((N, N)), W])]), dtype=int)
-    rhs = np.zeros(2 * N, dtype=int)
+
+    # DEBUG
+    if matlab_data is not None:
+        assert compare(W, m_debug.W3)
+
+    Ld = coo_matrix(vstack([hstack([W, coo_matrix((N, N))]), hstack([coo_matrix((N, N)), W])]))
+
+    # DEBUG
+    if matlab_data is not None:
+        assert compare(Ld, m_debug.Ld1)
+
+
+    rhs = np.zeros(2 * N)
     A = coo_matrix((2 * N, 2 * N), dtype=int).tolil()
 
     for li in range(len(mesh.loops)):
@@ -217,7 +264,7 @@ def mesh_parameterization_iterative(input_mesh : Mesh, m_data = None):
     LcCons[np.diag_indices_from(Lc)] = 1
     rhs[fixedUV[:, 0]] = fixedUV[:, 1]
     rhs[fixedUV[:, 0] + N] = fixedUV[:, 2]
-    rhsadd = np.zeros_like(rhs, dtype=int)
+    rhsadd = np.zeros_like(rhs)
 
     for k in range(len(ifixed)):
         ci = ifixed[k]
@@ -294,7 +341,7 @@ def oneringv(mesh, nVertex):
     Returns:
         ndarray: Indices of the one-ring vertices.
     """
-    return np.nonzero(mesh.e[nVertex, :] != 0)[0]
+    return np.nonzero(mesh.e[nVertex, :] != 0)[1]
 
 
 def faceArea(mesh, faces=None):
@@ -340,7 +387,7 @@ def triarea(p1, p2, p3):
     return A
 
 
-def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False):
+def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False, m_debug=None):
     """
     Compute the cotangent weights for the given vertices in the mesh.
 
@@ -357,7 +404,7 @@ def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False):
         vertices = mesh.vidx
 
     n = len(vertices)
-    W = mesh.e[vertices, :]
+    W = mesh.e[vertices, :].astype(float)
     W[W != 0] = -1
 
     if areaWeighted:
@@ -381,7 +428,7 @@ def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False):
                 verts[kk] = f[np.logical_and(f != qi, f != qj)]
                 vertfaces[kk] = faces[kk]
 
-            sumAB = 0
+            sumAB = 0.0
 
             if authalic:
                 for kk in range(len(verts)):
