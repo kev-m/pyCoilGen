@@ -66,7 +66,8 @@ def load_preoptimized_data(input_args, matlab_data = None) -> CoilSolution:
     sf_b_field = target_field.b
 
     # Generate a combined mesh container
-    combined_mesh = generate_combined_mesh(coil_parts)
+    # TODO: Umm?? Why recreate the combined mesh, when it was created in parameterize_mesh?
+    combined_mesh = generate_combined_mesh(coil_parts) 
 
     # Assign the stream function to the different mesh parts
     for part_ind in range(len(coil_parts)):
