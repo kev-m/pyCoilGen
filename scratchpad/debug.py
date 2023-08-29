@@ -962,9 +962,15 @@ def develop_calculate_inductance_by_coil_layout():
 def develop_load_preoptimized_data():
     from sub_functions.load_preoptimized_data import load_preoptimized_data
 
+    project_name = 'Preoptimzed_Breast_Coil'
+
+    mat_data = load_matlab(f'debug/{project_name}')
+    mat_data_out = mat_data['coil_layouts'].out
+
     input_args = DataStructure(sf_source_file='source_data_breast_coil.npy', debug=1,
-                               surface_is_cylinder_flag=False, circular_diameter_factor=1)
-    solution = load_preoptimized_data(input_args)
+                               surface_is_cylinder_flag=False, circular_diameter_factor=1,
+                               project_name = project_name)
+    solution = load_preoptimized_data(input_args, m_data=mat_data_out)
 
     log.debug(" Here!")
 
