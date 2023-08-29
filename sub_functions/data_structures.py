@@ -73,7 +73,7 @@ class Mesh:
         self.v = None           # (n,3) : The array of mesh vertices (n, [x,y,z]).
         self.fn = None          # (n,3) : The face normals (n, [x,y.z]).
         self.n = None           # (n,3) : The vertex normals (n, [x,y.z]).
-        self.uv = None          # Vertices, UV texture matrix (n, [x,y,z=0])
+        self.uv = None          # (n,2) : Vertices, UV texture matrix (n, [x,y,z=0])
         self.boundary = None    # List of 1D lists of vertex indices along mesh boundaries (m,[i]) (parameterize_mesh)
 
     def recreate(self, vertices, faces):
