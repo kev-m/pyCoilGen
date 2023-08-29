@@ -66,7 +66,7 @@ def load_preoptimized_data(input_args, matlab_data = None) -> CoilSolution:
     sf_b_field = target_field.b
 
     # Generate a combined mesh container
-    # TODO: Umm?? Why recreate the combined mesh, when it was created in parameterize_mesh?
+    # TODO: Umm?? Why recreate the combined mesh, when it was created above?
     combined_mesh = generate_combined_mesh(coil_parts) 
 
     # Assign the stream function to the different mesh parts
@@ -75,8 +75,9 @@ def load_preoptimized_data(input_args, matlab_data = None) -> CoilSolution:
         coil_parts[part_ind].stream_function = stream_function[unique_vert_inds]
 
     # Return the CoilSolution instance with the preoptimized data
-    return CoilSolution(input_args=input_args, coil_parts=coil_parts, target_field=target_field, sf_b_field=sf_b_field,
-                        combined_mesh=combined_mesh, is_suppressed_point=is_suppressed_point)
+    return CoilSolution(input_args=input_args, coil_parts=coil_parts, target_field=target_field, 
+                        is_suppressed_point=is_suppressed_point, combined_mesh=combined_mesh,
+                        sf_b_field=sf_b_field)
 
 # Example usage
 if __name__ == "__main__":
