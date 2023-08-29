@@ -544,24 +544,6 @@ class CoilPart:
     ohmian_resistance: np.ndarray = None    # Surface wire resistance (create_sweep_along_surface)
 
 
-@dataclass
-class CoilSolution:
-    """
-    Represents a high-level CoilGen solution.
-
-    Attributes:
-        coil_parts (list): A list of mesh parts that make up the coil surface.
-        target_field: The target field associated with the CoilSolution.
-    """
-    input_args: any = None
-    coil_parts: List[CoilPart] = None
-    target_field = None
-    is_suppressed_point = None
-    combined_mesh = None
-    sf_b_field = None
-    primary_surface_ind = None
-
-
 # Used by define_target_field
 @dataclass
 class TargetField:
@@ -577,9 +559,26 @@ class TargetField:
     def __str__(self):
         return as_string(self)
 
+
+@dataclass
+class CoilSolution:
+    """
+    Represents a high-level CoilGen solution.
+
+    Attributes:
+        coil_parts (list): A list of mesh parts that make up the coil surface.
+        target_field: The target field associated with the CoilSolution.
+    """
+    input_args: any = None
+    coil_parts: List[CoilPart] = None
+    target_field: TargetField = None
+    is_suppressed_point: np.ndarray = None
+    combined_mesh: DataStructure = None
+    sf_b_field: np.ndarray = None
+    primary_surface_ind = None
+
+
 # Used in calculate_gradient
-
-
 @dataclass
 class LayoutGradient:
     """
