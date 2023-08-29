@@ -16,7 +16,7 @@ from helpers.visualisation import visualize_vertex_connections
 log = logging.getLogger(__name__)
 
 
-def parameterize_mesh(coil_parts: List[Mesh], input, matlab_data = None) -> List[Mesh]:
+def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
     """
     Create the parameterized 2D mesh.
 
@@ -66,7 +66,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input, matlab_data = None) -> List
             # Go for the parameterization; distinguish between cylinder and non-cylinder
             if not surface_is_cylinder:
                 # Create a 2D dataset for fit
-                mesh_part = mesh_parameterization_iterative(mesh_part, matlab_data)
+                mesh_part = mesh_parameterization_iterative(mesh_part)
             else:
                 # Planarization of cylinder
 
