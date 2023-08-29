@@ -57,6 +57,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input, matlab_data = None) -> List
             log.debug(" - max_face_normal: %s, max_face_normal_std: %s", max_face_normal, max_face_normal_std)
 
         mesh_part.v = mesh_vertices
+        mesh_part.f = mesh_faces
         mesh_part.fn = face_normals
         mesh_part.n = vertex_normals
 
