@@ -970,7 +970,7 @@ def develop_load_preoptimized_data():
     input_args = DataStructure(sf_source_file='source_data_breast_coil.npy', debug=1,
                                surface_is_cylinder_flag=False, circular_diameter_factor=1,
                                project_name = project_name)
-    solution = load_preoptimized_data(input_args, matlab_data=mat_data_out)
+    solution = load_preoptimized_data(input_args) #, matlab_data=mat_data_out)
 
     log.debug(" Here!")
 
