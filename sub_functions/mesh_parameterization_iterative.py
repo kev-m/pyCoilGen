@@ -10,9 +10,6 @@ from sub_functions.data_structures import DataStructure, Mesh
 
 log = logging.getLogger(__name__)
 
-# DEBUG
-from helpers.visualisation import compare, compare_contains
-
 def compare_sparse(instance1, instance2, magic=0):
     if not instance1.shape == instance2.shape:
         log.error(" Not the same shape: %s is not %s", np.shape(instance1), np.shape(instance2))
@@ -67,7 +64,7 @@ def compare_sparse(instance1, instance2, magic=0):
 
     return False
 
-def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
+def mesh_parameterization_iterative(mesh : Mesh):
     """
     Performs iterative mesh parameterization based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes".
 
@@ -77,15 +74,6 @@ def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
     Returns:
         mesh: Parameterized mesh as a DataStructure object containing 'v', 'n', 'u', 'f', 'e', 'bounds', 'version', 'vidx', and 'fidx' attributes.
     """
-
-    # DEBUG
-    if matlab_data is not None:
-        coil_part = matlab_data.coil_parts
-        m_mesh = coil_part.coil_mesh
-        m_debug = m_mesh.mesh_parameterization_iterative
-    else:
-        m_debug = None
-
     mesh_vertices = mesh.get_vertices()
     mesh_faces = mesh.get_faces()
 
@@ -97,11 +85,6 @@ def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
     mesh.version=1
     mesh.vidx=np.arange(0, mesh_vertices.shape[0])
     mesh.fidx=np.arange(0, mesh_faces.shape[0])
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare(mesh.f, m_mesh.f-1) # Pass
-        assert np.allclose(mesh.bounds, m_mesh.bounds) # Pass
 
     """
     Computed value is never used.
@@ -143,10 +126,6 @@ def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
     # Create a sparse matrix from the 'e' array using numpy's coo_matrix
     mesh.e = coo_matrix((e[:, 2], (e[:, 0], e[:, 1])), shape=(mesh.v.shape[0], mesh.v.shape[0]), dtype=int).tolil()
 
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(mesh.e, m_mesh.e.astype(int)) # Pass
-
     # Find boundary vertices
     # mesh.v: Vertices array (each row represents a vertex)
     # mesh.f: Faces array (each row represents a face with vertex indices)
@@ -166,11 +145,6 @@ def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
     # Compute mesh.isboundaryf using the boundary vertex information
     mesh.isboundaryf = (mesh.isboundaryv[mesh.f[:, 0]] + mesh.isboundaryv[mesh.f[:, 1]] + mesh.isboundaryv[mesh.f[:, 2]])
     mesh.isboundaryf = mesh.isboundaryf > 0
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare(mesh.isboundaryf, m_mesh.isboundaryf) # Pass
-
 
     # Initialize variables for loops
     loops = []
@@ -234,12 +208,6 @@ def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
         mesh.loops = []
 
 
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare(mesh.loops.reshape(110,), m_mesh.loops-1) # Pass
-        assert compare_sparse(mesh.e, m_mesh.e) # Pass
-
-
     mesh.te = mesh.e.copy() # Try 2, mesh.e is already lil
     #mesh.te.data[mesh.e.data != 0] = 0
     #mesh.te = mesh.e.tolil() # To allow index addressing, below
@@ -254,18 +222,6 @@ def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
 
             mesh.te[vv1, vv2] = ti + 1 # NB: Subtract 1 when using values from mesh.te!!
 
-            # DEBUG
-            if matlab_data is not None:
-                if mesh.te[vv1, vv2] != m_mesh.te[vv1, vv2]:
-                    log.debug(" Here!! mesh.te[%d,%d]: %s != %s", vv1,vv2,mesh.te[vv1, vv2],m_mesh.te[vv1, vv2])
-                    pass
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(mesh.te, m_mesh.te.astype(int)) # Pass
-        pass
-
-
     mesh.valence = np.zeros(len(mesh.v))
 
     for vi in range(len(mesh.v)):
@@ -276,15 +232,6 @@ def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
     mesh.unique_vert_inds = mesh.unique_vert_inds.copy()
     iboundary = mesh.vidx[mesh.isboundaryv != 0]
 
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare(mesh.valence, m_mesh.valence) # Pass
-
-        assert compare(iboundary, m_debug.iboundary-1) # Pass
-        assert compare(mesh.unique_vert_inds, m_mesh.unique_vert_inds-1) # Pass
-        assert compare(mesh.fn, m_mesh.fn) # Calculated above
-        ## assert compare(mesh.n, m_mesh.n.T) # Fail
-
     dists = vmag2(vadd(mesh.v[iboundary], -mesh.v[iboundary[0]]))
     maxi = np.argmax(dists)
     ifixed = np.array([iboundary[0], iboundary[maxi]])
@@ -293,24 +240,9 @@ def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
     N = len(mesh.vidx)
     W = cotanWeights(mesh) # , m_debug=m_debug)
 
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(W, m_debug.W1) # Pass
-
     W = (-W).tolil()
     W[np.arange(N), np.arange(N)] = -np.sum(W, axis=1)
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(W, m_debug.W3) # Pass
-
     Ld = coo_matrix(vstack([hstack([W, coo_matrix((N, N))]), hstack([coo_matrix((N, N)), W])])).tolil() # Hypothesis...
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(Ld, m_debug.Ld1)
-
-
     rhs = np.zeros(2 * N)
     A = coo_matrix((2 * N, 2 * N), dtype=int).tolil()
 
@@ -325,50 +257,14 @@ def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
             A[jx, ky] += 1
             A[kx, jy] -= 1
 
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(A, m_debug.A1)
-
     A = A + A.T
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(A.tolil(), m_debug.A2.tolil(), magic=1) # Pass
-
     Lc = Ld - A
     LcCons = Lc.tolil() # Was Lc.copy(), Using lil because of 'SparseEfficiencyWarning', later
     ifixed = np.concatenate((ifixed, ifixed + N))
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(LcCons, m_debug.LcCons1.tolil(), magic=2) # Pass
-        assert compare(ifixed, m_debug.ifixed-1) # Pass
-
     LcCons[ifixed, :] = 0
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(LcCons.tolil(), m_debug.LcCons2.tolil(), magic=2) # Pass
-
-    # MATLAB: LcCons(sub2ind(size(Lc), ifixed, ifixed)) = 1;
     LcCons[ifixed, ifixed] = 1
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(LcCons.tolil(), m_debug.LcCons3.tolil(), magic=2) # Pass
-
     rhs[fixedUV[:, 0]] = fixedUV[:, 1]
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare(rhs, m_debug.rhs1) # Pass
-
     rhs[fixedUV[:, 0] + N] = fixedUV[:, 2]
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare(rhs, m_debug.rhs2) # Pass
-
     rhsadd = np.zeros_like(rhs)
 
     for k in range(len(ifixed)):
@@ -377,29 +273,9 @@ def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
         col[ci] = 0
         rhsadd += rhs[ci] * col
 
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare(rhsadd, m_debug.rhsadd) # Pass
-
     LcCons[:, ifixed] = 0
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(LcCons.tolil(), m_debug.LcCons4.tolil(), magic=2) # Pass
-
     LcCons[ifixed, ifixed] = 1
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare_sparse(LcCons.tolil(), m_debug.LcCons5.tolil(), magic=2) # Pass
-
     rhs -= rhsadd
-
-
-    # DEBUG
-    if matlab_data is not None: # and False:
-        assert compare(rhs, m_debug.rhs5) # Pass
-        assert compare_sparse(LcCons, m_debug.LcCons5.tolil(), magic=2) # Pass
 
     # mesh.uv = np.linalg.solve(LcCons, rhs)    
     # mesh.uv = np.column_stack((mesh.uv[:N], mesh.uv[N:2 * N]))
@@ -407,13 +283,6 @@ def mesh_parameterization_iterative(mesh : Mesh, matlab_data = None):
     mesh_uv = linalg.spsolve(LcCons, rhs)
     N = len(mesh_uv) // 2
     mesh.uv = np.column_stack((mesh_uv[:N], mesh_uv[N:])) # .T # MATLAB shape
-
-    # DEBUG
-    if matlab_data is not None:
-        assert compare(mesh.uv, m_mesh.uv)
-
-    #mesh.vertices = mesh.v
-    #mesh.faces = mesh.f
     mesh.boundary = mesh.loops
 
     return mesh
@@ -519,7 +388,7 @@ def triarea(p1, p2, p3):
     return A
 
 
-def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False, m_debug=None):
+def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False):
     """
     Compute the cotangent weights for the given vertices in the mesh.
 
@@ -580,12 +449,6 @@ def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False, m_debu
                     sumAB += vcot(v1, v2) / faceAreas[int(vertfaces[kk])]
 
             W[qi, qj] = sumAB
-
-            # DEBUG
-            if m_debug is not None:
-                if np.allclose(W[qi, qj], m_debug.W1[qi,qj]) == False:
-                    log.debug("Here!! W[%d,%d]: %f is not equal to %f", qi, qj, sumAB, m_debug.W1[qi,qj])
-                    pass
 
     return W
 
