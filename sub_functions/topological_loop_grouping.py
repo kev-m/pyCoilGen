@@ -130,6 +130,8 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
             for group_index, group_level in enumerate(group_levels):
                 sorted_group_level = group_level.copy()
                 for index in range(len(group_level)):
+                    # IndexError: index 2 is out of bounds for axis 0 with size 2
+                    # Mismatch between len of group_level (5) and sort_indices (2)
                     sorted_group_level[index] = group_level[sort_indices[index]]
                 group_levels[group_index] = sorted_group_level
 
