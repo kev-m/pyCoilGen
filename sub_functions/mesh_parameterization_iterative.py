@@ -10,7 +10,8 @@ from sub_functions.data_structures import DataStructure, Mesh
 
 log = logging.getLogger(__name__)
 
-def mesh_parameterization_iterative(mesh : Mesh):
+
+def mesh_parameterization_iterative(mesh: Mesh):
     """
     Performs iterative mesh parameterization based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes".
 
@@ -25,12 +26,12 @@ def mesh_parameterization_iterative(mesh : Mesh):
 
     # Initialize mesh properties
     # v,f,fn,n are already initialised
-    mesh.bounds=[np.min(mesh_vertices, axis=0), np.max(mesh_vertices, axis=0),
-          0.5 * (np.min(mesh_vertices, axis=0) + np.max(mesh_vertices, axis=0))]
+    mesh.bounds = [np.min(mesh_vertices, axis=0), np.max(mesh_vertices, axis=0),
+                   0.5 * (np.min(mesh_vertices, axis=0) + np.max(mesh_vertices, axis=0))]
 
-    mesh.version=1
-    mesh.vidx=np.arange(0, mesh_vertices.shape[0])
-    mesh.fidx=np.arange(0, mesh_faces.shape[0])
+    mesh.version = 1
+    mesh.vidx = np.arange(0, mesh_vertices.shape[0])
+    mesh.fidx = np.arange(0, mesh_faces.shape[0])
 
     """
     Computed value is never used.
@@ -89,7 +90,8 @@ def mesh_parameterization_iterative(mesh : Mesh):
     be = np.unique(be, axis=0)
 
     # Compute mesh.isboundaryf using the boundary vertex information
-    mesh.isboundaryf = (mesh.isboundaryv[mesh.f[:, 0]] + mesh.isboundaryv[mesh.f[:, 1]] + mesh.isboundaryv[mesh.f[:, 2]])
+    mesh.isboundaryf = (mesh.isboundaryv[mesh.f[:, 0]] +
+                        mesh.isboundaryv[mesh.f[:, 1]] + mesh.isboundaryv[mesh.f[:, 2]])
     mesh.isboundaryf = mesh.isboundaryf > 0
 
     # Initialize variables for loops
@@ -148,15 +150,14 @@ def mesh_parameterization_iterative(mesh : Mesh):
 
         # mesh.loops does not exist yet
         mesh.loops = np.asarray([loops[idx[kkkk]] for kkkk in range(len(idx))])
-        #for kkkk in range(len(idx)):
+        # for kkkk in range(len(idx)):
         #    mesh.loops[kkkk] = loops[idx[kkkk]]
     else:
         mesh.loops = []
 
-
-    mesh.te = mesh.e.copy() # Try 2, mesh.e is already lil
-    #mesh.te.data[mesh.e.data != 0] = 0
-    #mesh.te = mesh.e.tolil() # To allow index addressing, below
+    mesh.te = mesh.e.copy()  # Try 2, mesh.e is already lil
+    # mesh.te.data[mesh.e.data != 0] = 0
+    # mesh.te = mesh.e.tolil() # To allow index addressing, below
     mesh.te[mesh.e != 0] = 0
     for ti in range(len(mesh.f)):
         for kkkk in range(3):
@@ -166,12 +167,12 @@ def mesh_parameterization_iterative(mesh : Mesh):
             if mesh.te[vv1, vv2] != 0:
                 vv1, vv2 = vv2, vv1
 
-            mesh.te[vv1, vv2] = ti + 1 # NB: Subtract 1 when using values from mesh.te!!
+            mesh.te[vv1, vv2] = ti + 1  # NB: Subtract 1 when using values from mesh.te!!
 
     mesh.valence = np.zeros(len(mesh.v))
 
     for vi in range(len(mesh.v)):
-        #ii,jj = np.nonzero(mesh.e[vi])
+        # ii,jj = np.nonzero(mesh.e[vi])
         _, jj = mesh.e.getrow(vi).nonzero()
         mesh.valence[vi] = len(jj)
 
@@ -181,14 +182,14 @@ def mesh_parameterization_iterative(mesh : Mesh):
     dists = vmag2(vadd(mesh.v[iboundary], -mesh.v[iboundary[0]]))
     maxi = np.argmax(dists)
     ifixed = np.array([iboundary[0], iboundary[maxi]])
-    fixedUV = np.array([[iboundary[0], 0, 0], [iboundary[maxi], 1, 0]]) # MATLAB 2,n
+    fixedUV = np.array([[iboundary[0], 0, 0], [iboundary[maxi], 1, 0]])  # MATLAB 2,n
 
     N = len(mesh.vidx)
-    W = cotanWeights(mesh) # , m_debug=m_debug)
+    W = cotanWeights(mesh)  # , m_debug=m_debug)
 
     W = (-W).tolil()
     W[np.arange(N), np.arange(N)] = -np.sum(W, axis=1)
-    Ld = coo_matrix(vstack([hstack([W, coo_matrix((N, N))]), hstack([coo_matrix((N, N)), W])])).tolil() # Hypothesis...
+    Ld = coo_matrix(vstack([hstack([W, coo_matrix((N, N))]), hstack([coo_matrix((N, N)), W])])).tolil()  # Hypothesis...
     rhs = np.zeros(2 * N)
     A = coo_matrix((2 * N, 2 * N), dtype=int).tolil()
 
@@ -205,7 +206,7 @@ def mesh_parameterization_iterative(mesh : Mesh):
 
     A = A + A.T
     Lc = Ld - A
-    LcCons = Lc.tolil() # Was Lc.copy(), Using lil because of 'SparseEfficiencyWarning', later
+    LcCons = Lc.tolil()  # Was Lc.copy(), Using lil because of 'SparseEfficiencyWarning', later
     ifixed = np.concatenate((ifixed, ifixed + N))
     LcCons[ifixed, :] = 0
     LcCons[ifixed, ifixed] = 1
@@ -223,12 +224,12 @@ def mesh_parameterization_iterative(mesh : Mesh):
     LcCons[ifixed, ifixed] = 1
     rhs -= rhsadd
 
-    # mesh.uv = np.linalg.solve(LcCons, rhs)    
+    # mesh.uv = np.linalg.solve(LcCons, rhs)
     # mesh.uv = np.column_stack((mesh.uv[:N], mesh.uv[N:2 * N]))
     # Solve the sparse linear system using spsolve
     mesh_uv = linalg.spsolve(LcCons, rhs)
     N = len(mesh_uv) // 2
-    mesh.uv = np.column_stack((mesh_uv[:N], mesh_uv[N:])) # .T # MATLAB shape
+    mesh.uv = np.column_stack((mesh_uv[:N], mesh_uv[N:]))  # .T # MATLAB shape
     mesh.boundary = mesh.loops
 
     return mesh
@@ -375,7 +376,7 @@ def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False):
                 # Remembering to substract 1 from mesh.te -> faces before using...
                 f = mesh.f[faces[kk]-1, :]  # Subtracting 1 from faces before using
                 verts[kk] = f[np.logical_and(f != qi, f != qj)]
-                vertfaces[kk] = faces[kk]-1 # Subtracting 1 from faces before using
+                vertfaces[kk] = faces[kk]-1  # Subtracting 1 from faces before using
 
             sumAB = 0.0
 
@@ -513,4 +514,4 @@ def ncross(v1, v2):
     Returns:
         ndarray: Normalized cross product.
     """
-    return  np. linalg. norm(np.cross(v1, v2))
+    return np. linalg. norm(np.cross(v1, v2))
