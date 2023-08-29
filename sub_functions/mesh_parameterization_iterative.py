@@ -13,24 +13,38 @@ log = logging.getLogger(__name__)
 # DEBUG
 from helpers.visualisation import compare, compare_contains
 
-def compare_sparse(instance1, instance2):
+def compare_sparse(instance1, instance2, magic=0):
     if not instance1.shape == instance2.shape:
         log.error(" Not the same shape: %s is not %s", np.shape(instance1), np.shape(instance2))
         return False
 
     num_rows = instance1.shape[0]
-    for row_idx in range(num_rows):
-        row1 = instance1.getrow(row_idx).data[0]
-        row2 = instance2.getrow(row_idx).data
+    if magic == 0:
+        for row_idx in range(num_rows):
+            row1 = instance1.getrow(row_idx).data[0]
+            row2 = instance2.getrow(row_idx).data
 
-        if len(row1) != len(row2):
-            log.error(" Not the same shape at index %d: %s is not %s", row_idx, np.shape(row1), np.shape(row2))
-            return False
+            if len(row1) != len(row2):
+                log.error(" Not the same shape at index %d: %s is not %s", row_idx, np.shape(row1), np.shape(row2))
+                return False
 
-        if np.allclose(row1, row2) == False:
-            log.error(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
-                        row_idx, row1[row_idx][:5], row2[row_idx][:5])
-            return False
+            if np.allclose(row1, row2) == False:
+                log.error(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
+                            row_idx, row1[row_idx][:5], row2[row_idx][:5])
+                return False
+    if magic == 1:
+        for row_idx in range(num_rows):
+            row1 = instance1.getrow(row_idx).data
+            row2 = instance2.getrow(row_idx).data
+
+            if len(row1) != len(row2):
+                log.error(" Not the same shape at index %d: %s is not %s", row_idx, np.shape(row1), np.shape(row2))
+                return False
+
+            if np.allclose(row1, row2) == False:
+                log.error(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
+                            row_idx, row1[:5], row2[:5])
+                return False
 
     return True
 
@@ -224,17 +238,17 @@ def mesh_parameterization_iterative(input_mesh : Mesh, matlab_data = None):
             if mesh.te[vv1, vv2] != 0:
                 vv1, vv2 = vv2, vv1
 
-            mesh.te[vv1, vv2] = ti # DEBUG
+            mesh.te[vv1, vv2] = ti + 1 # NB: Subtract 1 when using values from mesh.te!!
 
             # DEBUG
             if matlab_data is not None:
-                if mesh.te[vv1, vv2] != m_mesh.te[vv1, vv2]-1:
-                    log.debug(" Here!! mesh.te[%d,%d]: %s != %s", vv1,vv2,mesh.te[vv1, vv2],m_mesh.te[vv1, vv2]-1)
+                if mesh.te[vv1, vv2] != m_mesh.te[vv1, vv2]:
+                    log.debug(" Here!! mesh.te[%d,%d]: %s != %s", vv1,vv2,mesh.te[vv1, vv2],m_mesh.te[vv1, vv2])
                     pass
 
     # DEBUG
     if matlab_data is not None:
-        # assert compare_sparse(mesh.te, m_mesh.te.astype(int)) # Pass
+        assert compare_sparse(mesh.te, m_mesh.te.astype(int)) # Pass
         pass
 
 
@@ -269,20 +283,20 @@ def mesh_parameterization_iterative(input_mesh : Mesh, matlab_data = None):
 
     # DEBUG
     if matlab_data is not None:
-        assert compare_sparse(W, m_debug.W1)
+        assert compare_sparse(W, m_debug.W1) # Pass
 
-    W = -W
+    W = (-W).tolil()
     W[np.arange(N), np.arange(N)] = -np.sum(W, axis=1)
 
     # DEBUG
     if matlab_data is not None:
-        assert compare(W, m_debug.W3)
+        assert compare_sparse(W, m_debug.W3) # Pass
 
     Ld = coo_matrix(vstack([hstack([W, coo_matrix((N, N))]), hstack([coo_matrix((N, N)), W])]))
 
     # DEBUG
     if matlab_data is not None:
-        assert compare(Ld, m_debug.Ld1)
+        assert compare_sparse(Ld, m_debug.Ld1, magic=1)
 
 
     rhs = np.zeros(2 * N)
@@ -463,15 +477,15 @@ def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False, m_debu
             qj = ov[j]
             faces = [mesh.te[qi, qj], mesh.te[qj, qi]]
             # MATLAB is using 0 as some kind of magic number, since MATLAB indexing starts at 1...
-            # faces = [f for f in faces if f != 0] 
+            faces = np.array([f for f in faces if f != 0])
             verts = np.zeros(len(faces), dtype=int)
             vertfaces = np.zeros(len(faces), dtype=int)
 
             for kk in range(len(faces)):
-                f = mesh.f[faces[kk], :]
-                inds = np.where(np.logical_and(f != qi, f != qj))[0]
-                verts[kk] = f[inds]
-                vertfaces[kk] = faces[kk]
+                # Remembering to substract 1 from mesh.te -> faces before using...
+                f = mesh.f[faces[kk]-1, :]  # Subtracting 1 from faces before using
+                verts[kk] = f[np.logical_and(f != qi, f != qj)]
+                vertfaces[kk] = faces[kk]-1 # Subtracting 1 from faces before using
 
             sumAB = 0.0
 
