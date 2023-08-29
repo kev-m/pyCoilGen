@@ -10,60 +10,6 @@ from sub_functions.data_structures import DataStructure, Mesh
 
 log = logging.getLogger(__name__)
 
-def compare_sparse(instance1, instance2, magic=0):
-    if not instance1.shape == instance2.shape:
-        log.error(" Not the same shape: %s is not %s", np.shape(instance1), np.shape(instance2))
-        return False
-
-    num_rows = instance1.shape[0]
-    if magic == 0:
-        for row_idx in range(num_rows):
-            row1 = instance1.getrow(row_idx).data[0]
-            row2 = instance2.getrow(row_idx).data
-
-            if len(row1) != len(row2):
-                log.error(" Not the same shape at index %d: %s is not %s", row_idx, np.shape(row1), np.shape(row2))
-                return False
-
-            if np.allclose(row1, row2) == False:
-                log.error(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
-                            row_idx, row1[:5], row2[:5])
-                return False
-        return True
-    if magic == 1:
-        for row_idx in range(num_rows):
-            row1 = instance1.getrow(row_idx).data
-            row2 = instance2.getrow(row_idx).data
-
-            if len(row1) != len(row2):
-                log.error(" Not the same shape at index %d: %s is not %s", row_idx, np.shape(row1), np.shape(row2))
-                return False
-            
-            if len(row1[0]) == 0:
-                break
-
-            if np.allclose(row1, row2) == False:
-                log.error(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
-                            row_idx, row1[:5], row2[:5])
-                return False
-        return True
-    if magic == 2:
-        for row_idx in range(num_rows):
-            row1 = instance1.getrow(row_idx).data[0]
-            row2 = instance2.getrow(row_idx).data[0]
-
-            if len(row1) != len(row2):
-                log.error(" Not the same shape at index %d: %s is not %s", row_idx, np.shape(row1), np.shape(row2))
-                return False
-
-            if np.allclose(row1, row2) == False:
-                log.error(" Not the same value at index [%d]:\n %s ... is not\n %s ...",
-                            row_idx, row1[:5], row2[:5])
-                return False
-        return True
-
-    return False
-
 def mesh_parameterization_iterative(mesh : Mesh):
     """
     Performs iterative mesh parameterization based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes".
