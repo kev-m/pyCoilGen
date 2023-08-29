@@ -33,33 +33,6 @@ def mesh_parameterization_iterative(mesh: Mesh):
     mesh.vidx = np.arange(0, mesh_vertices.shape[0])
     mesh.fidx = np.arange(0, mesh_faces.shape[0])
 
-    """
-    Computed value is never used.
-    Using Mesh.face_normals()
-
-    # Compute face normals
-    for iii in range(mesh.f.shape[0]):
-        fvv = mesh.v[mesh.f[iii, :], :]
-        ## log.debug(" fvv: %s", fvv)
-        ee1 = fvv[:,1] - fvv[:,0]
-        ee2 = fvv[:,2] - fvv[:, 0]
-        M = np.cross(ee1, ee2)
-        ## log.debug(" M: %s", M)
-        mag = np.array([np.sum(M * M, axis=0)])
-        ## log.debug(" mag: %s", mag)
-        z = np.where(mag < np.finfo(float).eps)[0]
-        mag[z] = 1
-        Mlen = np.sqrt(mag)
-        ## log.debug(" Mlen: %s", Mlen)
-        temp2 = np.tile(Mlen, (1, M.shape[0]))
-        temp = M / temp2
-        mesh.fn[iii] = temp
-    """
-
-    # Assuming 'mesh' is a dictionary-like structure containing 'f' and 'v' arrays
-    # mesh.f: Faces array (each row represents a face with vertex indices)
-    # mesh.v: Vertices array (each row represents a vertex)
-
     num_faces = mesh.f.shape[0]
     e = np.zeros((num_faces * 3 * 2, 3), dtype=int)
 
@@ -74,12 +47,9 @@ def mesh_parameterization_iterative(mesh: Mesh):
     mesh.e = coo_matrix((e[:, 2], (e[:, 0], e[:, 1])), shape=(mesh.v.shape[0], mesh.v.shape[0]), dtype=int).tolil()
 
     # Find boundary vertices
-    # mesh.v: Vertices array (each row represents a vertex)
-    # mesh.f: Faces array (each row represents a face with vertex indices)
 
     # Find non-zero entries in the sparse matrix
     iiii, jjjj, _ = find(mesh.e == 1)
-    # jjjj, iiii = np.nonzero(mesh.e == 1)
 
     # Initialize mesh.isboundaryv and set boundary vertices to 1
     mesh.isboundaryv = np.zeros(mesh.v.shape[0], dtype=int)
@@ -150,14 +120,10 @@ def mesh_parameterization_iterative(mesh: Mesh):
 
         # mesh.loops does not exist yet
         mesh.loops = np.asarray([loops[idx[kkkk]] for kkkk in range(len(idx))])
-        # for kkkk in range(len(idx)):
-        #    mesh.loops[kkkk] = loops[idx[kkkk]]
     else:
         mesh.loops = []
 
-    mesh.te = mesh.e.copy()  # Try 2, mesh.e is already lil
-    # mesh.te.data[mesh.e.data != 0] = 0
-    # mesh.te = mesh.e.tolil() # To allow index addressing, below
+    mesh.te = mesh.e.copy()
     mesh.te[mesh.e != 0] = 0
     for ti in range(len(mesh.f)):
         for kkkk in range(3):
@@ -172,7 +138,6 @@ def mesh_parameterization_iterative(mesh: Mesh):
     mesh.valence = np.zeros(len(mesh.v))
 
     for vi in range(len(mesh.v)):
-        # ii,jj = np.nonzero(mesh.e[vi])
         _, jj = mesh.e.getrow(vi).nonzero()
         mesh.valence[vi] = len(jj)
 
@@ -185,7 +150,7 @@ def mesh_parameterization_iterative(mesh: Mesh):
     fixedUV = np.array([[iboundary[0], 0, 0], [iboundary[maxi], 1, 0]])  # MATLAB 2,n
 
     N = len(mesh.vidx)
-    W = cotanWeights(mesh)  # , m_debug=m_debug)
+    W = cotanWeights(mesh)
 
     W = (-W).tolil()
     W[np.arange(N), np.arange(N)] = -np.sum(W, axis=1)
@@ -224,12 +189,10 @@ def mesh_parameterization_iterative(mesh: Mesh):
     LcCons[ifixed, ifixed] = 1
     rhs -= rhsadd
 
-    # mesh.uv = np.linalg.solve(LcCons, rhs)
-    # mesh.uv = np.column_stack((mesh.uv[:N], mesh.uv[N:2 * N]))
     # Solve the sparse linear system using spsolve
     mesh_uv = linalg.spsolve(LcCons, rhs)
     N = len(mesh_uv) // 2
-    mesh.uv = np.column_stack((mesh_uv[:N], mesh_uv[N:]))  # .T # MATLAB shape
+    mesh.uv = np.column_stack((mesh_uv[:N], mesh_uv[N:]))
     mesh.boundary = mesh.loops
 
     return mesh
@@ -501,17 +464,3 @@ def vmag(M):
         ndarray: Array of vector magnitudes.
     """
     return np.sqrt(np.sum(M * M, axis=1))
-
-
-def ncross(v1, v2):
-    """
-    Compute the normalized cross product between v1 and v2.
-
-    Args:
-        v1 (ndarray): First vector.
-        v2 (ndarray): Second vector.
-
-    Returns:
-        ndarray: Normalized cross product.
-    """
-    return np. linalg. norm(np.cross(v1, v2))
