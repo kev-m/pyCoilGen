@@ -57,7 +57,7 @@ if __name__ == '__main__':
         'skip_sweep':False,
         'skip_inductance_calculation':False,
 
-        'project_name': 'preoptimzed_breast_coil',
+        'project_name': 'Preoptimzed_Breast_Coil',
         'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug',
         'debug': DEBUG_BASIC,
