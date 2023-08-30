@@ -215,7 +215,12 @@ class Mesh:
         for index, boundary in enumerate(groups):
             # Close the boundary by add the first element to the end
             boundary.append(boundary[0])
-            new_array = np.asarray(boundary, dtype=int)
+
+            # Swap the order to match MATALB ordering
+            if index != len(groups)-1:
+                boundary = [node for node in reversed(boundary)] # Reversed, to match MATLAB
+
+            new_array = np.asarray(boundary, dtype=int) 
             boundaries[index] = new_array
 
         return boundaries
