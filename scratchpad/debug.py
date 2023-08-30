@@ -416,6 +416,11 @@ def develop_parameterize_mesh():
         assert compare(coil_mesh.boundary, m_c_mesh.boundary-1)
         assert compare(coil_mesh.uv, m_c_mesh.uv.T)
 
+        visualize_vertex_connections(coil_mesh.uv, 800, f'images/01_mesh_uv_{part_ind}_p.png')
+        visualize_vertex_connections(m_c_mesh.uv.T, 800, f'images/01_mesh_uv_{part_ind}_m.png')
+        visualize_compare_vertices(coil_mesh.uv, m_c_mesh.uv.T, 800, f'images/01_mesh_uv_{part_ind}_diff.png')
+
+
 def develop_calculate_one_ring_by_mesh():  # PAUSED
     from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 
@@ -1190,12 +1195,10 @@ if __name__ == "__main__":
     # debug5() # Refine a simple 1 face mesh into four.
     # debug6() # Examine cylinder_radius500mm_length1500mm.stl
     # test_add_nearest_ref_point_to_curve()
-
-    develop_split_disconnected_mesh()
+    # develop_split_disconnected_mesh()
     # develop_refine_mesh
     develop_parameterize_mesh()
     # develop_define_target_field
-
     # develop_calculate_one_ring_by_mesh()
     # develop_calculate_basis_functions()
     # develop_calculate_sensitivity_matrix()
@@ -1203,7 +1206,7 @@ if __name__ == "__main__":
     # calculate_resistance_matrix
     # develop_stream_function_optimization()
     # develop_calc_potential_levels()
-    # develop_calc_contours_by_triangular_potential_cuts()
+    develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
     # develop_topological_loop_grouping()
     # develop_calculate_group_centers()
