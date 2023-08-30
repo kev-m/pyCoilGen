@@ -289,6 +289,133 @@ def get_connected_vertices(vertex_index, face_indices):
     return list(connected_vertices)
 
 
+def develop_split_disconnected_mesh():
+    from sub_functions.split_disconnected_mesh import split_disconnected_mesh
+
+
+    # which = 'shielded_ygradient_coil'
+    project_name = 'Preoptimzed_SVD_Coil'
+
+    # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
+    if project_name == 'biplanar':
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        mat_data_out = matlab_data['coil_layouts'].out
+
+        solution = load_numpy('debug/coilgen_biplanar_False_10.npy')
+    elif project_name == 'ygradient_coil':
+        matlab_data = load_matlab('debug/ygradient_coil')
+        mat_data_out = matlab_data['coil_layouts'].out
+
+        # solution = load_numpy('debug/coilgen_cylinder_False_10.npy')
+        solution = load_numpy('debug/coilgen_cylinder_True_10.npy')
+        p_coil_parts = solution.coil_parts
+    elif project_name == 'Preoptimzed_SVD_Coil':
+        matlab_data = load_matlab(f'debug/{project_name}')
+        mat_data_out = matlab_data['coil_layouts'].out
+
+        # Load preoptimized data
+        load_path = 'Pre_Optimized_Solutions/source_data_SVD_coil.npy'
+        # Load data from load_path
+        loaded_data = np.load(load_path, allow_pickle=True)[0]
+        # Extract loaded data
+        coil_mesh = loaded_data.coil_mesh
+        coil_mesh_in = Mesh(vertices=coil_mesh.vertices, faces=coil_mesh.faces)
+    else:
+        matlab_data = load_matlab(f'debug/{project_name}')
+        mat_data_out = matlab_data['coil_layouts'].out
+
+    if not isinstance(mat_data_out.coil_parts, np.ndarray):
+        m_c_parts = [mat_data_out.coil_parts]
+    else:
+        m_c_parts = mat_data_out.coil_parts
+
+    ###################################################################################
+    # Function under test
+    coil_parts = split_disconnected_mesh(coil_mesh_in)
+    ###################################################################################
+    
+    # DEBUG
+    assert len(coil_parts) == len(m_c_parts)
+    for part_ind, m_c_part in enumerate(m_c_parts):
+        coil_part = coil_parts[part_ind]
+        coil_mesh = coil_part.coil_mesh
+        m_coil_mesh = m_c_part.coil_mesh
+        assert compare(coil_mesh.get_vertices(), m_coil_mesh.vertices.T)
+        assert compare(coil_mesh.get_faces(), m_coil_mesh.faces.T-1)
+        assert compare(coil_mesh.unique_vert_inds, m_coil_mesh.unique_vert_inds-1)
+
+
+def develop_parameterize_mesh():
+    from sub_functions.parameterize_mesh import parameterize_mesh
+    project_name = 'Preoptimzed_SVD_Coil'
+    # project_name = 'ygradient_coil'
+    # project_name = 'biplanar'
+
+    # Python saved data 01 : Just after parameterize_mesh
+    if project_name == 'biplanar':
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        mat_data_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_biplanar_False_01.npy')
+
+    elif project_name == 'ygradient_coil':
+        matlab_data = load_matlab('debug/ygradient_coil')
+        mat_data_out = matlab_data['coil_layouts'].out
+        # solution = load_numpy('debug/coilgen_cylinder_False_01.npy')
+        solution = load_numpy('debug/coilgen_cylinder_True_01.npy')
+
+    elif project_name.startswith('Preoptimzed'):
+        # Load preoptimized data
+        load_path = 'Pre_Optimized_Solutions/source_data_SVD_coil.npy'
+        # Load data from load_path
+        loaded_data = np.load(load_path, allow_pickle=True)[0]
+        # Extract loaded data
+        coil_mesh = loaded_data.coil_mesh
+        coil_mesh_in = Mesh(vertices=coil_mesh.vertices, faces=coil_mesh.faces)
+
+        matlab_data = load_matlab(f'debug/{project_name}')
+        mat_data_out = matlab_data['coil_layouts'].out
+
+        solution = load_numpy(f'debug/{project_name}_09.npy')
+    else:
+        matlab_data = load_matlab(f'debug/{project_name}')
+        mat_data_out = matlab_data['coil_layouts'].out
+
+        solution = load_numpy(f'debug/{project_name}_01.npy')
+
+
+    if not isinstance(mat_data_out.coil_parts, np.ndarray):
+        m_c_parts = [mat_data_out.coil_parts]
+    else:
+        m_c_parts = mat_data_out.coil_parts
+
+    input_args = DataStructure(surface_is_cylinder_flag=solution.input_args.surface_is_cylinder_flag, 
+                               circular_diameter_factor=solution.input_args.circular_diameter_factor,
+                               debug=1)
+    
+    p_coil_parts = solution.coil_parts
+
+    ###################################################################################
+    # Function under test
+    p_coil_parts = parameterize_mesh(p_coil_parts, input_args)
+    ###################################################################################
+
+    for part_ind, m_c_part in enumerate(m_c_parts):
+        coil_mesh = p_coil_parts[part_ind].coil_mesh
+        m_c_mesh = m_c_part.coil_mesh
+        
+        # Check:
+        # - v,n (np.ndarray)  : vertices and vertex normals (m,3), (m,3)
+        # - f,fn (np.ndarray) : faces and face normals (n,2), (n,3)
+        # - uv (np.ndarray)   : 2D project of mesh (m,2)
+        # - boundary (int)    : list of lists boundary vertex indices (n, variable)
+
+        assert compare(coil_mesh.v, m_c_mesh.v)         # M: nv,3
+        # assert compare(coil_mesh.n, m_c_mesh.n.T)     # M: 3,nv (vertexNormal(triangulation,.... calculates differently)
+        assert compare(coil_mesh.f, m_c_mesh.faces.T-1) # M: 2,nf
+        assert compare(coil_mesh.fn, m_c_mesh.fn)       # M: nf,3
+        assert compare(coil_mesh.boundary, m_c_mesh.boundary-1)
+        assert compare(coil_mesh.uv, m_c_mesh.uv.T)
+
 def develop_calculate_one_ring_by_mesh():  # PAUSED
     from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 
@@ -650,6 +777,7 @@ def develop_process_raw_loops():
     assert compare(coil_part.combined_loop_field, m_coil_part.combined_loop_field, double_tolerance=5e-7)  # Pass
     assert compare(coil_part.loop_significance, m_coil_part.loop_signficance, double_tolerance=0.005)
     assert compare(coil_part.field_by_loops, m_coil_part.field_by_loops, double_tolerance=2e-7)  # Pass!
+
 
 def develop_topological_loop_grouping():
     from sub_functions.topological_loop_grouping import topological_loop_grouping
@@ -1041,7 +1169,10 @@ def develop_load_preoptimized_data():
     input_args = DataStructure(sf_source_file='source_data_breast_coil.npy', debug=1,
                                surface_is_cylinder_flag=False, circular_diameter_factor=1,
                                project_name = project_name)
-    solution = load_preoptimized_data(input_args) #, matlab_data=mat_data_out)
+    ###################################################################################
+    # Function under test
+    solution = load_preoptimized_data(input_args, matlab_data=mat_data_out)
+    ###################################################################################
 
     log.debug(" Here!")
 
@@ -1059,6 +1190,12 @@ if __name__ == "__main__":
     # debug5() # Refine a simple 1 face mesh into four.
     # debug6() # Examine cylinder_radius500mm_length1500mm.stl
     # test_add_nearest_ref_point_to_curve()
+
+    develop_split_disconnected_mesh()
+    # develop_refine_mesh
+    develop_parameterize_mesh()
+    # develop_define_target_field
+
     # develop_calculate_one_ring_by_mesh()
     # develop_calculate_basis_functions()
     # develop_calculate_sensitivity_matrix()
@@ -1066,7 +1203,7 @@ if __name__ == "__main__":
     # calculate_resistance_matrix
     # develop_stream_function_optimization()
     # develop_calc_potential_levels()
-    develop_calc_contours_by_triangular_potential_cuts()
+    # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
     # develop_topological_loop_grouping()
     # develop_calculate_group_centers()
