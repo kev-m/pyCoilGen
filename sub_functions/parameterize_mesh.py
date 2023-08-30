@@ -20,6 +20,15 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
     """
     Create the parameterized 2D mesh.
 
+    Initialises the following properties of a CoilPart:
+        - v,n (np.ndarray)  : vertices and vertex normals (m,3), (m,3)
+        - f,fn (np.ndarray) : faces and face normals (n,2), (n,3)
+        - uv (np.ndarray)   : 2D project of mesh (m,2)
+        - boundary (int)    : list of lists boundary vertex indices (n, variable)
+
+    Updates the following properties of a CoilPart:
+        - None
+
     Args:
         coil_parts (object): Coil parts object with attributes 'coil_mesh'.
         input (object): Input object with attributes 'surface_is_cylinder_flag' and 'circular_diameter_factor_cylinder_parameterization'.
