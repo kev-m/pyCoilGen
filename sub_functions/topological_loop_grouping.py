@@ -8,8 +8,11 @@ from sub_functions.check_mutual_loop_inclusion import check_mutual_loop_inclusio
 
 log = logging.getLogger(__name__)
 
+# DEBUG
+from helpers.visualisation import compare
+def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=None):
 
-def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
+#def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
     """
     Group the contour loops in topological order.
 
@@ -27,6 +30,11 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         List[CoilPart]: Updated list of CoilPart structures with contour loop groups.
     """
     for part_ind in range(len(coil_parts)):
+        # DEBUG
+        if m_c_parts is not None:
+            m_c_part = m_c_parts[part_ind]
+            m_debug = m_c_part.topological_loop_grouping
+
         coil_part = coil_parts[part_ind]
         num_total_loops = len(coil_part.contour_lines)
         loop_in_loop_mat = np.zeros((num_total_loops, num_total_loops))
@@ -39,6 +47,10 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
                         coil_part.contour_lines[loop_num].uv,
                         coil_part.contour_lines[loop_to_test].uv
                     )
+
+        # DEBUG
+        if m_c_parts is not None:
+            assert compare(loop_in_loop_mat, m_debug.loop_in_loop_mat1)
 
         # Clear the diagonals from the loop_in_loop_mat
         mask = np.ones((num_total_loops, num_total_loops), dtype=int) - np.eye(num_total_loops, dtype=int)
@@ -62,6 +74,11 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
             group_levels[loop_to_test] = [ind for ind, lower_loop in enumerate(
                 lower_loops) if lower_loop == lower_loops[loop_to_test]]
 
+
+        # DEBUG
+        if m_c_parts is not None:
+            assert compare(group_levels, m_debug.group_levels1)
+
         # Delete the repetition in the parallel levels and the singular levels
         multi_element_indices = [index for index, cell in enumerate(group_levels) if len(cell) != 1]
         new_group_levels = []
@@ -75,6 +92,11 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
                 new_group_levels.append(group_levels[i])
 
         group_levels = new_group_levels
+
+
+        # DEBUG
+        if m_c_parts is not None:
+            assert compare(group_levels, m_debug.group_levels3)
 
         # Creating the loop groups (containing still the loops of the inner groups)
         overlapping_loop_groups_num = [loop_num for loop_num in group_levels[0]]
