@@ -56,6 +56,50 @@ if __name__ == '__main__':
         'persistence_dir': 'debug',
         'output_directory': 'images',
         'debug': DEBUG_BASIC,
+
+        # Debugging
+        "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
+        "target_region_resolution": 5,  # MATLAB 10 is the default but 5 is faster
     }
 
     result = CoilGen(log, arg_dict)
+
+"""
+Timing information (MATLAB online server):
+Parse inputs:
+Elapsed time is 0.016330 seconds.
+Load preoptimized data:
+Split the mesh and the stream function into disconnected pieces.
+Elapsed time is 0.027680 seconds.
+Parameterize the mesh:
+Elapsed time is 0.048049 seconds.
+Elapsed time is 0.048924 seconds.
+Calculate the potential levels for the discretization:
+Elapsed time is 0.004498 seconds.
+Generate the contours:
+Elapsed time is 1.082546 seconds.
+Process contours: Evaluate loop significance
+Elapsed time is 59.712511 seconds.
+Find the minimal distance between the contour lines:
+Elapsed time is 0.005178 seconds.
+Group the contour loops in topological order:
+Elapsed time is 9.266655 seconds.
+Calculate center locations of groups:
+Elapsed time is 0.042878 seconds.
+Interconnect the single groups:
+Elapsed time is 0.254066 seconds.
+Interconnect the groups to a single wire path:
+Elapsed time is 5.473644 seconds.
+Shift the return paths over the surface:
+Elapsed time is 6.134210 seconds.
+Create PCB Print:
+Elapsed time is 0.008580 seconds.
+Generate volumetric coil body:
+Elapsed time is 6.501566 seconds.
+
+filename = 
+
+    "debug/Preoptimzed_SVD_Coil.mat"
+
+>> 
+"""
