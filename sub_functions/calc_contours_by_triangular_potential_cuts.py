@@ -14,7 +14,11 @@ from sub_functions.data_structures import ContourLine, UnarrangedLoop, Unarrange
 log = logging.getLogger(__name__)
 
 
-def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
+# DEBUG
+from helpers.visualisation import compare, compare_contains
+def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart], m_c_parts=None):
+
+#def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
     """
     Center the stream function potential around zero and add zeros around the periphery.
 
@@ -32,6 +36,13 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         coil_parts (list): Updated list of coil parts.
     """
     for part_ind in range(len(coil_parts)):
+
+        # DEBUG
+        if m_c_parts is not None:
+            m_c_part = m_c_parts[part_ind]
+            m_debug = m_c_part.calc_contours_by_triangular_potential_cuts
+
+
         part = coil_parts[part_ind]
         part_mesh = part.coil_mesh
         part_vertices = part_mesh.get_vertices()
@@ -66,6 +77,16 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         for x_ind in range(edge_nodes.shape[0]):
             edge_opposed_nodes[x_ind, 0] = np.setdiff1d(edge_attached_triangles[x_ind, 0], edge_nodes[x_ind])
             edge_opposed_nodes[x_ind, 1] = np.setdiff1d(edge_attached_triangles[x_ind, 1], edge_nodes[x_ind])
+
+
+        # DEBUG
+        if m_c_parts is not None:
+            assert compare_contains(edge_opposed_nodes, m_debug.edge_opposed_nodes-1)
+            assert len(edge_attached_triangles) == len(m_debug.edge_attached_triangles)
+            for index1, m_ea_tri in enumerate(m_debug.edge_attached_triangles):
+                p_ea_tri = edge_attached_triangles[index1]
+
+                log.debug("Dont bother")
 
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- edge_opposed_nodes shape: %s, max(%d)", edge_opposed_nodes.shape, np.max(edge_opposed_nodes))
