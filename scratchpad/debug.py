@@ -523,75 +523,115 @@ def develop_calc_potential_levels():
 def develop_calc_contours_by_triangular_potential_cuts():
     from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 
-    # MATLAB saved data
-    mat_data = load_matlab('debug/cylinder_coil')
-    mat_data_out = mat_data['coil_layouts'].out
-    m_coil_parts = mat_data_out.coil_parts
-    m_c_part = m_coil_parts
 
-    # Python saved data 09: calc_potential_levels
-    # solution = load_numpy('debug/coilgen_cylinder_False_09.npy')
-    p_coil_parts = solution.coil_parts
-    solution = load_numpy('debug/coilgen_cylinder_False_09_True.npy')
+    # which = 'shielded_ygradient_coil'
+    which = 'Preoptimzed_SVD_Coil'
+
+    # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
+    if which == 'biplanar':
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        mat_data_out = matlab_data['coil_layouts'].out
+        m_c_parts = m_out.coil_parts
+
+        solution = load_numpy('debug/coilgen_biplanar_False_10.npy')
+    elif which == 'ygradient_coil':
+
+        mat_data = load_matlab('debug/cylinder_coil')
+        mat_data_out = mat_data['coil_layouts'].out
+        m_c_parts = mat_data_out.coil_parts
+
+        # Python saved data 09: calc_potential_levels
+        # solution = load_numpy('debug/coilgen_cylinder_False_09.npy')
+        p_coil_parts = solution.coil_parts
+        solution = load_numpy('debug/coilgen_cylinder_False_09_True.npy')
+        p_coil_parts = solution.coil_parts
+
+    else:
+        matlab_data = load_matlab(f'debug/{which}')
+        m_out = matlab_data['coil_layouts'].out
+        # Put some logic to turn m_c_parts into a list if m_out.coil_parts is not an array.
+        m_c_parts = [m_out.coil_parts]
+        solution = load_numpy(f'debug/{which}_09.npy')
+
     p_coil_parts = solution.coil_parts
 
     ###################################################################################
     # Function under test
-    coil_parts2 = calc_contours_by_triangular_potential_cuts(p_coil_parts)
+    coil_parts2 = calc_contours_by_triangular_potential_cuts(p_coil_parts, m_c_parts)
     ###################################################################################
 
-    coil_part = coil_parts2[0]
+    for part_ind, m_c_part in enumerate(m_c_parts):
+        coil_part = coil_parts2[part_ind]
 
-    # TODO: Check the top-level ordering (20 elements). Can the Python output match the MATLAB output
-    #       if I re-order there?
+        # TODO: Check the top-level ordering (20 elements). Can the Python output match the MATLAB output
+        #       if I re-order there?
 
-    for index1, m_ru_point in enumerate(m_c_part.raw.unsorted_points):
-        c_ru_point = coil_part.raw.unsorted_points[index1]
-        visualize_vertex_connections(c_ru_point.uv, 800, f'images/10_ru_point_uv_{index1}_p.png')
-        visualize_vertex_connections(m_ru_point.uv, 800, f'images/10_ru_point_uv_{index1}_m.png')
+        assert len(coil_part.contour_lines) == len(m_c_part.contour_lines)
 
-    assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
-    for index1, m_ru_point in enumerate(m_c_part.raw.unsorted_points):
-        c_ru_point = coil_part.raw.unsorted_points[index1]
-        assert len(c_ru_point.edge_ind) == len(m_ru_point.edge_ind)
-        assert np.isclose(c_ru_point.potential, m_ru_point.potential)
-        assert c_ru_point.uv.shape[0] == m_ru_point.uv.shape[0]  # Python shape!
-        assert (compare(c_ru_point.uv, m_ru_point.uv))  # Order is different
-        assert (compare(c_ru_point.edge_ind, m_ru_point.edge_ind))  # Completely different!!
+        for index1, m_ru_point in enumerate(m_c_part.raw.unsorted_points):
+            c_ru_point = coil_part.raw.unsorted_points[index1]
+            visualize_vertex_connections(c_ru_point.uv, 800, f'images/10_ru_point_uv_{part_ind}_{index1}_p.png')
+            visualize_vertex_connections(m_ru_point.uv, 800, f'images/10_ru_point_uv_{part_ind}_{index1}_m.png')
 
-    assert len(coil_part.raw.unarranged_loops) == len(m_c_part.raw.unarranged_loops)
-    for index1, m_ru_loops in enumerate(m_c_part.raw.unarranged_loops):
-        c_loops = coil_part.raw.unarranged_loops[index1]
-        m_loops = m_c_part.raw.unarranged_loops[index1]
-        assert len(c_loops.loop) == len(m_loops.loop)
-        # Skip the next section, the loops are different!!
-        # for index2, m_ru_loop in enumerate(m_ru_loops.loop):
-        #    c_ru_loop = c_loops.loop[index2]
-        #    assert c_ru_loop.uv.shape[0] == m_ru_loop.uv.shape[0] # Python shape!
-        #    assert(compare_contains(c_ru_loop.uv, m_ru_loop.uv)) #
-        #    assert len(c_ru_loop.edge_inds) == len(m_ru_loop.edge_inds)
-        #    #assert(compare(c_ru_point.edge_inds, m_ru_point.edge_inds))
+        assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
+        for index1, m_ru_point in enumerate(m_c_part.raw.unsorted_points):
+            c_ru_point = coil_part.raw.unsorted_points[index1]
+            assert len(c_ru_point.edge_ind) == len(m_ru_point.edge_ind)
+            assert np.isclose(c_ru_point.potential, m_ru_point.potential)
+            assert c_ru_point.uv.shape[0] == m_ru_point.uv.shape[0]  # Python shape!
+            assert (compare(c_ru_point.uv, m_ru_point.uv))  # Order is different
+            assert (compare(c_ru_point.edge_ind, m_ru_point.edge_ind))  # Completely different!!
+
+        assert len(coil_part.raw.unarranged_loops) == len(m_c_part.raw.unarranged_loops)
+        for index1, m_ru_loops in enumerate(m_c_part.raw.unarranged_loops):
+            c_loops = coil_part.raw.unarranged_loops[index1]
+            m_loops = m_c_part.raw.unarranged_loops[index1]
+            assert len(c_loops.loop) == len(m_loops.loop)
+            # Skip the next section, the loops are different!!
+            # for index2, m_ru_loop in enumerate(m_ru_loops.loop):
+            #    c_ru_loop = c_loops.loop[index2]
+            #    assert c_ru_loop.uv.shape[0] == m_ru_loop.uv.shape[0] # Python shape!
+            #    assert(compare_contains(c_ru_loop.uv, m_ru_loop.uv)) #
+            #    assert len(c_ru_loop.edge_inds) == len(m_ru_loop.edge_inds)
+            #    #assert(compare(c_ru_point.edge_inds, m_ru_point.edge_inds))
 
 
 def develop_process_raw_loops():
     from sub_functions.process_raw_loops import process_raw_loops
 
-    # MATLAB saved data
-    mat_data = load_matlab('debug/cylinder_coil')
-    mat_data_out = mat_data['coil_layouts'].out
-    m_coil_parts = mat_data_out.coil_parts
-    m_coil_part = m_coil_parts
+    # which = 'shielded_ygradient_coil'
+    which = 'Preoptimzed_SVD_Coil'
 
     # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
-    # solution = load_numpy('debug/coilgen_cylinder_False_10.npy')
-    p_coil_parts = solution.coil_parts
-    solution = load_numpy('debug/coilgen_cylinder_False_10_True.npy')
-    p_coil_parts = solution.coil_parts
+    if which == 'biplanar':
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        mat_data_out = matlab_data['coil_layouts'].out
+        m_c_parts = m_out.coil_parts
+        m_c_part = m_out.coil_parts[0]
 
-    input_args = DataStructure(smooth_flag=1, smooth_factor=1, min_loop_significance=1)
+        solution = load_numpy('debug/coilgen_biplanar_False_10.npy')
+    elif which == 'ygradient_coil':
+        matlab_data = load_matlab('debug/ygradient_coil')
+        mat_data_out = matlab_data['coil_layouts'].out
+        m_c_parts = [m_out.coil_parts]
+        m_c_part = m_out.coil_parts[0]
+
+        # solution = load_numpy('debug/coilgen_cylinder_False_10.npy')
+        solution = load_numpy('debug/coilgen_cylinder_True_10.npy')
+        p_coil_parts = solution.coil_parts
+    else:
+        matlab_data = load_matlab(f'debug/{which}')
+        m_out = matlab_data['coil_layouts'].out
+        m_c_parts = [m_out.coil_parts]
+        m_c_part = m_out.coil_parts
+        solution = load_numpy(f'debug/{which}_10.npy')
+        input_args = DataStructure(smooth_flag=solution.input_args.smooth_flag, smooth_factor=solution.input_args.smooth_factor, 
+                                   min_loop_significance=solution.input_args.min_loop_significance)
+
     target_field = mat_data_out.target_field
+    # target_field = solution.target_field
 
-    debug_data = m_coil_part
+    m_coil_part = m_c_part
     ###################################################################################
     # Function under test
     coil_parts2 = process_raw_loops(p_coil_parts, input_args, target_field)
@@ -610,6 +650,37 @@ def develop_process_raw_loops():
     assert compare(coil_part.combined_loop_field, m_coil_part.combined_loop_field, double_tolerance=5e-7)  # Pass
     assert compare(coil_part.loop_significance, m_coil_part.loop_signficance, double_tolerance=0.005)
     assert compare(coil_part.field_by_loops, m_coil_part.field_by_loops, double_tolerance=2e-7)  # Pass!
+
+def develop_topological_loop_grouping():
+    from sub_functions.topological_loop_grouping import topological_loop_grouping
+
+    # which = 'shielded_ygradient_coil'
+    which = 'Preoptimzed_SVD_Coil'
+
+    # Python saved data 12 : After find_minimal_contour_distance
+    if which == 'biplanar':
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        solution = load_numpy('debug/coilgen_biplanar_False_16.npy')
+    elif which == 'cylinder':
+        matlab_data = load_matlab('debug/ygradient_coil')
+        m_coil_parts = matlab_data['coil_layouts'].out.coil_parts
+        m_c_part = m_coil_parts
+        solution = load_numpy('debug/coilgen_cylinder_True_16.npy')
+        # solution = load_numpy('debug/coilgen_cylinder_False_16.npy')
+    else:
+        matlab_data = load_matlab(f'debug/{which}')
+        m_out = matlab_data['coil_layouts'].out
+        m_c_parts = m_out.coil_parts
+        m_c_part = m_out.coil_parts
+        solution = load_numpy(f'debug/{which}_12.npy')
+
+    input_args = None
+
+    p_coil_parts = solution.coil_parts
+    ######################################################################################################
+    # Function under test
+    coil_parts = topological_loop_grouping(p_coil_parts, input_args, [m_c_part])
+    ######################################################################################################
 
 
 def develop_calculate_group_centers():
@@ -995,8 +1066,9 @@ if __name__ == "__main__":
     # calculate_resistance_matrix
     # develop_stream_function_optimization()
     # develop_calc_potential_levels()
-    # develop_calc_contours_by_triangular_potential_cuts()
+    develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
+    # develop_topological_loop_grouping()
     # develop_calculate_group_centers()
     # develop_interconnect_within_groups()
     # develop_interconnect_among_groups()
@@ -1004,6 +1076,7 @@ if __name__ == "__main__":
     # develop_generate_cylindrical_pcb_print()
     # develop_create_sweep_along_surface()
     # develop_calculate_inductance_by_coil_layout()
+    # develop_load_preoptimized_data()
     #
     # test_smooth_track_by_folding()
     # from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file1, \
@@ -1015,4 +1088,3 @@ if __name__ == "__main__":
     # test_split_disconnected_mesh_stl_file2()
     # from tests.test_mesh import test_get_face_index2
     # test_get_face_index2()
-    develop_load_preoptimized_data()
