@@ -88,8 +88,8 @@ def parse_input(parse_cli=True):
                         default='field', help="Field type to evaluate")
 
     # Add flag for cylindrical surface
-    parser.add_argument('--surface_is_cylinder_flag',
-                        action='store_true', help="Flag for cylindrical surface")
+    parser.add_argument('--surface_is_cylinder_flag', type=bool, default=True,
+                        help="Flag for cylindrical surface")
 
     # Add the circular diameter factor for cylinder parameterization (circular_diameter_factor_cylinder_parameterization)
     parser.add_argument('--circular_diameter_factor', type=float, default=1,
@@ -152,7 +152,7 @@ def parse_input(parse_cli=True):
                         default=str(Path.cwd()), help="Output directory")
 
     # Add flag if the track should be smoothed
-    parser.add_argument('--smooth_flag', action='store_true',
+    parser.add_argument('--smooth_flag', type=bool, default=True,
                         help="Flag if the track should be smoothed")
 
     # Add the smoothing parameter
@@ -160,11 +160,11 @@ def parse_input(parse_cli=True):
                         default=1, help="Smoothing parameter")
 
     # Add flag to save sweeped .stl
-    parser.add_argument('--save_stl_flag', action='store_true',
+    parser.add_argument('--save_stl_flag', type=bool, default=True,
                         help="Flag to save swept .stl")
 
     # Add flag to plot results
-    parser.add_argument('--plot_flag', action='store_true',
+    parser.add_argument('--plot_flag', type=bool, default=True,
                         help="Flag to plot results")
 
     # Add interconnection_method: Regular or spiral in/out
@@ -176,7 +176,7 @@ def parse_input(parse_cli=True):
                         help="Group interconnection method: 'straight' or 'crossed'")
 
     # Add flag to skip calculation of minimal winding distance
-    parser.add_argument('--skip_calculation_min_winding_distance', action='store_true',
+    parser.add_argument('--skip_calculation_min_winding_distance', type=bool, default=True,
                         help="Flag to skip calculation of minimal winding distance")
 
     # Add flag to skip post processing
@@ -314,6 +314,7 @@ if __name__ == "__main__":
     arg_list = []
     parser, input = parse_input(arg_list)
     log.debug("input.skip_sweep: %s", input.skip_sweep)
+    log.debug("skip_calculation_min_winding_distance: %s ? Is True?", input.skip_calculation_min_winding_distance)
 
     # Random other checks
     log.debug("input.track_width_factor: %s", input.track_width_factor)
