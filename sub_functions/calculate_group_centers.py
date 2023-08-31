@@ -106,6 +106,7 @@ def calculate_group_centers(coil_parts: List[CoilPart]) -> List[CoilPart]:
             point = [group_centers_2d[0, rrrr], group_centers_2d[1, rrrr]]
             target_triangle, bary_centric_coord = get_target_triangle_def(point, planar_mesh)
 
+            # TypeError: ufunc 'isnan' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
             if not np.isnan(target_triangle):
                 vertices = curved_mesh.vertices[curved_mesh.faces[target_triangle]]
                 group_centers_3d[:, rrrr] = barycentric_to_cartesian(bary_centric_coord, vertices)
