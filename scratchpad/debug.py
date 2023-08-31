@@ -824,22 +824,28 @@ def develop_topological_loop_grouping():
     elif which == 'cylinder':
         matlab_data = load_matlab('debug/ygradient_coil')
         m_coil_parts = matlab_data['coil_layouts'].out.coil_parts
-        m_c_part = m_coil_parts
         solution = load_numpy('debug/coilgen_cylinder_True_16.npy')
         # solution = load_numpy('debug/coilgen_cylinder_False_16.npy')
     else:
         matlab_data = load_matlab(f'debug/{which}')
         m_out = matlab_data['coil_layouts'].out
-        m_c_parts = m_out.coil_parts
-        m_c_part = m_out.coil_parts
         solution = load_numpy(f'debug/{which}_12.npy')
+
+    m_c_parts = m_out.coil_parts
+    if not isinstance(m_c_parts, np.ndarray):
+        m_c_parts = np.asarray([m_c_parts])
 
     input_args = None
 
     p_coil_parts = solution.coil_parts
+    
+    # Use MATLAB contour lines
+    log.warning("Using MATLAB's contours in %s, line 843!", __file__)
+    for index, m_c_part in enumerate(m_c_parts):
+        p_coil_parts[index].contour_lines = m_c_part.contour_lines
     ######################################################################################################
     # Function under test
-    coil_parts = topological_loop_grouping(p_coil_parts, input_args, [m_c_part])
+    coil_parts = topological_loop_grouping(p_coil_parts, input_args, m_c_parts)
     ######################################################################################################
 
 
@@ -1233,9 +1239,9 @@ if __name__ == "__main__":
     # calculate_resistance_matrix
     # develop_stream_function_optimization()
     # develop_calc_potential_levels()
-    develop_calc_contours_by_triangular_potential_cuts()
+    # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
-    # develop_topological_loop_grouping()
+    develop_topological_loop_grouping()
     # develop_calculate_group_centers()
     # develop_interconnect_within_groups()
     # develop_interconnect_among_groups()
