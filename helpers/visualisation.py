@@ -12,6 +12,16 @@ def get_linenumber():
     cf = currentframe()
     return cf.f_back.f_lineno
 
+def passify_matlab(matlab_thing):
+    """
+    Some MATLAB items are arrays when the have more than 1 element, else are scalars.
+
+    This functions ensures that these scalars are converted into arrays.
+    """
+    if isinstance(matlab_thing, np.ndarray):
+        return matlab_thing
+    return np.asarray([matlab_thing])
+
 def _compare_list(index, instance1, instance2, double_tolerance=1e-10, equal_nan=True):
     """
     Compare two instances for equality with optional double tolerance.
@@ -28,21 +38,25 @@ def _compare_list(index, instance1, instance2, double_tolerance=1e-10, equal_nan
         TypeError: If the type of `instance1` is not supported.
     """
     if isinstance(instance1, list):
+        instance2 = passify_matlab(instance2)
         if len(instance1) != instance2.shape[0]:
             log.error(" Not the same shape at index %d: %s is not %s", index, len(instance1), np.shape(instance2))
             return False
-        if isinstance(instance1[0], list):
-            if _compare_list(0, instance1[0], instance2[0]) == False:
-                return False
-        else:
-            for index in range(len(instance1)):
-                if instance1[index] is None and instance2[index].shape[0] == 0:
-                    continue
-
-                if np.allclose(instance1[index], instance2[index], atol=double_tolerance) == False:
-                    log.error(" Not the same value at index [%d]: %s is not %s",
-                                index, instance1[index], instance2[index])
+        try:
+            if isinstance(instance1[0], list):
+                if _compare_list(0, instance1[0], instance2[0]) == False:
                     return False
+            else:
+                for index in range(len(instance1)):
+                    if instance1[index] is None and instance2[index].shape[0] == 0:
+                        continue
+
+                    if np.allclose(instance1[index], instance2[index], atol=double_tolerance) == False:
+                        log.error(" Not the same value at index [%d]: %s is not %s",
+                                    index, instance1[index], instance2[index])
+                        return False
+        except IndexError:
+            return instance2.shape[0] == 0
         return True
 
     log.error("compare(): Type(%s) is not supported", type(instance1))
@@ -120,6 +134,21 @@ def compare_contains(array1, array2, double_tolerance=1e-10, strict=True, equal_
     Returns:
         bool: True if the instances have matching entries, False otherwise.
     """
+    # Simplication: Rude implementation if mixed order list and array
+    if isinstance(array1, list):
+        for item1 in array1:
+            found = False
+            for item2 in array2:
+                if len(item1) == len(item2) and np.allclose(item1, item2, atol=double_tolerance, equal_nan=equal_nan):
+                    found = True
+                    break
+            if found:
+                continue
+            log.error("Can not find value %s in %s", value, array2)
+            return False
+        return True
+
+
     if not type(array1) == type(array2):
         log.error(" Not the same type: %s is not %s", type(array1), type(array2))
         return False
