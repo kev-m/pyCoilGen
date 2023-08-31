@@ -1197,7 +1197,7 @@ if __name__ == "__main__":
     # test_add_nearest_ref_point_to_curve()
     # develop_split_disconnected_mesh()
     # develop_refine_mesh
-    develop_parameterize_mesh()
+    # develop_parameterize_mesh()
     # develop_define_target_field
     # develop_calculate_one_ring_by_mesh()
     # develop_calculate_basis_functions()
