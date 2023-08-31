@@ -480,4 +480,5 @@ if __name__ == "__main__":
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 2m11
 
+    solution = CoilGen(log, arg_dict1)
     solution = CoilGen(log, arg_dict2)
