@@ -7,7 +7,7 @@ from sub_functions.data_structures import ContourLine
 from helpers.common import nearest_approaches
 
 
-def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only_point_flag: bool):
+def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only_point_flag: bool, only_min_dist = False):
     """
     Calculate the mutual nearest positions and segment indices between two loops.
 
@@ -15,6 +15,7 @@ def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only
         loop_a (ContourLine): First contour line.
         loop_b (ContourLine): Second contour line.
         only_point_flag (bool): If True, only consider nearest points and neglect positions between points.
+        only_min_dist (bool): If True, only calculate min_dist and skip the others.
 
     Returns:
         tuple: A tuple containing the following elements:
@@ -46,6 +47,8 @@ def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only
             near_points_b_v[:, test_point_ind] = all_near_points_b[:, min_ind_b]
 
         min_dist = np.min(near_dists)
+        if only_min_dist:
+            return min_dist, None, None, None, None
         min_ind_b = np.argmin(near_dists)
         near_points_b_v = near_points_b_v[:, min_ind_b]
         near_points_b_uv = loop_b.uv[:, min_ind_b] + \
@@ -79,6 +82,8 @@ def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only
             min_dist_ind[test_point_ind] = np.argmin(np.linalg.norm(loop_a.v - loop_b.v[:, test_point_ind], axis=0))
 
         min_dist = np.min(min_test_ind)
+        if only_min_dist:
+            return min_dist, None, None, None, None
         min_ind_b = np.argmin(min_test_ind)
         min_ind_a = min_dist_ind[min_ind_b]
 
