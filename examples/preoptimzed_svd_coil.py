@@ -41,7 +41,7 @@ if __name__ == '__main__':
         'sf_source_file': 'source_data_SVD_coil.npy',
         # the number of potential steps that determines the later number of windings (Stream function discretization)
         'levels': 30,
-        'min_loop_signifcance': 5,
+        'min_loop_significance': 5,
         'pot_offset_factor': 0.25,  # a potential offset value for the minimal and maximal contour potential ; must be between 0 and 1
         'surface_is_cylinder_flag': True,
         'interconnection_cut_width': 0.01,  # the width for the interconnections are interconnected; in meter
