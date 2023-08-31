@@ -56,10 +56,6 @@ if __name__ == '__main__':
         'persistence_dir': 'debug',
         'output_directory': 'images',
         'debug': DEBUG_BASIC,
-
-        # Debugging
-        "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
-        "target_region_resolution": 5,  # MATLAB 10 is the default but 5 is faster
     }
 
     result = CoilGen(log, arg_dict)
