@@ -32,7 +32,7 @@ def find_minimal_contour_distance(coil_parts: List[CoilPart], input_args):
                     if ind_1 != ind_2:
                         min_dist, _, _, _, _ = find_min_mutual_loop_distance(coil_part.contour_lines[ind_1],
                                                                              coil_part.contour_lines[ind_2],
-                                                                             False)
+                                                                             False, only_min_dist=True)
                         min_vals.append(min_dist)
             coil_part.pcb_track_width = min(min_vals)
         else:
