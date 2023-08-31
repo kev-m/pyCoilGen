@@ -51,6 +51,8 @@ if __name__ == '__main__':
         'sf_opt_method': 'tikkonov', # ...
         'fmincon_parameter': [1000.0, 10 ^ 10, 1.000000e-10, 1.000000e-10, 1.000000e-10],
         'tikonov_reg_factor': 100,  # %Tikonov regularization factor for the SF optimization
+
+        'output_directory': 'images',
         'project_name': 'ygradient_coil',
         'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug',

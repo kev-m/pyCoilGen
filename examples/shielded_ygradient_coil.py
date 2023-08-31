@@ -53,6 +53,7 @@ if __name__ == '__main__':
         'skip_inductance_calculation': False,
         'tikonov_reg_factor': 10,           # Tikonov regularization factor for the SF optimization
 
+        'output_directory': 'images',
         'project_name': 'shielded_ygradient_coil',
         'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug',
