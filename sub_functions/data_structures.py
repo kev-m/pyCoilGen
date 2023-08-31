@@ -393,11 +393,16 @@ class UnarrangedLoop(Shape2D):
 
     Used by calc_contours_by_triangular_potential_cuts
     """
-    edge_inds: List[int] = None
     current_orientation: float = None
+    edge_inds: np.ndarray = None # Converted from list
 
     def add_edge(self, edge):
-        self.edge_inds.append(edge)
+        if self.edge_inds is None:
+            self.edge_inds = np.zeros((1, 2), dtype=int)
+            self.edge_inds[0] = edge
+            return
+        self.edge_inds = np.vstack((self.edge_inds, [edge]))
+
 
     def add_uv(self, uv):
         append_uv(self, uv)
