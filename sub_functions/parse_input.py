@@ -48,7 +48,7 @@ def parse_input(parse_cli=True):
                         default=1, help="Weight for the secondary target points")
 
     # Add flag to use only target mesh vertices as target coordinates
-    parser.add_argument('--use_only_target_mesh_verts', action='store_true',
+    parser.add_argument('--use_only_target_mesh_verts', type=bool, default=False,
                         help="Flag to use only target mesh vertices as target coordinates")
 
     # Add the stream function source file
@@ -180,15 +180,15 @@ def parse_input(parse_cli=True):
                         help="Flag to skip calculation of minimal winding distance")
 
     # Add flag to skip post processing
-    parser.add_argument('--skip_postprocessing',
-                        action='store_true', help="Flag to skip post-processing")
+    parser.add_argument('--skip_postprocessing', type=bool, default=False, 
+                        help="Flag to skip post-processing")
 
     # Add flag to skip inductance_calculation
-    parser.add_argument('--skip_inductance_calculation',
-                        action='store_true', help="Flag to skip inductance calculation")
+    parser.add_argument('--skip_inductance_calculation', type=bool, default=False, 
+                        help="Flag to skip inductance calculation")
 
     # Flag to skip the shifting of return paths
-    parser.add_argument('--skip_normal_shift', action='store_true',
+    parser.add_argument('--skip_normal_shift', type=bool, default=False,
                         help="Flag to skip the shifting of return paths")
 
     # Add smoothing parameters regarding the normal shift
@@ -196,11 +196,11 @@ def parse_input(parse_cli=True):
                         default=[2, 3, 2], help="Smoothing parameters regarding the normal shift")
 
     # Flag to skip the generation of a volumetric (3D) coil body
-    parser.add_argument('--skip_sweep', action='store_true',
+    parser.add_argument('--skip_sweep', type=bool, default=False,
                         help="Flag to skip the generation of a volumetric (3D) coil body")
 
     # Flag to generate a rectangular pcb pattern to wrap around a cylinder
-    parser.add_argument('--make_cylindrical_pcb', action='store_true',
+    parser.add_argument('--make_cylindrical_pcb', type=bool, default=False,
                         help="Flag to generate a rectangular pcb pattern to wrap around a cylinder")
 
     # Add the pcb_interconnection_method: 'spiral_in_out' or other options
@@ -220,7 +220,7 @@ def parse_input(parse_cli=True):
                         help="Gauss integration order")
 
     # Add flag to set the roi into the geometric center of the mesh
-    parser.add_argument('--set_roi_into_mesh_center', action='store_true',
+    parser.add_argument('--set_roi_into_mesh_center', type=bool, default=False,
                         help="Flag to set the ROI into the geometric center of the mesh")
 
     # In case of pcb layout, specify the track width
