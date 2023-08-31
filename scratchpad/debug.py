@@ -15,7 +15,7 @@ sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
 from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, \
-    visualize_compare_vertices, visualize_projected_vertices
+    visualize_compare_vertices, visualize_projected_vertices, visualize_compare_contours
 from helpers.extraction import load_matlab
 from sub_functions.data_structures import DataStructure, Mesh, CoilPart, CoilSolution
 from sub_functions.read_mesh import create_unique_noded_mesh
@@ -689,21 +689,48 @@ def develop_calc_contours_by_triangular_potential_cuts():
 
     ###################################################################################
     # Function under test
-    coil_parts2 = calc_contours_by_triangular_potential_cuts(p_coil_parts, m_c_parts)
+    coil_parts2 = calc_contours_by_triangular_potential_cuts(p_coil_parts)
     ###################################################################################
 
     for part_ind, m_c_part in enumerate(m_c_parts):
         coil_part = coil_parts2[part_ind]
+        m_debug = m_c_part.calc_contours_by_triangular_potential_cuts
 
-        # TODO: Check the top-level ordering (20 elements). Can the Python output match the MATLAB output
-        #       if I re-order there?
+        """
+        assert coil_part.num_edges == m_debug.edge_attached_triangles_inds.shape[0]
+        # assert edge_nodes.shape[0] == m_debug.edge_nodes2.shape[0]
+        # assert compare_contains(edge_nodes,  m_debug.edge_nodes2-1) # Pass, but very slow
 
-        assert len(coil_part.contour_lines) == len(m_c_part.contour_lines)
+        assert len(coil_part.edge_attached_triangles) == len(m_debug.edge_attached_triangles)
+        assert coil_part.edge_opposed_nodes.shape[0] == m_debug.edge_opposed_nodes.shape[0]
+        # Fail - different route through the mesh!
+        # assert compare_contains(edge_opposed_nodes, m_debug.edge_opposed_nodes-1, strict=False)
+        assert compare(coil_part.potential_level_list, m_c_part.potential_level_list)
+        """
 
-        for index1, m_ru_point in enumerate(m_c_part.raw.unsorted_points):
-            c_ru_point = coil_part.raw.unsorted_points[index1]
-            visualize_vertex_connections(c_ru_point.uv, 800, f'images/10_ru_point_uv_{part_ind}_{index1}_p.png')
-            visualize_vertex_connections(m_ru_point.uv, 800, f'images/10_ru_point_uv_{part_ind}_{index1}_m.png')
+        assert len(coil_part.contour_lines) == len(m_debug.contour_lines) # Sanity check
+        # A bit of visualisation for references
+        coil_mesh = coil_part.coil_mesh
+        visualize_compare_contours(coil_mesh.uv, 800, 
+                                   f'images/10_contour1_{part_ind}_p.png', coil_part.contour_lines)
+        visualize_compare_contours(m_c_part.coil_mesh.uv.T, 800,
+                                   f'images/10_contour1_{part_ind}_m.png', m_debug.contour_lines)
+
+        for index1, m_contour in enumerate(m_debug.contour_lines):
+            p_contour = coil_part.contour_lines[index1]
+            visualize_vertex_connections(p_contour.uv.T, 800, 
+                                         f'images/10_contour_lines_{part_ind}_{index1}_p.png')
+            visualize_vertex_connections(m_contour.uv.T, 800, 
+                                         f'images/10_contour_lines_{part_ind}_{index1}_m.png')
+
+        # Now do the actual checking of values
+        for index, m_contour in enumerate(m_debug.contour_lines):
+            p_contour = coil_part.contour_lines[index]
+            # Check: potential, current_orientation, uv, v
+            assert p_contour.potential == m_contour.potential
+            assert p_contour.current_orientation == m_contour.current_orientation
+            assert compare(p_contour.uv, m_contour.uv)
+
 
         assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
         for index1, m_ru_point in enumerate(m_c_part.raw.unsorted_points):
