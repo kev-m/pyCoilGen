@@ -15,7 +15,7 @@ sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
 from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, \
-    visualize_compare_vertices, visualize_projected_vertices, visualize_compare_contours
+    visualize_compare_vertices, visualize_projected_vertices, visualize_compare_contours, passify_matlab
 from helpers.extraction import load_matlab
 from sub_functions.data_structures import DataStructure, Mesh, CoilPart, CoilSolution
 from sub_functions.read_mesh import create_unique_noded_mesh
@@ -844,8 +844,8 @@ def develop_topological_loop_grouping():
     
     # Use MATLAB contour lines
     log.warning("Using MATLAB's contours in %s, line 843!", __file__)
-    for index, m_c_part in enumerate(m_c_parts):
-        p_coil_parts[index].contour_lines = m_c_part.contour_lines
+    for part_index, m_c_part in enumerate(m_c_parts):
+        p_coil_parts[part_index].contour_lines = m_c_part.contour_lines
     ######################################################################################################
     # Function under test
     coil_parts = topological_loop_grouping(p_coil_parts, input_args, m_c_parts)
@@ -855,10 +855,33 @@ def develop_topological_loop_grouping():
     # loop_groups, group_levels, level_positions, groups
 
     assert len(coil_parts) == len(m_c_parts)
-    for index, m_c_part in enumerate(m_c_parts):
-        coil_part = coil_parts[index]
+    for part_index, m_c_part in enumerate(m_c_parts):
+        m_debug = m_c_part.topological_loop_grouping
+        coil_part = coil_parts[part_index]
 
+
+        # Check that the groups and loops are the same
+        # 1. groups
         assert len(coil_part.groups) == len(m_c_part.groups)
+        for index1, m_group in enumerate(m_c_part.groups):
+            p_group = coil_part.groups[index1]
+
+            # 2. loops
+            assert len(p_group.loops) == len(m_group.loops)
+            for index2, m_loop in enumerate(m_group.loops):
+                p_loop = p_group.loops[index2]
+                assert p_loop.current_orientation == m_loop.current_orientation
+                assert p_loop.potential == m_loop.potential
+                assert compare(p_loop.uv, m_loop.uv)
+                assert compare(p_loop.v, m_loop.v)
+
+        # 3. loop_groups
+        m_passified = np.empty((len(m_c_part.loop_groups)), dtype=object)
+        for i in range(len(m_debug.loop_groups2)):
+            m_passified[i] = passify_matlab(m_c_part.loop_groups[i]-1)
+
+        assert len(coil_part.loop_groups) == len(m_passified)
+        assert compare(np.array(coil_part.loop_groups, dtype=object), m_passified)
 
 
 def develop_calculate_group_centers():
@@ -894,7 +917,7 @@ def develop_calculate_group_centers():
 
     ###################################################################################
     # Function under test
-    coil_parts = calculate_group_centers(p_coil_parts)
+    coil_parts = calculate_group_centers(p_coil_parts, m_c_parts)
     ###################################################################################
 
     # And now!!
