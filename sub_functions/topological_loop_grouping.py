@@ -214,6 +214,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
             loops_to_remove = [loop for subgroup_index in group_contains_following_group[iiii]
                                for loop in overlapping_loop_groups[subgroup_index]]
             diff = set(loop_groups[iiii]) - set(loops_to_remove)
+            # Order the loop_groups
             loop_groups[iiii] = list(diff)
 
         # Order the loop_groups
@@ -223,9 +224,30 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
             coil_part.loop_groups[index] = np.array(sorted(sub_loop))
         loop_groups = coil_part.loop_groups  # Use the np.array from here on.
 
+        # DEBUG
+        if m_c_parts is not None:
+            # assert compare_contains(group_contains_following_group, m_debug.group_contains_following_group-1)
+            m_passified = np.empty((len(m_debug.loop_groups2)), dtype=object)
+            for i in range(len(m_debug.loop_groups2)):
+                m_passified[i] = passify_matlab(m_debug.loop_groups2[i]-1)
+
+            assert len(loop_groups) == len(m_passified)
+            assert compare(loop_groups, m_passified)
+
         # Order the groups based on the number of loops
         sort_ind = sorted(range(len(coil_parts[part_ind].loop_groups)), key=lambda x: len(coil_parts[part_ind].loop_groups[x]), reverse=True)
-        coil_parts[part_ind].loop_groups = [coil_parts[part_ind].loop_groups[i] for i in sort_ind]        
+
+        # DEBUG
+        if m_c_parts is not None:
+            # Final sorted coil_parts(part_ind).loop_groups
+            # assert compare_contains(group_contains_following_group, m_debug.group_contains_following_group-1)
+            m_passified = np.empty((len(m_c_part.loop_groups)), dtype=object)
+            for i in range(len(m_debug.loop_groups2)):
+                m_passified[i] = passify_matlab(m_c_part.loop_groups[i]-1)
+
+            assert len(loop_groups) == len(m_passified)
+            assert compare(np.array(loop_groups, dtype=object), m_passified)
+
 
         # Renumber (=rename) the groups (also in the levels)
         renamed_group_levels = group_levels.copy()
@@ -241,6 +263,19 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
         group_levels = [list(level) for level in renamed_group_levels]
 
         coil_part.group_levels = np.array(group_levels, dtype=object)
+        # DEBUG
+        if m_c_parts is not None:
+            # MATLAB array/scalar, again!!
+            if len(coil_part.group_levels) == 1:
+                # The MATLAB example will be a single leveled array!
+                m_group_levels = np.empty((1), dtype=object)
+                m_group_levels[0] = m_debug.renamed_group_levels - 1
+            else:
+                m_group_levels = m_debug.renamed_group_levels-1
+
+            assert len(coil_part.group_levels) == len(m_group_levels)
+            assert compare(coil_part.group_levels, m_group_levels) # Pass
+
 
         # Find for each parallel level the groups that contain that level
         loops_per_level = []
