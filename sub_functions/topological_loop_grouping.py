@@ -215,14 +215,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
                                for loop in overlapping_loop_groups[subgroup_index]]
             diff = set(loop_groups[iiii]) - set(loops_to_remove)
             # Order the loop_groups
-            loop_groups[iiii] = list(diff)
-
-        # Order the loop_groups
-        # TODO: Check the MATLAB if the group sub-lists are sorted too.
-        coil_part.loop_groups = np.empty((len(overlapping_loop_groups)), dtype=object)
-        for index, sub_loop in enumerate(loop_groups):
-            coil_part.loop_groups[index] = np.array(sorted(sub_loop))
-        loop_groups = coil_part.loop_groups  # Use the np.array from here on.
+            loop_groups[iiii] = np.array(sorted(list(diff)))
 
         # DEBUG
         if m_c_parts is not None:
@@ -235,7 +228,18 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
             assert compare(loop_groups, m_passified)
 
         # Order the groups based on the number of loops
-        sort_ind = sorted(range(len(coil_parts[part_ind].loop_groups)), key=lambda x: len(coil_parts[part_ind].loop_groups[x]), reverse=True)
+        # Generating the list of group lengths
+        # Sorting the indices based on the lengths in descending order
+        #sort_ind = sorted(range(len(loop_groups)), key=lambda x: len(loop_groups[x]), reverse=True)
+        group_lengths = [len(loop_groups[x]) for x in range(len(loop_groups))]
+        sort_ind = sorted(range(len(loop_groups)), key=lambda x: group_lengths[x], reverse=True)
+        #sort_ind = sorted(range(len(loop_groups)), key=lambda x: group_lengths[x])
+
+        coil_part.loop_groups = np.empty((len(loop_groups)), dtype=object)
+        for i in range(len(loop_groups)):
+            coil_part.loop_groups[i] = loop_groups[sort_ind[i]]
+
+        loop_groups = coil_part.loop_groups # Use the np.array from here on.
 
         # DEBUG
         if m_c_parts is not None:
@@ -256,13 +260,16 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
                 for renamed_index in range(len(loop_groups)):
                     if group_levels[iiii][level_index] in loop_groups[renamed_index]:
                         renamed_group_levels[iiii][level_index] = renamed_index
-                        #break
+                        break
 
         # Re-sort parallel_levels to new group names
-        renamed_group_levels = sorted(list(set(tuple(level) for level in renamed_group_levels)))
-        group_levels = [list(level) for level in renamed_group_levels]
+        sort_ind_level = sorted(range(len(renamed_group_levels)), key=lambda i: min(renamed_group_levels[i]))
 
-        coil_part.group_levels = np.array(group_levels, dtype=object)
+        coil_part.group_levels = np.empty((len(group_levels)), dtype=object)
+        for i in range(len(renamed_group_levels)):
+            coil_part.group_levels[i] = np.asarray(renamed_group_levels[sort_ind_level[i]])
+
+
         # DEBUG
         if m_c_parts is not None:
             # MATLAB array/scalar, again!!
