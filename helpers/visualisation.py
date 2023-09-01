@@ -58,6 +58,8 @@ def _compare_list(index, instance1, instance2, double_tolerance=1e-10, equal_nan
         except IndexError:
             return instance2.shape[0] == 0
         return True
+    if isinstance(instance1, np.ndarray):
+        return compare(instance1, instance2)
 
     log.error("compare(): Type(%s) is not supported", type(instance1))
     return False
@@ -144,7 +146,7 @@ def compare_contains(array1, array2, double_tolerance=1e-10, strict=True, equal_
                     break
             if found:
                 continue
-            log.error("Can not find value %s in %s", value, array2)
+            log.error("Can not find value %s in %s", item1, array2)
             return False
         return True
 
