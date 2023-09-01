@@ -104,7 +104,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                     elif force_cut_selection[group_ind] == 'low':
                         cut_position_used = cut_positions[loop_ind].low_cut.v
                     else:
-                        cut_position_used = cut_positions[loop_ind].high_cut.add_v
+                        cut_position_used = cut_positions[loop_ind].high_cut.v
 
                     # NOTE: high_cut/low_cut.v are (n,3) whereas part_group.loops[] etc are (3,n)
                     # Temporary hack until all v and uv are changed from MATLAB (2,m) to Python (m,2)
