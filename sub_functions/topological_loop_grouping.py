@@ -42,7 +42,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
         # DEBUG
         if m_c_parts is not None:
             try:
-                loop_in_loop_mat = np.load('debug/topological_loop_grouping-loop_in_loop_mat.npy', allow_pickle=True)
+                loop_in_loop_mat = np.load(f'debug/{input_args.project_name}_{part_ind}_topological_loop_grouping-loop_in_loop_mat.npy', allow_pickle=True)
             except FileNotFoundError:
                 # Check for all loop enclosures of other loops
                 for loop_to_test in range(num_total_loops):
@@ -52,11 +52,20 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
                                 coil_part.contour_lines[loop_num].uv,
                                 coil_part.contour_lines[loop_to_test].uv
                             )
+        else:
+            # Check for all loop enclosures of other loops
+            for loop_to_test in range(num_total_loops):
+                for loop_num in range(num_total_loops):
+                    if loop_to_test != loop_num:
+                        loop_in_loop_mat[loop_to_test, loop_num] = check_mutual_loop_inclusion(
+                            coil_part.contour_lines[loop_num].uv,
+                            coil_part.contour_lines[loop_to_test].uv
+                        )
 
         # DEBUG
         if m_c_parts is not None:
             assert compare(loop_in_loop_mat, m_debug.loop_in_loop_mat1)
-            np.save('debug/topological_loop_grouping-loop_in_loop_mat.npy', loop_in_loop_mat)
+            np.save(f'debug/{input_args.project_name}_{part_ind}_topological_loop_grouping-loop_in_loop_mat.npy', loop_in_loop_mat)
 
         # Clear the diagonals from the loop_in_loop_mat
         mask = np.ones((num_total_loops, num_total_loops), dtype=int) - np.eye(num_total_loops, dtype=int)
@@ -99,6 +108,11 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
         for i in multi_element_indices:
             if not group_levels[i] in new_group_levels:
                 new_group_levels.append(group_levels[i])
+
+        # TODO: MATLAB has a way of converting to string which orders the groups by the first character,
+        #       so 55 appears before 6. This has a weird effect on all subsequent results!?
+
+        # Remove levels with only one member unless it is the singular top level
         top_level_indices = [index for index, cell in enumerate(
             group_levels) if len(cell) == 1 and is_global_top_loop[cell[0]]]
         for i in top_level_indices:
@@ -110,7 +124,15 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
 
         # DEBUG
         if m_c_parts is not None:
-            assert compare_contains(group_levels, m_debug.group_levels3-1)
+            # MATLAB array/scalar, again!!
+            if len(group_levels) == 1:
+                # The MATLAB example will be a single leveled array!
+                m_group_levels = m_debug.group_levels3.reshape(1,-1) - 1
+            else:
+                m_group_levels = m_debug.group_levels3-1
+            assert compare(group_levels, m_group_levels)
+            # log.warning(" Using MATLAB group levels in %s, line 114.", __file__)
+            # group_levels = m_debug.group_levels3-1
 
         # Creating the loop groups (containing still the loops of the inner groups)
         overlapping_loop_groups_num = np.asarray([item for group_level in group_levels for item in group_level])
@@ -119,8 +141,10 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
 
         # DEBUG
         if m_c_parts is not None:
-            assert compare_contains(overlapping_loop_groups_num, m_debug.overlapping_loop_groups_num-1)
-            assert compare_contains(overlapping_loop_groups, np.array(m_debug.overlapping_loop_groups1-1, dtype=int))
+            #assert compare_contains(overlapping_loop_groups_num, m_debug.overlapping_loop_groups_num-1)
+            #assert compare_contains(overlapping_loop_groups, np.array(m_debug.overlapping_loop_groups1-1, dtype=int))
+            assert compare(overlapping_loop_groups_num, m_debug.overlapping_loop_groups_num-1)
+            assert compare(overlapping_loop_groups, np.array(m_debug.overlapping_loop_groups1-1, dtype=int))
 
         # Horizontally concatenate the cell array elements and convert to a list of individual elements (cells)
         yyy = []
@@ -135,11 +159,12 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
             m_passified = np.empty((len(m_debug.overlapping_loop_groups2)), dtype=object)
             for i in range(len(m_debug.overlapping_loop_groups2)):
                 m_passified[i] = passify_matlab(m_debug.overlapping_loop_groups2[i]-1)
-            assert compare_contains(overlapping_loop_groups, m_passified)
+            # assert compare_contains(overlapping_loop_groups, m_passified)
+            assert compare(overlapping_loop_groups, m_passified)
 
         # Build the group topology by checking the loop content of a certain group
         # to see if it is a superset of the loop content of another group
-        group_in_group_mat = np.zeros((len(overlapping_loop_groups), len(overlapping_loop_groups)))
+        group_in_group_mat = np.zeros((len(overlapping_loop_groups), len(overlapping_loop_groups)), dtype=int)
 
         for group_index_1 in range(len(overlapping_loop_groups)):
             for group_index_2 in range(len(overlapping_loop_groups)):
@@ -148,15 +173,42 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
 
             group_in_group_mat[group_index_1, group_index_1] = 0
 
+        # DEBUG
+        if m_c_parts is not None:
+            assert compare(group_in_group_mat, m_debug.group_in_group_mat)
+
+
+
         group_is_subgroup_of = [list(np.nonzero(group_in_group_mat[group_index, :])[0])
                                 for group_index in range(len(overlapping_loop_groups))]
+
+        # DEBUG
+        if m_c_parts is not None:
+            #assert compare_contains(group_is_subgroup_of, m_debug.group_is_subgroup_of-1)
+            assert compare(group_is_subgroup_of, m_debug.group_is_subgroup_of-1)
+
         group_contains_following_group = [list(np.nonzero(group_in_group_mat[:, group_index])[0])
                                           for group_index in range(len(overlapping_loop_groups))]
+
+        # DEBUG
+        if m_c_parts is not None:
+            # assert compare_contains(group_contains_following_group, m_debug.group_contains_following_group-1)
+            assert compare(group_contains_following_group, m_debug.group_contains_following_group-1)
 
         # Remove loops from group if they also belong to a respective subgroup
         loop_groups = [group.copy() for group in overlapping_loop_groups]
         for index, loop_group in enumerate(overlapping_loop_groups):
             loop_groups[index] = np.array(loop_group, copy=True)
+
+        # DEBUG
+        if m_c_parts is not None:
+            # assert compare_contains(group_contains_following_group, m_debug.group_contains_following_group-1)
+            m_passified = np.empty((len(m_debug.loop_groups1)), dtype=object)
+            for i in range(len(m_debug.loop_groups1)):
+                m_passified[i] = passify_matlab(m_debug.loop_groups1[i]-1)
+
+            assert len(loop_groups) == len(m_passified)
+            assert compare(loop_groups, m_passified)
 
         for iiii in range(len(overlapping_loop_groups)):
             loops_to_remove = [loop for subgroup_index in group_contains_following_group[iiii]
