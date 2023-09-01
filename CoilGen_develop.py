@@ -45,10 +45,10 @@ from sub_functions.shift_return_paths import shift_return_paths
 from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
 from sub_functions.create_sweep_along_surface import create_sweep_along_surface
 from sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
+from sub_functions.load_preoptimized_data import load_preoptimized_data
 """
 from evaluate_field_errors import evaluate_field_errors
 from calculate_gradient import calculate_gradient
-from load_preoptimized_data import load_preoptimized_data
 """
 
 log = logging.getLogger(__name__)
@@ -497,10 +497,14 @@ def CoilGen(log, input=None):
 
     else:
         # Load the preoptimized data
+        # Load the preoptimized data
         print('Load preoptimized data:')
-        raise Exception("Not supported")
-        coil_parts, _, _, combined_mesh, sf_b_field, target_field, is_suppressed_point = load_preoptimized_data(
-            input_args)
+        timer.start()
+        solution = load_preoptimized_data(input_args)
+        timer.stop()
+        coil_parts = solution.coil_parts
+        combined_mesh = solution.combined_mesh
+        target_field = solution.target_field
 
     # Calculate the potential levels for the discretization
     print('Calculate the potential levels for the discretization:')
@@ -814,6 +818,7 @@ def CoilGen(log, input=None):
                 assert compare(c_group_levels, m_group_levels)        # Pass~
                 assert compare(c_level_positions, m_level_positions)  # Pass~
                 # assert compare(c_loop_groups, m_loop_groups)        # Fail: They don't match up exactly
+                pass
 
         # Manual conclusion: Not identical, but close. Contour groups in different orders...
 
@@ -1139,7 +1144,7 @@ if __name__ == "__main__":
         "use_only_target_mesh_verts": False,
 
         "project_name": 'biplanar_xgradient',
-        "debug": DEBUG_VERBOSE,
+        "debug": DEBUG_BASIC,
         "persistence_dir": 'debug',
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 4m3, 6m12.747s
