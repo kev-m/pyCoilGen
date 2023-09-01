@@ -815,15 +815,18 @@ def develop_topological_loop_grouping():
     from sub_functions.topological_loop_grouping import topological_loop_grouping
 
     # which = 'shielded_ygradient_coil'
-    which = 'Preoptimzed_SVD_Coil'
+    # which = 'Preoptimzed_Breast_Coil'
+    # which = 'Preoptimzed_SVD_Coil'
+    which = 'biplanar_xgradient_0_5'
 
     # Python saved data 12 : After find_minimal_contour_distance
-    if which == 'biplanar':
+    if which == 'biplanar_xgradient':
         matlab_data = load_matlab('debug/biplanar_xgradient')
+        m_out = matlab_data['coil_layouts'].out
         solution = load_numpy('debug/coilgen_biplanar_False_16.npy')
-    elif which == 'cylinder':
+    elif which == 'ygradient_coil':
         matlab_data = load_matlab('debug/ygradient_coil')
-        m_coil_parts = matlab_data['coil_layouts'].out.coil_parts
+        m_out = matlab_data['coil_layouts'].out
         solution = load_numpy('debug/coilgen_cylinder_True_16.npy')
         # solution = load_numpy('debug/coilgen_cylinder_False_16.npy')
     else:
@@ -835,7 +838,7 @@ def develop_topological_loop_grouping():
     if not isinstance(m_c_parts, np.ndarray):
         m_c_parts = np.asarray([m_c_parts])
 
-    input_args = None
+    input_args = DataStructure(project_name=which)
 
     p_coil_parts = solution.coil_parts
     
@@ -848,15 +851,45 @@ def develop_topological_loop_grouping():
     coil_parts = topological_loop_grouping(p_coil_parts, input_args, m_c_parts)
     ######################################################################################################
 
+    # And now, check the following:
+    # loop_groups, group_levels, level_positions, groups
+
+    assert len(coil_parts) == len(m_c_parts)
+    for index, m_c_part in enumerate(m_c_parts):
+        coil_part = coil_parts[index]
+
+        assert len(coil_part.groups) == len(m_c_part.groups)
+
 
 def develop_calculate_group_centers():
     from sub_functions.calculate_group_centers import calculate_group_centers
-    mat_data = load_matlab('debug/cylinder_coil')
-    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
-    m_c_part = m_coil_parts
-    solution = load_numpy('debug/coilgen_cylinder_False_13_False_patched.npy')
-    p_coil_parts = solution.coil_parts
-    # solution = load_numpy('debug/coilgen_cylinder_False_13_True_patched.npy')
+
+    # which = 'shielded_ygradient_coil'
+    # which = 'Preoptimzed_Breast_Coil'
+    # which = 'Preoptimzed_SVD_Coil'
+    # which = 'ygradient_coil'
+    which = 'biplanar_xgradient_0_5'
+
+    # Python saved data 13 : After topological_loop_grouping
+    if which == 'biplanar':
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_biplanar_False_13.npy')
+    elif which == 'cylinder':
+        matlab_data = load_matlab('debug/ygradient_coil')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_cylinder_False_13_patched.npy')
+    else:
+        matlab_data = load_matlab(f'debug/{which}')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy(f'debug/{which}_13.npy')
+
+
+    m_c_parts = m_out.coil_parts
+    if not isinstance(m_c_parts, np.ndarray):
+        m_c_parts = np.asarray([m_c_parts])
+
+
     p_coil_parts = solution.coil_parts
 
     ###################################################################################
@@ -865,13 +898,19 @@ def develop_calculate_group_centers():
     ###################################################################################
 
     # And now!!
-    coil_part = coil_parts[0]
+    assert len(coil_parts) == len(m_c_parts)
+    for index, m_c_part in enumerate(m_c_parts):
+        coil_part = coil_parts[index]
 
-    m_group_centers = m_c_part.group_centers
-    c_group_centers = coil_part.group_centers
+        assert len(coil_part.groups) == len(m_c_part.groups)
 
-    assert compare(c_group_centers.uv, m_group_centers.uv)  #
-    assert compare(c_group_centers.v, m_group_centers.v)    #
+        m_group_centers = m_c_part.group_centers
+        c_group_centers = coil_part.group_centers
+
+        assert c_group_centers.uv.shape == m_group_centers.uv.shape
+
+        assert compare(c_group_centers.uv, m_group_centers.uv)  #
+        assert compare(c_group_centers.v, m_group_centers.v)    #
 
 
 def develop_interconnect_within_groups():
@@ -1242,7 +1281,7 @@ if __name__ == "__main__":
     # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
     develop_topological_loop_grouping()
-    # develop_calculate_group_centers()
+    develop_calculate_group_centers()
     # develop_interconnect_within_groups()
     # develop_interconnect_among_groups()
     # develop_shift_return_paths()
