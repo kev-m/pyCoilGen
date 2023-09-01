@@ -13,8 +13,10 @@ from sub_functions.data_structures import ContourLine, UnarrangedLoop, Unarrange
 
 log = logging.getLogger(__name__)
 
-
-def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
+# DEBUG
+from helpers.visualisation import compare, compare_contains
+def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart], m_c_parts=None):
+#def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
     """
     Center the stream function potential around zero and add zeros around the periphery.
 
@@ -32,6 +34,11 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         coil_parts (list): Updated list of coil parts.
     """
     for part_ind in range(len(coil_parts)):
+        # DEBUG
+        if m_c_parts is not None:
+            m_c_part = m_c_parts[part_ind]
+            m_debug = m_c_part.calc_contours_by_triangular_potential_cuts
+
         part = coil_parts[part_ind]
         part_mesh = part.coil_mesh
         part_vertices = part_mesh.get_vertices()
@@ -49,6 +56,13 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # Returns the edges that are shared by the adjacent faces (index into vertices array).
         edge_nodes = mesh.face_adjacency_edges
         num_edges = edge_nodes.shape[0]
+
+        # DEBUG
+        if m_c_parts is not None:
+            assert num_edges == m_debug.edge_attached_triangles_inds.shape[0]
+            assert edge_nodes.shape[0] == m_debug.edge_nodes2.shape[0]
+            # assert compare_contains(edge_nodes,  m_debug.edge_nodes2-1) # Pass, but very slow
+
 
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- edge_faces shape: %s, max(%d)", edge_faces.shape, np.max(edge_faces))  # 696,2: Max: 263
@@ -70,15 +84,40 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- edge_opposed_nodes shape: %s, max(%d)", edge_opposed_nodes.shape, np.max(edge_opposed_nodes))
 
+        # DEBUG
+        if m_c_parts is not None:
+            assert len(edge_attached_triangles) == len(m_debug.edge_attached_triangles)
+            assert edge_opposed_nodes.shape[0] == m_debug.edge_opposed_nodes.shape[0]
+            # Fail - different route through the mesh!
+            # assert compare_contains(edge_opposed_nodes, m_debug.edge_opposed_nodes-1, strict=False)
+            assert compare(part.potential_level_list, m_c_part.potential_level_list)
+
+        ######################################################################################
+        #
+        log.warning("Using MATLAB's data in %s, line 99", __file__)
+        edge_opposed_nodes = m_debug.edge_opposed_nodes-1
+        edge_nodes = m_debug.edge_nodes2-1
+        #
+        ######################################################################################
+
         # Test for all edges whether they cut one of the potential levels
         num_potentials = len(part.potential_level_list)
         rep_contour_level_list = np.tile(part.potential_level_list, (edge_nodes.shape[0], 1))
         edge_node_potentials = part.stream_function[edge_nodes]
 
+        # DEBUG
+        if m_c_parts is not None:
+            assert compare(edge_node_potentials, m_debug.edge_node_potentials)
+
         min_edge_potentials = np.min(edge_node_potentials, axis=1)
         max_edge_potentials = np.max(edge_node_potentials, axis=1)
         min_edge_potentials = np.tile(min_edge_potentials[:, np.newaxis], (1, num_potentials))
         max_edge_potentials = np.tile(max_edge_potentials[:, np.newaxis], (1, num_potentials))
+
+        # DEBUG
+        if m_c_parts is not None:
+            assert compare(min_edge_potentials, m_debug.min_edge_potentials2)
+            assert compare(max_edge_potentials, m_debug.max_edge_potentials2)
 
         tri_below_pot_step = max_edge_potentials > rep_contour_level_list
         tri_above_pot_step = min_edge_potentials < rep_contour_level_list
@@ -108,6 +147,11 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         v_cut_point = potential_cut_criteria * (
             first_edge_node_v + v_component_edge_vectors * cut_point_distance_to_edge_node_1 / edge_lengths)
 
+        # DEBUG
+        if m_c_parts is not None and False: # Passes with MATLAB data
+            assert compare(u_cut_point, m_debug.u_cut_point, equal_nan=True) # Pass!
+            assert compare(v_cut_point, m_debug.v_cut_point, equal_nan=True) # Pass!
+
         # Create cell by sorting the cut points to the corresponding potential levels
         potential_sorted_cut_points = np.zeros((num_potentials), dtype=object)  # 20 x M x 3
         value3 = np.arange(edge_nodes.shape[0], dtype=int)
@@ -117,6 +161,14 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             cut_points = cut_points[~np.isnan(cut_points[:, 0])]
             potential_sorted_cut_points[pot_ind] = cut_points
         # End of Part 1
+
+        # DEBUG
+        if m_c_parts is not None:
+            # The z-values are different?!
+            for m_cp in m_debug.potential_sorted_cut_points2:
+                m_cp[:,2] -= 1 # MATLAB indexing is 1-based.
+            assert compare(potential_sorted_cut_points, m_debug.potential_sorted_cut_points2) # Pass!
+
 
         # Start of Part 2
         # Create the unsorted points structure
@@ -215,7 +267,17 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 set_new_start = True
         # End of Part 2
 
+        # DEBUG
+        if m_c_parts is not None: # Check that the part.raw.unarranged_loops[potential_group] are the same
+            for index, m_potential_group in enumerate(m_debug.raw.unsorted_points):
+                p_m_potential_group = part.raw.unsorted_points[index]
+                assert p_m_potential_group.potential == m_potential_group.potential
+                assert compare(p_m_potential_group.edge_ind, m_potential_group.edge_ind-1)
+                assert compare(p_m_potential_group.uv, m_potential_group.uv)
+                
+
         # Start of Part 3
+        num_contours = 0
         # Evaluate current orientation for each loop
         for pot_ind in range(len(part.raw.unsorted_points)):
             center_segment_potential = part.raw.unsorted_points[pot_ind].potential
@@ -223,6 +285,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             for loop_ind in range(len(potential_loop.loop)):
                 potential_loop_item = potential_loop.loop[loop_ind]
                 if len(potential_loop_item.edge_inds) > 2:
+                    num_contours += 1
                     test_edge = int(np.floor(len(potential_loop_item.edge_inds) / 2))
                     first_edge = potential_loop_item.edge_inds[test_edge]
                     second_edge = potential_loop_item.edge_inds[test_edge + 1]
@@ -269,17 +332,48 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     log.error('Some loops are too small and contain only 2 points, therefore ill-defined')
         # End of Part 3
 
+        # DEBUG
+        if m_c_parts is not None: # Check that the part.raw.unarranged_loops[potential_group] are the same
+            assert num_contours == len(m_debug.contour_lines)
+            assert len(part.raw.unsorted_points) == len(part.raw.unarranged_loops) # Sanity check
+            assert len(part.raw.unsorted_points) == len(m_debug.raw.unsorted_points) # Sanity check
+            assert len(part.raw.unarranged_loops) == len(m_debug.raw.unarranged_loops) # Sanity check
+            for index1, m_potential_group in enumerate(m_debug.raw.unsorted_points):
+                p_potential_group = part.raw.unarranged_loops[index1]
+                for index2, m_unarranged_loops in enumerate(m_debug.raw.unarranged_loops):
+                    m_loop_container = m_unarranged_loops.loop
+                    if not isinstance(m_loop_container, np.ndarray): # MATLAB has annoying habit of making single element arrays into items.
+                        m_loop_container = [m_loop_container]
+
+                    p_loop_container = part.raw.unarranged_loops[index2]
+                    assert len(p_loop_container.loop) == len(m_loop_container)
+
+                    for index3, m_loop in enumerate(m_loop_container):
+                        p_loop = p_loop_container.loop[index3]
+
+                        assert len(p_loop.edge_inds) == len(m_loop.edge_inds)                        
+                        #assert compare(p_loop.edge_inds, m_loop.edge_inds-1)
+                        assert compare(p_loop.uv, m_loop.uv)
+                        assert p_loop.current_orientation == m_loop.current_orientation
+
+
         # Start of Part 4
         # Build the contour lines
         raw_part = part.raw
-        part.contour_lines = []
+        part.contour_lines = [ContourLine() for _ in range(num_contours)]
+        contour_index = 0
         for pot_ind in range(len(raw_part.unsorted_points)):
             for loop_ind in range(len(raw_part.unarranged_loops[pot_ind].loop)):
+                # DEBUG
+                m_contour = m_debug.contour_lines[contour_index]
+                m_c_debug = m_debug.contour_debug[contour_index]
+
+                contour_line = part.contour_lines[contour_index]
+
                 uv = raw_part.unarranged_loops[pot_ind].loop[loop_ind].uv
-                potential = raw_part.unsorted_points[pot_ind].potential
-                
-                contour_line = ContourLine()
                 contour_line.uv = uv.T
+
+                potential = raw_part.unsorted_points[pot_ind].potential                
                 contour_line.potential = potential
                 
                 uv_center = np.mean(contour_line.uv, axis=1)
@@ -288,10 +382,24 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 uv_vecs = contour_line.uv[:, 1:] - contour_line.uv[:, :-1]
                 uv_vecs = np.vstack((uv_vecs, np.zeros(uv_vecs.shape[1])))
                 rot_vecs = np.cross(uv_to_center_vecs.T, uv_vecs.T) # Transpose
-                track_orientation = np.sign(np.sum(rot_vecs[2, :])) # Swap, because vector is transposed
+                rot_sum = np.sum(rot_vecs[2, :])
+                track_orientation = int(np.sign(rot_sum)) # Swap, because vector is transposed
                 
-                contour_line.current_orientation = int(track_orientation)
-                part.contour_lines.append(contour_line)
+                contour_line.current_orientation = track_orientation
+
+                p_contour = contour_line
+                assert track_orientation == m_c_debug.track_orientation
+                assert np.isclose(potential, m_c_debug.potential)
+                assert np.allclose(uv_center, m_c_debug.uv_center)
+                assert np.allclose(uv_to_center_vecs, m_c_debug.uv_to_center_vecs2)
+                assert np.allclose(uv_vecs, m_c_debug.uv_vecs2)
+                assert np.isclose(rot_sum, m_c_debug.rot_sum)
+
+                assert np.isclose(p_contour.potential, m_contour.potential)
+                assert compare(p_contour.uv, m_contour.uv)
+
+                contour_index += 1
+
 
         # End of Part 4
 
