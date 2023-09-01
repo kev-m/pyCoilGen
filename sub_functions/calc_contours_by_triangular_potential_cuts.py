@@ -290,7 +290,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 rot_vecs = np.cross(uv_to_center_vecs.T, uv_vecs.T) # Transpose
                 track_orientation = np.sign(np.sum(rot_vecs[2, :])) # Swap, because vector is transposed
                 
-                contour_line.current_orientation = track_orientation
+                contour_line.current_orientation = int(track_orientation)
                 part.contour_lines.append(contour_line)
 
         # End of Part 4
