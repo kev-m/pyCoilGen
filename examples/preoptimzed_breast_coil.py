@@ -119,4 +119,5 @@ DEBUG:helpers.timing:Elapsed time: 10.179749 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_Breast_Coil_19.npy'
 Calculate the inductance by coil layout:
 DEBUG:helpers.timing:Elapsed time: 0.169019 seconds
-DEBUG:helpers.timing:Total elapsed time: 41.522746 seconds"""
+DEBUG:helpers.timing:Total elapsed time: 41.522746 seconds
+"""
