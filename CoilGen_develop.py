@@ -86,60 +86,16 @@ def CoilGen(log, input=None):
 
     ######################################################################################
     # DEVELOPMENT: Remove this
-    if input_args.coil_mesh_file == 'bi_planer_rectangles_width_1000mm_distance_500mm.stl':
-        debug_key = 'biplanar'
-        log.debug(" Loading comparison data from biplanar_xgradient")
-        mat_contents = load_matlab('debug/biplanar_xgradient')
-        matlab_data = mat_contents['coil_layouts']
-        compare_mesh_shape = True
-    else:
-        debug_key = 'cylinder'
-        log.debug(" Loading comparison data from result_y_gradient")
-        # mat_contents = load_matlab('debug/result_y_gradient')
-        mat_contents = load_matlab('debug/ygradient_coil')
-        log.debug("mat_contents: %s", mat_contents.keys())
-        matlab_data = mat_contents['coil_layouts']
-        compare_mesh_shape = True
-
+    compare_mesh_shape = True
+    mat_filename = f'debug/{input_args.project_name}_{input_args.iteration_num_mesh_refinement}_{input_args.target_region_resolution}'
+    log.debug(" Loading comparison data from %s", mat_filename)
+    mat_contents = load_matlab(mat_filename)
+    matlab_data = mat_contents['coil_layouts']
     m_out = get_element_by_name(matlab_data, 'out')
     if isinstance(m_out.coil_parts, (np.ndarray)):
         m_c_parts = m_out.coil_parts
     else:
         m_c_parts = [m_out.coil_parts]
-
-    # m_faces = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.faces')-1
-    # m_vertices = get_element_by_name(matlab_data, 'out.coil_parts[0].coil_mesh.vertices')
-    # log.debug(" m_faces shape: %s", m_faces.shape)
-    # log.debug(" m_vertices shape: %s", m_vertices.shape)
-
-    # Mesh parameterisation
-    # m_v = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.v', False)
-    # m_fn = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.fn', False)
-    # m_n = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.n')
-
-    # Sanity check
-    # assert (compare(m_vertices, m_v))
-
-    # m_uv = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.uv')
-    # m_boundary_x = get_and_show_debug(matlab_data, 'out.coil_parts[0].coil_mesh.boundary')-1
-
-    # Target field
-    # b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
-    m_target_field = get_and_show_debug(matlab_data, 'out.target_field')
-    m_tf_b = m_target_field.b
-    m_tf_coords = m_target_field.coords
-    m_tf_weights = m_target_field.weights
-    m_tf_target_field_group_inds = m_target_field.target_field_group_inds
-    m_tf_target_gradient_dbdxyz = m_target_field.target_gradient_dbdxyz
-
-    # One Ring List
-    # m_c_part = get_and_show_debug(matlab_data, 'out.coil_parts[0]')
-    # m_or_one_ring_list = m_c_part.one_ring_list - 1
-    # Transpose the entries
-    # for index1 in range(len(m_or_one_ring_list)):
-    #    m_or_one_ring_list[index1] = m_or_one_ring_list[index1].T
-    # m_or_node_triangles = m_c_part.node_triangles - 1
-    # m_or_node_triangle_mat = m_c_part.node_triangle_mat
 
     # END of Remove this
     ######################################################################################
@@ -151,7 +107,8 @@ def CoilGen(log, input=None):
         log.debug('Parse inputs: %s', input_args)
 
     persistence_dir = input_args.persistence_dir
-    project_name = f'coilgen_{debug_key}_{use_matlab_data}'
+    #project_name = f'coilgen_{debug_key}_{use_matlab_data}'
+    project_name = f'{input_args.project_name}_{use_matlab_data}_{input_args.iteration_num_mesh_refinement}_{input_args.target_region_resolution}'
 
     solution = CoilSolution()
     solution.input_args = input_args
@@ -269,6 +226,15 @@ def CoilGen(log, input=None):
         #####################################################
         # Verify:  b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
         # Differences between biplanar and cylinder examples:
+
+        # Target field
+        # b, coords, weights, target_field_group_inds, target_gradient_dbdxyz
+        m_target_field = get_and_show_debug(matlab_data, 'out.target_field')
+        m_tf_b = m_target_field.b
+        m_tf_coords = m_target_field.coords
+        m_tf_weights = m_target_field.weights
+        m_tf_target_field_group_inds = m_target_field.target_field_group_inds
+        m_tf_target_gradient_dbdxyz = m_target_field.target_gradient_dbdxyz
 
         # visualize_projected_vertices(target_field.b, 800, f'images/02b_target_field_p.png')
         # visualize_projected_vertices(m_tf_b, 800, f'images/02b_target_field_p.png')
@@ -587,21 +553,22 @@ def CoilGen(log, input=None):
         coil_part = coil_parts[part_index]
         coil_mesh = coil_part.coil_mesh
         m_c_part = m_c_parts[part_index]
+        m_debug = m_c_part.calc_contours_by_triangular_potential_cuts
 
-        assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
-        for index1, m_ru_points in enumerate(m_c_part.raw.unsorted_points):
+        assert len(coil_part.raw.unsorted_points) == len(m_debug.raw.unsorted_points)
+        for index1, m_ru_points in enumerate(m_debug.raw.unsorted_points):
             c_ru_point = coil_part.raw.unsorted_points[index1]
-            m_ru_point = m_c_part.raw.unsorted_points[index1]
+            m_ru_point = m_debug.raw.unsorted_points[index1]
             assert len(c_ru_point.edge_ind) == len(m_ru_point.edge_ind)
             assert np.isclose(c_ru_point.potential, m_ru_point.potential)
             assert c_ru_point.uv.shape[0] == m_ru_point.uv.shape[0]  # Python shape!
             # assert(compare(c_ru_point.edge_ind, m_ru_point.edge_ind)) # Different ordering?
             # assert(compare_contains(c_ru_point.uv, m_ru_point.uv)) # Order is different
 
-        assert len(coil_part.raw.unarranged_loops) == len(m_c_part.raw.unarranged_loops)
-        for index1, m_ru_loops in enumerate(m_c_part.raw.unarranged_loops):
+        assert len(coil_part.raw.unarranged_loops) == len(m_debug.raw.unarranged_loops)
+        for index1, m_ru_loops in enumerate(m_debug.raw.unarranged_loops):
             c_loops = coil_part.raw.unarranged_loops[index1]
-            m_loops = m_c_part.raw.unarranged_loops[index1]
+            m_loops = m_debug.raw.unarranged_loops[index1]
             assert len(c_loops.loop) == len(m_loops.loop)
             # Skip the next section, the loops are different!!
             # for index2, m_ru_loop in enumerate(m_ru_loops.loop):
@@ -611,7 +578,7 @@ def CoilGen(log, input=None):
             #    assert len(c_ru_loop.edge_inds) == len(m_ru_loop.edge_inds)
             #    #assert(compare(c_ru_point.edge_inds, m_ru_point.edge_inds))
 
-        m_contour_lines = m_c_part.contour_lines1
+        m_contour_lines = m_debug.contour_lines
 
         assert len(coil_part.contour_lines) == len(m_contour_lines)
         for index1 in range(len(coil_part.contour_lines)):
@@ -764,7 +731,7 @@ def CoilGen(log, input=None):
             # =================================================
             # MATLAB / Python ordering hack:
             # Re-order Python groups to match MATLAB ordering
-            if debug_key == 'cylinder':
+            if input_args.project_name == 'ygradient_coil':
                 m_to_pyindex = [1, 0, 2, 3]
                 cp_groups = coil_part.groups
                 cp_level_positions = coil_part.level_positions
@@ -778,11 +745,12 @@ def CoilGen(log, input=None):
                     cp_groups[0], cp_groups[1] = cp_groups[1], cp_groups[0]
                     cp_loop_groups[0], cp_loop_groups[1] = cp_loop_groups[1], cp_loop_groups[0]
 
-            if debug_key == 'biplanar':
+            if input_args.project_name == 'biplanar_xgradient':
                 if part_index == 0:
-                    m_to_pyindex = [1, 0, 3, 2]
+                    m_to_pyindex = [0, 1, 2, 3]
                 if part_index == 1:
-                    m_to_pyindex = [1, 3, 0, 2]
+                    #m_to_pyindex = [1, 2, 0, 3]
+                    m_to_pyindex = [0, 1, 2, 3] # Don't swap
                 cp_groups = coil_part.groups
                 cp_level_positions = coil_part.level_positions
                 cp_group_levels = coil_part.group_levels
@@ -843,7 +811,7 @@ def CoilGen(log, input=None):
                 assert compare(c_loop_groups, m_loop_groups)        # Pass
                 assert compare(c_level_positions, m_level_positions)  # Pass
             else:
-                assert compare(c_group_levels, m_group_levels)      # Pass~
+                assert compare(c_group_levels, m_group_levels)        # Pass~
                 assert compare(c_level_positions, m_level_positions)  # Pass~
                 # assert compare(c_loop_groups, m_loop_groups)        # Fail: They don't match up exactly
 
@@ -877,7 +845,7 @@ def CoilGen(log, input=None):
         m_group_centers = m_c_part.group_centers
         c_group_centers = coil_part.group_centers
 
-        if get_level() >= DEBUG_VERBOSE:
+        if get_level() >= DEBUG_BASIC:
             visualize_compare_contours(coil_mesh.uv, 800, f'images/14_contour_centres_{part_index}_p.png',
                                        coil_part.contour_lines, c_group_centers.uv)
             visualize_compare_contours(coil_mesh.uv, 800, f'images/14_contour_centres_{part_index}_m.png',
@@ -1170,8 +1138,8 @@ if __name__ == "__main__":
         "track_width_factor": 0.5,
         "use_only_target_mesh_verts": False,
 
-        "project_name": 'biplanar',
-        "debug": DEBUG_BASIC,
+        "project_name": 'biplanar_xgradient',
+        "debug": DEBUG_VERBOSE,
         "persistence_dir": 'debug',
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 4m3, 6m12.747s
@@ -1215,7 +1183,6 @@ if __name__ == "__main__":
         "planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         "plot_flag": 1,
         "pot_offset_factor": 0.25,
-        "project_name": 'cylinder',
         "save_stl_flag": 1,
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
@@ -1241,6 +1208,8 @@ if __name__ == "__main__":
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
         "use_only_target_mesh_verts": False,
+
+        "project_name": 'ygradient_coil',
         "debug": DEBUG_BASIC,
         "persistence_dir": 'debug',
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
