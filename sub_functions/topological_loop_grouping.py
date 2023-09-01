@@ -10,9 +10,9 @@ log = logging.getLogger(__name__)
 
 # DEBUG
 from helpers.visualisation import compare, compare_contains, passify_matlab
-def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=None):
+def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=None) -> List[CoilPart]:
 
-#def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
+#def topological_loop_grouping(coil_parts: List[CoilPart], input_args) -> List[CoilPart]:
     """
     Group the contour loops in topological order.
 
