@@ -50,7 +50,7 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
             for single_level_ind in range(len(levels_to_process)):  # 1 level
 
                 current_level = levels_to_process[single_level_ind]
-                groups_to_connect = coil_part.group_levels[current_level]
+                groups_to_connect = coil_part.group_levels[current_level].tolist()
                 group_len = len(groups_to_connect)
 
                 # Select the current host group of the level
