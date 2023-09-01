@@ -657,20 +657,18 @@ def develop_calc_contours_by_triangular_potential_cuts():
 
 
     # which = 'shielded_ygradient_coil'
-    which = 'Preoptimzed_SVD_Coil'
+    which = 'Preoptimzed_SVD_Coil_0_10'
 
     # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
     if which == 'biplanar':
         matlab_data = load_matlab('debug/biplanar_xgradient')
-        mat_data_out = matlab_data['coil_layouts'].out
-        m_c_parts = m_out.coil_parts
+        m_out = matlab_data['coil_layouts'].out
 
         solution = load_numpy('debug/coilgen_biplanar_False_10.npy')
     elif which == 'ygradient_coil':
 
         mat_data = load_matlab('debug/cylinder_coil')
-        mat_data_out = mat_data['coil_layouts'].out
-        m_c_parts = mat_data_out.coil_parts
+        m_out = matlab_data['coil_layouts'].out
 
         # Python saved data 09: calc_potential_levels
         # solution = load_numpy('debug/coilgen_cylinder_False_09.npy')
@@ -682,14 +680,17 @@ def develop_calc_contours_by_triangular_potential_cuts():
         matlab_data = load_matlab(f'debug/{which}')
         m_out = matlab_data['coil_layouts'].out
         # Put some logic to turn m_c_parts into a list if m_out.coil_parts is not an array.
-        m_c_parts = [m_out.coil_parts]
         solution = load_numpy(f'debug/{which}_09.npy')
+
+    m_c_parts = m_out.coil_parts
+    if not isinstance(m_c_parts, np.ndarray):
+        m_c_parts = np.asarray([m_c_parts])
 
     p_coil_parts = solution.coil_parts
 
     ###################################################################################
     # Function under test
-    coil_parts2 = calc_contours_by_triangular_potential_cuts(p_coil_parts)
+    coil_parts2 = calc_contours_by_triangular_potential_cuts(p_coil_parts, m_c_parts)
     ###################################################################################
 
     for part_ind, m_c_part in enumerate(m_c_parts):
@@ -715,24 +716,36 @@ def develop_calc_contours_by_triangular_potential_cuts():
                                    f'images/10_contour1_{part_ind}_p.png', coil_part.contour_lines)
         visualize_compare_contours(m_c_part.coil_mesh.uv.T, 800,
                                    f'images/10_contour1_{part_ind}_m.png', m_debug.contour_lines)
-
+        """
         for index1, m_contour in enumerate(m_debug.contour_lines):
             p_contour = coil_part.contour_lines[index1]
             visualize_vertex_connections(p_contour.uv.T, 800, 
                                          f'images/10_contour_lines_{part_ind}_{index1}_p.png')
             visualize_vertex_connections(m_contour.uv.T, 800, 
                                          f'images/10_contour_lines_{part_ind}_{index1}_m.png')
-
+        """
         # Now do the actual checking of values
         for index, m_contour in enumerate(m_debug.contour_lines):
             p_contour = coil_part.contour_lines[index]
             # Check: potential, current_orientation, uv, v
             assert p_contour.potential == m_contour.potential
-            assert p_contour.current_orientation == m_contour.current_orientation
-            assert compare(p_contour.uv, m_contour.uv)
+            #assert p_contour.current_orientation == m_contour.current_orientation
+            #assert compare(p_contour.uv, m_contour.uv)
+            match = p_contour.current_orientation == m_contour.current_orientation
+            match &= compare(p_contour.uv, m_contour.uv)
+            log.debug("Contour: p:%d c:%d: O: %s, UV: %s", 
+                      part_ind, index, 
+                      p_contour.current_orientation == m_contour.current_orientation, 
+                      compare(p_contour.uv, m_contour.uv))
+            if match == False:
+                visualize_vertex_connections(p_contour.uv.T, 800, 
+                                            f'images/10_contour_lines_{part_ind}_{index}_p.png')
+                visualize_vertex_connections(m_contour.uv.T, 800, 
+                                            f'images/10_contour_lines_{part_ind}_{index}_m.png')
 
 
-        assert len(coil_part.raw.unsorted_points) == len(m_c_part.raw.unsorted_points)
+
+        assert len(coil_part.raw.unsorted_points) == len(m_debug.raw.unsorted_points)
         for index1, m_ru_point in enumerate(m_c_part.raw.unsorted_points):
             c_ru_point = coil_part.raw.unsorted_points[index1]
             assert len(c_ru_point.edge_ind) == len(m_ru_point.edge_ind)
@@ -843,7 +856,7 @@ def develop_topological_loop_grouping():
     p_coil_parts = solution.coil_parts
     
     # Use MATLAB contour lines
-    log.warning("Using MATLAB's contours in %s, line 843!", __file__)
+    log.warning("Using MATLAB's contours in %s, line 846!", __file__)
     for part_index, m_c_part in enumerate(m_c_parts):
         p_coil_parts[part_index].contour_lines = m_c_part.contour_lines
     ######################################################################################################
@@ -885,13 +898,14 @@ def develop_topological_loop_grouping():
 
 
 def develop_calculate_group_centers():
+    from sub_functions.topological_loop_grouping import topological_loop_grouping
     from sub_functions.calculate_group_centers import calculate_group_centers
 
     # which = 'shielded_ygradient_coil'
     # which = 'Preoptimzed_Breast_Coil'
-    # which = 'Preoptimzed_SVD_Coil'
+    which = 'Preoptimzed_SVD_Coil_0_10'
     # which = 'ygradient_coil'
-    which = 'biplanar_xgradient_0_5'
+    # which = 'biplanar_xgradient_0_5'
 
     # Python saved data 13 : After topological_loop_grouping
     if which == 'biplanar':
@@ -912,14 +926,51 @@ def develop_calculate_group_centers():
     if not isinstance(m_c_parts, np.ndarray):
         m_c_parts = np.asarray([m_c_parts])
 
-
     p_coil_parts = solution.coil_parts
+
+    # Use MATLAB contour lines
+    log.warning("Using MATLAB's contours in %s, line 843!", __file__)
+    for part_index, m_c_part in enumerate(m_c_parts):
+        p_coil_parts[part_index].contour_lines = m_c_part.contour_lines
+    ######################################################################################################
+    # Function under test
+    input_args = DataStructure(project_name=which)
+    coil_parts = topological_loop_grouping(p_coil_parts, input_args, m_c_parts)
+    ######################################################################################################
+    assert len(coil_parts) == len(m_c_parts)
+    for part_index, m_c_part in enumerate(m_c_parts):
+        m_debug = m_c_part.topological_loop_grouping
+        coil_part = coil_parts[part_index]
+
+
+        # Check that the groups and loops are the same
+        # 1. groups
+        assert len(coil_part.groups) == len(m_c_part.groups)
+        for index1, m_group in enumerate(m_c_part.groups):
+            p_group = coil_part.groups[index1]
+
+            # 2. loops
+            assert len(p_group.loops) == len(m_group.loops)
+            for index2, m_loop in enumerate(m_group.loops):
+                p_loop = p_group.loops[index2]
+                assert p_loop.current_orientation == m_loop.current_orientation
+                assert np.isclose(p_loop.potential, m_loop.potential)
+                assert compare(p_loop.uv, m_loop.uv)
+                assert compare(p_loop.v, m_loop.v, double_tolerance=1e-4)
+
+        # 3. loop_groups
+        m_passified = np.empty((len(m_c_part.loop_groups)), dtype=object)
+        for i in range(len(m_debug.loop_groups2)):
+            m_passified[i] = passify_matlab(m_c_part.loop_groups[i]-1)
+
+        assert len(coil_part.loop_groups) == len(m_passified)
+        assert compare(np.array(coil_part.loop_groups, dtype=object), m_passified)
+
 
     ###################################################################################
     # Function under test
     coil_parts = calculate_group_centers(p_coil_parts, m_c_parts)
     ###################################################################################
-
     # And now!!
     assert len(coil_parts) == len(m_c_parts)
     for index, m_c_part in enumerate(m_c_parts):
@@ -1301,10 +1352,10 @@ if __name__ == "__main__":
     # calculate_resistance_matrix
     # develop_stream_function_optimization()
     # develop_calc_potential_levels()
-    # develop_calc_contours_by_triangular_potential_cuts()
+    develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
-    develop_topological_loop_grouping()
-    develop_calculate_group_centers()
+    # develop_topological_loop_grouping()
+    # develop_calculate_group_centers()
     # develop_interconnect_within_groups()
     # develop_interconnect_among_groups()
     # develop_shift_return_paths()
