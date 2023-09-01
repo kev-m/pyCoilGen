@@ -62,8 +62,8 @@ if __name__ == '__main__':
 
     result = CoilGen(log, arg_dict)
 
-    """
-    Load geometry:
+"""
+Load geometry:
 DEBUG:sub_functions.read_mesh:Loading mesh: Double_coaxial_open_cylinder_r1_400mm_r2_600_length_1500mm.stl
 DEBUG:sub_functions.read_mesh:Loading STL
 DEBUG:trimesh:loaded <trimesh.Trimesh(vertices.shape=(528, 3), faces.shape=(960, 3))> using `load_stl` in 0.0020s
