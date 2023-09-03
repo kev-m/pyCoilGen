@@ -130,9 +130,9 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
                 m_group_levels = m_debug.group_levels3.reshape(1,-1) - 1
             else:
                 m_group_levels = m_debug.group_levels3-1
-            assert compare(group_levels, m_group_levels)
-            # log.warning(" Using MATLAB group levels in %s, line 114.", __file__)
-            # group_levels = m_debug.group_levels3-1
+            assert compare_contains(group_levels, m_group_levels) # Ordering is different
+            log.warning(" Using MATLAB group levels in %s, line 114.", __file__)
+            group_levels = m_debug.group_levels3-1
 
         # Creating the loop groups (containing still the loops of the inner groups)
         overlapping_loop_groups_num = np.asarray([item for group_level in group_levels for item in group_level])
@@ -328,15 +328,20 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
         for iiii, loop_group in enumerate(loop_groups):
             # Sort the loops in each group according to the rank (the number of elements in higher_loops for each
             # group)
-            # TODO: Check if higher_loops is correct!
-            unsorted1 = [len(higher_loops[x]) for x in loop_group]
-            sort_ind_loops1 = sorted(unsorted1, reverse=True)
+            #  content = cellfun(@(x) numel(higher_loops{x}), num2cell(coil_parts(part_ind).loop_groups{iiii}));
+            #  [~, sort_ind_loops] = sort(content, 'descend');
+            content = [len(higher_loops[x]) for x in loop_group]
+            sort_ind_loops = sorted(range(len(content)), key=lambda x: content[x], reverse=True)
 
-            # Alternate:
-            # Sort the loops in each group according to the ordered potentials
-            potentials = [coil_part.contour_lines[x].current_orientation *
-                          coil_part.contour_lines[x].potential for x in coil_part.loop_groups[iiii]]
-            sort_ind_loops = sorted(range(len(potentials)), key=lambda i: potentials[i])
+            # DEBUG
+            if m_c_parts is not None:
+                m_loop_vars = m_debug.loop_vars10[iiii]
+                m_content = m_loop_vars.loop_debug.content
+                m_sort_ind_loops1 = m_loop_vars.loop_debug.sort_ind_loops-1
+
+            # DEBUG
+            if m_c_parts is not None:
+                assert np.allclose(sort_ind_loops, m_sort_ind_loops1)
 
             this_group = TopoGroup()    # Create Topopological group container
             this_group.loops = []       # Assign loops member
