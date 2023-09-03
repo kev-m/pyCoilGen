@@ -12,12 +12,18 @@ def get_linenumber():
     cf = currentframe()
     return cf.f_back.f_lineno
 
-def passify_matlab(matlab_thing):
+def passify_matlab(matlab_thing, magic=0):
     """
     Some MATLAB items are arrays when the have more than 1 element, else are scalars.
 
     This functions ensures that these scalars are converted into arrays.
     """
+    if magic==1:
+        if matlab_thing.shape == (2,):
+            result = np.asarray([[matlab_thing[0]],[matlab_thing[1]]])
+            return result
+        else:
+            return matlab_thing
     if isinstance(matlab_thing, np.ndarray):
         return matlab_thing
     return np.asarray([matlab_thing])
