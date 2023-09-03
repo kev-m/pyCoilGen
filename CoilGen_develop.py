@@ -8,7 +8,7 @@ import logging
 from helpers.extraction import get_element_by_name, load_matlab, get_and_show_debug
 from helpers.visualisation import compare, compare_contains, visualize_vertex_connections, \
     visualize_multi_connections, visualize_compare_vertices, visualize_compare_contours, get_linenumber, \
-    visualize_projected_vertices
+    visualize_projected_vertices, passify_matlab
 from sub_functions.data_structures import Mesh
 
 # Local imports
@@ -573,7 +573,7 @@ def CoilGen(log, input=None):
         for index1, m_ru_loops in enumerate(m_debug.raw.unarranged_loops):
             c_loops = coil_part.raw.unarranged_loops[index1]
             m_loops = m_debug.raw.unarranged_loops[index1]
-            assert len(c_loops.loop) == len(m_loops.loop)
+            assert len(c_loops.loop) == len(passify_matlab(m_loops.loop))
             # Skip the next section, the loops are different!!
             # for index2, m_ru_loop in enumerate(m_ru_loops.loop):
             #    c_ru_loop = c_loops.loop[index2]
@@ -946,7 +946,7 @@ def CoilGen(log, input=None):
             # Wire path
             c_wire_path = p_coil_part.wire_path
             m_wire_path = m_c_part.wire_path1
-            if get_level() >= DEBUG_VERBOSE:
+            if get_level() >= DEBUG_BASIC:
                 visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/16_wire_path_uv_{part_index}_p.png')
                 visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/16_wire_path_uv_{part_index}_m.png')
 
