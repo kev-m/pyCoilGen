@@ -75,8 +75,8 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
             if len(part_group.loops) == 1:
                 # If the group consists of only one loop, it is not necessary to open it
                 shape3d = Shape3D(uv=part_group.loops[0].uv, v=part_group.loops[0].v)
-                uv_nan = np.array([[np.nan], [np.nan]])
-                v_nan = np.array([[np.nan], [np.nan], [np.nan]])
+                uv_nan = np.array([np.nan, np.nan])
+                v_nan = np.array([np.nan, np.nan, np.nan])
                 part_group.opened_loop = [shape3d]
                 part_group.cutshape = [Shape2D(uv=uv_nan)]
                 part_connected_group.return_path = Shape3D(uv=uv_nan, v=v_nan)
