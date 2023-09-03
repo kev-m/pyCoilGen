@@ -279,6 +279,18 @@ def CoilGen(log, input_args=None):
         timer.stop()
         save(persistence_dir, project_name, '16', solution)
 
+        #####################################################
+        # Visualisation
+        if get_level() > DEBUG_NONE:
+            for index1 in range(len(coil_parts)):
+                c_part = coil_parts[index1]
+                c_wire_path = c_part.wire_path
+
+                visualize_vertex_connections(
+                    c_wire_path.uv.T, 800, f'images/16_{project_name}_wire_path2_uv_{index1}_p.png')
+        #
+        #####################################################
+
         # Connect the groups and shift the return paths over the surface
         print('Shift the return paths over the surface:')
         timer.start()
