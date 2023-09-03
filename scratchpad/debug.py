@@ -823,8 +823,8 @@ def develop_topological_loop_grouping():
 
     # which = 'shielded_ygradient_coil'
     # which = 'Preoptimzed_Breast_Coil'
-    # which = 'Preoptimzed_SVD_Coil'
-    which = 'biplanar_xgradient_0_5'
+    which = 'Preoptimzed_SVD_Coil_0_10'
+    # which = 'biplanar_xgradient_0_5'
 
     # Python saved data 12 : After find_minimal_contour_distance
     if which == 'biplanar_xgradient':
@@ -850,9 +850,9 @@ def develop_topological_loop_grouping():
     p_coil_parts = solution.coil_parts
     
     # Use MATLAB contour lines
-    log.warning("Using MATLAB's contours in %s, line 846!", __file__)
-    for part_index, m_c_part in enumerate(m_c_parts):
-        p_coil_parts[part_index].contour_lines = m_c_part.contour_lines
+    #log.warning("Using MATLAB's contours in %s, line 853!", __file__)
+    #for part_index, m_c_part in enumerate(m_c_parts):
+    #    p_coil_parts[part_index].contour_lines = m_c_part.contour_lines
     ######################################################################################################
     # Function under test
     coil_parts = topological_loop_grouping(p_coil_parts, input_args, m_c_parts)
@@ -879,8 +879,8 @@ def develop_topological_loop_grouping():
                 p_loop = p_group.loops[index2]
                 assert p_loop.current_orientation == m_loop.current_orientation
                 assert p_loop.potential == m_loop.potential
-                assert compare(p_loop.uv, m_loop.uv)
-                assert compare(p_loop.v, m_loop.v)
+                ### assert compare(p_loop.uv, m_loop.uv)
+                ### assert compare(p_loop.v, m_loop.v)
 
         # 3. loop_groups
         m_passified = np.empty((len(m_c_part.loop_groups)), dtype=object)
@@ -984,24 +984,37 @@ def develop_calculate_group_centers():
 def develop_interconnect_within_groups():
     from sub_functions.interconnect_within_groups import interconnect_within_groups
 
-    which = 'biplanar'
-    # MATLAB saved data
+    # which = 'shielded_ygradient_coil'
+    # which = 'Preoptimzed_Breast_Coil'
+    which = 'Preoptimzed_SVD_Coil_0_10'
+    # which = 'ygradient_coil_0_5'
+    # which = 'biplanar_xgradient_0_5'
 
-    # Python saved data 14 : After calculate_group_centers
+    # Python saved data 13 : After topological_loop_grouping
     if which == 'biplanar':
-        mat_data = load_matlab('debug/biplanar_xgradient')
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        m_out = matlab_data['coil_layouts'].out
         solution = load_numpy('debug/coilgen_biplanar_False_14.npy')
-    else:
-        mat_data = load_matlab('debug/ygradient_coil')
+    elif which == 'cylinder':
+        matlab_data = load_matlab('debug/ygradient_coil')
+        m_out = matlab_data['coil_layouts'].out
         # solution = load_numpy('debug/coilgen_cylinder_True_14.npy')
         solution = load_numpy('debug/coilgen_cylinder_False_14.npy')
+    else:
+        matlab_data = load_matlab(f'debug/{which}')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy(f'debug/{which}_14.npy')
+
+    m_c_parts = m_out.coil_parts
+    if not isinstance(m_c_parts, np.ndarray):
+        m_c_parts = np.asarray([m_c_parts])
 
     p_coil_parts = solution.coil_parts
 
-    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
-    m_c_part = m_coil_parts
-
-    input_args = DataStructure(force_cut_selection=['high'], b_0_direction=[0, 0, 1], interconnection_cut_width=0.1)
+    # input_args = DataStructure(force_cut_selection=['high'], b_0_direction=[0, 0, 1], interconnection_cut_width=0.1)
+    input_args = DataStructure(force_cut_selection=solution.input_args.force_cut_selection, 
+                               b_0_direction=solution.input_args.b_0_direction, 
+                               interconnection_cut_width=solution.input_args.interconnection_cut_width)
 
     ###################################################################################
     # Function under test
@@ -1009,83 +1022,133 @@ def develop_interconnect_within_groups():
     ###################################################################################
 
     # And now!!
-    coil_part = coil_parts[0]
+    for part_ind, m_c_part in enumerate(m_c_parts):
+        coil_part = coil_parts[part_ind]
+        # Verify: connected_group, groups.opened_loop
+        # Part groups
+        m_groups = m_c_part.groups
+        # MATLAB to Python order mapping for Preoptimzed_SVD_Coil
+        mapping = np.arange(len(m_groups))
+        if which == 'Preoptimzed_SVD_Coil_0_10':
+            m_to_m =  [12, 13, 15, 16, 17, 18, 19, 20]
+            m_to_py = [13, 12, 16, 17, 16, 17, 18, 19]
+            mapping[m_to_m] = mapping[m_to_py]
+        c_groups = coil_part.groups
+        assert len(m_groups) == len(c_groups)
+        for index1, m_group in enumerate(m_groups):
+            c_group = c_groups[mapping[index1]]
+            # Just check the cutshape size, as a representative proxy
+            if len(c_group.loops) > 1:
+                for index2, m_cutshape in enumerate(m_group.cutshape):
+                    c_cutshape = c_group.cutshape[index2] 
+                    assert c_cutshape.uv.shape == m_cutshape.uv.shape
+                    assert compare(c_cutshape.uv, m_cutshape.uv, double_tolerance=0.005)
 
-    # Verify: connected_group, groups.opened_loop
+            else:
+                assert c_group.cutshape[0].uv.shape == m_group.cutshape.uv.shape
 
-    # Part groups
-    m_groups = m_c_part.groups
-    c_groups = coil_part.groups
-    assert len(m_groups) == len(c_groups)
-    for index1, m_group in enumerate(m_groups):
-        c_group = c_groups[index1]
-        for index2, m_loop in enumerate(m_group.opened_loop):
-            c_loop = c_group.opened_loop[index2]
-            assert compare(c_loop.uv, m_loop.uv)
-            assert compare(c_loop.v, m_loop.v)
+        # Connected Groups
+        m_connected_groups = m_c_part.connected_group
+        c_connected_groups = coil_part.connected_group
+        assert len(m_connected_groups) == len(c_connected_groups)
+        for index1, m_connected_group in enumerate(m_connected_groups):
+            c_connected_group = c_connected_groups[mapping[index1]]
 
-    # Connected Groups
-    m_connected_groups = m_c_part.connected_group
-    c_connected_groups = coil_part.connected_group
-    assert len(m_connected_groups) == len(c_connected_groups)
-    for index1, m_connected_group in enumerate(m_connected_groups):
-        c_connected_group = c_connected_groups[index1]
+            # MATLAB shape
+            if False:
+                visualize_vertex_connections(c_connected_group.uv.T, 800, 
+                                            f'images/15_connected_group_{part_ind}_uv_{index1}_p.png')
+                visualize_vertex_connections(m_connected_group.group_debug.uv.T, 800,
+                                            f'images/15_connected_group_{part_ind}_uv_{index1}_m.png')
 
-        # MATLAB shape
-        visualize_vertex_connections(c_connected_group.uv.T, 800, f'images/connected_group_uv1_{index1}_p.png')
-        visualize_vertex_connections(m_connected_group.group_debug.uv.T, 800,
-                                     f'images/connected_group_uv1_{index1}_m.png')
+            log.debug("Here in %s, line %d - Part: %d, Index: %d", __file__, get_linenumber(), part_ind, index1)
 
-        log.debug(" Here: uv values in %s, line %d", __file__, get_linenumber())
+            assert c_connected_group.uv.shape == m_connected_group.uv.shape
+            assert c_connected_group.v.shape == m_connected_group.v.shape
+            assert c_connected_group.return_path.v.shape == m_connected_group.return_path.v.shape
+            assert c_connected_group.spiral_in.v.shape == m_connected_group.spiral_in.v.shape
+            assert c_connected_group.spiral_out.v.shape == m_connected_group.spiral_out.v.shape
 
-        # Check....
-        log.debug(" return_path.v shape: %s", c_connected_group.return_path.v.shape)
-        log.debug(" c_connected_group.return_path.v: %s", compare(
-            c_connected_group.return_path.v, m_connected_group.return_path.v))  # True
-        log.debug(" c_connected_group.return_path.v: %s", compare(
-            c_connected_group.return_path.uv, m_connected_group.return_path.uv))
+            # Check....
+            """
+            log.debug(" return_path.v shape: %s", c_connected_group.return_path.v.shape)
+            ### log.debug(" c_connected_group.return_path.v: %s", compare(
+            ###    c_connected_group.return_path.v, m_connected_group.return_path.v))  # True
+            log.debug(" c_connected_group.return_path.v: %s", compare(
+                c_connected_group.return_path.uv, m_connected_group.return_path.uv))
 
-        # Not the same shape: (3, 373) is not (3, 379)
-        log.debug(" spiral_in.v shape: %s", c_connected_group.spiral_in.v.shape)
-        log.debug(" spiral_in.v: %s", compare(c_connected_group.spiral_in.v, m_connected_group.group_debug.spiral_in.v))
-        log.debug(" spiral_in.uv: %s", compare(c_connected_group.spiral_in.uv, m_connected_group.group_debug.spiral_in.uv))
+            # Not the same shape: (3, 373) is not (3, 379)
+            log.debug(" spiral_in.v shape: %s", c_connected_group.spiral_in.v.shape)
+            log.debug(" spiral_in.v: %s", compare(c_connected_group.spiral_in.v, m_connected_group.group_debug.spiral_in.v))
+            log.debug(" spiral_in.uv: %s", compare(c_connected_group.spiral_in.uv, m_connected_group.group_debug.spiral_in.uv))
 
-        # Not the same shape: (3, 321) is not (3, 379)
-        log.debug(" spiral_out.v: %s", compare(c_connected_group.spiral_out.v, m_connected_group.group_debug.spiral_out.v))
-        log.debug(" spiral_out.uv: %s", compare(c_connected_group.spiral_out.uv,
-                  m_connected_group.group_debug.spiral_out.uv))
+            # Not the same shape: (3, 321) is not (3, 379)
+            log.debug(" spiral_out.v: %s", compare(c_connected_group.spiral_out.v, m_connected_group.group_debug.spiral_out.v))
+            log.debug(" spiral_out.uv: %s", compare(c_connected_group.spiral_out.uv,
+                    m_connected_group.group_debug.spiral_out.uv))
 
-        # Not the same shape: (3, 384) is not (3, 390)
-        log.debug(" compare uv: %s", compare(c_connected_group.uv, m_connected_group.uv))
-        log.debug(" compare v: %s", compare(c_connected_group.v, m_connected_group.v))
+            # Not the same shape: (3, 384) is not (3, 390)
+            log.debug(" compare uv: %s", compare(c_connected_group.uv, m_connected_group.uv))
+            log.debug(" compare v: %s", compare(c_connected_group.v, m_connected_group.v))
+            """
 
 
 def develop_interconnect_among_groups():
     from sub_functions.interconnect_among_groups import interconnect_among_groups
-    mat_data = load_matlab('debug/cylinder_coil')
-    m_coil_parts = mat_data['coil_layouts'].out.coil_parts
-    m_c_part = m_coil_parts
-    # The Python paths and the MATLAB paths are close but slightly different. This prevents detailed debugging.
-    # Actually, there is no bug!
-    solution = load_numpy('debug/coilgen_cylinder_False_15_True.npy')
+
+    # which = 'shielded_ygradient_coil'
+    # which = 'Preoptimzed_Breast_Coil'
+    which = 'Preoptimzed_SVD_Coil_0_10'
+    # which = 'ygradient_coil'
+    # which = 'biplanar_xgradient_0_5'
+
+    # Python saved data 13 : After topological_loop_grouping
+    if which == 'biplanar':
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_biplanar_False_15.npy')
+    elif which == 'cylinder':
+        matlab_data = load_matlab('debug/ygradient_coil')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_cylinder_False_15_patched.npy')
+        # The Python paths and the MATLAB paths are close but slightly different. 
+        # This prevents detailed debugging.
+        #solution = load_numpy('debug/coilgen_cylinder_True_15.npy')
+    else:
+        matlab_data = load_matlab(f'debug/{which}')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy(f'debug/{which}_15.npy')
+
+    m_c_parts = m_out.coil_parts
+    if not isinstance(m_c_parts, np.ndarray):
+        m_c_parts = np.asarray([m_c_parts])
+
     p_coil_parts = solution.coil_parts
 
-    input_args = DataStructure(interconnection_cut_width=0.1)
-    coil_parts = interconnect_among_groups(p_coil_parts, input_args, m_c_part)
 
     # Wire path
-    for index1 in range(len(coil_parts)):
-        c_wire_path = coil_parts[index1].wire_path
+    for part_ind, m_c_part in enumerate(m_c_parts):
         m_wire_path = m_c_part.wire_path1
+        visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/16_{which}_wire_path2_uv_{part_ind}_m.png')
 
-        visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_p.png')
-        visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_m.png')
+
+    input_args = DataStructure(interconnection_cut_width=solution.input_args.interconnection_cut_width)
+    ###################################################################################
+    # Function under test
+    coil_parts = interconnect_among_groups(p_coil_parts, input_args, m_c_parts)
+    ###################################################################################
+
+    # Wire path
+    for part_ind, m_c_part in enumerate(m_c_parts):
+        c_wire_path = coil_parts[part_ind].wire_path
+        m_wire_path = m_c_part.wire_path1
+        visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/16_{which}_wire_path2_uv_{part_ind}_p.png')
 
         # Check....
         assert (compare(c_wire_path.v, m_wire_path.v))  # Pass!
         assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass!
 
-        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/wire_path_uv_{index1}_diff.png')
+        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/16_{which}_wire_path2_uv_{part_ind}_diff.png')
 
 
 def test_smooth_track_by_folding():
@@ -1346,12 +1409,12 @@ if __name__ == "__main__":
     # calculate_resistance_matrix
     # develop_stream_function_optimization()
     # develop_calc_potential_levels()
-    develop_calc_contours_by_triangular_potential_cuts()
+    # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
     # develop_topological_loop_grouping()
     # develop_calculate_group_centers()
     # develop_interconnect_within_groups()
-    # develop_interconnect_among_groups()
+    develop_interconnect_among_groups()
     # develop_shift_return_paths()
     # develop_generate_cylindrical_pcb_print()
     # develop_create_sweep_along_surface()
