@@ -553,6 +553,8 @@ class CoilPart:
     layout_surface_mesh: Mesh = None        # Layout mesh (create_sweep_along_surface)
     ohmian_resistance: np.ndarray = None    # Surface wire resistance (create_sweep_along_surface)
 
+    def __repr__():
+        return f'CoilPart'
 
 # Used by define_target_field
 @dataclass
