@@ -132,7 +132,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
                 m_group_levels = m_debug.group_levels3-1
             assert compare_contains(group_levels, m_group_levels) # Ordering is different
             log.warning(" Using MATLAB group levels in %s, line 114.", __file__)
-            group_levels = m_debug.group_levels3-1
+            group_levels = passify_matlab(m_debug.group_levels3-1, magic=2)
 
         # Creating the loop groups (containing still the loops of the inner groups)
         overlapping_loop_groups_num = np.asarray([item for group_level in group_levels for item in group_level])
