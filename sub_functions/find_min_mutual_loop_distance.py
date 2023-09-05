@@ -48,7 +48,7 @@ def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only
 
         min_dist = np.min(near_dists)
         if only_min_dist:
-            return min_dist, None, None, None, None
+            return min_dist
         min_ind_b = np.argmin(near_dists)
         near_points_b_v = near_points_b_v[:, min_ind_b]
         near_points_b_uv = loop_b.uv[:, min_ind_b] + \
@@ -83,7 +83,7 @@ def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only
 
         min_dist = np.min(min_test_ind)
         if only_min_dist:
-            return min_dist, None, None, None, None
+            return min_dist
         min_ind_b = np.argmin(min_test_ind)
         min_ind_a = min_dist_ind[min_ind_b]
 
