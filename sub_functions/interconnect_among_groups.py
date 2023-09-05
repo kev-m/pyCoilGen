@@ -56,7 +56,7 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                 is_enclosing = [0] * len(groups_to_connect)
 
                 if coil_part.level_positions[current_level]:
-                    current_top_group = coil_part.level_positions[current_level][-1]-1 # TODO: Check this final -1
+                    current_top_group = coil_part.level_positions[current_level][-1]
                     groups_to_connect.append(current_top_group)
                     is_enclosing.append(1)
                 group_len = len(groups_to_connect)
