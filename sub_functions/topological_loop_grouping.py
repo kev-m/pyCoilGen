@@ -95,8 +95,8 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
         # Convert the list of lower loops into parallel levels
         group_levels = [None] * num_total_loops
         for loop_to_test in range(num_total_loops):
-            group_levels[loop_to_test] = [ind for ind, lower_loop in enumerate(
-                lower_loops) if lower_loop == lower_loops[loop_to_test]]
+            group_levels[loop_to_test] = [ind for ind, lower_loop in enumerate(lower_loops) if 
+                                          lower_loop == lower_loops[loop_to_test]]
 
         # DEBUG
         if m_c_parts is not None:
@@ -132,7 +132,12 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
                 m_group_levels = m_debug.group_levels3-1
             assert compare_contains(group_levels, m_group_levels) # Ordering is different
             log.warning(" Using MATLAB group levels in %s, line 114.", __file__)
-            group_levels = passify_matlab(m_debug.group_levels3-1, magic=2)
+            ### group_levels = passify_matlab(m_debug.group_levels3-1, magic=2)
+            m_group_levels = []
+            for m_group_level in m_debug.group_levels3:
+                m_group_levels.append((m_group_level-1).tolist())
+            group_levels = m_group_levels
+
 
         # Creating the loop groups (containing still the loops of the inner groups)
         overlapping_loop_groups_num = np.asarray([item for group_level in group_levels for item in group_level])
@@ -301,6 +306,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args, m_c_parts=
                     if loop_in_loop_mat[contour_index, loops_per_level[level_index][loop_index]] == 1:
                         level_enclosed_by_loop[-1].append(contour_index)
 
+        # TODO: Not calculated correctly!
         level_positions = []
 
         for level_index in range(len(level_enclosed_by_loop)):
