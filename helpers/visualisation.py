@@ -116,6 +116,18 @@ def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True):
                 return False
         return True
 
+    if isinstance(instance1, list) and isinstance(instance2, list):
+        if len(instance1) != len(instance2):
+            log.error(" Not the same shape: %s is not %s", len(instance1), np.shape(instance2))
+            return False
+
+        if len(instance1) > 0 and isinstance(instance1[0], list):
+            for index in range(len(instance1)):
+                if _compare_list(index, instance1[index], instance2[index]) == False:
+                    log.error(" Not the same value at index [%d]: %s is not %s",
+                                index, instance1[index], instance2[index])
+                    return False
+
     if isinstance(instance1, list):
         if len(instance1) != instance2.shape[0]:
             log.error(" Not the same shape: %s is not %s", len(instance1), np.shape(instance2))
