@@ -11,7 +11,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: Trimesh, num_attempts = 1000):
+def uv_to_xyz_obsolete(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: Trimesh, num_attempts = 1000):
     """
     Convert 2D surface coordinates to 3D xyz coordinates of the 3D coil surface.
 
@@ -47,7 +47,7 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: 
     for point_ind in range(points_in_3d.shape[0]):
         point = points_in_3d[point_ind - num_deleted_points]
         # Find the target triangle and barycentric coordinates of the point on the planar mesh
-        target_triangle, barycentric = get_target_triangle(point, planary_mesh, proximity)
+        target_triangle, barycentric = get_target_triangle_obsolete(point, planary_mesh, proximity)
 
         attempts = 0
         np.random.seed(3) # Setting the seed to improve testing robustness
@@ -55,7 +55,7 @@ def uv_to_xyz(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: 
             # If the point is not directly on a triangle, perturb the point slightly and try again
             rand = (0.5 - np.random.rand(2))
             perturbed_point = point + avg_mesh_diameter * np.array([rand[0], rand[1], 0.0]) / 1000
-            target_triangle, barycentric = get_target_triangle(perturbed_point, planary_mesh, proximity)
+            target_triangle, barycentric = get_target_triangle_obsolete(perturbed_point, planary_mesh, proximity)
             attempts += 1
             if attempts > num_attempts:
                 log.warning('point %s at index %d can not be assigned to any triangle.', point, point_ind)
@@ -148,7 +148,7 @@ def pointLocation(point_2D: np.ndarray, face_indices: np.ndarray, mesh_vertices:
             return index, barycentric
     return None, None
 
-def get_target_triangle_def(point, planary_mesh: Trimesh):
+def get_target_triangle_def_obsolete(point, planary_mesh: Trimesh):
     """
     Get the face that contains the given point.
 
@@ -165,7 +165,7 @@ def get_target_triangle_def(point, planary_mesh: Trimesh):
     """
     return get_target_triangle(point, planary_mesh, ProximityQuery(planary_mesh))
 
-def get_target_triangle(point, planary_mesh: Trimesh, proximity: ProximityQuery):
+def get_target_triangle_obsolete(point, planary_mesh: Trimesh, proximity: ProximityQuery):
     """
     Get the face that contains the given point using the provided ProximityQuery.
 
