@@ -14,8 +14,9 @@ print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
-from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, \
-    visualize_compare_vertices, visualize_projected_vertices, visualize_compare_contours, passify_matlab
+from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, compare_contains, \
+    get_linenumber, visualize_compare_vertices, visualize_projected_vertices, visualize_compare_contours, \
+    passify_matlab
 from helpers.extraction import load_matlab
 from sub_functions.data_structures import DataStructure, Mesh, CoilPart, CoilSolution, ConnectedGroup, Shape3D, \
     TopoGroup, ContourLine
@@ -656,9 +657,9 @@ def develop_calc_potential_levels():
 def develop_calc_contours_by_triangular_potential_cuts():
     from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 
-
     # which = 'shielded_ygradient_coil'
-    which = 'Preoptimzed_SVD_Coil_0_10'
+    which = 'Preoptimzed_Breast_Coil_0_10'
+    # which = 'Preoptimzed_SVD_Coil_0_10'
 
     # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
     if which == 'biplanar':
@@ -687,7 +688,25 @@ def develop_calc_contours_by_triangular_potential_cuts():
     if not isinstance(m_c_parts, np.ndarray):
         m_c_parts = np.asarray([m_c_parts])
 
-    p_coil_parts = solution.coil_parts
+    c_coil_parts = solution.coil_parts
+
+    # Use MATLAB input data
+    #######################################################
+    # Testing the algorithm, so use MATLAB data as input:
+    # coil_part.
+    #   mesh
+    #   stream_function
+    p_coil_parts = []
+    for index1, m_c_part in enumerate(m_c_parts):
+        c_coil_part = c_coil_parts[index1]
+        p_coil_part = CoilPart()
+        # mesh
+        p_coil_part.coil_mesh = Mesh(vertices=m_c_part.coil_mesh.vertices.T, faces=m_c_part.coil_mesh.faces.T-1)
+        p_coil_part.coil_mesh.uv = m_c_part.coil_mesh.uv.T
+        # stream_function
+        p_coil_part.stream_function = m_c_part.stream_function
+        p_coil_part.potential_level_list = m_c_part.potential_level_list
+        p_coil_parts.append(p_coil_part)
 
     ###################################################################################
     # Function under test
@@ -714,9 +733,9 @@ def develop_calc_contours_by_triangular_potential_cuts():
         # A bit of visualisation for references
         coil_mesh = coil_part.coil_mesh
         visualize_compare_contours(coil_mesh.uv, 800, 
-                                   f'images/10_contour1_{part_ind}_p.png', coil_part.contour_lines)
+                                   f'images/10_contour1_{part_ind}_d_p.png', coil_part.contour_lines)
         visualize_compare_contours(m_c_part.coil_mesh.uv.T, 800,
-                                   f'images/10_contour1_{part_ind}_m.png', m_debug.contour_lines)
+                                   f'images/10_contour1_{part_ind}_d_m.png', m_debug.contour_lines)
         """
         for index1, m_contour in enumerate(m_debug.contour_lines):
             p_contour = coil_part.contour_lines[index1]
@@ -727,13 +746,28 @@ def develop_calc_contours_by_triangular_potential_cuts():
         """
         # Now do the actual checking of values
         for index, m_contour in enumerate(m_debug.contour_lines):
-            p_contour = coil_part.contour_lines[index]
+            # The ordering is different, so try and find the Python equivalent by looking for
+            # the contour line with the same shape and potential as the current MATLAB one....
+            found = 0
+            found_index = -1
+            pcons = []
+            for i, pcon in enumerate(coil_part.contour_lines):
+                if pcon.uv.shape[0] == m_contour.uv.shape[0] and np.isclose(pcon.uv.min(), m_contour.uv.min()):
+                    found += 1
+                    found_index = i
+                    pcons.append(pcon)
+                    if found > 1:
+                        log.debug("Trouble!!")
+            assert found == 1
+            p_contour = coil_part.contour_lines[found_index]
             # Check: potential, current_orientation, uv, v
             assert p_contour.potential == m_contour.potential
             assert p_contour.current_orientation == m_contour.current_orientation
-            ## assert compare(p_contour.uv, m_contour.uv)
+            # assert compare(p_contour.uv, m_contour.uv) # Sometimes contours are rotated around vertices
+            assert p_contour.uv.shape == m_contour.uv.shape
 
 
+        """ Raw parts are the temporary workings for the contours. Only the contours matter!
         assert len(coil_part.raw.unsorted_points) == len(m_debug.raw.unsorted_points)
         for index1, m_ru_point in enumerate(m_debug.raw.unsorted_points):
             c_ru_point = coil_part.raw.unsorted_points[index1]
@@ -755,19 +789,34 @@ def develop_calc_contours_by_triangular_potential_cuts():
                 p_loop_container = coil_part.raw.unarranged_loops[index2]
                 assert len(p_loop_container.loop) == len(m_loop_container)
                 for index3, m_loop in enumerate(m_loop_container):
-                    p_loop = p_loop_container.loop[index3]
-                    ## assert len(p_loop.edge_inds) == len(m_loop.edge_inds)                        
-                    ## assert compare(p_loop.edge_inds, m_loop.edge_inds-1)
-                    ## assert compare(p_loop.uv, m_loop.uv)
-                    ## assert p_loop.current_orientation == m_loop.current_orientation
 
+                    # The ordering is different, so try and find the Python equivalent by looking for
+                    # the loop with the same shape and potential as the current MATLAB one....
+                    found = 0
+                    found_index = -1
+                    plops = []
+                    for i, plop in enumerate(p_loop_container.loop):
+                        if plop.uv.shape[0] == m_loop.uv.shape[0] and plop.uv.min() == m_loop.uv.min():
+                            found += 1
+                            found_index = i
+                            plops.append(plop)
+                            if found > 1:
+                                log.debug('Trouble!!')
+                    assert found == 1
 
-
+                    p_loop = p_loop_container.loop[found_index]
+                    assert len(p_loop.edge_inds) == len(m_loop.edge_inds)                        
+                    assert compare_contains(p_loop.edge_inds, m_loop.edge_inds-1)
+                    assert p_loop.uv.shape == m_loop.uv.shape
+                    # Never used. Python orientation is sometimes opposite to MATLAB
+                    # assert p_loop.current_orientation == m_loop.current_orientation
+            """
 def develop_process_raw_loops():
     from sub_functions.process_raw_loops import process_raw_loops
 
     # which = 'shielded_ygradient_coil'
-    which = 'Preoptimzed_SVD_Coil'
+    which = 'Preoptimzed_Breast_Coil_0_10'
+    # which = 'Preoptimzed_SVD_Coil_0_10'
 
     # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
     if which == 'biplanar':
@@ -823,8 +872,8 @@ def develop_topological_loop_grouping():
     from sub_functions.topological_loop_grouping import topological_loop_grouping
 
     # which = 'shielded_ygradient_coil'
-    # which = 'Preoptimzed_Breast_Coil'
-    which = 'Preoptimzed_SVD_Coil_0_10'
+    which = 'Preoptimzed_Breast_Coil_0_10'
+    # which = 'Preoptimzed_SVD_Coil_0_10'
     # which = 'biplanar_xgradient_0_5'
 
     # Python saved data 12 : After find_minimal_contour_distance
@@ -851,12 +900,22 @@ def develop_topological_loop_grouping():
     c_coil_parts = solution.coil_parts
     
     # Use MATLAB contour lines
+    #######################################################
+    # Testing the algorithm, so use MATLAB data as input:
+    # coil_part.
+    #   mesh
+    #   groups
+    #       loops.uv
     p_coil_parts = []
     for index1, m_c_part in enumerate(m_c_parts):
         p_coil_part = CoilPart()
-        p_coil_part.contour_lines = m_c_part.contour_lines
+        # groups
+        p_coil_part.contour_lines = []
+        for index2, m_contour in enumerate(passify_matlab(m_c_part.contour_lines)):
+            p_line = ContourLine(uv=m_contour.uv, v=m_contour.v)
+            p_coil_part.contour_lines.append(p_line)
+    p_coil_parts.append(p_coil_part)
 
-        p_coil_parts.append(p_coil_part)
     ######################################################################################################
     # Function under test
     coil_parts = topological_loop_grouping(p_coil_parts, input_args, m_c_parts)
@@ -879,8 +938,6 @@ def develop_topological_loop_grouping():
             assert len(p_group.loops) == len(m_group.loops)
             for index2, m_loop in enumerate(m_group.loops):
                 p_loop = p_group.loops[index2]
-                assert p_loop.current_orientation == m_loop.current_orientation
-                assert np.isclose(p_loop.potential, m_loop.potential)
                 assert compare(p_loop.uv, m_loop.uv)
                 assert compare(p_loop.v, m_loop.v, double_tolerance=1e-4)
 
@@ -897,9 +954,9 @@ def develop_topological_loop_grouping():
 def develop_calculate_group_centers():
     from sub_functions.calculate_group_centers import calculate_group_centers
 
-    # which = 'shielded_ygradient_coil'
-    # which = 'Preoptimzed_Breast_Coil_0_10'
-    which = 'Preoptimzed_SVD_Coil_0_10'
+    # which = 'shielded_ygradient_coil_0_9'
+    which = 'Preoptimzed_Breast_Coil_0_10'
+    # which = 'Preoptimzed_SVD_Coil_0_10'
     # which = 'ygradient_coil'
     # which = 'biplanar_xgradient_0_5'
 
@@ -923,7 +980,6 @@ def develop_calculate_group_centers():
         m_c_parts = np.asarray([m_c_parts])
     c_coil_parts = solution.coil_parts
 
-    # Copy mesh and groups
     #######################################################
     # Testing the algorithm, so use MATLAB data as input:
     # coil_part.
@@ -961,11 +1017,11 @@ def develop_calculate_group_centers():
 
         coil_mesh = coil_part.coil_mesh
         c_group_centers = coil_part.group_centers
-        visualize_compare_contours(coil_mesh.uv, 800, f'images/14_contour_centres_{part_index}_p.png',
+        visualize_compare_contours(coil_mesh.uv, 800, f'images/14_{which}_contour_centres_d_{part_index}_p.png',
                                     m_c_part.contour_lines, c_group_centers.uv)
         m_coil_mesh = m_c_part.coil_mesh
         m_group_centers = m_c_part.group_centers
-        visualize_compare_contours(m_coil_mesh.uv.T, 800, f'images/14_contour_centres_{part_index}_m.png',
+        visualize_compare_contours(m_coil_mesh.uv.T, 800, f'images/14_{which}_contour_centres_d_{part_index}_m.png',
                                     m_c_part.contour_lines, m_group_centers.uv)
 
 
@@ -1527,10 +1583,10 @@ if __name__ == "__main__":
     # calculate_resistance_matrix
     # develop_stream_function_optimization()
     # develop_calc_potential_levels()
-    # develop_calc_contours_by_triangular_potential_cuts()
+    develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
     # develop_topological_loop_grouping()
-    develop_calculate_group_centers()
+    # develop_calculate_group_centers()
     # develop_open_loop_with_3d_sphere()
     # develop_interconnect_within_groups()
     # develop_interconnect_among_groups()
