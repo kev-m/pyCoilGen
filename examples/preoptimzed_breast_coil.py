@@ -41,7 +41,7 @@ if __name__ == '__main__':
     arg_dict = {
         'field_shape_function':'none', # definition of the target field
         'coil_mesh_file':'none',    
-        'min_loop_significance':4,
+        # 'min_loop_significance':1,
         'use_only_target_mesh_verts':False,
         'sf_source_file':'source_data_breast_coil.npy',
         'levels':14, # the number of potential steps that determines the later number of windings (Stream function discretization)
