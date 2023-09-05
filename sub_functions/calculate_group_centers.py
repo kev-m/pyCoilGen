@@ -8,7 +8,7 @@ import logging
 from sub_functions.data_structures import CoilPart, Shape3D, Mesh
 from sub_functions.find_segment_intersections import find_segment_intersections
 from sub_functions.check_mutual_loop_inclusion import check_mutual_loop_inclusion
-from sub_functions.uv_to_xyz import get_target_triangle_def, barycentric_to_cartesian
+from sub_functions.uv_to_xyz import barycentric_to_cartesian
 
 log = logging.getLogger(__name__)
 
