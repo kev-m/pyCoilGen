@@ -17,7 +17,8 @@ sys.path.append(str(sub_functions_path))
 from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, get_linenumber, \
     visualize_compare_vertices, visualize_projected_vertices, visualize_compare_contours, passify_matlab
 from helpers.extraction import load_matlab
-from sub_functions.data_structures import DataStructure, Mesh, CoilPart, CoilSolution
+from sub_functions.data_structures import DataStructure, Mesh, CoilPart, CoilSolution, ConnectedGroup, Shape3D, \
+    TopoGroup, ContourLine
 from sub_functions.read_mesh import create_unique_noded_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh
 from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
@@ -847,12 +848,15 @@ def develop_topological_loop_grouping():
 
     input_args = DataStructure(project_name=which)
 
-    p_coil_parts = solution.coil_parts
+    c_coil_parts = solution.coil_parts
     
     # Use MATLAB contour lines
-    #log.warning("Using MATLAB's contours in %s, line 853!", __file__)
-    #for part_index, m_c_part in enumerate(m_c_parts):
-    #    p_coil_parts[part_index].contour_lines = m_c_part.contour_lines
+    p_coil_parts = []
+    for index1, m_c_part in enumerate(m_c_parts):
+        p_coil_part = CoilPart()
+        p_coil_part.contour_lines = m_c_part.contour_lines
+
+        p_coil_parts.append(p_coil_part)
     ######################################################################################################
     # Function under test
     coil_parts = topological_loop_grouping(p_coil_parts, input_args, m_c_parts)
@@ -860,82 +864,10 @@ def develop_topological_loop_grouping():
 
     # And now, check the following:
     # loop_groups, group_levels, level_positions, groups
-
     assert len(coil_parts) == len(m_c_parts)
     for part_index, m_c_part in enumerate(m_c_parts):
         m_debug = m_c_part.topological_loop_grouping
         coil_part = coil_parts[part_index]
-
-
-        # Check that the groups and loops are the same
-        # 1. groups
-        assert len(coil_part.groups) == len(m_c_part.groups)
-        for index1, m_group in enumerate(m_c_part.groups):
-            p_group = coil_part.groups[index1]
-
-            # 2. loops
-            assert len(p_group.loops) == len(m_group.loops)
-            for index2, m_loop in enumerate(m_group.loops):
-                p_loop = p_group.loops[index2]
-                assert p_loop.current_orientation == m_loop.current_orientation
-                assert p_loop.potential == m_loop.potential
-                ### assert compare(p_loop.uv, m_loop.uv)
-                ### assert compare(p_loop.v, m_loop.v)
-
-        # 3. loop_groups
-        m_passified = np.empty((len(m_c_part.loop_groups)), dtype=object)
-        for i in range(len(m_debug.loop_groups2)):
-            m_passified[i] = passify_matlab(m_c_part.loop_groups[i]-1)
-
-        assert len(coil_part.loop_groups) == len(m_passified)
-        assert compare(np.array(coil_part.loop_groups, dtype=object), m_passified)
-
-
-def develop_calculate_group_centers():
-    from sub_functions.topological_loop_grouping import topological_loop_grouping
-    from sub_functions.calculate_group_centers import calculate_group_centers
-
-    # which = 'shielded_ygradient_coil'
-    # which = 'Preoptimzed_Breast_Coil'
-    which = 'Preoptimzed_SVD_Coil_0_10'
-    # which = 'ygradient_coil'
-    # which = 'biplanar_xgradient_0_5'
-
-    # Python saved data 13 : After topological_loop_grouping
-    if which == 'biplanar':
-        matlab_data = load_matlab('debug/biplanar_xgradient')
-        m_out = matlab_data['coil_layouts'].out
-        solution = load_numpy('debug/coilgen_biplanar_False_13.npy')
-    elif which == 'cylinder':
-        matlab_data = load_matlab('debug/ygradient_coil')
-        m_out = matlab_data['coil_layouts'].out
-        solution = load_numpy('debug/coilgen_cylinder_False_13_patched.npy')
-    else:
-        matlab_data = load_matlab(f'debug/{which}')
-        m_out = matlab_data['coil_layouts'].out
-        solution = load_numpy(f'debug/{which}_13.npy')
-
-
-    m_c_parts = m_out.coil_parts
-    if not isinstance(m_c_parts, np.ndarray):
-        m_c_parts = np.asarray([m_c_parts])
-
-    p_coil_parts = solution.coil_parts
-
-    # Use MATLAB contour lines
-    log.warning("Using MATLAB's contours in %s, line 843!", __file__)
-    for part_index, m_c_part in enumerate(m_c_parts):
-        p_coil_parts[part_index].contour_lines = m_c_part.contour_lines
-    ######################################################################################################
-    # Function under test
-    input_args = DataStructure(project_name=which)
-    coil_parts = topological_loop_grouping(p_coil_parts, input_args, m_c_parts)
-    ######################################################################################################
-    assert len(coil_parts) == len(m_c_parts)
-    for part_index, m_c_part in enumerate(m_c_parts):
-        m_debug = m_c_part.topological_loop_grouping
-        coil_part = coil_parts[part_index]
-
 
         # Check that the groups and loops are the same
         # 1. groups
@@ -961,14 +893,81 @@ def develop_calculate_group_centers():
         assert compare(np.array(coil_part.loop_groups, dtype=object), m_passified)
 
 
+
+def develop_calculate_group_centers():
+    from sub_functions.calculate_group_centers import calculate_group_centers
+
+    # which = 'shielded_ygradient_coil'
+    # which = 'Preoptimzed_Breast_Coil_0_10'
+    which = 'Preoptimzed_SVD_Coil_0_10'
+    # which = 'ygradient_coil'
+    # which = 'biplanar_xgradient_0_5'
+
+    # Python saved data 13 : After topological_loop_grouping
+    if which == 'biplanar':
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_biplanar_False_13.npy')
+    elif which == 'cylinder':
+        matlab_data = load_matlab('debug/ygradient_coil')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_cylinder_False_13_patched.npy')
+    else:
+        matlab_data = load_matlab(f'debug/{which}')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy(f'debug/{which}_13.npy')
+
+
+    m_c_parts = m_out.coil_parts
+    if not isinstance(m_c_parts, np.ndarray):
+        m_c_parts = np.asarray([m_c_parts])
+    c_coil_parts = solution.coil_parts
+
+    # Copy mesh and groups
+    #######################################################
+    # Testing the algorithm, so use MATLAB data as input:
+    # coil_part.
+    #   mesh
+    #   groups
+    #       loops.uv
+    p_coil_parts = []
+    for index1, m_c_part in enumerate(m_c_parts):
+        p_coil_part = CoilPart()
+        # mesh
+        p_coil_part.coil_mesh = Mesh(vertices=m_c_part.coil_mesh.vertices.T, faces=m_c_part.coil_mesh.faces.T-1)
+        p_coil_part.coil_mesh.uv = m_c_part.coil_mesh.uv.T
+        # groups
+        p_coil_part.groups = []
+        for index2, m_group in enumerate(m_c_part.groups):
+            p_group = TopoGroup()
+            # loops
+            p_group.loops = []
+            for index2, m_loop in enumerate(passify_matlab(m_group.loops)):
+                p_line = ContourLine(uv=m_loop.uv, v=m_loop.v)
+                p_line.current_orientation = m_loop.current_orientation
+                p_line.potential = m_loop.potential
+                p_group.loops.append(p_line)
+            p_coil_part.groups.append(p_group)
+        p_coil_parts.append(p_coil_part)
+
     ###################################################################################
     # Function under test
     coil_parts = calculate_group_centers(p_coil_parts, m_c_parts)
     ###################################################################################
     # And now!!
     assert len(coil_parts) == len(m_c_parts)
-    for index, m_c_part in enumerate(m_c_parts):
-        coil_part = coil_parts[index]
+    for part_index, m_c_part in enumerate(m_c_parts):
+        coil_part = coil_parts[part_index]
+
+        coil_mesh = coil_part.coil_mesh
+        c_group_centers = coil_part.group_centers
+        visualize_compare_contours(coil_mesh.uv, 800, f'images/14_contour_centres_{part_index}_p.png',
+                                    m_c_part.contour_lines, c_group_centers.uv)
+        m_coil_mesh = m_c_part.coil_mesh
+        m_group_centers = m_c_part.group_centers
+        visualize_compare_contours(m_coil_mesh.uv.T, 800, f'images/14_contour_centres_{part_index}_m.png',
+                                    m_c_part.contour_lines, m_group_centers.uv)
+
 
         assert len(coil_part.groups) == len(m_c_part.groups)
 
@@ -979,6 +978,83 @@ def develop_calculate_group_centers():
 
         assert compare(c_group_centers.uv, m_group_centers.uv)  #
         assert compare(c_group_centers.v, m_group_centers.v)    #
+
+
+def develop_open_loop_with_3d_sphere():
+    from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
+
+    # which = 'shielded_ygradient_coil'
+    # which = 'Preoptimzed_Breast_Coil'
+    which = 'Preoptimzed_SVD_Coil_0_10'
+    # which = 'ygradient_coil'
+    # which = 'biplanar_xgradient_0_5'
+    project_name = 'Preoptimzed_SVD_Coil'
+
+    # Python saved data 13 : After topological_loop_grouping
+    if which == 'biplanar':
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_biplanar_False_15.npy')
+    elif which == 'cylinder':
+        matlab_data = load_matlab('debug/ygradient_coil')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_cylinder_False_15_patched.npy')
+        # The Python paths and the MATLAB paths are close but slightly different. 
+        # This prevents detailed debugging.
+        #solution = load_numpy('debug/coilgen_cylinder_True_15.npy')
+    else:
+        matlab_data = load_matlab(f'debug/{which}')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy(f'debug/{which}_15.npy')
+
+    m_c_parts = m_out.coil_parts
+    if not isinstance(m_c_parts, np.ndarray):
+        m_c_parts = np.asarray([m_c_parts])
+
+    c_coil_parts = solution.coil_parts
+
+    ###################################################################################
+    # Function under test : open_loop_with_3d_sphere
+    # 
+    counter = 0
+    for part_ind, m_c_part in enumerate(m_c_parts):
+        m_top_debug = m_c_part.interconnect_among_groups
+        # debug_single_level_ind_debugPreoptimzed_SVD_Coil_2
+        mat_data = load_matlab(f'debug/debug_single_level_ind_debug{project_name}_{counter+1}')
+        m_level_debug = passify_matlab(mat_data['single_level_ind_debug'])
+
+        m_levels_to_process = m_top_debug.level_ind_debug[counter].levels_to_process
+        levels_to_process = passify_matlab(m_levels_to_process-1)
+
+        for single_level_ind in range(len(levels_to_process)):  # 1 level
+            mat_data = load_matlab(f'debug/debug_interconnect_among_groups_{project_name}_{counter+1}_{single_level_ind+1}')
+            m_single_level_debug = mat_data['connection_ind_debug']
+
+            num_connections_to_do = m_level_debug[single_level_ind].num_connections_to_do
+            for connect_ind in range(num_connections_to_do):  # 3
+                m_connection_ind_debug = m_single_level_debug[connect_ind]
+                m_sphere_debug_in = m_connection_ind_debug.open_loop_with_3d_sphere
+                m_sphere_debug_out = m_connection_ind_debug.sphere_debug_out1
+
+                curve_points_in = Shape3D(v=m_sphere_debug_in.debug_open1.input.curve_in.v, uv=m_sphere_debug_in.debug_open1.input.curve_in.uv)
+                sphere_center_p = m_sphere_debug_in.debug_open1.input.sphere_centre
+                sphere_center = [[sphere_center_p[0]], [sphere_center_p[1]], [sphere_center_p[2]]]  # MATLAB shape
+                sphere_diameter = m_sphere_debug_in.debug_open1.input.sphere_diameter
+
+                ###################################################################################
+                opened_loop, uv_cut, cut_points = open_loop_with_3d_sphere(curve_points_in, sphere_center, sphere_diameter)
+                ###################################################################################
+                m_cut_shape_1 = m_c_part.opening_cuts_among_groups[connect_ind].cut1
+                m_opened_group_1 = m_connection_ind_debug.opened_group_1
+                m_cut_points = m_sphere_debug_out.cut_points
+
+                assert compare(opened_loop.uv, m_opened_group_1.uv)
+                assert compare(opened_loop.v, m_opened_group_1.v)
+                assert compare(uv_cut, m_cut_shape_1)
+
+        counter += 1
+
+    ###################################################################################
 
 
 def develop_interconnect_within_groups():
@@ -1097,10 +1173,13 @@ def develop_interconnect_among_groups():
     from sub_functions.interconnect_among_groups import interconnect_among_groups
 
     # which = 'shielded_ygradient_coil'
-    # which = 'Preoptimzed_Breast_Coil'
-    which = 'Preoptimzed_SVD_Coil_0_10'
+    which = 'Preoptimzed_Breast_Coil_0_10'
+    # which = 'Preoptimzed_SVD_Coil_0_10'
     # which = 'ygradient_coil'
     # which = 'biplanar_xgradient_0_5'
+
+    # project_name = 'Preoptimzed_SVD_Coil'
+    project_name = 'Preoptimzed_Breast_Coil'
 
     # Python saved data 13 : After topological_loop_grouping
     if which == 'biplanar':
@@ -1123,16 +1202,55 @@ def develop_interconnect_among_groups():
     if not isinstance(m_c_parts, np.ndarray):
         m_c_parts = np.asarray([m_c_parts])
 
-    p_coil_parts = solution.coil_parts
-
+    c_coil_parts = solution.coil_parts
 
     # Wire path
     for part_ind, m_c_part in enumerate(m_c_parts):
         m_wire_path = m_c_part.wire_path1
         visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/16_{which}_wire_path2_uv_{part_ind}_m.png')
 
+    #######################################################
+    # Testing the algorithm, so use MATLAB data as input:
+    # coil_part.
+    #   connected_group
+    #       return_path.uv
+    #   level_positions
+    #   group_levels
+    p_coil_parts = []
+    for index1, m_c_part in enumerate(m_c_parts):
+        p_coil_part = CoilPart()
+        # connected_group
+        p_coil_part.connected_group = []
+        for index2, m_connected_group in enumerate(m_c_part.connected_group):
+            p_connected_group = ConnectedGroup()
+            p_connected_group.uv = m_connected_group.uv
+            p_connected_group.v = m_connected_group.v
+            p_connected_group.return_path = Shape3D(uv=passify_matlab(m_connected_group.return_path.uv, magic=1))
+            p_coil_part.connected_group.append(p_connected_group)
+        p_coil_parts.append(p_coil_part)
 
-    input_args = DataStructure(interconnection_cut_width=solution.input_args.interconnection_cut_width)
+        # level_positions
+        if project_name == 'Preoptimzed_Breast_Coil':
+            p_coil_part.level_positions = [[]] # [[]]
+            m_c_part.level_positions = p_coil_part.level_positions
+        else:
+            p_coil_part.level_positions = []
+        for index2, m_level_position in enumerate(passify_matlab(m_c_part.level_positions)):
+            p_coil_part.level_positions.append(passify_matlab(m_level_position).tolist())
+
+        # group_levels
+        p_coil_part.group_levels = np.empty((len(m_c_part.group_levels)), dtype=object)
+        if project_name == 'Preoptimzed_Breast_Coil':
+            p_coil_part.group_levels[0] =  m_c_part.group_levels - 1
+        else:
+            for index2, m_group_level in enumerate(m_c_part.group_levels):
+                p_coil_part.group_levels[index2] = m_group_level-1
+
+    #
+    #######################################################
+
+    input_args = DataStructure(interconnection_cut_width=solution.input_args.interconnection_cut_width,
+                               project_name=project_name)
     ###################################################################################
     # Function under test
     coil_parts = interconnect_among_groups(p_coil_parts, input_args, m_c_parts)
@@ -1412,9 +1530,10 @@ if __name__ == "__main__":
     # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
     # develop_topological_loop_grouping()
-    # develop_calculate_group_centers()
+    develop_calculate_group_centers()
+    # develop_open_loop_with_3d_sphere()
     # develop_interconnect_within_groups()
-    develop_interconnect_among_groups()
+    # develop_interconnect_among_groups()
     # develop_shift_return_paths()
     # develop_generate_cylindrical_pcb_print()
     # develop_create_sweep_along_surface()
