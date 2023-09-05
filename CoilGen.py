@@ -261,7 +261,7 @@ def CoilGen(log, input_args=None):
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
         timer.start()
-        coil_parts = calculate_group_centers(coil_parts, None)  # 14
+        coil_parts = calculate_group_centers(coil_parts)  # 14
         timer.stop()
         save(persistence_dir, project_name, '14', solution)
 
@@ -463,7 +463,7 @@ if __name__ == "__main__":
         "make_cylindrical_pcb": 1,
         "max_allowed_angle_within_coil_track": 120,
         "min_allowed_angle_within_coil_track": 0.0001,
-        "min_loop_significance": 0.1,
+        "min_loop_significance": 1, # Was 0.1, a bug?
         "min_point_loop_number": 20,
         "normal_shift_length": 0.025,
         "normal_shift_smooth_factors": [2, 3, 2],
