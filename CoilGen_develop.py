@@ -181,14 +181,14 @@ def CoilGen(log, input=None):
             for part_index in range(len(coil_parts)):
                 coil_mesh = coil_parts[part_index].coil_mesh
                 m_c_part = m_c_parts[part_index]
-                p2d = visualize_projected_vertices(coil_mesh.v, 800, f'images/02_coil_mesh{part_index}_v_p.png')
+                p2d = visualize_projected_vertices(coil_mesh.v, 800, f'images/02_{input_args.project_name}_coil_mesh{part_index}_v_p.png')
                 m2d = visualize_projected_vertices(m_c_part.coil_mesh.v, 800,
                                                    f'images/02_coil_mesh{part_index}_v_m.png')
 
                 # Plot the two UV and see the difference
-                visualize_compare_vertices(p2d, m2d, 800, f'images/02_coil_mesh{part_index}_v2d_diff.png')
+                visualize_compare_vertices(p2d, m2d, 800, f'images/02_{input_args.project_name}_coil_mesh{part_index}_v2d_diff.png')
                 visualize_compare_vertices(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 800,
-                                           f'images/02_coil_mesh{part_index}_uv_diff.png')
+                                           f'images/02_{input_args.project_name}_coil_mesh{part_index}_uv_diff.png')
 
                 # assert (compare(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 0.0001))    # Pass
 
@@ -287,9 +287,9 @@ def CoilGen(log, input=None):
                     m_or_node_triangles[index] = np.asarray([m_tri], dtype=np.uint8)
 
             visualize_multi_connections(
-                coil_mesh.uv, 800, f'images/03_one-ring_list_{part_index}_p.png', one_ring_list[0:25])
+                coil_mesh.uv, 800, f'images/03_{input_args.project_name}_one-ring_list_{part_index}_p.png', one_ring_list[0:25])
             visualize_multi_connections(
-                coil_mesh.uv, 800, f'images/03_one-ring_list_{part_index}_m.png', m_or_one_ring_list[0:25])
+                coil_mesh.uv, 800, f'images/03_{input_args.project_name}_one-ring_list_{part_index}_m.png', m_or_one_ring_list[0:25])
 
             # Differences between biplanar and cylinder examples:
             # assert (compare_contains(one_ring_list, m_or_one_ring_list, strict=False))   # PASS - different order!
@@ -599,17 +599,17 @@ def CoilGen(log, input=None):
 
         if get_level() >= DEBUG_VERBOSE:
             visualize_compare_contours(
-                coil_mesh.uv, 800, f'images/10_contour1_{part_index}_p.png', coil_part.contour_lines)
+                coil_mesh.uv, 800, f'images/10_{input_args.project_name}_contour1_{part_index}_p.png', coil_part.contour_lines)
             visualize_compare_contours(m_c_part.coil_mesh.uv.T, 800,
-                                       f'images/10_contour1_{part_index}_m.png', m_contour_lines)
+                                       f'images/10_{input_args.project_name}_contour1_{part_index}_m.png', m_contour_lines)
 
             for index1, m_contour in enumerate(m_contour_lines):
                 # MATLAB shape
                 p_contour = coil_part.contour_lines[index1]
                 visualize_vertex_connections(
-                    p_contour.uv.T, 800, f'images/10_contour_lines_{part_index}_{index1}_p.png')
+                    p_contour.uv.T, 800, f'images/10_{input_args.project_name}_contour_lines_{part_index}_{index1}_p.png')
                 visualize_vertex_connections(
-                    m_contour.uv.T, 800, f'images/10_contour_lines_{part_index}_{index1}_m.png')
+                    m_contour.uv.T, 800, f'images/10_{input_args.project_name}_contour_lines_{part_index}_{index1}_m.png')
 
     # Manual conclusion: Not identical, but really close.
 
@@ -648,18 +648,18 @@ def CoilGen(log, input=None):
 
         m_contour_lines = m_c_part.contour_lines
         p2d = visualize_projected_vertices(coil_part.combined_loop_field.T, 800,
-                                           f'images/11_combined_loop_field_{part_index}_p.png')
+                                           f'images/11_{input_args.project_name}_combined_loop_field_{part_index}_p.png')
         m2d = visualize_projected_vertices(m_c_part.combined_loop_field.T, 800,
-                                           f'images/11_combined_loop_field_{part_index}_m.png')
+                                           f'images/11_{input_args.project_name}_combined_loop_field_{part_index}_m.png')
 
         # Plot the two fields and see the difference
-        visualize_compare_vertices(p2d, m2d, 800, f'images/11_combined_loop_field_{part_index}_diff.png')
+        visualize_compare_vertices(p2d, m2d, 800, f'images/11_{input_args.project_name}_combined_loop_field_{part_index}_diff.png')
 
         if get_level() >= DEBUG_VERBOSE:
             visualize_compare_contours(
-                coil_mesh.uv, 800, f'images/11_contour_lines_{part_index}_p.png', coil_part.contour_lines)
+                coil_mesh.uv, 800, f'images/11_{input_args.project_name}_contour_lines_{part_index}_p.png', coil_part.contour_lines)
             visualize_compare_contours(
-                coil_mesh.uv, 800, f'images/11_contour_lines_{part_index}_m.png', m_contour_lines)
+                coil_mesh.uv, 800, f'images/11_{input_args.project_name}_contour_lines_{part_index}_m.png', m_contour_lines)
 
         # Fails for part_index 1, when Python generates an extra contour
         if part_index == 0:
@@ -788,9 +788,9 @@ def CoilGen(log, input=None):
 
                 if get_level() >= DEBUG_VERBOSE:
                     visualize_compare_contours(
-                        coil_mesh.uv, 800, f'images/13_contour4_{part_index}_{index1}_p.png', c_group.loops)
+                        coil_mesh.uv, 800, f'images/13_{input_args.project_name}_contour4_{part_index}_{index1}_p.png', c_group.loops)
                     visualize_compare_contours(
-                        coil_mesh.uv, 800, f'images/13_contour4_{part_index}_{index1}_m.png', m_group.loops)
+                        coil_mesh.uv, 800, f'images/13_{input_args.project_name}_contour4_{part_index}_{index1}_m.png', m_group.loops)
 
                 for index2, m_loop in enumerate(m_group.loops):
                     if get_level() >= DEBUG_VERBOSE:
@@ -846,19 +846,24 @@ def CoilGen(log, input=None):
         # DEVELOPMENT: Remove this
         # DEBUG
         # Verify: Coil Part values: group_centers
-        m_group_centers = m_c_part.group_centers
-        c_group_centers = coil_part.group_centers
+        for part_index in range(len(coil_parts)):
+            log.debug(" Part index: %d", part_index)
+            coil_part = coil_parts[part_index]
+            coil_mesh = coil_part.coil_mesh
+            m_c_part = m_c_parts[part_index]
+            m_group_centers = m_c_part.group_centers
+            c_group_centers = coil_part.group_centers
 
-        if get_level() >= DEBUG_BASIC:
-            visualize_compare_contours(coil_mesh.uv, 800, f'images/14_contour_centres_{part_index}_p.png',
-                                       coil_part.contour_lines, c_group_centers.uv)
-            visualize_compare_contours(coil_mesh.uv, 800, f'images/14_contour_centres_{part_index}_m.png',
-                                       m_c_part.contour_lines, m_group_centers.uv)
+            if get_level() >= DEBUG_BASIC:
+                visualize_compare_contours(coil_mesh.uv, 800, f'images/14_{input_args.project_name}_contour_centres_{part_index}_p.png',
+                                        coil_part.contour_lines, c_group_centers.uv)
+                visualize_compare_contours(coil_mesh.uv, 800, f'images/14_{input_args.project_name}_contour_centres_{part_index}_m.png',
+                                        m_c_part.contour_lines, m_group_centers.uv)
 
-        # Pass (alternate sorting in topological_loop_grouping)
-        assert compare(c_group_centers.uv, m_group_centers.uv, double_tolerance=0.004)
-        # Pass (alternate sorting in topological_loop_grouping)
-        assert compare(c_group_centers.v, m_group_centers.v, double_tolerance=0.004)
+            # Pass (alternate sorting in topological_loop_grouping)
+            assert compare(c_group_centers.uv, m_group_centers.uv, double_tolerance=0.004)
+            # Pass (alternate sorting in topological_loop_grouping)
+            assert compare(c_group_centers.v, m_group_centers.v, double_tolerance=0.004)
 
         # Manual conclusion: Not identical, but close. Different paths, different group layouts.
 
@@ -901,9 +906,9 @@ def CoilGen(log, input=None):
                 if get_level() >= DEBUG_VERBOSE:
                     # MATLAB shape
                     visualize_vertex_connections(c_connected_group.uv.T, 800,
-                                                 f'images/15_connected_group_{part_index}_uv_{index1}_p.png')
+                                                 f'images/15_{input_args.project_name}_connected_group_{part_index}_uv_{index1}_p.png')
                     visualize_vertex_connections(m_connected_group.uv.T, 800,
-                                                 f'images/15_connected_group_{part_index}_uv_{index1}_m.png')
+                                                 f'images/15_{input_args.project_name}_connected_group_{part_index}_uv_{index1}_m.png')
 
                 # Check....
                 if False:  # Temporarily disable these checks
@@ -946,8 +951,8 @@ def CoilGen(log, input=None):
             c_wire_path = p_coil_part.wire_path
             m_wire_path = m_c_part.wire_path1
             if get_level() >= DEBUG_BASIC:
-                visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/16_wire_path_uv_{part_index}_p.png')
-                visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/16_wire_path_uv_{part_index}_m.png')
+                visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/16_{input_args.project_name}_wire_path_uv_{part_index}_p.png')
+                visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/16_{input_args.project_name}_wire_path_uv_{part_index}_m.png')
 
             if use_matlab_data:
                 assert (compare(c_wire_path.uv, m_wire_path.uv))    # Fail: (2, 1540) is not (2, 1539)
@@ -972,12 +977,12 @@ def CoilGen(log, input=None):
             c_wire_path = c_part.wire_path
             m_wire_path = m_c_part.wire_path
 
-            visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_p.png')
-            visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_m.png')
+            visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/17_{input_args.project_name}_wire_path2_uv_{index1}_p.png')
+            visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/17_{input_args.project_name}_wire_path2_uv_{index1}_m.png')
 
             if use_matlab_data:
                 visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800,
-                                           f'images/17_wire_path2_uv_{index1}_diff.png')
+                                           f'images/17_{input_args.project_name}_wire_path2_uv_{index1}_diff.png')
                 # Check....
                 assert (compare(c_part.shift_array, m_c_part.shift_array))          # Pass
                 assert (compare(c_part.points_to_shift, m_c_part.points_to_shift))  # Pass
@@ -1012,9 +1017,9 @@ def CoilGen(log, input=None):
                     m_wire_part = m_group_layout.wire_parts
 
                     visualize_vertex_connections(
-                        c_wire_part.uv.T, 800, f'images/18_pcb_{part_index}_{layer}_group{index2}_uv_p.png')
+                        c_wire_part.uv.T, 800, f'images/18_{input_args.project_name}_pcb_{part_index}_{layer}_group{index2}_uv_p.png')
                     visualize_vertex_connections(
-                        m_wire_part.uv.T, 800, f'images/18_pcb_{part_index}_{layer}_group{index2}_uv_m.png')
+                        m_wire_part.uv.T, 800, f'images/18_{input_args.project_name}_pcb_{part_index}_{layer}_group{index2}_uv_m.png')
 
                     # visualize_compare_vertices(c_wire_part.uv.T, m_wire_part.uv.T, 800, f'images/pcb_{layer}_group{part_index}_uv_diff.png')
 
@@ -1035,9 +1040,9 @@ def CoilGen(log, input=None):
                     m_wire_part = m_group_layout.wire_parts
 
                     visualize_vertex_connections(
-                        c_wire_part.uv.T, 800, f'images/18_pcb_{part_index}_{layer}_group{index2}_uv_p.png')
+                        c_wire_part.uv.T, 800, f'images/18_{input_args.project_name}_pcb_{part_index}_{layer}_group{index2}_uv_p.png')
                     visualize_vertex_connections(
-                        m_wire_part.uv.T, 800, f'images/18_pcb_{part_index}_{layer}_group{index2}_uv_m.png')
+                        m_wire_part.uv.T, 800, f'images/18_{input_args.project_name}_pcb_{part_index}_{layer}_group{index2}_uv_m.png')
 
         # Manual conclusion: Pass, when using MATLAB data
         #
