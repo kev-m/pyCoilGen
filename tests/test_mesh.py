@@ -66,3 +66,40 @@ def test_get_face_index2():
         if face_index != indices[index]:
             print("Fails at index", index)
         assert face_index == indices[index]
+
+def test_uv_to_xyz_planar():
+    from sub_functions.build_planar_mesh import build_planar_mesh
+    val = build_planar_mesh(0.30, 0.60, 3, 3, 0, 0, 1, 0, 0, 0, 1.0)
+    points_2d_in = np.array([[-0.15, -0.14], [-0.29, -0.10], [-0.19, +0.056]]).T  # Faces: 0, 1, 2
+
+    curved_mesh = Mesh(vertices=val.vertices, faces=val.faces)
+    planar_uv_3d = curved_mesh.get_vertices()
+    planar_uv = planar_uv_3d[:, :2]
+
+    # Test code
+    curved_mesh.v = curved_mesh.get_vertices()
+    curved_mesh.f = curved_mesh.get_faces()
+    points_out_3d, points_2d_out = curved_mesh.uv_to_xyz(points_2d_in, planar_uv)
+
+    assert points_out_3d.shape == (3,3)
+    assert points_2d_out.shape == (2,3)
+
+    assert np.isclose(points_out_3d[0], points_2d_out[0]).all()
+    assert np.isclose(points_out_3d[1], points_2d_out[1]).all()
+    assert np.isclose(points_out_3d[2], [1., 1., 1.]).all()
+
+    # Verify that a point not on the mesh is not assigned to a face and removed from the input data.
+    points_2d_in = np.array([[-0.15, -0.14], [-0.29, -0.10], [-0.19, +0.056], [-1, -1]]).T  # Faces: 0, 1, 2, None
+
+    # Test code
+    points_out_3d, points_2d_out = curved_mesh.uv_to_xyz(points_2d_in, planar_uv, 3)
+    assert points_out_3d.shape == (3,3)
+    assert points_2d_out.shape == (2,3)
+
+    # Verify that a point close to the mesh can be placed onto the mesh (Random!! Can fail!)
+    points_2d_in = np.array([[-0.3001, -0.1]]).T  # Faces: 0, 1, 2, None
+
+    # Test code
+    points_out_3d, points_2d_out = curved_mesh.uv_to_xyz(points_2d_in, planar_uv, 100)
+    assert points_out_3d.shape == (3,1)
+    assert points_2d_out.shape == (2,1)
