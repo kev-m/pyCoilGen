@@ -18,6 +18,7 @@ from helpers.visualisation import visualize_vertex_connections, visualize_3D_bou
     get_linenumber, visualize_compare_vertices, visualize_projected_vertices, visualize_compare_contours, \
     passify_matlab
 from helpers.extraction import load_matlab
+from helpers.timing import Timing
 from sub_functions.data_structures import DataStructure, Mesh, CoilPart, CoilSolution, ConnectedGroup, Shape3D, \
     TopoGroup, ContourLine
 from sub_functions.read_mesh import create_unique_noded_mesh
@@ -418,9 +419,9 @@ def develop_parameterize_mesh():
         assert compare(coil_mesh.boundary, m_c_mesh.boundary-1)
         assert compare(coil_mesh.uv, m_c_mesh.uv.T)
 
-        visualize_vertex_connections(coil_mesh.uv, 800, f'images/01_mesh_uv_{part_ind}_p.png')
-        visualize_vertex_connections(m_c_mesh.uv.T, 800, f'images/01_mesh_uv_{part_ind}_m.png')
-        visualize_compare_vertices(coil_mesh.uv, m_c_mesh.uv.T, 800, f'images/01_mesh_uv_{part_ind}_diff.png')
+        visualize_vertex_connections(coil_mesh.uv, 800, f'images/01_mesh_uv_d_{part_ind}_p.png')
+        visualize_vertex_connections(m_c_mesh.uv.T, 800, f'images/01_mesh_uv_d_{part_ind}_m.png')
+        visualize_compare_vertices(coil_mesh.uv, m_c_mesh.uv.T, 800, f'images/01_mesh_uv_d_{part_ind}_diff.png')
 
 
 def develop_calculate_one_ring_by_mesh():  # PAUSED
@@ -811,69 +812,147 @@ def develop_calc_contours_by_triangular_potential_cuts():
                     # Never used. Python orientation is sometimes opposite to MATLAB
                     # assert p_loop.current_orientation == m_loop.current_orientation
             """
+
+
 def develop_process_raw_loops():
     from sub_functions.process_raw_loops import process_raw_loops
 
+    # which = 'ygradient_coil_0_5'
+    # which = 'biplanar_xgradient_0_5'
     # which = 'shielded_ygradient_coil'
-    which = 'Preoptimzed_Breast_Coil_0_10'
-    # which = 'Preoptimzed_SVD_Coil_0_10'
+    # which = 'Preoptimzed_Breast_Coil_0_10'
+    which = 'Preoptimzed_SVD_Coil_0_10'
 
     # Python saved data 10 : Just between calc_contours_by_triangular_potential_cuts and process_raw_loops
     if which == 'biplanar':
         matlab_data = load_matlab('debug/biplanar_xgradient')
-        mat_data_out = matlab_data['coil_layouts'].out
+        m_out = matlab_data['coil_layouts'].out
         m_c_parts = m_out.coil_parts
-        m_c_part = m_out.coil_parts[0]
 
         solution = load_numpy('debug/coilgen_biplanar_False_10.npy')
     elif which == 'ygradient_coil':
         matlab_data = load_matlab('debug/ygradient_coil')
-        mat_data_out = matlab_data['coil_layouts'].out
-        m_c_parts = [m_out.coil_parts]
-        m_c_part = m_out.coil_parts[0]
+        m_out = matlab_data['coil_layouts'].out
+        m_c_parts = m_out.coil_parts
 
         # solution = load_numpy('debug/coilgen_cylinder_False_10.npy')
         solution = load_numpy('debug/coilgen_cylinder_True_10.npy')
-        p_coil_parts = solution.coil_parts
     else:
         matlab_data = load_matlab(f'debug/{which}')
         m_out = matlab_data['coil_layouts'].out
-        m_c_parts = [m_out.coil_parts]
-        m_c_part = m_out.coil_parts
-        solution = load_numpy(f'debug/{which}_10.npy')
-        input_args = DataStructure(smooth_flag=solution.input_args.smooth_flag, smooth_factor=solution.input_args.smooth_factor, 
-                                   min_loop_significance=solution.input_args.min_loop_significance)
 
-    target_field = mat_data_out.target_field
+        solution = load_numpy(f'debug/{which}_10.npy')
+
+    input_args = DataStructure(smooth_flag=solution.input_args.smooth_flag, smooth_factor=solution.input_args.smooth_factor, 
+                                min_loop_significance=solution.input_args.min_loop_significance)
+
+    m_c_parts = m_out.coil_parts
+    if not isinstance(m_c_parts, np.ndarray):
+        m_c_parts = np.asarray([m_c_parts])
+
+    target_field = m_out.target_field
     # target_field = solution.target_field
 
-    m_coil_part = m_c_part
+    assert solution.input_args.min_loop_significance == m_out.input_data.min_loop_signifcance
+    assert solution.input_args.smooth_flag == m_out.input_data.smooth_flag
+    assert solution.input_args.smooth_factor == m_out.input_data.smooth_factor
+
+    c_coil_parts = solution.coil_parts
+
+    # Use MATLAB contour lines
+    #######################################################
+    # Testing the algorithm, so use MATLAB data as input:
+    # coil_part.
+    #   contour_lines
+    #   contour_step
+    #   coil_mesh
+    p_coil_parts = []
+    for index1, m_c_part in enumerate(m_c_parts):
+        p_coil_part = CoilPart()
+        # contour_lines
+        p_coil_part.contour_lines = []
+        m_debug = m_c_part.calc_contours_by_triangular_potential_cuts
+        for index2, m_contour in enumerate(passify_matlab(m_debug.contour_lines)):
+            p_line = ContourLine(uv=m_contour.uv)
+            p_coil_part.contour_lines.append(p_line)
+        # contour_step
+        p_coil_part.contour_step = m_c_part.contour_step
+        # coil_mesh (Just use Python's)
+        p_coil_part.coil_mesh = c_coil_parts[index1].coil_mesh
+    p_coil_parts.append(p_coil_part)
+
+    timer = Timing()
     ###################################################################################
     # Function under test
-    coil_parts2 = process_raw_loops(p_coil_parts, input_args, target_field)
+    timer.start()
+    coil_parts2 = process_raw_loops(c_coil_parts, input_args, target_field)
+    timer.stop()
+    # Preoptimzed_Breast_Coil_0_10
+    #   Using sub_functions.uv_to_xyz: 7.306278 seconds
+    #   Using Mesh.uv_to_xyz: 13.067177 seconds, but 100% idenitical to MATLAB
     ###################################################################################
 
-    # Verification
-    coil_part = coil_parts2[0]
-    assert len(coil_part.contour_lines) == len(m_coil_part.contour_lines)
-    assert compare(coil_part.combined_loop_field, m_coil_part.combined_loop_field, double_tolerance=5e-7)  # Pass!
-    assert compare(coil_part.loop_significance, m_coil_part.loop_signficance, double_tolerance=0.005)
-    assert compare(coil_part.field_by_loops, m_coil_part.field_by_loops, double_tolerance=2e-7)  # Pass!
+    # Tiny logic to tweak double_tolerances when using c_coil_parts
+    using_matlab = False
+    if using_matlab == False:
+        double_tolerance_uv = 0.03
+        double_tolerance_v = 0.015
 
-    # Checks:
-    coil_part = coil_parts2[0]
-    assert abs(coil_part.combined_loop_length - m_coil_part.combined_loop_length) < 0.0005  # Pass
-    assert compare(coil_part.combined_loop_field, m_coil_part.combined_loop_field, double_tolerance=5e-7)  # Pass
-    assert compare(coil_part.loop_significance, m_coil_part.loop_signficance, double_tolerance=0.005)
-    assert compare(coil_part.field_by_loops, m_coil_part.field_by_loops, double_tolerance=2e-7)  # Pass!
+    # Verification
+    for part_ind, m_coil_part in enumerate(m_c_parts):
+        coil_part = coil_parts2[part_ind]
+
+        coil_mesh = coil_part.coil_mesh
+        visualize_compare_contours(coil_mesh.uv, 800, 
+                                   f'images/11_contour1_{part_ind}_d_p.png', coil_part.contour_lines)
+        visualize_compare_contours(m_c_part.coil_mesh.uv.T, 800,
+                                   f'images/11_contour1_{part_ind}_d_m.png', m_coil_part.contour_lines)
+
+
+        # Now check the actual contour values (uv updated, v initialised)
+        mapping = np.arange(len(m_coil_part.contour_lines))
+        p_to_m = mapping.copy()
+        for index, m_contour in enumerate(m_coil_part.contour_lines):
+            # p_contour = coil_part.contour_lines[index]
+            # Check: uv, v - same input, output should be identical
+
+            # Order is different, so search for matching Python contour index
+            found = 0
+            found_index = -1
+            pcons = []
+            for i, pcon in enumerate(coil_part.contour_lines):
+                if pcon.uv.shape[0] == m_contour.uv.shape[0] and np.isclose(pcon.uv.min(), m_contour.uv.min()):
+                    found += 1
+                    found_index = i
+                    pcons.append(pcon)
+                    if found > 1:
+                        log.debug("Trouble!!")
+            assert found == 1
+            p_contour = coil_part.contour_lines[found_index]
+            p_to_m[index] = found_index
+
+            assert p_contour.uv.shape == m_contour.uv.shape
+            assert compare(p_contour.uv, m_contour.uv, double_tolerance=double_tolerance_uv)
+            assert compare(p_contour.v, m_contour.v, double_tolerance=double_tolerance_v) 
+
+        if using_matlab == False:
+            coil_part.loop_significance[mapping] = coil_part.loop_significance[p_to_m]
+            coil_part.field_by_loops[:,:,mapping] = coil_part.field_by_loops[:,:,p_to_m] # Can this be done?
+        
+
+        assert len(coil_part.contour_lines) == len(m_coil_part.contour_lines)
+        assert abs(coil_part.combined_loop_length - m_coil_part.combined_loop_length) < 1e-10  # Pass
+        assert compare(coil_part.combined_loop_field, m_coil_part.combined_loop_field)  # Pass
+        assert compare(coil_part.loop_significance, m_coil_part.loop_signficance, double_tolerance=1e-9)
+        assert compare(coil_part.field_by_loops, m_coil_part.field_by_loops)  # Pass!
 
 
 def develop_topological_loop_grouping():
     from sub_functions.topological_loop_grouping import topological_loop_grouping
 
     # which = 'shielded_ygradient_coil'
-    which = 'Preoptimzed_Breast_Coil_0_10'
-    # which = 'Preoptimzed_SVD_Coil_0_10'
+    # which = 'Preoptimzed_Breast_Coil_0_10'
+    which = 'Preoptimzed_SVD_Coil_0_10'
     # which = 'biplanar_xgradient_0_5'
 
     # Python saved data 12 : After find_minimal_contour_distance
@@ -903,13 +982,11 @@ def develop_topological_loop_grouping():
     #######################################################
     # Testing the algorithm, so use MATLAB data as input:
     # coil_part.
-    #   mesh
-    #   groups
-    #       loops.uv
+    #   contour_lines
     p_coil_parts = []
     for index1, m_c_part in enumerate(m_c_parts):
         p_coil_part = CoilPart()
-        # groups
+        # contour_lines
         p_coil_part.contour_lines = []
         for index2, m_contour in enumerate(passify_matlab(m_c_part.contour_lines)):
             p_line = ContourLine(uv=m_contour.uv, v=m_contour.v)
@@ -924,9 +1001,9 @@ def develop_topological_loop_grouping():
     # And now, check the following:
     # loop_groups, group_levels, level_positions, groups
     assert len(coil_parts) == len(m_c_parts)
-    for part_index, m_c_part in enumerate(m_c_parts):
+    for part_ind, m_c_part in enumerate(m_c_parts):
         m_debug = m_c_part.topological_loop_grouping
-        coil_part = coil_parts[part_index]
+        coil_part = coil_parts[part_ind]
 
         # Check that the groups and loops are the same
         # 1. groups
@@ -934,9 +1011,11 @@ def develop_topological_loop_grouping():
         for index1, m_group in enumerate(m_c_part.groups):
             p_group = coil_part.groups[index1]
 
+            m_group_loops = passify_matlab(m_group.loops)
+
             # 2. loops
-            assert len(p_group.loops) == len(m_group.loops)
-            for index2, m_loop in enumerate(m_group.loops):
+            assert len(p_group.loops) == len(m_group_loops)
+            for index2, m_loop in enumerate(m_group_loops):
                 p_loop = p_group.loops[index2]
                 assert compare(p_loop.uv, m_loop.uv)
                 assert compare(p_loop.v, m_loop.v, double_tolerance=1e-4)
@@ -949,14 +1028,21 @@ def develop_topological_loop_grouping():
         assert len(coil_part.loop_groups) == len(m_passified)
         assert compare(np.array(coil_part.loop_groups, dtype=object), m_passified)
 
+        # 4. level_positions
+        m_passified = []
+        for i in range(len(m_c_part.level_positions)):
+            m_passified.append(passify_matlab(m_c_part.level_positions[i]-1).tolist())
+
+        assert len(coil_part.level_positions) == len(m_passified)
+        assert compare(coil_part.level_positions, m_passified)
 
 
 def develop_calculate_group_centers():
     from sub_functions.calculate_group_centers import calculate_group_centers
 
     # which = 'shielded_ygradient_coil_0_9'
-    which = 'Preoptimzed_Breast_Coil_0_10'
-    # which = 'Preoptimzed_SVD_Coil_0_10'
+    # which = 'Preoptimzed_Breast_Coil_0_10'
+    which = 'Preoptimzed_SVD_Coil_0_10'
     # which = 'ygradient_coil'
     # which = 'biplanar_xgradient_0_5'
 
@@ -1189,9 +1275,9 @@ def develop_interconnect_within_groups():
             # MATLAB shape
             if False:
                 visualize_vertex_connections(c_connected_group.uv.T, 800, 
-                                            f'images/15_connected_group_{part_ind}_uv_{index1}_p.png')
+                                            f'images/15_connected_group_{part_ind}_uv_d_{index1}_p.png')
                 visualize_vertex_connections(m_connected_group.group_debug.uv.T, 800,
-                                            f'images/15_connected_group_{part_ind}_uv_{index1}_m.png')
+                                            f'images/15_connected_group_{part_ind}_uv_d_{index1}_m.png')
 
             log.debug("Here in %s, line %d - Part: %d, Index: %d", __file__, get_linenumber(), part_ind, index1)
 
@@ -1229,13 +1315,13 @@ def develop_interconnect_among_groups():
     from sub_functions.interconnect_among_groups import interconnect_among_groups
 
     # which = 'shielded_ygradient_coil'
-    which = 'Preoptimzed_Breast_Coil_0_10'
-    # which = 'Preoptimzed_SVD_Coil_0_10'
+    # which = 'Preoptimzed_Breast_Coil_0_10'
+    which = 'Preoptimzed_SVD_Coil_0_10'
     # which = 'ygradient_coil'
     # which = 'biplanar_xgradient_0_5'
 
-    # project_name = 'Preoptimzed_SVD_Coil'
-    project_name = 'Preoptimzed_Breast_Coil'
+    project_name = 'Preoptimzed_SVD_Coil'
+    # project_name = 'Preoptimzed_Breast_Coil'
 
     # Python saved data 13 : After topological_loop_grouping
     if which == 'biplanar':
@@ -1263,7 +1349,7 @@ def develop_interconnect_among_groups():
     # Wire path
     for part_ind, m_c_part in enumerate(m_c_parts):
         m_wire_path = m_c_part.wire_path1
-        visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/16_{which}_wire_path2_uv_{part_ind}_m.png')
+        visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/16_{which}_wire_path2_uv_d_{part_ind}_m.png')
 
     #######################################################
     # Testing the algorithm, so use MATLAB data as input:
@@ -1304,6 +1390,7 @@ def develop_interconnect_among_groups():
 
     #
     #######################################################
+    assert solution.input_args.interconnection_cut_width == m_out.input_data.interconnection_cut_width
 
     input_args = DataStructure(interconnection_cut_width=solution.input_args.interconnection_cut_width,
                                project_name=project_name)
@@ -1316,13 +1403,13 @@ def develop_interconnect_among_groups():
     for part_ind, m_c_part in enumerate(m_c_parts):
         c_wire_path = coil_parts[part_ind].wire_path
         m_wire_path = m_c_part.wire_path1
-        visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/16_{which}_wire_path2_uv_{part_ind}_p.png')
+        visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/16_{which}_wire_path2_uv_d_{part_ind}_p.png')
 
         # Check....
         assert (compare(c_wire_path.v, m_wire_path.v))  # Pass!
         assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass!
 
-        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/16_{which}_wire_path2_uv_{part_ind}_diff.png')
+        visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800, f'images/16_{which}_wire_path2_uv_d_{part_ind}_diff.png')
 
 
 def test_smooth_track_by_folding():
@@ -1343,23 +1430,42 @@ def develop_shift_return_paths():
     from sub_functions.shift_return_paths import shift_return_paths
 
     # which = 'shielded_ygradient_coil'
-    which = 'cylinder'
-    # MATLAB saved data
+    # which = 'Preoptimzed_Breast_Coil_0_10'
+    which = 'Preoptimzed_SVD_Coil_0_10'
+    # which = 'ygradient_coil'
+    # which = 'biplanar_xgradient_0_5'
+
+    project_name = 'Preoptimzed_SVD_Coil'
+    # project_name = 'Preoptimzed_Breast_Coil'
 
     # Python saved data 16 : After interconnect_among_groups
     if which == 'biplanar':
-        mat_data = load_matlab('debug/biplanar_xgradient')
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        m_out = matlab_data['coil_layouts'].out
         solution = load_numpy('debug/coilgen_biplanar_False_16.npy')
     elif which == 'cylinder':
-        mat_data = load_matlab('debug/ygradient_coil')
-        m_coil_parts = mat_data['coil_layouts'].out.coil_parts
-        m_c_part = m_coil_parts
+        matlab_data = load_matlab('debug/ygradient_coil')
+        m_out = matlab_data['coil_layouts'].out
         solution = load_numpy('debug/coilgen_cylinder_True_16.npy')
-        # solution = load_numpy('debug/coilgen_cylinder_False_16.npy')
+        # The Python paths and the MATLAB paths are close but slightly different. 
+        # This prevents detailed debugging.
+        #solution = load_numpy('debug/coilgen_cylinder_True_15.npy')
     else:
-        mat_data = load_matlab(f'debug/{which}')
-        m_out = mat_data['coil_layouts'].out
+        matlab_data = load_matlab(f'debug/{which}')
+        m_out = matlab_data['coil_layouts'].out
         solution = load_numpy(f'debug/{which}_16.npy')
+
+    m_c_parts = m_out.coil_parts
+    if not isinstance(m_c_parts, np.ndarray):
+        m_c_parts = np.asarray([m_c_parts])
+
+    c_coil_parts = solution.coil_parts
+
+    # Wire path
+    for part_ind, m_c_part in enumerate(m_c_parts):
+        m_wire_path = m_c_part.wire_path1
+        visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/17_{which}_wire_path2_uv_d_{part_ind}_m.png')
+
 
     input_args = DataStructure(interconnection_cut_width=solution.input_args.interconnection_cut_width,
                                skip_normal_shift=solution.input_args.skip_normal_shift,
@@ -1368,27 +1474,52 @@ def develop_shift_return_paths():
                                normal_shift_smooth_factors=solution.input_args.normal_shift_smooth_factors,
                                normal_shift_length=solution.input_args.normal_shift_length)
 
-    p_coil_parts = solution.coil_parts
+    c_coil_parts = solution.coil_parts
+
+    # Make doubly sure that the c_coil_parts model ran with the same input parameters as MATLAB
+    assert solution.input_args.interconnection_cut_width == m_out.input_data.interconnection_cut_width
+    assert solution.input_args.skip_normal_shift == m_out.input_data.skip_normal_shift
+    assert solution.input_args.smooth_factor == m_out.input_data.smooth_factor
+    assert solution.input_args.normal_shift_smooth_factors == m_out.input_data.normal_shift_smooth_factors.tolist()
+    assert solution.input_args.normal_shift_length == m_out.input_data.normal_shift_length
+
+    #######################################################
+    # Testing the algorithm, so use MATLAB data as input:
+    # coil_part.
+    #   wire_path
+    #   coil_mesh.uv
+    p_coil_parts = []
+    for index1, m_c_part in enumerate(m_c_parts):
+        p_coil_part = CoilPart()
+        # coil_mesh
+        p_coil_part.coil_mesh = Mesh(vertices=m_c_part.coil_mesh.vertices.T, faces=m_c_part.coil_mesh.faces.T-1)
+        p_coil_part.coil_mesh.uv = m_c_part.coil_mesh.uv.T
+        # wire_path
+        p_coil_part.wire_path = Shape3D(uv=m_c_part.wire_path1.uv, v=m_c_part.wire_path1.v)
+        # Add part to collective
+        p_coil_parts.append(p_coil_part)
+
     ######################################################################################################
     # Function under test
     coil_parts = shift_return_paths(p_coil_parts, input_args)  # , m_c_part)
     ######################################################################################################
 
     # Verify: shift_array, points_to_shift, wire_path
-    for index1 in range(len(coil_parts)):
-        c_part = coil_parts[index1]
-        c_wire_path = c_part.wire_path
+    for part_ind, m_c_part in enumerate(m_c_parts):
+        coil_part = coil_parts[part_ind]
+
+        c_wire_path = coil_parts[part_ind].wire_path
         m_wire_path = m_c_part.wire_path
 
-        visualize_vertex_connections(c_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_p.png')
-        visualize_vertex_connections(m_wire_path.uv.T, 800, f'images/17_wire_path2_uv_{index1}_m.png')
+        visualize_vertex_connections(c_wire_path.uv.T, 800, 
+                                     f'images/17_{which}_wire_path2_uv_d_{part_ind}_p.png')
 
         visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800,
-                                   f'images/17_wire_path2_uv_{index1}_diff.png')
+                                   f'images/17_{which}_wire_path2_uv_d_{part_ind}_diff.png')
 
         # Check....
-        assert (compare(c_part.shift_array, m_c_part.shift_array))          # Pass
-        assert (compare(c_part.points_to_shift, m_c_part.points_to_shift))  # Pass
+        assert (compare(coil_part.shift_array, m_c_part.shift_array))          # Pass
+        assert (compare(coil_part.points_to_shift, m_c_part.points_to_shift))  # Pass
 
         assert (compare(c_wire_path.v, m_wire_path.v, double_tolerance=0.03))  # Pass, with this coarse tolerance!
         assert (compare(c_wire_path.uv, m_wire_path.uv))  # Pass
@@ -1583,9 +1714,9 @@ if __name__ == "__main__":
     # calculate_resistance_matrix
     # develop_stream_function_optimization()
     # develop_calc_potential_levels()
-    develop_calc_contours_by_triangular_potential_cuts()
+    # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
-    # develop_topological_loop_grouping()
+    develop_topological_loop_grouping()
     # develop_calculate_group_centers()
     # develop_open_loop_with_3d_sphere()
     # develop_interconnect_within_groups()
@@ -1606,3 +1737,5 @@ if __name__ == "__main__":
     # test_split_disconnected_mesh_stl_file2()
     # from tests.test_mesh import test_get_face_index2
     # test_get_face_index2()
+    # from tests.test_mesh import test_uv_to_xyz_planar
+    # test_uv_to_xyz_planar()
