@@ -223,6 +223,19 @@ def CoilGen(log, input_args=None):
     timer.stop()
     save(persistence_dir, project_name, '10', solution)
 
+    #####################################################
+    # Visualisation
+    if get_level() > DEBUG_NONE:
+        for part_index in range(len(coil_parts)):
+            coil_part = coil_parts[part_index]
+            coil_mesh = coil_part.coil_mesh
+            c_group_centers = coil_part.group_centers
+
+            visualize_compare_contours(coil_mesh.uv, 800, f'images/10_{project_name}_contours_{part_index}_p.png',
+                                        coil_part.contour_lines)
+    #
+    #####################################################
+
     # Process contours
     print('Process contours: Evaluate loop significance')
     timer.start()
@@ -248,7 +261,7 @@ def CoilGen(log, input_args=None):
         # Calculate center locations of groups
         print('Calculate center locations of groups:')
         timer.start()
-        coil_parts = calculate_group_centers(coil_parts)  # 14
+        coil_parts = calculate_group_centers(coil_parts, None)  # 14
         timer.stop()
         save(persistence_dir, project_name, '14', solution)
 
