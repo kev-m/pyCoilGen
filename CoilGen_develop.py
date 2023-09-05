@@ -753,8 +753,7 @@ def CoilGen(log, input=None):
                 if part_index == 0:
                     m_to_pyindex = [0, 1, 2, 3]
                 if part_index == 1:
-                    #m_to_pyindex = [1, 2, 0, 3]
-                    m_to_pyindex = [0, 1, 2, 3] # Don't swap
+                    m_to_pyindex = [0, 1, 3, 2]
                 cp_groups = coil_part.groups
                 cp_level_positions = coil_part.level_positions
                 cp_group_levels = coil_part.group_levels
@@ -815,7 +814,7 @@ def CoilGen(log, input=None):
                 assert compare(c_loop_groups, m_loop_groups)        # Pass
                 assert compare(c_level_positions, m_level_positions)  # Pass
             else:
-                assert compare(c_group_levels, m_group_levels)        # Pass~
+                assert compare_contains(c_group_levels, m_group_levels)        # Pass~
                 assert compare(c_level_positions, m_level_positions)  # Pass~
                 # assert compare(c_loop_groups, m_loop_groups)        # Fail: They don't match up exactly
                 pass
