@@ -78,8 +78,8 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                 uv_nan = np.array([np.nan, np.nan])
                 v_nan = np.array([np.nan, np.nan, np.nan])
                 part_group.opened_loop = [shape3d]
-                part_group.cutshape = [Shape2D(uv=uv_nan)]
-                part_connected_group.return_path = Shape3D(uv=uv_nan, v=v_nan)
+                part_group.cutshape = [Shape2D(uv=uv_nan.reshape(1,-1).T)]
+                part_connected_group.return_path = Shape3D(uv=uv_nan.reshape(1,-1).T, v=v_nan.reshape(1,-1).T)
                 part_connected_group.uv = shape3d.uv.copy()
                 part_connected_group.v = shape3d.v.copy()
                 part_connected_group.spiral_in = shape3d.copy()
