@@ -834,7 +834,7 @@ def CoilGen(log, input=None):
                 for index2, m_loops in enumerate(m_group.loops):
                     c_group.loops[index2].uv = m_loops.uv
                     c_group.loops[index2].v = m_loops.v
-        save(persistence_dir, project_name, '13_patched', coil_parts)
+            save(persistence_dir, project_name, '13_patched', coil_parts)
         # =================================================
 
         # Calculate center locations of groups
