@@ -18,7 +18,7 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
 
     Args:
         curve_points_in (CurvePoints): The input curve points.
-        sphere_center (ndarray): The center position of the sphere (3D coordinates).
+        sphere_center (ndarray): (1,3) The center position of the sphere (3D coordinates).
         sphere_diameter (float): The diameter of the sphere.
 
     Returns:
