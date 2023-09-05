@@ -51,15 +51,15 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
 
                 current_level = levels_to_process[single_level_ind]
                 groups_to_connect = coil_part.group_levels[current_level].tolist()
-                group_len = len(groups_to_connect)
 
                 # Select the current host group of the level
-                is_enclosing = [0] * group_len
+                is_enclosing = [0] * len(groups_to_connect)
 
                 if coil_part.level_positions[current_level]:
-                    current_top_group = coil_part.level_positions[current_level][-1]
+                    current_top_group = coil_part.level_positions[current_level][-1]-1 # TODO: Check this final -1
                     groups_to_connect.append(current_top_group)
                     is_enclosing.append(1)
+                group_len = len(groups_to_connect)
 
                 # Make the n-1 interconnections in an optimal way resulting in one track for that level
                 num_connections_to_do = group_len - 1
@@ -69,7 +69,6 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
 
                     for connect_ind in range(num_connections_to_do): # 3
                         # Get the tracks to connect
-                        # M: In each loop, has
                         grouptracks_to_connect = [connected_group_buff[group] for group in groups_to_connect]
 
                         # Remove the return_path for the search of mutual group cuts
