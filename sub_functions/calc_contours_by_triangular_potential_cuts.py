@@ -258,8 +258,8 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     # Test the chirality of the segment on the potential gradient on that segment
                     segment_vec = potential_loop_item.uv[test_edge + 1] - potential_loop_item.uv[test_edge]
 
-                    cross_vec = np.cross([segment_vec[0], segment_vec[1], 0], [
-                                         pot_gradient_vec[0], pot_gradient_vec[1], 0])
+                    cross_vec = np.cross([segment_vec[0], segment_vec[1], 0], 
+                                         [pot_gradient_vec[0], pot_gradient_vec[1], 0])
 
                     potential_loop_item.current_orientation = int(np.sign(cross_vec[2]))
 
