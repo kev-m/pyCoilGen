@@ -463,17 +463,17 @@ class ContourLine(Shape3D):
 @dataclass
 class TopoGroup:                        # CoilPart.groups
     loops: List[ContourLine] = None     # Assigned in topological_loop_grouping
-    cutshape: List[Shape2D] = None      # Assigned in interconnect_within_groups
-    opened_loop: List[Shape3D] = None   # Assigned in interconnect_within_groups
+    cutshape: List[Shape2D] = None      # 2D Shape (2,n) Assigned in interconnect_within_groups
+    opened_loop: List[Shape3D] = None   # 3D Shape (2,n) Assigned in interconnect_within_groups
 
 
 @dataclass
 class ConnectedGroup(Shape3D):          # CoilPart.connected_group
     # uv: np.ndarray = None             # 2D shape (2,n) Assigned in interconnect_within_groups
     # v: np.ndarray = None              # 3D shape (3,n) Assigned in interconnect_within_groups
-    return_path: Shape3D = None         # Assigned in interconnect_within_groups
-    spiral_in: Shape3D = None           # Assigned in interconnect_within_groups
-    spiral_out: Shape3D = None          # Assigned in interconnect_within_groups
+    return_path: Shape3D = None         # 3D shape (3,n) Assigned in interconnect_within_groups
+    spiral_in: Shape3D = None           # 3D shape (3,n) Assigned in interconnect_within_groups
+    spiral_out: Shape3D = None          # 3D shape (3,n) Assigned in interconnect_within_groups
     unrolled_coords: np.ndarray = None  # 3D shape (3,n) Assigned in interconnect_among_groups
 
 
