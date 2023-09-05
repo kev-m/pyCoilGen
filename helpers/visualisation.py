@@ -24,6 +24,11 @@ def passify_matlab(matlab_thing, magic=0):
             return result
         else:
             return matlab_thing
+    # Magic 2: Turn the matlab_thing array into a 1,n array
+    if magic==2:
+        m_array = np.empty((1), dtype=object)
+        m_array[0] = matlab_thing
+        return m_array
     if isinstance(matlab_thing, np.ndarray):
         return matlab_thing
     return np.asarray([matlab_thing])
