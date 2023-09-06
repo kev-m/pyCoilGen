@@ -7,6 +7,7 @@ from sub_functions.process_raw_loops import biot_savart_calc_b
 
 log = logging.getLogger(__name__)
 
+
 def evaluate_field_errors(solution: CoilSolution, input_args, target_field, sf_b_field) -> SolutionErrors:
     """
     Calculate relative errors between different input and output fields.
@@ -20,10 +21,10 @@ def evaluate_field_errors(solution: CoilSolution, input_args, target_field, sf_b
 
     Depends on the following input_args:
         - skip_postprocessing
-        
+
     Updates the following properties of a CoilPart:
         - None
-    
+
     Args:
         coil_parts (List[CoilPart]): List of CoilPart structures.
         input_args (struct): Input parameters.
@@ -60,7 +61,7 @@ def evaluate_field_errors(solution: CoilSolution, input_args, target_field, sf_b
         """
         The provided code segment initializes the fields in coil_parts, calculates the field by loops and layouts,
         and finds the ideal current strength.
-        """        
+        """
         # End of part 1
 
         # Part 2: Find the current polarity for the different coil parts regarding the target field
@@ -80,8 +81,10 @@ def evaluate_field_errors(solution: CoilSolution, input_args, target_field, sf_b
 
         for pol_ind in range(len(possible_polarities)):
             for part_ind in range(len(coil_parts)):
-                combined_field_layout[pol_ind] += possible_polarities[pol_ind][part_ind] * coil_parts[part_ind].field_by_layout
-                combined_field_loops[pol_ind] += possible_polarities[pol_ind][part_ind] * coil_parts[part_ind].field_by_loops
+                combined_field_layout[pol_ind] += possible_polarities[pol_ind][part_ind] * \
+                    coil_parts[part_ind].field_by_layout
+                combined_field_loops[pol_ind] += possible_polarities[pol_ind][part_ind] * \
+                    coil_parts[part_ind].field_by_loops
 
             # Project the combined field onto the target field
             pol_projections_layout[pol_ind] = np.linalg.norm(combined_field_layout[pol_ind] - target_field.b)
@@ -113,8 +116,10 @@ def evaluate_field_errors(solution: CoilSolution, input_args, target_field, sf_b
         for part_ind in range(len(coil_parts)):
             if possible_polarities[best_dir_loops][part_ind] != 1:
                 for loop_ind in range(len(coil_parts[part_ind].contour_lines)):
-                    coil_parts[part_ind].contour_lines[loop_ind].v = np.fliplr(coil_parts[part_ind].contour_lines[loop_ind].v)
-                    coil_parts[part_ind].contour_lines[loop_ind].uv = np.fliplr(coil_parts[part_ind].contour_lines[loop_ind].uv)
+                    coil_parts[part_ind].contour_lines[loop_ind].v = np.fliplr(
+                        coil_parts[part_ind].contour_lines[loop_ind].v)
+                    coil_parts[part_ind].contour_lines[loop_ind].uv = np.fliplr(
+                        coil_parts[part_ind].contour_lines[loop_ind].uv)
 
         """
         This code segment covers the third part of your MATLAB code, including choosing the best combination, adjusting
@@ -132,17 +137,25 @@ def evaluate_field_errors(solution: CoilSolution, input_args, target_field, sf_b
 
         # Calculate relative errors
         field_error_vals = FieldErrors()
-        field_error_vals.max_rel_error_layout_vs_target = np.max(np.abs((layout_z - target_z) / np.max(np.abs(target_z)))) * 100
-        field_error_vals.mean_rel_error_layout_vs_target = np.mean(np.abs((layout_z - target_z) / np.max(np.abs(target_z)))) * 100
+        field_error_vals.max_rel_error_layout_vs_target = np.max(
+            np.abs((layout_z - target_z) / np.max(np.abs(target_z)))) * 100
+        field_error_vals.mean_rel_error_layout_vs_target = np.mean(
+            np.abs((layout_z - target_z) / np.max(np.abs(target_z)))) * 100
 
-        field_error_vals.max_rel_error_unconnected_contours_vs_target = np.max(np.abs((loop_z - target_z) / np.max(np.abs(target_z)))) * 100
-        field_error_vals.mean_rel_error_unconnected_contours_vs_target = np.mean(np.abs((loop_z - target_z) / np.max(np.abs(target_z)))) * 100
+        field_error_vals.max_rel_error_unconnected_contours_vs_target = np.max(
+            np.abs((loop_z - target_z) / np.max(np.abs(target_z)))) * 100
+        field_error_vals.mean_rel_error_unconnected_contours_vs_target = np.mean(
+            np.abs((loop_z - target_z) / np.max(np.abs(target_z)))) * 100
 
-        field_error_vals.max_rel_error_layout_vs_stream_function_field = np.max(np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
-        field_error_vals.mean_rel_error_layout_vs_stream_function_field = np.mean(np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
+        field_error_vals.max_rel_error_layout_vs_stream_function_field = np.max(
+            np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
+        field_error_vals.mean_rel_error_layout_vs_stream_function_field = np.mean(
+            np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
 
-        field_error_vals.max_rel_error_unconnected_contours_vs_stream_function_field = np.max(np.abs((loop_z - sf_z) / np.max(np.abs(sf_z)))) * 100
-        field_error_vals.mean_rel_error_unconnected_contours_vs_stream_function_field = np.mean(np.abs((loop_z - sf_z) / np.max(np.abs(sf_z)))) * 100
+        field_error_vals.max_rel_error_unconnected_contours_vs_stream_function_field = np.max(
+            np.abs((loop_z - sf_z) / np.max(np.abs(sf_z)))) * 100
+        field_error_vals.mean_rel_error_unconnected_contours_vs_stream_function_field = np.mean(
+            np.abs((loop_z - sf_z) / np.max(np.abs(sf_z)))) * 100
 
         # Go back to the fields for 1 Ampere (Unit Current)
         combined_field_layout_per1Amp = np.zeros_like(combined_field_layout)
@@ -150,9 +163,9 @@ def evaluate_field_errors(solution: CoilSolution, input_args, target_field, sf_b
 
         for part_ind in range(len(coil_parts)):
             combined_field_layout_per1Amp += (coil_parts[part_ind].field_by_layout /
-                                            np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_layout][part_ind]
+                                              np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_layout][part_ind]
             combined_field_loops_per1Amp += (coil_parts[part_ind].field_by_loops /
-                                            np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_loops][part_ind]
+                                             np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_loops][part_ind]
 
         # Calculate the ideal current strength for the connected layout to match the target field
         opt_current_layout = np.abs(np.mean(target_field.b[2, :] / combined_field_layout[2, :]))
@@ -160,8 +173,8 @@ def evaluate_field_errors(solution: CoilSolution, input_args, target_field, sf_b
         # Return results
         solution_errors = SolutionErrors(field_error_vals=field_error_vals)
         solution_errors.combined_field_layout = combined_field_layout
-        solution_errors.combined_field_loops =combined_field_loops
-        solution_errors.combined_field_layout_per1Amp =combined_field_layout_per1Amp
-        solution_errors.combined_field_loops_per1Amp =combined_field_loops_per1Amp
-        solution_errors.opt_current_layout =opt_current_layout
+        solution_errors.combined_field_loops = combined_field_loops
+        solution_errors.combined_field_layout_per1Amp = combined_field_layout_per1Amp
+        solution_errors.combined_field_loops_per1Amp = combined_field_loops_per1Amp
+        solution_errors.opt_current_layout = opt_current_layout
         return solution_errors
