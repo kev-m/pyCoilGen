@@ -1729,8 +1729,8 @@ def develop_evaluate_field_errors():
         p_coil_part = CoilPart()
         # contour_step
         p_coil_part.contour_step = m_c_part.contour_step
-    target_field = m_out.target_field # ??
-    sf_b_field = m_out.b_field_opt_sf # ??
+    target_field = m_out.target_field  # ??
+    sf_b_field = m_out.b_field_opt_sf  # ??
     #######################################################
     assert solution.input_args.interconnection_cut_width == m_out.input_data.interconnection_cut_width
 
@@ -1739,8 +1739,40 @@ def develop_evaluate_field_errors():
                               target_field=target_field, sf_b_field=sf_b_field)
     ###################################################################################
     # Function under test
-    coil_parts = evaluate_field_errors(solution)
+    solution_errors = evaluate_field_errors(solution)
     ###################################################################################
+
+    # Now, check the computed values:
+    assert compare(float(solution_errors.opt_current_layout), m_out.needed_current_layout, fail_result=True)  # Fail
+
+    assert compare(solution_errors.combined_field_layout, m_out.field_by_layout, fail_result=True)  # Fail
+    assert compare(solution_errors.combined_field_layout_per1Amp, m_out.field_layout_per1Amp, fail_result=True)  # Fail
+
+    assert compare(solution_errors.combined_field_loops, m_out.field_by_unconnected_loops)  # Pass
+    assert compare(solution_errors.combined_field_loops_per1Amp, m_out.field_loops_per1Amp)  # Pass
+
+    fe = solution_errors.field_error_vals
+    # Convert all from np.float to float
+    for attribute, value in fe.__dict__.items():
+        fe.__dict__[attribute] = float(value)
+    m_fe = m_out.error_vals
+    assert compare(fe.max_rel_error_layout_vs_target, m_fe.max_rel_error_layout_vs_target, fail_result=True)  # Fail
+    assert compare(fe.mean_rel_error_layout_vs_target, m_fe.mean_rel_error_layout_vs_target, fail_result=True)  # Fail
+
+    assert compare(fe.max_rel_error_unconnected_contours_vs_target,
+                   m_fe.max_rel_error_unconnected_contours_vs_target)  # Pass
+    assert compare(fe.mean_rel_error_unconnected_contours_vs_target,
+                   m_fe.mean_rel_error_unconnected_contours_vs_target)  # Pass
+
+    assert compare(fe.max_rel_error_layout_vs_stream_function_field,
+                   m_fe.max_rel_error_layout_vs_stream_function_field, fail_result=True)  # Fail
+    assert compare(fe.mean_rel_error_layout_vs_stream_function_field,
+                   m_fe.mean_rel_error_layout_vs_stream_function_field, fail_result=True)  # Fail
+
+    assert compare(fe.max_rel_error_unconnected_contours_vs_stream_function_field,
+                   m_fe.max_rel_error_unconnected_contours_vs_stream_function_field)  # Pass
+    assert compare(fe.mean_rel_error_unconnected_contours_vs_stream_function_field,
+                   m_fe.mean_rel_error_unconnected_contours_vs_stream_function_field)  # Pass
 
 
 if __name__ == "__main__":
