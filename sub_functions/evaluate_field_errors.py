@@ -45,7 +45,7 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
 
     for coil_part in coil_parts:
         # Calculate the combined field of the unconnected contours
-        coil_part.field_by_loops = np.zeros((3, len(target_field.b)))
+        coil_part.field_by_loops = np.zeros((3, target_field.b.shape[1]))
 
         for loop in coil_part.contour_lines:
             loop_field = biot_savart_calc_b(loop.v, target_field)
@@ -110,7 +110,7 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
         combined_field_loops = combined_field_loops[best_dir_loops]
 
         # Adjust the current direction for the layout (in case of the wrong direction)
-        if not input.skip_postprocessing:
+        if not input_args.skip_postprocessing:
             for part_ind in range(len(coil_parts)):
                 if possible_polarities[best_dir_layout][part_ind] != 1:
                     coil_parts[part_ind].wire_path.v = np.fliplr(coil_parts[part_ind].wire_path.v)
@@ -152,6 +152,7 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
             np.abs((loop_z - target_z) / np.max(np.abs(target_z)))) * 100
 
         field_error_vals.max_rel_error_layout_vs_stream_function_field = np.max(
+            # ValueError: operands could not be broadcast together with shapes (257,) (3,) 
             np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
         field_error_vals.mean_rel_error_layout_vs_stream_function_field = np.mean(
             np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
