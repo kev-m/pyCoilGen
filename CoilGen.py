@@ -343,12 +343,13 @@ def CoilGen(log, input_args=None):
     timer.start()
     solution = calculate_inductance_by_coil_layout(solution, input_args)
     timer.stop()
+    save(persistence_dir, project_name, '20', solution)
 
     # Evaluate the field errors
     print('Evaluate the field errors:')
-    field_errors = evaluate_field_errors(solution)
-    solution.field_errors = field_errors
-
+    coil_parts, solution_errors = evaluate_field_errors(coil_parts, input_args, solution.target_field, solution.sf_b_field)
+    save(persistence_dir, project_name, '21', solution)
+    
     # WIP
     timer.stop()
     return solution
