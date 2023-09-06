@@ -87,7 +87,7 @@ def CoilGen(log, input_args=None):
 
     set_level(input_args.debug)
 
-    project_name = input_args.project_name
+    project_name = f'{input_args.project_name}_{input_args.iteration_num_mesh_refinement}_{input_args.target_region_resolution}'
     persistence_dir = input_args.persistence_dir
 
     # Print the input variables
@@ -223,6 +223,19 @@ def CoilGen(log, input_args=None):
     timer.stop()
     save(persistence_dir, project_name, '10', solution)
 
+    #####################################################
+    # Visualisation
+    if get_level() > DEBUG_NONE:
+        for part_index in range(len(coil_parts)):
+            coil_part = coil_parts[part_index]
+            coil_mesh = coil_part.coil_mesh
+            c_group_centers = coil_part.group_centers
+
+            visualize_compare_contours(coil_mesh.uv, 800, f'images/10_{project_name}_contours_{part_index}_p.png',
+                                        coil_part.contour_lines)
+    #
+    #####################################################
+
     # Process contours
     print('Process contours: Evaluate loop significance')
     timer.start()
@@ -278,6 +291,18 @@ def CoilGen(log, input_args=None):
         coil_parts = interconnect_among_groups(coil_parts, input_args)  # 16
         timer.stop()
         save(persistence_dir, project_name, '16', solution)
+
+        #####################################################
+        # Visualisation
+        if get_level() > DEBUG_NONE:
+            for index1 in range(len(coil_parts)):
+                c_part = coil_parts[index1]
+                c_wire_path = c_part.wire_path
+
+                visualize_vertex_connections(
+                    c_wire_path.uv.T, 800, f'images/16_{project_name}_wire_path2_uv_{index1}_p.png')
+        #
+        #####################################################
 
         # Connect the groups and shift the return paths over the surface
         print('Shift the return paths over the surface:')
@@ -355,14 +380,13 @@ if __name__ == "__main__":
         #"cylinder_mesh_parameter_list": [0.4, 0.1125, 50, 50, 0.0, 1.0, 0.0, 0.0],
         #"double_cone_mesh_parameter_list": [0.8, 0.3, 0.3, 0.1, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "field_shape_function": "x",
-        "fieldtype_to_evaluate": ['', 'MCOS', 'string', [3707764736,          2,          1,          1,          2,                2]],
         "fmincon_parameter": [500.0, 10000000000.0, 1e-10, 1e-10, 1e-10],
         "force_cut_selection": ['high'],
         #"gauss_order": 2,
         #"group_interconnection_method": "crossed",
         "interconnection_cut_width": 0.05,
         "interconnection_method": "regular",
-        "iteration_num_mesh_refinement": 1,  # MATLAB 1 is default, but 0 is faster
+        "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 14,
         #"make_cylindrical_pcb": 0,
@@ -372,7 +396,6 @@ if __name__ == "__main__":
         #"min_point_loop_number": 20,
         "normal_shift_length": 0.01,
         #"normal_shift_smooth_factors": [2, 3, 2],
-        "output_directory": "images",
         #"pcb_interconnection_method": "spiral_in_out",
         #"pcb_spiral_end_shift_factor": 10,
         #"planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -398,11 +421,13 @@ if __name__ == "__main__":
         #"target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.1,    # GitHub
-        #"target_region_resolution": 10, # MATLAB 10 is the default but 5 is faster
+        "target_region_resolution": 5, # MATLAB 10 is the default but 5 is faster
         "tikonov_reg_factor": 10,
         #"tiny_segment_length_percentage": 0,
         #"track_width_factor": 0.5,
         "use_only_target_mesh_verts": False,
+
+        "output_directory": "images",
         "project_name": 'biplanar_xgradient',
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
         "persistence_dir": 'debug',
@@ -432,17 +457,16 @@ if __name__ == "__main__":
         "group_interconnection_method": "crossed",
         "interconnection_cut_width": 0.1,
         "interconnection_method": "regular",
-        "iteration_num_mesh_refinement": 1,  # MATLAB 1 is default, but 0 is faster
+        "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 20,
         "make_cylindrical_pcb": 1,
         "max_allowed_angle_within_coil_track": 120,
         "min_allowed_angle_within_coil_track": 0.0001,
-        "min_loop_significance": 0.1,
+        "min_loop_significance": 1, # Was 0.1, a bug?
         "min_point_loop_number": 20,
         "normal_shift_length": 0.025,
         "normal_shift_smooth_factors": [2, 3, 2],
-        "output_directory": "images",
         "pcb_interconnection_method": "spiral_in_out",
         "pcb_spiral_end_shift_factor": 10,
         "planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -468,16 +492,18 @@ if __name__ == "__main__":
         "target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.15,
-        "target_region_resolution": 10,  # MATLAB 10 is the default but 5 is faster
+        "target_region_resolution": 5,  # MATLAB 10 is the default but 5 is faster
         "tikonov_reg_factor": 100,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
         "use_only_target_mesh_verts": False,
-        "debug": DEBUG_BASIC,
 
+        "debug": DEBUG_BASIC,
+        "output_directory": "images",
         "project_name": 'ygradient_coil',
         "persistence_dir": 'debug',
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 2m11
 
+    solution = CoilGen(log, arg_dict1)
     solution = CoilGen(log, arg_dict2)

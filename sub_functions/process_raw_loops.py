@@ -9,7 +9,6 @@ import logging
 from sub_functions.constants import *
 from sub_functions.data_structures import CoilPart, WirePart, TargetField
 from sub_functions.smooth_track_by_folding import smooth_track_by_folding
-from sub_functions.uv_to_xyz import uv_to_xyz
 
 log = logging.getLogger(__name__)
 
@@ -46,9 +45,8 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
 
     # Generate the curved coordinates
     for coil_part in coil_parts:
-        curved_mesh = coil_part.coil_mesh.trimesh_obj
         for p_contour in coil_part.contour_lines:
-            p_contour.v, p_contour.uv = uv_to_xyz(p_contour.uv, coil_part.coil_mesh.uv, curved_mesh)
+            p_contour.v, p_contour.uv = coil_part.coil_mesh.uv_to_xyz(p_contour.uv, coil_part.coil_mesh.uv)
 
     # Evaluate loop significance and remove loops that do not contribute enough to the target field
     coil_parts = evaluate_loop_significance(coil_parts, target_field)

@@ -28,7 +28,7 @@ if __name__ == '__main__':
         'secondary_target_mesh_file': 'none',
         'secondary_target_weight': 0.5,
         'target_region_radius': 0.15,  # ...  % in meter
-        # 'target_region_resolution': 10,  # MATLAB 10 is the default
+        # 'target_region_resolution': 5,  # MATLAB 10 is the default
         'use_only_target_mesh_verts': False,
         'sf_source_file': 'none',
         # % the number of potential steps that determines the later number of windings (Stream function discretization)
@@ -51,6 +51,8 @@ if __name__ == '__main__':
         'sf_opt_method': 'tikkonov', # ...
         'fmincon_parameter': [1000.0, 10 ^ 10, 1.000000e-10, 1.000000e-10, 1.000000e-10],
         'tikonov_reg_factor': 100,  # %Tikonov regularization factor for the SF optimization
+
+        'output_directory': 'images',
         'project_name': 'ygradient_coil',
         'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug',
@@ -59,3 +61,4 @@ if __name__ == '__main__':
     }
 
     result = CoilGen(log, arg_dict)
+    # DEBUG:helpers.timing:Total elapsed time: 89.771717 seconds

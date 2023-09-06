@@ -6,7 +6,6 @@ import logging
 
 # Local imports
 from sub_functions.data_structures import CoilPart, Mesh
-from sub_functions.uv_to_xyz import uv_to_xyz, pointLocation
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +52,7 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
             if input_args.smooth_flag and input_args.smooth_factor > 1:
                 # Apply smoothing to the wire path
                 wire_path_out.uv = smooth_track_by_folding(wire_path_out.uv, input_args.smooth_factor)
-                wire_path_out.v, wire_path_out.uv = uv_to_xyz(wire_path_out.uv, part_faces, part_vertices)
+                wire_path_out.v, wire_path_out.uv = coil_mesh.uv_to_xyz(wire_path_out.uv, coil_mesh.uv)
 
             if np.all(wire_path_out.uv[:, -1] == wire_path_out.uv[:, 0]):
                 wire_path_out.add_uv(wire_path_out.uv[:, :1])

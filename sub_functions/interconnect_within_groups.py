@@ -75,11 +75,11 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
             if len(part_group.loops) == 1:
                 # If the group consists of only one loop, it is not necessary to open it
                 shape3d = Shape3D(uv=part_group.loops[0].uv, v=part_group.loops[0].v)
-                uv_nan = np.array([[np.nan], [np.nan]])
-                v_nan = np.array([[np.nan], [np.nan], [np.nan]])
+                uv_nan = np.array([np.nan, np.nan])
+                v_nan = np.array([np.nan, np.nan, np.nan])
                 part_group.opened_loop = [shape3d]
-                part_group.cutshape = [Shape2D(uv=uv_nan)]
-                part_connected_group.return_path = Shape3D(uv=uv_nan, v=v_nan)
+                part_group.cutshape = [Shape2D(uv=uv_nan.reshape(1,-1).T)]
+                part_connected_group.return_path = Shape3D(uv=uv_nan.reshape(1,-1).T, v=v_nan.reshape(1,-1).T)
                 part_connected_group.uv = shape3d.uv.copy()
                 part_connected_group.v = shape3d.v.copy()
                 part_connected_group.spiral_in = shape3d.copy()
@@ -104,7 +104,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                     elif force_cut_selection[group_ind] == 'low':
                         cut_position_used = cut_positions[loop_ind].low_cut.v
                     else:
-                        cut_position_used = cut_positions[loop_ind].high_cut.add_v
+                        cut_position_used = cut_positions[loop_ind].high_cut.v
 
                     # NOTE: high_cut/low_cut.v are (n,3) whereas part_group.loops[] etc are (3,n)
                     # Temporary hack until all v and uv are changed from MATLAB (2,m) to Python (m,2)

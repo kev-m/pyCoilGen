@@ -1,16 +1,14 @@
 import numpy as np
 from typing import List
 
-from trimesh import Trimesh
-
 # Logging
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart, Shape3D
+from sub_functions.data_structures import CoilPart, Shape3D, Mesh
 from sub_functions.find_segment_intersections import find_segment_intersections
 from sub_functions.check_mutual_loop_inclusion import check_mutual_loop_inclusion
-from sub_functions.uv_to_xyz import get_target_triangle_def, barycentric_to_cartesian
+from sub_functions.uv_to_xyz import barycentric_to_cartesian
 
 log = logging.getLogger(__name__)
 
@@ -98,15 +96,16 @@ def calculate_group_centers(coil_parts: List[CoilPart]) -> List[CoilPart]:
         # Set the centers, considering the possibility of non-mesh points
         group_centers_3d = np.zeros((3, group_centers_2d.shape[1]))
 
-        planar_mesh = Trimesh(faces=part_mesh.get_faces(), vertices=part_mesh.uv)
+        planar_mesh = Mesh(faces=part_mesh.get_faces(), vertices=part_mesh.uv)
         curved_mesh = part_mesh.trimesh_obj # Trimesh(faces=part_mesh.get_faces(), vertices=part_mesh.get_vertices())
 
         for rrrr in range(len(coil_part.groups)):
             # Set centers outside the 2D mesh in the center of the 3D volume
             point = [group_centers_2d[0, rrrr], group_centers_2d[1, rrrr]]
-            target_triangle, bary_centric_coord = get_target_triangle_def(point, planar_mesh)
+            target_triangle, bary_centric_coord = planar_mesh.get_face_index(point) # get_target_triangle_def(point, planar_mesh)
 
-            if not np.isnan(target_triangle):
+            # TypeError: ufunc 'isnan' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
+            if target_triangle != -1:
                 vertices = curved_mesh.vertices[curved_mesh.faces[target_triangle]]
                 group_centers_3d[:, rrrr] = barycentric_to_cartesian(bary_centric_coord, vertices)
             else:
