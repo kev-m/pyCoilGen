@@ -30,7 +30,7 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
         input_args (struct): Input parameters.
 
     Returns:
-        FieldErrors (FieldErrors): A structure containing field error values and other information.
+        solution_errors (SolutionErrors): A structure containing field error values and other information.
     """
     input_args = solution.input_args
     target_field = solution.target_field
@@ -135,7 +135,7 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
 
         # Extract z-components of the fields
         target_z = target_field.b[2, :]
-        sf_z = sf_b_field[2, :]  # Field of stream function
+        sf_z = sf_b_field.T[2, :]  # Field of stream function (Tranposed, because it is Python shaped (n,3))
         layout_z = combined_field_layout[2, :]
         loop_z = combined_field_loops[2, :]
 
@@ -152,7 +152,6 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
             np.abs((loop_z - target_z) / np.max(np.abs(target_z)))) * 100
 
         field_error_vals.max_rel_error_layout_vs_stream_function_field = np.max(
-            # ValueError: operands could not be broadcast together with shapes (257,) (3,) 
             np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
         field_error_vals.mean_rel_error_layout_vs_stream_function_field = np.mean(
             np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
