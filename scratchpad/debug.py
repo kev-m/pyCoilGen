@@ -1687,6 +1687,50 @@ def develop_load_preoptimized_data():
     log.debug(" Here!")
 
 
+def develop_evaluate_field_errors():
+    from sub_functions.evaluate_field_errors import evaluate_field_errors
+
+    # which = 'shielded_ygradient_coil'
+    # which = 'Preoptimzed_Breast_Coil_0_10'
+    # which = 'Preoptimzed_SVD_Coil_0_10'
+    which = 'ygradient_coil_0_5'
+    # which = 'biplanar_xgradient_0_5'
+
+    # Python saved data 13 : After topological_loop_grouping
+    if which == 'biplanar':
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_biplanar_False_19.npy')
+    elif which == 'cylinder':
+        matlab_data = load_matlab('debug/ygradient_coil')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_cylinder_False_19_patched.npy')
+        # The Python paths and the MATLAB paths are close but slightly different.
+        # This prevents detailed debugging.
+        # solution = load_numpy('debug/coilgen_cylinder_True_15.npy')
+    else:
+        matlab_data = load_matlab(f'debug/{which}')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy(f'debug/{which}_19.npy')
+
+    m_c_parts = m_out.coil_parts
+    if not isinstance(m_c_parts, np.ndarray):
+        m_c_parts = np.asarray([m_c_parts])
+
+    c_coil_parts = solution.coil_parts
+
+    #######################################################
+    assert solution.input_args.interconnection_cut_width == m_out.input_data.interconnection_cut_width
+
+    input_args = DataStructure(skip_postprocessing=solution.input_args.skip_postprocessing)
+    p_solution = CoilSolution(input_args=input_args, coil_parts=coil_parts,
+                              target_field=target_field, sf_b_field=sf_b_field)
+    ###################################################################################
+    # Function under test
+    coil_parts = evaluate_field_errors(solution)
+    ###################################################################################
+
+
 if __name__ == "__main__":
     # Set up logging
     log = logging.getLogger(__name__)
@@ -1713,7 +1757,7 @@ if __name__ == "__main__":
     # develop_calc_potential_levels()
     # develop_calc_contours_by_triangular_potential_cuts()
     # develop_process_raw_loops()
-    develop_topological_loop_grouping()
+    # develop_topological_loop_grouping()
     # develop_calculate_group_centers()
     # develop_open_loop_with_3d_sphere()
     # develop_interconnect_within_groups()
@@ -1723,6 +1767,7 @@ if __name__ == "__main__":
     # develop_create_sweep_along_surface()
     # develop_calculate_inductance_by_coil_layout()
     # develop_load_preoptimized_data()
+    develop_evaluate_field_errors()
     #
     # test_smooth_track_by_folding()
     # from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file1, \
