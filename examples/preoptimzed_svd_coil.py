@@ -46,7 +46,7 @@ if __name__ == '__main__':
         'pot_offset_factor': 0.25,  # a potential offset value for the minimal and maximal contour potential ; must be between 0 and 1
         'surface_is_cylinder_flag': True,
         'interconnection_cut_width': 0.01,  # the width for the interconnections are interconnected; in meter
-        'normal_shift_length': 0,  # the length for which overlapping return paths will be shifted along the surface normals; in meter
+        'normal_shift_length': 0.01,  # the length for which overlapping return paths will be shifted along the surface normals; in meter
         'level_set_method': 'primary',  # Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
         'interconnection_method': 'regular',
         'skip_postprocessing': False,
