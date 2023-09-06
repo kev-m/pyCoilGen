@@ -219,9 +219,9 @@ class Mesh:
 
             # Swap the order to match MATALB ordering
             if index != len(groups)-1:
-                boundary = [node for node in reversed(boundary)] # Reversed, to match MATLAB
+                boundary = [node for node in reversed(boundary)]  # Reversed, to match MATLAB
 
-            new_array = np.asarray(boundary, dtype=int) 
+            new_array = np.asarray(boundary, dtype=int)
             boundaries[index] = new_array
 
         return boundaries
@@ -312,7 +312,7 @@ class Mesh:
         # log.debug("get_face_index(%s), No found face", vertex)
         return -1, None
 
-    def uv_to_xyz(self, points_in_2d_in: np.ndarray, planary_uv: np.ndarray, num_attempts = 1000):
+    def uv_to_xyz(self, points_in_2d_in: np.ndarray, planary_uv: np.ndarray, num_attempts=1000):
         """
         Convert 2D surface coordinates to 3D xyz coordinates of the 3D coil surface.
 
@@ -336,22 +336,22 @@ class Mesh:
         diameters = np.linalg.norm(planar_vertices - mean_pos, axis=1)
         avg_mesh_diameter = np.mean(diameters)
 
-        points_out_3d = np.zeros((points_in_2d_in.shape[1], 3)) # Python shape
-        points_out_2d = points_in_2d_in.T.copy() # Python shape
+        points_out_3d = np.zeros((points_in_2d_in.shape[1], 3))  # Python shape
+        points_out_2d = points_in_2d_in.T.copy()  # Python shape
         num_deleted_points = 0
-        for point_ind in range(points_out_2d.shape[0]): # MATLAB sgape
+        for point_ind in range(points_out_2d.shape[0]):  # MATLAB sgape
             point = points_out_2d[point_ind - num_deleted_points]
             # Find the target triangle and barycentric coordinates of the point on the planar mesh
             # target_triangle, barycentric = get_target_triangle(point, planary_mesh, proximity)
             target_triangle, barycentric = planary_mesh.get_face_index(point)
 
             attempts = 0
-            np.random.seed(3) # Setting the seed to improve testing robustness
+            np.random.seed(3)  # Setting the seed to improve testing robustness
             while target_triangle == -1:
                 # If the point is not directly on a triangle, perturb the point slightly and try again
                 rand = (0.5 - np.random.rand(2))
                 perturbed_point = point + avg_mesh_diameter * np.array([rand[0], rand[1]]) / 1000
-                #target_triangle, barycentric = get_target_triangle(perturbed_point, planary_mesh, proximity)
+                # target_triangle, barycentric = get_target_triangle(perturbed_point, planary_mesh, proximity)
                 target_triangle, barycentric = planary_mesh.get_face_index(perturbed_point)
                 attempts += 1
                 if attempts > num_attempts:
@@ -363,15 +363,15 @@ class Mesh:
                     point = perturbed_point
                 # Convert the 2D barycentric coordinates to 3D Cartesian coordinates
                 face_vertices_3d = curved_mesh_vertices[curved_mesh_faces[target_triangle]]
-                points_out_3d[point_ind - num_deleted_points, :] = barycentric_to_cartesian(barycentric, face_vertices_3d)
+                points_out_3d[point_ind - num_deleted_points,
+                              :] = barycentric_to_cartesian(barycentric, face_vertices_3d)
             else:
                 # Remove the point if it cannot be assigned to a triangle
-                points_out_2d = np.delete(points_out_2d, point_ind - num_deleted_points, axis=0) # Python shape
-                points_out_3d = np.delete(points_out_3d, point_ind - num_deleted_points, axis=0) # Python shape
+                points_out_2d = np.delete(points_out_2d, point_ind - num_deleted_points, axis=0)  # Python shape
+                points_out_3d = np.delete(points_out_3d, point_ind - num_deleted_points, axis=0)  # Python shape
                 num_deleted_points += 1
 
-
-        return points_out_3d.T, points_out_2d.T # Return as MATLAB shape
+        return points_out_3d.T, points_out_2d.T  # Return as MATLAB shape
 
 
 # Helper functions
@@ -456,7 +456,7 @@ class UnarrangedLoop(Shape2D):
     Used by calc_contours_by_triangular_potential_cuts
     """
     current_orientation: float = None
-    edge_inds: np.ndarray = None # Converted from list
+    edge_inds: np.ndarray = None  # Converted from list
 
     def add_edge(self, edge):
         if self.edge_inds is None:
@@ -464,7 +464,6 @@ class UnarrangedLoop(Shape2D):
             self.edge_inds[0] = edge
             return
         self.edge_inds = np.vstack((self.edge_inds, [edge]))
-
 
     def add_uv(self, uv):
         append_uv(self, uv)
@@ -614,9 +613,13 @@ class CoilPart:
     pcb_tracks: PCBTrack = None             # (generate_cylindrical_pcb_print)
     layout_surface_mesh: Mesh = None        # Layout mesh (create_sweep_along_surface)
     ohmian_resistance: np.ndarray = None    # Surface wire resistance (create_sweep_along_surface)
+    field_by_layout: np.ndarray = None      # (evaluate_field_errors)
+    # field_by_loops: np.ndarray = None     # (evaluate_field_errors)
+    field_by_layout: np.ndarray = None      # (evaluate_field_errors)
 
     def __repr__():
         return f'CoilPart'
+
 
 # Used by define_target_field
 @dataclass
