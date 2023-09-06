@@ -2,6 +2,7 @@ env
 
 *.pyc
 __pycache__/
+*.tar
 
 instance/
 
