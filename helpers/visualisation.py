@@ -76,7 +76,7 @@ def _compare_list(index, instance1, instance2, double_tolerance=1e-10, equal_nan
     return False
 
 
-def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True):
+def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True, fail_result=False):
     """
     Compare two instances for equality with optional double tolerance.
 
@@ -93,18 +93,18 @@ def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True):
     """
     if not type(instance1) == type(instance2) and not isinstance(instance1, list):
         log.error(" Not the same type: %s is not %s", type(instance1), type(instance2))
-        return False
+        return fail_result
 
     if isinstance(instance1, np.ndarray):
         if not instance1.shape == instance2.shape:
             log.error(" Not the same shape: %s is not %s", np.shape(instance1), np.shape(instance2))
-            return False
+            return fail_result
         for index in range(instance1.shape[0]):
             # log.debug(" %d -> %s", index, instance1[index])
             if not np.shape(instance1[index]) == np.shape(instance2[index]):
                 log.error(" Not the same shape at index %d: %s is not %s",
                           index, np.shape(instance1[index]), np.shape(instance2[index]))
-                return False
+                return fail_result
 
             if not np.allclose(instance1[index], instance2[index], atol=double_tolerance, equal_nan=equal_nan):
                 if isinstance(instance1[index], np.ndarray):
@@ -113,32 +113,38 @@ def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True):
                 else:
                     log.error(" Not the same value at index [%d]: %s is not %s",
                               index, instance1[index], instance2[index])
-                return False
+                return fail_result
         return True
 
     if isinstance(instance1, list) and isinstance(instance2, list):
         if len(instance1) != len(instance2):
             log.error(" Not the same shape: %s is not %s", len(instance1), np.shape(instance2))
-            return False
+            return fail_result
 
         if len(instance1) > 0 and isinstance(instance1[0], list):
             for index in range(len(instance1)):
                 if instance1[index] != instance2[index]:
                     log.error(" Not the same value at index [%d]: %s is not %s",
                                 index, instance1[index], instance2[index])
-                    return False
+                    return fail_result
         return True
 
     if isinstance(instance1, list):
         if len(instance1) != instance2.shape[0]:
             log.error(" Not the same shape: %s is not %s", len(instance1), np.shape(instance2))
-            return False
+            return fail_result
 
         for index in range(len(instance1)):
             if _compare_list(index, instance1[index], instance2[index]) == False:
                 log.error(" Not the same value at index [%d]: %s is not %s",
                             index, instance1[index], instance2[index])
-                return False
+                return fail_result
+        return True
+
+    if isinstance(instance1, float):
+        if np.isclose(instance1, instance2, atol=double_tolerance, equal_nan=equal_nan) == False:
+            log.error("Not the same: %f <> %f by %f", instance1, instance2, instance1-instance2)
+            return fail_result
         return True
 
     log.error("compare(): Type(%s) is not supported", type(instance1))
