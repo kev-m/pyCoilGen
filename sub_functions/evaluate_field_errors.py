@@ -2,13 +2,13 @@ import numpy as np
 from typing import List
 import logging
 
-from sub_functions.data_structures import CoilSolution, FieldErrors, SolutionErrors
+from sub_functions.data_structures import CoilPart, DataStructure, FieldErrors, SolutionErrors, TargetField
 from sub_functions.process_raw_loops import biot_savart_calc_b
 
 log = logging.getLogger(__name__)
 
 
-def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
+def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure, target_field: TargetField, sf_b_field: np.ndarray, m_c_part=None) -> (List[CoilPart], SolutionErrors):
     """
     Calculate relative errors between different input and output fields.
 
@@ -28,40 +28,28 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
     Args:
         coil_parts (List[CoilPart]): List of CoilPart structures.
         input_args (struct): Input parameters.
+        target_field (TargetField): The target magnetic field.
+        sf_b_field (np.ndarray): TBD
 
     Returns:
         solution_errors (SolutionErrors): A structure containing field error values and other information.
     """
-    input_args = solution.input_args
-    target_field = solution.target_field
-    sf_b_field = solution.sf_b_field
-
-    coil_parts = solution.coil_parts
-    # Initialize fields in coil_parts
-    for coil_part in coil_parts:
-        coil_part.opt_current_layout = None
-        coil_part.field_by_loops = None
-        coil_part.field_by_layout = None
-
     for coil_part in coil_parts:
         # Calculate the combined field of the unconnected contours
-        coil_part.field_by_loops = np.zeros((3, target_field.b.shape[1]))
-
+        coil_part.field_by_loops2 = np.zeros((3, target_field.b.shape[1])) # (3,257)
         for loop in coil_part.contour_lines:
             loop_field = biot_savart_calc_b(loop.v, target_field)
-            coil_part.field_by_loops += loop_field
-
-        coil_part.field_by_loops *= coil_part.contour_step
+            coil_part.field_by_loops2 += loop_field
+        coil_part.field_by_loops2 *= coil_part.contour_step
 
         # Calculate the field of connected, final layouts
         if not input_args.skip_postprocessing:
             coil_part.field_by_layout = biot_savart_calc_b(coil_part.wire_path.v, target_field)
             coil_part.field_by_layout *= coil_part.contour_step  # scaled with the current of the discretization
         else:
-            coil_part.field_by_layout = coil_part.field_by_loops
+            coil_part.field_by_layout = coil_part.field_by_loops2
 
-        # Find the ideal current strength for the connected layout to match the target field
-        # part.opt_current_layout = abs(np.mean(target_field.b[2, :] / part.field_by_layout[2, :]))
+    for coil_part in coil_parts:
         """
         The provided code segment initializes the fields in coil_parts, calculates the field by loops and layouts,
         and finds the ideal current strength.
@@ -79,7 +67,7 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
         # Combine the coil_part fields scaled with all possible polarities and choose the one
         # which is closest to the target field
         combined_field_layout = np.zeros((len(possible_polarities), *coil_part.field_by_layout.shape))
-        combined_field_loops = np.zeros((len(possible_polarities), *coil_part.field_by_loops.shape))
+        combined_field_loops = np.zeros((len(possible_polarities), *coil_part.field_by_loops2.shape))
         pol_projections_loops = np.zeros(len(possible_polarities))
         pol_projections_layout = np.zeros(len(possible_polarities))
 
@@ -88,7 +76,7 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
                 combined_field_layout[pol_ind] += possible_polarities[pol_ind][part_ind] * \
                     coil_parts[part_ind].field_by_layout
                 combined_field_loops[pol_ind] += possible_polarities[pol_ind][part_ind] * \
-                    coil_parts[part_ind].field_by_loops
+                    coil_parts[part_ind].field_by_loops2
 
             # Project the combined field onto the target field
             pol_projections_layout[pol_ind] = np.linalg.norm(combined_field_layout[pol_ind] - target_field.b)
@@ -134,8 +122,8 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
         # Part 4: Calculate field errors and return results
 
         # Extract z-components of the fields
-        target_z = target_field.b[2, :]
-        sf_z = sf_b_field.T[2, :]  # Field of stream function (Tranposed, because it is Python shaped (n,3))
+        target_z = target_field.b[2, :] # Tranpose into MATLAB shape
+        sf_z = sf_b_field[:, 2]  # Field of stream function (Transposed, because it is Python shaped (n,3))
         layout_z = combined_field_layout[2, :]
         loop_z = combined_field_loops[2, :]
 
@@ -168,7 +156,7 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
         for part_ind in range(len(coil_parts)):
             combined_field_layout_per1Amp += (coil_parts[part_ind].field_by_layout /
                                               np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_layout][part_ind]
-            combined_field_loops_per1Amp += (coil_parts[part_ind].field_by_loops /
+            combined_field_loops_per1Amp += (coil_parts[part_ind].field_by_loops2 /
                                              np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_loops][part_ind]
 
         # Calculate the ideal current strength for the connected layout to match the target field
@@ -181,4 +169,4 @@ def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
         solution_errors.combined_field_layout_per1Amp = combined_field_layout_per1Amp
         solution_errors.combined_field_loops_per1Amp = combined_field_loops_per1Amp
         solution_errors.opt_current_layout = opt_current_layout
-        return solution_errors
+        return coil_parts, solution_errors
