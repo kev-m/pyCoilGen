@@ -1,4 +1,19 @@
 # System imports
+import numpy as np
+import json
+
+# Logging
+import logging
+
+# Local imports
+# Add the sub_functions directory to the Python module search path
+import sys
+from pathlib import Path
+sub_functions_path = Path(__file__).resolve().parent / '..'
+print(sub_functions_path)
+sys.path.append(str(sub_functions_path))
+
+# Do not move import from here!
 from CoilGen import CoilGen
 from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh
@@ -10,21 +25,6 @@ from helpers.extraction import load_matlab
 from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, compare_contains, \
     get_linenumber, visualize_compare_vertices, visualize_projected_vertices, visualize_compare_contours, \
     passify_matlab
-import sys
-from pathlib import Path
-import numpy as np
-import json
-
-# Logging
-import logging
-
-# Local imports
-# Add the sub_functions directory to the Python module search path
-sub_functions_path = Path(__file__).resolve().parent / '..'
-print(sub_functions_path)
-sys.path.append(str(sub_functions_path))
-
-# Do not move import from here!
 
 
 def load_numpy(filename) -> CoilSolution:
@@ -1720,10 +1720,22 @@ def develop_evaluate_field_errors():
     c_coil_parts = solution.coil_parts
 
     #######################################################
+    # Testing the algorithm, so use MATLAB data as input:
+    # coil_part.
+    #   contour_step
+    #   field_by_loops, if skip_postprocessing = True
+    p_coil_parts = []
+    for index1, m_c_part in enumerate(m_c_parts):
+        p_coil_part = CoilPart()
+        # contour_step
+        p_coil_part.contour_step = m_c_part.contour_step
+    target_field = m_out.target_field # ??
+    sf_b_field = m_out.b_field_opt_sf # ??
+    #######################################################
     assert solution.input_args.interconnection_cut_width == m_out.input_data.interconnection_cut_width
 
     input_args = DataStructure(skip_postprocessing=solution.input_args.skip_postprocessing)
-    p_solution = CoilSolution(input_args=input_args, coil_parts=coil_parts,
+    p_solution = CoilSolution(input_args=input_args, coil_parts=p_coil_parts,
                               target_field=target_field, sf_b_field=sf_b_field)
     ###################################################################################
     # Function under test
