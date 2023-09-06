@@ -682,7 +682,7 @@ class CoilSolution:
     target_field: TargetField = None
     is_suppressed_point: np.ndarray = None
     combined_mesh: DataStructure = None
-    sf_b_field: np.ndarray = None
+    sf_b_field: np.ndarray = None           # (n,3) 
     primary_surface_ind = None
 
 
