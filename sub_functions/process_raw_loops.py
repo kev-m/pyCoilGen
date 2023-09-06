@@ -77,6 +77,14 @@ def evaluate_loop_significance(coil_parts: List[CoilPart], target_field: TargetF
     """
     Calculate the relative errors between the different input and output fields and evaluate loop significance.
 
+    Initialises the following properties of a CoilPart:
+        - field_by_loops
+        - combined_loop_field
+        - loop_significance
+
+    Updates the following properties of a CoilPart:
+        - None
+
     Args:
         coil_parts (List[CoilPart]): A list of CoilPart structures.
         target_field (TargetField): The target field associated with the CoilSolution.
