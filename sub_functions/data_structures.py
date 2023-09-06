@@ -638,6 +638,37 @@ class TargetField:
 
 
 @dataclass
+class FieldErrors:
+    """
+    Used by evaluate_field_errors.py
+    """
+    max_rel_error_layout_vs_target: float = None
+    mean_rel_error_layout_vs_target: float = None
+
+    max_rel_error_unconnected_contours_vs_target: float = None
+    mean_rel_error_unconnected_contours_vs_target: float = None
+
+    max_rel_error_layout_vs_stream_function_field: float = None
+    mean_rel_error_layout_vs_stream_function_field: float = None
+
+    max_rel_error_unconnected_contours_vs_stream_function_field: float = None
+    mean_rel_error_unconnected_contours_vs_stream_function_field: float = None
+
+
+@dataclass
+class SolutionErrors:
+    """
+    Used by evaluate_field_errors.py
+    """
+    field_error_vals: FieldErrors = None
+    combined_field_layout: np.ndarray = None
+    combined_field_loops: np.ndarray = None
+    combined_field_layout_per1Amp: float = None
+    combined_field_loops_per1Amp: float = None
+    opt_current_layout: float = None
+
+
+@dataclass
 class CoilSolution:
     """
     Represents a high-level CoilGen solution.
