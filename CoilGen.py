@@ -44,8 +44,8 @@ from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pc
 from sub_functions.create_sweep_along_surface import create_sweep_along_surface
 from sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
 from sub_functions.load_preoptimized_data import load_preoptimized_data
+from sub_functions.evaluate_field_errors import evaluate_field_errors
 """
-from evaluate_field_errors import evaluate_field_errors
 from calculate_gradient import calculate_gradient
 """
 
@@ -344,13 +344,14 @@ def CoilGen(log, input_args=None):
     solution = calculate_inductance_by_coil_layout(solution, input_args)
     timer.stop()
 
+    # Evaluate the field errors
+    print('Evaluate the field errors:')
+    field_errors = evaluate_field_errors(solution)
+    solution.field_errors = field_errors
+
     # WIP
     timer.stop()
     return solution
-
-    # Evaluate the field errors
-    print('Evaluate the field errors:')
-    field_errors, _, _ = evaluate_field_errors(coil_parts, target_field, input_args)
 
     # Calculate the gradient
     print('Calculate the gradient:')
