@@ -123,10 +123,11 @@ def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True):
 
         if len(instance1) > 0 and isinstance(instance1[0], list):
             for index in range(len(instance1)):
-                if _compare_list(index, instance1[index], instance2[index]) == False:
+                if instance1[index] != instance2[index]:
                     log.error(" Not the same value at index [%d]: %s is not %s",
                                 index, instance1[index], instance2[index])
                     return False
+        return True
 
     if isinstance(instance1, list):
         if len(instance1) != instance2.shape[0]:
