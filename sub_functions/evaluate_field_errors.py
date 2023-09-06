@@ -2,44 +2,58 @@ import numpy as np
 from typing import List
 import logging
 
-from sub_functions.data_structures import CoilPart, CoilSolution
+from sub_functions.data_structures import CoilSolution, FieldErrors, SolutionErrors
 from sub_functions.process_raw_loops import biot_savart_calc_b
 
 log = logging.getLogger(__name__)
 
-def evaluate_field_errors(coil_parts: List[CoilPart], input_args, target_field, sf_b_field) -> CoilSolution:
+def evaluate_field_errors(solution: CoilSolution, input_args, target_field, sf_b_field) -> SolutionErrors:
     """
     Calculate relative errors between different input and output fields.
 
+    Initialises the following properties of the CoilParts:
+        - field_by_loops
+        - field_by_layout
+
+    Depends on the following properties of the CoilParts:
+        - wire_path
+
+    Depends on the following input_args:
+        - skip_postprocessing
+        
+    Updates the following properties of a CoilPart:
+        - None
+    
     Args:
         coil_parts (List[CoilPart]): List of CoilPart structures.
-        input_args: Input parameters.
+        input_args (struct): Input parameters.
 
     Returns:
-        CoilSolution: The solution containing field error values and other information.
+        FieldErrors (FieldErrors): A structure containing field error values and other information.
     """
+    coil_parts = solution.coil_parts
     # Initialize fields in coil_parts
-    for part in coil_parts:
-        part.opt_current_layout = None
-        part.field_by_loops = None
-        part.field_by_layout = None
+    for coil_part in coil_parts:
+        coil_part.opt_current_layout = None
+        coil_part.field_by_loops = None
+        coil_part.field_by_layout = None
 
-    for part in coil_parts:
+    for coil_part in coil_parts:
         # Calculate the combined field of the unconnected contours
-        part.field_by_loops = np.zeros((3, len(target_field.b)))
+        coil_part.field_by_loops = np.zeros((3, len(target_field.b)))
 
-        for loop in part.contour_lines:
+        for loop in coil_part.contour_lines:
             loop_field = biot_savart_calc_b(loop.v, target_field)
-            part.field_by_loops += loop_field
+            coil_part.field_by_loops += loop_field
 
-        part.field_by_loops *= part.contour_step
+        coil_part.field_by_loops *= coil_part.contour_step
 
         # Calculate the field of connected, final layouts
         if not input_args.skip_postprocessing:
-            part.field_by_layout = biot_savart_calc_b(part.wire_path.v, target_field)
-            part.field_by_layout *= part.contour_step  # scaled with the current of the discretization
+            coil_part.field_by_layout = biot_savart_calc_b(coil_part.wire_path.v, target_field)
+            coil_part.field_by_layout *= coil_part.contour_step  # scaled with the current of the discretization
         else:
-            part.field_by_layout = part.field_by_loops
+            coil_part.field_by_layout = coil_part.field_by_loops
 
         # Find the ideal current strength for the connected layout to match the target field
         # part.opt_current_layout = abs(np.mean(target_field.b[2, :] / part.field_by_layout[2, :]))
@@ -59,8 +73,8 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args, target_field, 
 
         # Combine the coil_part fields scaled with all possible polarities and choose the one
         # which is closest to the target field
-        combined_field_layout = np.zeros((len(possible_polarities), *coil_parts[0].field_by_layout.shape))
-        combined_field_loops = np.zeros((len(possible_polarities), *coil_parts[0].field_by_loops.shape))
+        combined_field_layout = np.zeros((len(possible_polarities), *coil_part.field_by_layout.shape))
+        combined_field_loops = np.zeros((len(possible_polarities), *coil_part.field_by_loops.shape))
         pol_projections_loops = np.zeros(len(possible_polarities))
         pol_projections_layout = np.zeros(len(possible_polarities))
 
@@ -117,6 +131,7 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args, target_field, 
         loop_z = combined_field_loops[2, :]
 
         # Calculate relative errors
+        field_error_vals = FieldErrors()
         field_error_vals.max_rel_error_layout_vs_target = np.max(np.abs((layout_z - target_z) / np.max(np.abs(target_z)))) * 100
         field_error_vals.mean_rel_error_layout_vs_target = np.mean(np.abs((layout_z - target_z) / np.max(np.abs(target_z)))) * 100
 
@@ -143,4 +158,10 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args, target_field, 
         opt_current_layout = np.abs(np.mean(target_field.b[2, :] / combined_field_layout[2, :]))
 
         # Return results
-        return coil_parts, combined_field_layout, combined_field_loops, combined_field_layout_per1Amp, combined_field_loops_per1Amp, field_error_vals, opt_current_layout
+        solution_errors = SolutionErrors(field_error_vals=field_error_vals)
+        solution_errors.combined_field_layout = combined_field_layout
+        solution_errors.combined_field_loops =combined_field_loops
+        solution_errors.combined_field_layout_per1Amp =combined_field_layout_per1Amp
+        solution_errors.combined_field_loops_per1Amp =combined_field_loops_per1Amp
+        solution_errors.opt_current_layout =opt_current_layout
+        return solution_errors
