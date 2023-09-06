@@ -8,7 +8,7 @@ from sub_functions.process_raw_loops import biot_savart_calc_b
 log = logging.getLogger(__name__)
 
 
-def evaluate_field_errors(solution: CoilSolution, input_args, target_field, sf_b_field) -> SolutionErrors:
+def evaluate_field_errors(solution: CoilSolution) -> SolutionErrors:
     """
     Calculate relative errors between different input and output fields.
 
@@ -32,6 +32,10 @@ def evaluate_field_errors(solution: CoilSolution, input_args, target_field, sf_b
     Returns:
         FieldErrors (FieldErrors): A structure containing field error values and other information.
     """
+    input_args = solution.input_args
+    target_field = solution.target_field
+    sf_b_field = solution.sf_b_field
+
     coil_parts = solution.coil_parts
     # Initialize fields in coil_parts
     for coil_part in coil_parts:
