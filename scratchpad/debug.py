@@ -1723,26 +1723,49 @@ def develop_evaluate_field_errors():
     # Testing the algorithm, so use MATLAB data as input:
     # coil_part.
     #   contour_step
+    #   contour_lines
+    #   wire_path
     #   field_by_loops, if skip_postprocessing = True
     p_coil_parts = []
     for index1, m_c_part in enumerate(m_c_parts):
         p_coil_part = CoilPart()
+
         # contour_step
         p_coil_part.contour_step = m_c_part.contour_step
-    target_field = m_out.target_field  # ??
-    sf_b_field = m_out.b_field_opt_sf  # ??
+
+        # contour_lines
+        p_coil_part.contour_lines = []
+        for index2, m_contour in enumerate(passify_matlab(m_c_part.contour_lines)):
+            p_line = ContourLine(v=m_contour.v)
+            p_coil_part.contour_lines.append(p_line)
+
+        # wire_path
+        p_coil_part.wire_path = m_c_part.wire_path
+
+        # Add this coil_part to the list
+        p_coil_parts.append(p_coil_part)
+
+    target_field = m_out.target_field  # MATLAB shape (3,n)
+    sf_b_field = m_out.b_field_opt_sf.T# Python shape (n,3) Transpose because Python shape is normally used
     #######################################################
-    assert solution.input_args.interconnection_cut_width == m_out.input_data.interconnection_cut_width
+    assert solution.input_args.skip_postprocessing == m_out.input_data.skip_postprocessing
 
     input_args = DataStructure(skip_postprocessing=solution.input_args.skip_postprocessing)
-    p_solution = CoilSolution(input_args=input_args, coil_parts=p_coil_parts,
-                              target_field=target_field, sf_b_field=sf_b_field)
     ###################################################################################
     # Function under test
-    solution_errors = evaluate_field_errors(solution)
+    t_coil_parts, solution_errors = evaluate_field_errors(p_coil_parts, input_args, target_field, sf_b_field, m_c_parts)
     ###################################################################################
 
     # Now, check the computed values:
+    # coil_part
+    #   field_by_loops
+    #   field_by_layout
+    for index, m_c_part in enumerate(m_c_parts):
+        t_coil_part = t_coil_parts[index]
+        assert compare(t_coil_part.field_by_loops2, m_c_part.field_by_loops, fail_result=True) # Fail, passes if *= -1.0??!?
+        assert compare(t_coil_part.field_by_layout, m_c_part.field_by_layout, fail_result=True) # Fail
+
+
     assert compare(float(solution_errors.opt_current_layout), m_out.needed_current_layout, fail_result=True)  # Fail
 
     assert compare(solution_errors.combined_field_layout, m_out.field_by_layout, fail_result=True)  # Fail
