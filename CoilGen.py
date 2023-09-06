@@ -347,7 +347,9 @@ def CoilGen(log, input_args=None):
 
     # Evaluate the field errors
     print('Evaluate the field errors:')
+    timer.start()
     coil_parts, solution_errors = evaluate_field_errors(coil_parts, input_args, solution.target_field, solution.sf_b_field)
+    timer.stop()
     save(persistence_dir, project_name, '21', solution)
     
     # WIP
