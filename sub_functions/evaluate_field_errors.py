@@ -36,6 +36,7 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
     """
     for coil_part in coil_parts:
         # Calculate the combined field of the unconnected contours
+        # Fails, wrong sign
         coil_part.field_by_loops2 = np.zeros((3, target_field.b.shape[1])) # (3,257)
         for loop in coil_part.contour_lines:
             loop_field = biot_savart_calc_b(loop.v, target_field)
@@ -56,7 +57,6 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
     # End of part 1
 
     # Part 2: Find the current polarity for the different coil parts regarding the target field
-
     # Create all possible polarities as binary representations
     possible_polarities = [list(format(x, '0' + str(len(coil_parts)) + 'b')) for x in range(2 ** len(coil_parts))]
 
@@ -72,14 +72,16 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
 
     for pol_ind in range(len(possible_polarities)):
         for part_ind in range(len(coil_parts)):
+            # Fails
             combined_field_layout[pol_ind] += possible_polarities[pol_ind][part_ind] * \
                 coil_parts[part_ind].field_by_layout
+            # Passes
             combined_field_loops[pol_ind] += possible_polarities[pol_ind][part_ind] * \
                 coil_parts[part_ind].field_by_loops2
 
         # Project the combined field onto the target field
-        pol_projections_layout[pol_ind] = np.linalg.norm(combined_field_layout[pol_ind] - target_field.b)
-        pol_projections_loops[pol_ind] = np.linalg.norm(combined_field_loops[pol_ind] - target_field.b)
+        pol_projections_layout[pol_ind] = np.linalg.norm(combined_field_layout[pol_ind] - target_field.b) # Fails?!?
+        pol_projections_loops[pol_ind] = np.linalg.norm(combined_field_loops[pol_ind] - target_field.b) # Passes
 
     """
     This code segment covers the second part of your MATLAB code, including generating possible polarities,
@@ -93,8 +95,8 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
     best_dir_loops = np.argmin(pol_projections_loops)
 
     # Choose the best combination for layout and loops
-    combined_field_layout = combined_field_layout[best_dir_layout]
-    combined_field_loops = combined_field_loops[best_dir_loops]
+    combined_field_layout = combined_field_layout[best_dir_layout] # Fail
+    combined_field_loops = combined_field_loops[best_dir_loops] # Pass
 
     # Adjust the current direction for the layout (in case of the wrong direction)
     if not input_args.skip_postprocessing:
@@ -120,30 +122,39 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
 
     # Part 4: Calculate field errors and return results
     # Extract z-components of the fields
-    target_z = target_field.b[2, :] # Tranpose into MATLAB shape
+    target_z = target_field.b[2, :] # Tranpose into MATLAB shape (3,n)
     sf_z = sf_b_field[:, 2]  # Field of stream function (Transposed, because it is Python shaped (n,3))
     layout_z = combined_field_layout[2, :]
     loop_z = combined_field_loops[2, :]
 
     # Calculate relative errors
     field_error_vals = FieldErrors()
+    # Pass
     field_error_vals.max_rel_error_layout_vs_target = np.max(
         np.abs((layout_z - target_z) / np.max(np.abs(target_z)))) * 100
+    # Pass
     field_error_vals.mean_rel_error_layout_vs_target = np.mean(
         np.abs((layout_z - target_z) / np.max(np.abs(target_z)))) * 100
 
+    # Pass
     field_error_vals.max_rel_error_unconnected_contours_vs_target = np.max(
         np.abs((loop_z - target_z) / np.max(np.abs(target_z)))) * 100
+    # Pass
     field_error_vals.mean_rel_error_unconnected_contours_vs_target = np.mean(
         np.abs((loop_z - target_z) / np.max(np.abs(target_z)))) * 100
 
+    # Fail
     field_error_vals.max_rel_error_layout_vs_stream_function_field = np.max(
+        # ValueError: operands could not be broadcast together with shapes (3734,) (3,) 
         np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
+    # Fail
     field_error_vals.mean_rel_error_layout_vs_stream_function_field = np.mean(
         np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
 
+    # Pass
     field_error_vals.max_rel_error_unconnected_contours_vs_stream_function_field = np.max(
         np.abs((loop_z - sf_z) / np.max(np.abs(sf_z)))) * 100
+    # Pass
     field_error_vals.mean_rel_error_unconnected_contours_vs_stream_function_field = np.mean(
         np.abs((loop_z - sf_z) / np.max(np.abs(sf_z)))) * 100
 
@@ -154,6 +165,7 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
     for part_ind in range(len(coil_parts)):
         combined_field_layout_per1Amp += (coil_parts[part_ind].field_by_layout /
                                             np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_layout][part_ind]
+        # Passes
         combined_field_loops_per1Amp += (coil_parts[part_ind].field_by_loops2 /
                                             np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_loops][part_ind]
 
