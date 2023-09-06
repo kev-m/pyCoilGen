@@ -595,7 +595,7 @@ class CoilPart:
     contour_lines: List[ContourLine] = None  # (process_raw_loops)
     potential_level_list: np.ndarray = None  # Placeholder (calc_potential_levels) (???)
     contour_step: float = None              # Placeholder (calc_potential_levels) (???)
-    field_by_loops: np.ndarray = None       # Placeholder (evaluate_loop_significance in process_raw_loops)
+    field_by_loops: np.ndarray = None       # Placeholder (evaluate_loop_significance in process_raw_loops and evaluate_field_errors) (3,num_vertices,num contours)
     combined_loop_field: np.ndarray = None  # Placeholder (evaluate_loop_significance in process_raw_loops) (3,m)
     loop_significance: np.ndarray = None    # Per contour line (evaluate_loop_significance in process_raw_loops) (n)
     combined_loop_length: float = 0.0       # Length of contour lines (process_raw_loops)
@@ -613,9 +613,8 @@ class CoilPart:
     pcb_tracks: PCBTrack = None             # (generate_cylindrical_pcb_print)
     layout_surface_mesh: Mesh = None        # Layout mesh (create_sweep_along_surface)
     ohmian_resistance: np.ndarray = None    # Surface wire resistance (create_sweep_along_surface)
-    field_by_layout: np.ndarray = None      # (evaluate_field_errors)
-    # field_by_loops: np.ndarray = None     # (evaluate_field_errors)
-    field_by_layout: np.ndarray = None      # (evaluate_field_errors)
+    field_by_loops2: np.ndarray = None      # (evaluate_field_errors) (3,num_vertices)
+    field_by_layout: np.ndarray = None      # (evaluate_field_errors) (3,num_vertices)
 
     def __repr__():
         return f'CoilPart'
