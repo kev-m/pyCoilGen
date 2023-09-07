@@ -56,9 +56,9 @@ def calculate_gradient(coil_parts: List[CoilPart], input_args, target_field: Tar
     gradient_direction /= np.linalg.norm(gradient_direction)
 
     # Project the gradient direction to the full set of cartesian gradients
-    layout_gradient.gradient_in_target_direction = np.sqrt((gradient_direction[0] * layout_gradient.dBzdxyz[0])**2 +
-                                                           (gradient_direction[1] * layout_gradient.dBzdxyz[1])**2 +
-                                                           (gradient_direction[2] * layout_gradient.dBzdxyz[2])**2)
+    layout_gradient.gradient_in_target_direction = np.sqrt((gradient_direction[0] * layout_gradient.dBzdxyz[:,0])**2 +
+                                                           (gradient_direction[1] * layout_gradient.dBzdxyz[:,1])**2 +
+                                                           (gradient_direction[2] * layout_gradient.dBzdxyz[:,2])**2)
     layout_gradient.mean_gradient_in_target_direction = np.nanmean(layout_gradient.gradient_in_target_direction)
     layout_gradient.std_gradient_in_target_direction = np.nanstd(layout_gradient.gradient_in_target_direction)
 
