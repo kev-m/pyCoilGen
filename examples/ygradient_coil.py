@@ -61,7 +61,6 @@ if __name__ == '__main__':
     }
 
     result = CoilGen(log, arg_dict)
-    # DEBUG:helpers.timing:Total elapsed time: 89.771717 seconds
 
 """
 Parse inputs:
