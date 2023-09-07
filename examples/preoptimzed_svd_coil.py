@@ -188,8 +188,10 @@ DEBUG:trimesh:Exporting 9600 faces as STL
 DEBUG:helpers.timing:Elapsed time: 41.984581 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_19.npy'
 Calculate the inductance by coil layout:
-DEBUG:helpers.timing:Elapsed time: 0.598101 seconds
+DEBUG:helpers.timing:Elapsed time: 0.573988 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_20.npy'
 Evaluate the field errors:
+DEBUG:helpers.timing:Elapsed time: 111.958881 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_21.npy'
-DEBUG:helpers.timing:Total elapsed time: 421.462714 seconds"""
+DEBUG:helpers.timing:Total elapsed time: 361.341822 seconds
+"""
