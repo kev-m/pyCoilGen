@@ -1692,7 +1692,7 @@ def develop_evaluate_field_errors():
 
     # which = 'ygradient_coil_0_5'  # Fails
     # which = 'biplanar_xgradient_0_5' # ALL PASS!!
-    which = 'biplanar_xgradient_1_10' # Fails
+    which = 'biplanar_xgradient_1_10'  # Fails
     # which = 'shielded_ygradient_coil_0_9' # Fails
     # which = 'Preoptimzed_Breast_Coil_0_10' # Fails
     # which = 'Preoptimzed_SVD_Coil_0_10'
@@ -1750,20 +1750,20 @@ def develop_evaluate_field_errors():
         p_coil_parts.append(p_coil_part)
 
     target_field = m_out.target_field  # MATLAB shape (3,n)
-    sf_b_field = m_out.b_field_opt_sf.T# Python shape (n,3) Transpose because Python shape is normally used
+    sf_b_field = m_out.b_field_opt_sf.T  # Python shape (n,3) Transpose because Python shape is normally used
     #######################################################
     assert solution.input_args.skip_postprocessing == m_out.input_data.skip_postprocessing
 
     assert compare(target_field.b, m_debug1.debug2.target_field.b)
     assert compare(target_field.coords, m_debug1.debug2.target_field.coords)
 
-
     input_args = DataStructure(skip_postprocessing=solution.input_args.skip_postprocessing)
     ###################################################################################
     # Function under test
     timer = Timing()
     timer.start()
-    t_coil_parts, solution_errors = evaluate_field_errors(p_coil_parts, input_args, target_field, sf_b_field)# , m_c_parts)
+    t_coil_parts, solution_errors = evaluate_field_errors(
+        p_coil_parts, input_args, target_field, sf_b_field)  # , m_c_parts)
     timer.stop()
     ###################################################################################
 
@@ -1773,14 +1773,17 @@ def develop_evaluate_field_errors():
     #   field_by_layout
     for index, m_c_part in enumerate(m_c_parts):
         t_coil_part = t_coil_parts[index]
-        assert compare(t_coil_part.field_by_loops2, m_c_part.field_by_loops) # Pass
-        assert compare(t_coil_part.field_by_layout, m_c_part.field_by_layout, fail_result=True) # Fail, -4.00852600e-05 -6.55700983e-05 -3.89525354e-05 -1.25023994e-05
+        assert compare(t_coil_part.field_by_loops2, m_c_part.field_by_loops)  # Pass
+        # Fail, -4.00852600e-05 -6.55700983e-05 -3.89525354e-05 -1.25023994e-05
+        assert compare(t_coil_part.field_by_layout, m_c_part.field_by_layout, fail_result=True)
 
+    assert compare(float(solution_errors.opt_current_layout),
+                   m_out.needed_current_layout, fail_result=True)  # Fail  0.006486
 
-    assert compare(float(solution_errors.opt_current_layout), m_out.needed_current_layout, fail_result=True)  # Fail  0.006486
-
-    assert compare(solution_errors.combined_field_layout, m_out.field_by_layout, fail_result=True)  # Fail, -4.00852600e-05 -6.55700983e-05 -3.89525354e-05 -1.25023994e-05
-    assert compare(solution_errors.combined_field_layout_per1Amp, m_out.field_layout_per1Amp, fail_result=True)  # Fail, -7.01195006e-08 -1.14699083e-07 -6.81380721e-08 -2.18699344e-08
+    # Fail, -4.00852600e-05 -6.55700983e-05 -3.89525354e-05 -1.25023994e-05
+    assert compare(solution_errors.combined_field_layout, m_out.field_by_layout, fail_result=True)
+    # Fail, -7.01195006e-08 -1.14699083e-07 -6.81380721e-08 -2.18699344e-08
+    assert compare(solution_errors.combined_field_layout_per1Amp, m_out.field_layout_per1Amp, fail_result=True)
 
     assert compare(solution_errors.combined_field_loops, m_out.field_by_unconnected_loops)  # Pass
     assert compare(solution_errors.combined_field_loops_per1Amp, m_out.field_loops_per1Amp)  # Pass
@@ -1812,12 +1815,12 @@ def develop_evaluate_field_errors():
 def develop_calculate_gradient():
     from sub_functions.calculate_gradient import calculate_gradient
 
-    # which = 'ygradient_coil_0_5'  # Fails
-    # which = 'biplanar_xgradient_0_5' # ALL PASS!!
-    # which = 'biplanar_xgradient_1_10' # Fails
-    # which = 'shielded_ygradient_coil_0_9' # Fails
-    # which = 'Preoptimzed_Breast_Coil_0_10' # Fails
-    which = 'Preoptimzed_SVD_Coil_0_10'
+    which = 'ygradient_coil_0_5'              #
+    # which = 'biplanar_xgradient_0_5'          #
+    # which = 'biplanar_xgradient_1_10'         #
+    # which = 'shielded_ygradient_coil_0_9'     #
+    # which = 'Preoptimzed_Breast_Coil_0_10'    #
+    # which = 'Preoptimzed_SVD_Coil_0_10'       #
 
     # Python saved data 13 : After topological_loop_grouping
     if which == 'biplanar':
@@ -1878,13 +1881,25 @@ def develop_calculate_gradient():
     # Function under test
     timer = Timing()
     timer.start()
-    layout_gradient = calculate_gradient(p_coil_parts, input_args, target_field)# , m_c_parts)
+    layout_gradient = calculate_gradient(p_coil_parts, input_args, target_field)  # , m_c_parts)
     timer.stop()
     ###################################################################################
     # DEBUG:
     # direct_biot_savart_gradient_calc_2: helpers.timing:Total elapsed time: 121.136640 seconds
     # direct_biot_savart_gradient_calc_3: helpers.timing:Total elapsed time: 92.586744 seconds
     # Now, check the computed values:
+
+    m_layout_gradient = m_out.layout_gradient  # MATLAB shape (3,n)
+    assert compare(layout_gradient.dBxdxyz, m_layout_gradient.dBxdxyz.T, fail_result=True)
+    assert compare(layout_gradient.dBydxyz, m_layout_gradient.dBydxyz.T, fail_result=True)
+    assert compare(layout_gradient.dBzdxyz, m_layout_gradient.dBzdxyz.T, fail_result=True)
+
+    assert compare(layout_gradient.gradient_in_target_direction,
+                   m_layout_gradient.gradient_in_target_direction, fail_result=True)
+    assert compare(float(layout_gradient.mean_gradient_in_target_direction),
+                   m_layout_gradient.mean_gradient_in_target_direction, double_tolerance=1.e-5, fail_result=True)
+    assert compare(float(layout_gradient.std_gradient_in_target_direction),
+                   m_layout_gradient.std_gradient_in_target_direction, double_tolerance=1.e-5, fail_result=True)
 
 
 if __name__ == "__main__":
