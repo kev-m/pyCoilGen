@@ -62,3 +62,72 @@ if __name__ == '__main__':
 
     result = CoilGen(log, arg_dict)
     # DEBUG:helpers.timing:Total elapsed time: 89.771717 seconds
+
+"""
+Parse inputs:
+Elapsed time is 0.019486 seconds.
+Load geometry:
+Elapsed time is 0.018189 seconds.
+Split the mesh and the stream function into disconnected pieces.
+Elapsed time is 0.014632 seconds.
+Upsample the mesh by subdivision:
+Elapsed time is 0.063404 seconds.
+Parameterize the mesh:
+Elapsed time is 0.033485 seconds.
+Define the target field:
+Elapsed time is 1.468534 seconds.
+Evaluate the temp data:
+Elapsed time is 0.019747 seconds.
+Calculate mesh one ring:
+Elapsed time is 0.124147 seconds.
+Create the basis funtion container which represents the current density:
+Elapsed time is 0.198522 seconds.
+Calculate the sensitivity matrix:
+Elapsed time is 1.810927 seconds.
+Calculate the gradient sensitivity matrix:
+Elapsed time is 3.663818 seconds.
+Calculate the resistance matrix:
+Elapsed time is 0.328228 seconds.
+Optimize the stream function toward target field and secondary constraints:
+Elapsed time is 0.406587 seconds.
+Calculate the potential levels for the discretization:
+Elapsed time is 0.004627 seconds.
+Generate the contours:
+Elapsed time is 0.289798 seconds.
+Process contours: Evaluate loop significance
+Elapsed time is 0.669709 seconds.
+Find the minimal distance between the contour lines:
+Elapsed time is 0.004533 seconds.
+Group the contour loops in topological order:
+Elapsed time is 0.619209 seconds.
+Calculate center locations of groups:
+Elapsed time is 0.024559 seconds.
+Interconnect the single groups:
+Elapsed time is 0.174792 seconds.
+Interconnect the groups to a single wire path:
+
+filename = 
+
+    "debug/debug_single_level_ind_debugygradient_coil_1.mat"
+
+Elapsed time is 0.416225 seconds.
+Shift the return paths over the surface:
+Elapsed time is 0.466666 seconds.
+Create PCB Print:
+Elapsed time is 0.212128 seconds.
+Generate volumetric coil body:
+Elapsed time is 1.049221 seconds.
+Calculate the inductance with fast henry:
+ FastHenry2 is not installed in the Folder- "Program Files (x86)" -", magnetic inductance will not be calculated.. 
+Elapsed time is 0.059660 seconds.
+Evaluate the result for the final wire track:
+Elapsed time is 1.330877 seconds.
+Calculate the resuting gradient field:
+Elapsed time is 0.801548 seconds.
+
+filename = 
+
+    "debug/ygradient_coil_1_10.mat"
+
+Elapsed time is 2.152556 seconds.
+"""
