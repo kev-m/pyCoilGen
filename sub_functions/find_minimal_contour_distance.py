@@ -16,6 +16,12 @@ def find_minimal_contour_distance(coil_parts: List[CoilPart], input_args):
     """
     Find the minimal distance in the xyz domain between contours to assign a proper conductor width later.
 
+    Initialises the following properties of a CoilPart:
+        - None
+
+    Updates the following properties of a CoilPart:
+        - pcb_track_width
+
     Args:
         coil_parts (List[CoilPart]): List of CoilPart structures.
         input_value: The 'input' value (provided as an argument but not used in the function).
@@ -31,8 +37,8 @@ def find_minimal_contour_distance(coil_parts: List[CoilPart], input_args):
                 for ind_2 in range(ind_1, len(coil_part.contour_lines)):
                     if ind_1 != ind_2:
                         min_dist = find_min_mutual_loop_distance(coil_part.contour_lines[ind_1],
-                                                                             coil_part.contour_lines[ind_2],
-                                                                             False, only_min_dist=True)
+                                                                 coil_part.contour_lines[ind_2],
+                                                                 False, only_min_dist=True)
                         min_vals.append(min_dist)
             coil_part.pcb_track_width = min(min_vals)
         else:

@@ -63,7 +63,7 @@ def load_preoptimized_data(input_args) -> CoilSolution:
     target_field.weights = np.ones(target_field.b.shape[1])
     target_field.target_field_group_inds = np.ones(target_field.b.shape[1])
     is_suppressed_point = np.zeros(target_field.b.shape[1])
-    sf_b_field = target_field.b
+    sf_b_field = loaded_data.target_field.b # MATLAB Shape
 
     # Generate a combined mesh container
     # TODO: Umm?? Why recreate the combined mesh, when it was created above?
