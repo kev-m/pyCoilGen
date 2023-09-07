@@ -3,12 +3,14 @@ from typing import List
 import logging
 
 from sub_functions.data_structures import CoilPart, DataStructure, FieldErrors, SolutionErrors, TargetField
-from sub_functions.process_raw_loops import biot_savart_calc_b
+from sub_functions.process_raw_loops import biot_savart_calc_b as biot_savart_calc_b
 
 log = logging.getLogger(__name__)
 
-
-def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure, target_field: TargetField, sf_b_field: np.ndarray, m_c_part=None) -> (List[CoilPart], SolutionErrors):
+#DEBUG
+from helpers.visualisation import compare
+def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure, target_field: TargetField, sf_b_field: np.ndarray, m_c_parts=None) -> (List[CoilPart], SolutionErrors):
+#def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure, target_field: TargetField, sf_b_field: np.ndarray) -> (List[CoilPart], SolutionErrors):
     """
     Calculate relative errors between different input and output fields.
 
@@ -34,7 +36,16 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
     Returns:
         solution_errors (SolutionErrors): A structure containing field error values and other information.
     """
+    # DEBUG
+    if m_c_parts is not None:
+        part_ind = 0
+        m_debug1 = m_c_parts[0].evaluate_field_errors
     for coil_part in coil_parts:
+        # DEBUG
+        if m_c_parts is not None:
+            m_c_part = m_c_parts[part_ind]
+            m_debug = m_c_part.evaluate_field_errors
+
         # Calculate the combined field of the unconnected contours
         # Fails, wrong sign
         coil_part.field_by_loops2 = np.zeros((3, target_field.b.shape[1])) # (3,257)
@@ -43,12 +54,40 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
             coil_part.field_by_loops2 += loop_field
         coil_part.field_by_loops2 *= coil_part.contour_step
 
+        # DEBUG
+        if m_c_parts is not None:
+            assert compare(coil_part.field_by_loops2, m_debug.debug1.output.field_by_loops) # Pass
+
         # Calculate the field of connected, final layouts
         if not input_args.skip_postprocessing:
+            # DEBUG
+            if m_c_parts is not None:
+                assert compare(coil_part.wire_path.v, m_debug.debug1.input.wire_path.v)
+                assert compare(target_field.b, m_debug1.debug2.target_field.b)
+                assert compare(target_field.coords, m_debug1.debug2.target_field.coords)
+
             coil_part.field_by_layout = biot_savart_calc_b(coil_part.wire_path.v, target_field)
+
+            # DEBUG
+            if m_c_parts is not None:
+                assert compare(coil_part.field_by_layout, m_debug.debug1.output.field_by_layout1, double_tolerance=6e-9, fail_result=True)
+                assert coil_part.contour_step == m_c_part.contour_step
+                # 1.4248728244134751e-09
+                # -2.728565015692892e-08
+
             coil_part.field_by_layout *= coil_part.contour_step  # scaled with the current of the discretization
+
+            # DEBUG
+            if m_c_parts is not None:
+                assert compare(coil_part.field_by_layout, m_debug.debug1.output.field_by_layout2, fail_result=True) # Fail!?!
+                part_ind += 1
+
         else:
             coil_part.field_by_layout = coil_part.field_by_loops2
+
+        # DEBUG
+        if m_c_parts is not None:
+            assert compare(coil_part.field_by_layout, m_debug.debug1.output.field_by_layout3, fail_result=True) # Fail!?!
 
     """
     The provided code segment initializes the fields in coil_parts, calculates the field by loops and layouts,
