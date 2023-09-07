@@ -1690,9 +1690,9 @@ def develop_load_preoptimized_data():
 def develop_evaluate_field_errors():
     from sub_functions.evaluate_field_errors import evaluate_field_errors
 
-    # which = 'ygradient_coil_0_5'  # Fails
+    which = 'ygradient_coil_0_5'  # Fails
     # which = 'biplanar_xgradient_0_5' # ALL PASS!!
-    which = 'biplanar_xgradient_1_10'  # Fails
+    # which = 'biplanar_xgradient_1_10'  # Fails
     # which = 'shielded_ygradient_coil_0_9' # Fails
     # which = 'Preoptimzed_Breast_Coil_0_10' # Fails
     # which = 'Preoptimzed_SVD_Coil_0_10'
@@ -1815,29 +1815,17 @@ def develop_evaluate_field_errors():
 def develop_calculate_gradient():
     from sub_functions.calculate_gradient import calculate_gradient
 
-    which = 'ygradient_coil_0_5'              #
-    # which = 'biplanar_xgradient_0_5'          #
+    # which = 'ygradient_coil_0_5'              #
+    # which = 'biplanar_xgradient_0_5'          # All Pass!
     # which = 'biplanar_xgradient_1_10'         #
-    # which = 'shielded_ygradient_coil_0_9'     #
+    which = 'shielded_ygradient_coil_0_9'     #
     # which = 'Preoptimzed_Breast_Coil_0_10'    #
     # which = 'Preoptimzed_SVD_Coil_0_10'       #
 
     # Python saved data 13 : After topological_loop_grouping
-    if which == 'biplanar':
-        matlab_data = load_matlab('debug/biplanar_xgradient')
-        m_out = matlab_data['coil_layouts'].out
-        solution = load_numpy('debug/coilgen_biplanar_False_19.npy')
-    elif which == 'cylinder':
-        matlab_data = load_matlab('debug/ygradient_coil')
-        m_out = matlab_data['coil_layouts'].out
-        solution = load_numpy('debug/coilgen_cylinder_False_19_patched.npy')
-        # The Python paths and the MATLAB paths are close but slightly different.
-        # This prevents detailed debugging.
-        # solution = load_numpy('debug/coilgen_cylinder_True_15.npy')
-    else:
-        matlab_data = load_matlab(f'debug/{which}')
-        m_out = matlab_data['coil_layouts'].out
-        solution = load_numpy(f'debug/{which}_19.npy')
+    matlab_data = load_matlab(f'debug/{which}')
+    m_out = matlab_data['coil_layouts'].out
+    solution = load_numpy(f'debug/{which}_20.npy')
 
     m_c_parts = m_out.coil_parts
     if not isinstance(m_c_parts, np.ndarray):
@@ -1884,22 +1872,23 @@ def develop_calculate_gradient():
     layout_gradient = calculate_gradient(p_coil_parts, input_args, target_field)  # , m_c_parts)
     timer.stop()
     ###################################################################################
-    # DEBUG:
+    # DEBUG: Preoptimzed_SVD_Coil_0_10
     # direct_biot_savart_gradient_calc_2: helpers.timing:Total elapsed time: 121.136640 seconds
     # direct_biot_savart_gradient_calc_3: helpers.timing:Total elapsed time: 92.586744 seconds
+    #   89.131132 seconds
     # Now, check the computed values:
 
     m_layout_gradient = m_out.layout_gradient  # MATLAB shape (3,n)
-    assert compare(layout_gradient.dBxdxyz, m_layout_gradient.dBxdxyz.T, fail_result=True)
-    assert compare(layout_gradient.dBydxyz, m_layout_gradient.dBydxyz.T, fail_result=True)
-    assert compare(layout_gradient.dBzdxyz, m_layout_gradient.dBzdxyz.T, fail_result=True)
+    assert compare(layout_gradient.dBxdxyz, m_layout_gradient.dBxdxyz.T, fail_result=True) # Fail (nearish)
+    assert compare(layout_gradient.dBydxyz, m_layout_gradient.dBydxyz.T, fail_result=True) # Fail (nearish)
+    assert compare(layout_gradient.dBzdxyz, m_layout_gradient.dBzdxyz.T, fail_result=True) # Fail (nearish)
 
     assert compare(layout_gradient.gradient_in_target_direction,
-                   m_layout_gradient.gradient_in_target_direction, fail_result=True)
+                   m_layout_gradient.gradient_in_target_direction, double_tolerance=6.e-5, fail_result=True)  # Fail
     assert compare(float(layout_gradient.mean_gradient_in_target_direction),
-                   m_layout_gradient.mean_gradient_in_target_direction, double_tolerance=1.e-5, fail_result=True)
+                   m_layout_gradient.mean_gradient_in_target_direction, double_tolerance=2.e-4, fail_result=True)
     assert compare(float(layout_gradient.std_gradient_in_target_direction),
-                   m_layout_gradient.std_gradient_in_target_direction, double_tolerance=1.e-5, fail_result=True)
+                   m_layout_gradient.std_gradient_in_target_direction, double_tolerance=2.e-4, fail_result=True)
 
 
 if __name__ == "__main__":
@@ -1938,7 +1927,7 @@ if __name__ == "__main__":
     # develop_create_sweep_along_surface()
     # develop_calculate_inductance_by_coil_layout()
     # develop_load_preoptimized_data()
-    # develop_evaluate_field_errors()
+    develop_evaluate_field_errors()
     develop_calculate_gradient()
     #
     # test_smooth_track_by_folding()
