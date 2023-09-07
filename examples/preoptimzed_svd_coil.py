@@ -104,94 +104,56 @@ filename =
 """
 Load preoptimized data:
 INFO:sub_functions.load_preoptimized_data:Split the mesh and the stream function into disconnected pieces.
-DEBUG:helpers.timing:Total elapsed time: 0.051306 seconds
+DEBUG:helpers.timing:Total elapsed time: 0.044327 seconds
 INFO:sub_functions.load_preoptimized_data:Parameterize the mesh:
 DEBUG:sub_functions.parameterize_mesh: - processing 0, vertices shape: (4880, 3)
 DEBUG:sub_functions.parameterize_mesh: - max_face_normal: [0.7071067811721325, 0.7071067811865472, 2.6563999738451888e-08], max_face_normal_std: 0.7071067811865472
-DEBUG:helpers.timing:Total elapsed time: 0.014804 seconds
-DEBUG:helpers.timing:Elapsed time: 0.085856 seconds
+DEBUG:helpers.timing:Total elapsed time: 0.009694 seconds
+DEBUG:helpers.timing:Elapsed time: 0.064414 seconds
 Calculate the potential levels for the discretization:
-DEBUG:helpers.timing:Elapsed time: 0.000163 seconds
+DEBUG:helpers.timing:Elapsed time: 0.000069 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_09.npy'
 Generate the contours:
-DEBUG:helpers.timing:Elapsed time: 2.838214 seconds
+DEBUG:helpers.timing:Elapsed time: 1.507967 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_10.npy'
 Process contours: Evaluate loop significance
-DEBUG:helpers.timing:Elapsed time: 94.183139 seconds
+DEBUG:helpers.timing:Elapsed time: 87.904885 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_11.npy'
 Find the minimal distance between the contour lines:
-DEBUG:helpers.timing:Elapsed time: 0.000081 seconds
+DEBUG:helpers.timing:Elapsed time: 0.000013 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_12.npy'
 Group the contour loops in topological order:
-DEBUG:helpers.timing:Elapsed time: 49.829742 seconds
+DEBUG:helpers.timing:Elapsed time: 29.020553 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_13.npy'
 Calculate center locations of groups:
-DEBUG:helpers.timing:Elapsed time: 0.097177 seconds
+DEBUG:helpers.timing:Elapsed time: 0.073859 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_14.npy'
 Interconnect the single groups:
-DEBUG:helpers.timing:Elapsed time: 0.233652 seconds
+DEBUG:helpers.timing:Elapsed time: 0.127210 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_15.npy'
 Interconnect the groups to a single wire path:
 CoilGen-Python/env/lib/python3.7/site-packages/numpy/core/fromnumeric.py:3441: RuntimeWarning: Mean of empty slice.
   out=out, **kwargs)
 CoilGen-Python/env/lib/python3.7/site-packages/numpy/core/_methods.py:189: RuntimeWarning: invalid value encountered in double_scalars
   ret = ret.dtype.type(ret / rcount)
-DEBUG:helpers.timing:Elapsed time: 10.360691 seconds
+DEBUG:helpers.timing:Elapsed time: 6.859388 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_16.npy'
 Shift the return paths over the surface:
-(env) kevin@Baelin:~/Dev/CoilGen-Python$  cd CoilGen-Python ; /usr/bin/env CoilGen-Python/env/bin/python /home/kevin/.vscode-server/extensions/ms-python.python-2023.14.0/pythonFiles/lib/python/debugpy/adapter/../../debugpy/launcher 55167 -- CoilGen-Python/examples/preoptimzed_svd_coil.py 
-Load preoptimized data:
-INFO:sub_functions.load_preoptimized_data:Split the mesh and the stream function into disconnected pieces.
-DEBUG:helpers.timing:Total elapsed time: 0.061566 seconds
-INFO:sub_functions.load_preoptimized_data:Parameterize the mesh:
-DEBUG:sub_functions.parameterize_mesh: - processing 0, vertices shape: (4880, 3)
-DEBUG:sub_functions.parameterize_mesh: - max_face_normal: [0.7071067811721325, 0.7071067811865472, 2.6563999738451888e-08], max_face_normal_std: 0.7071067811865472
-DEBUG:helpers.timing:Total elapsed time: 0.016555 seconds
-DEBUG:helpers.timing:Elapsed time: 0.092869 seconds
-Calculate the potential levels for the discretization:
-DEBUG:helpers.timing:Elapsed time: 0.000214 seconds
-DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_09.npy'
-Generate the contours:
-DEBUG:helpers.timing:Elapsed time: 3.247856 seconds
-DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_10.npy'
-Process contours: Evaluate loop significance
-DEBUG:helpers.timing:Elapsed time: 91.452078 seconds
-DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_11.npy'
-Find the minimal distance between the contour lines:
-DEBUG:helpers.timing:Elapsed time: 0.000072 seconds
-DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_12.npy'
-Group the contour loops in topological order:
-DEBUG:helpers.timing:Elapsed time: 47.747571 seconds
-DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_13.npy'
-Calculate center locations of groups:
-DEBUG:helpers.timing:Elapsed time: 0.090148 seconds
-DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_14.npy'
-Interconnect the single groups:
-DEBUG:helpers.timing:Elapsed time: 0.234925 seconds
-DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_15.npy'
-Interconnect the groups to a single wire path:
-CoilGen-Python/env/lib/python3.7/site-packages/numpy/core/fromnumeric.py:3441: RuntimeWarning: Mean of empty slice.
-  out=out, **kwargs)
-CoilGen-Python/env/lib/python3.7/site-packages/numpy/core/_methods.py:189: RuntimeWarning: invalid value encountered in double_scalars
-  ret = ret.dtype.type(ret / rcount)
-DEBUG:helpers.timing:Elapsed time: 10.577898 seconds
-DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_16.npy'
-Shift the return paths over the surface:
-DEBUG:helpers.timing:Elapsed time: 65.743629 seconds
+DEBUG:helpers.timing:Elapsed time: 49.813668 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_17.npy'
 Create PCB Print:
-DEBUG:helpers.timing:Elapsed time: 0.000397 seconds
+DEBUG:helpers.timing:Elapsed time: 0.000138 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_18.npy'
 Create sweep along surface:
 DEBUG:trimesh:Exporting 237654 faces as STL
 DEBUG:trimesh:Exporting 9600 faces as STL
-DEBUG:helpers.timing:Elapsed time: 41.984581 seconds
+DEBUG:helpers.timing:Elapsed time: 33.366084 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_19.npy'
 Calculate the inductance by coil layout:
-DEBUG:helpers.timing:Elapsed time: 0.573988 seconds
+DEBUG:helpers.timing:Elapsed time: 0.590177 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_20.npy'
 Evaluate the field errors:
-DEBUG:helpers.timing:Elapsed time: 111.958881 seconds
+DEBUG:helpers.timing:Elapsed time: 112.239657 seconds
 DEBUG:CoilGen:Saving solution to 'debug/Preoptimzed_SVD_Coil_0_10_21.npy'
-DEBUG:helpers.timing:Total elapsed time: 361.341822 seconds
+DEBUG:helpers.timing:Total elapsed time: 326.756189 seconds
 """
