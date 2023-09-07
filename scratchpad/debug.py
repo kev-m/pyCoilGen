@@ -1809,6 +1809,84 @@ def develop_evaluate_field_errors():
                    m_fe.mean_rel_error_unconnected_contours_vs_stream_function_field)  # Pass
 
 
+def develop_calculate_gradient():
+    from sub_functions.calculate_gradient import calculate_gradient
+
+    # which = 'ygradient_coil_0_5'  # Fails
+    # which = 'biplanar_xgradient_0_5' # ALL PASS!!
+    # which = 'biplanar_xgradient_1_10' # Fails
+    # which = 'shielded_ygradient_coil_0_9' # Fails
+    # which = 'Preoptimzed_Breast_Coil_0_10' # Fails
+    which = 'Preoptimzed_SVD_Coil_0_10'
+
+    # Python saved data 13 : After topological_loop_grouping
+    if which == 'biplanar':
+        matlab_data = load_matlab('debug/biplanar_xgradient')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_biplanar_False_19.npy')
+    elif which == 'cylinder':
+        matlab_data = load_matlab('debug/ygradient_coil')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy('debug/coilgen_cylinder_False_19_patched.npy')
+        # The Python paths and the MATLAB paths are close but slightly different.
+        # This prevents detailed debugging.
+        # solution = load_numpy('debug/coilgen_cylinder_True_15.npy')
+    else:
+        matlab_data = load_matlab(f'debug/{which}')
+        m_out = matlab_data['coil_layouts'].out
+        solution = load_numpy(f'debug/{which}_19.npy')
+
+    m_c_parts = m_out.coil_parts
+    if not isinstance(m_c_parts, np.ndarray):
+        m_c_parts = np.asarray([m_c_parts])
+
+    c_coil_parts = solution.coil_parts
+
+    #######################################################
+    # Testing the algorithm, so use MATLAB data as input:
+    # coil_part.
+    #   contour_step
+    #   contour_lines
+    #   wire_path
+    #   field_by_loops, if skip_postprocessing = True
+    p_coil_parts = []
+    for index1, m_c_part in enumerate(m_c_parts):
+
+        p_coil_part = CoilPart()
+
+        # contour_step
+        p_coil_part.contour_step = m_c_part.contour_step
+
+        # contour_lines
+        p_coil_part.contour_lines = []
+        for index2, m_contour in enumerate(passify_matlab(m_c_part.contour_lines)):
+            p_line = ContourLine(v=m_contour.v, uv=m_contour.uv.astype(np.float64))
+            p_coil_part.contour_lines.append(p_line)
+
+        # wire_path
+        p_coil_part.wire_path = m_c_part.wire_path
+
+        # Add this coil_part to the list
+        p_coil_parts.append(p_coil_part)
+
+    target_field = m_out.target_field  # MATLAB shape (3,n)
+    #######################################################
+    assert solution.input_args.field_shape_function == m_out.input_data.field_shape_function
+
+    input_args = DataStructure(field_shape_function=solution.input_args.field_shape_function)
+    ###################################################################################
+    # Function under test
+    timer = Timing()
+    timer.start()
+    layout_gradient = calculate_gradient(p_coil_parts, input_args, target_field)# , m_c_parts)
+    timer.stop()
+    ###################################################################################
+    # DEBUG:
+    # direct_biot_savart_gradient_calc_2: helpers.timing:Total elapsed time: 121.136640 seconds
+    # direct_biot_savart_gradient_calc_3: helpers.timing:Total elapsed time: 92.586744 seconds
+    # Now, check the computed values:
+
+
 if __name__ == "__main__":
     # Set up logging
     log = logging.getLogger(__name__)
@@ -1845,7 +1923,8 @@ if __name__ == "__main__":
     # develop_create_sweep_along_surface()
     # develop_calculate_inductance_by_coil_layout()
     # develop_load_preoptimized_data()
-    develop_evaluate_field_errors()
+    # develop_evaluate_field_errors()
+    develop_calculate_gradient()
     #
     # test_smooth_track_by_folding()
     # from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file1, \
