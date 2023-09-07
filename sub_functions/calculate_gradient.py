@@ -1,18 +1,22 @@
 import numpy as np
 
-from data_structures import LayoutGradient
+from typing import List
 
-def calculate_gradient(coil_parts, target_field, input):
+from sub_functions.data_structures import CoilPart, TargetField, LayoutGradient, WirePart
+
+
+def calculate_gradient(coil_parts, target_field, input_args):
     """
-    Calculate the average of the local gradients to neighbors for each point.
+    Calculate local gradient.
 
     Args:
-        coil_parts (list): List of CoilPart objects representing different parts of the coil.
-        target_field: Target field.
-        input: Input parameters.
+        coil_parts (list[CoilPart]): List of coil parts.
+        target_field (TargetField): Target magnetic field.
+        input_args (dict): Input arguments.
 
     Returns:
-        layout_gradient: Layout gradient object containing the calculated gradients.
+        LayoutGradient: Computed layout gradient.
+
     """
     # Determine field function based on input
     if input.field_shape_function == 'none':
@@ -20,34 +24,34 @@ def calculate_gradient(coil_parts, target_field, input):
     else:
         field_function = input.field_shape_function
 
-    layout_gradient = LayoutGradient()
-    layout_gradient.dBxdxyz = np.zeros(target_field.coords.shape)
-    layout_gradient.dBydxyz = np.zeros(target_field.coords.shape)
-    layout_gradient.dBzdxyz = np.zeros(target_field.coords.shape)
+    # Initialize gradient components
+    layout_gradient = LayoutGradient(
+        dBxdxyz=np.zeros(target_field.coords.shape),
+        dBydxyz=np.zeros(target_field.coords.shape),
+        dBzdxyz=np.zeros(target_field.coords.shape)
+    )
+
     DBxdxyz = np.zeros(target_field.coords.shape)
     DBydxyz = np.zeros(target_field.coords.shape)
     DBzdxyz = np.zeros(target_field.coords.shape)
 
-    if hasattr(coil_parts[0], 'wire_path'):
-        # Use wire paths
-        for part in coil_parts:
-            for i in range(len(part.wire_path.v)):
-                [DBxdxyz, DBydxyz, DBzdxyz] = direct_biot_savart_gradient_calc(part.wire_path.v[i],
-                                                                                target_field.coords)
-                layout_gradient.dBxdxyz += DBxdxyz
-                layout_gradient.dBydxyz += DBydxyz
-                layout_gradient.dBzdxyz += DBzdxyz
-    else:
-        # Use contour lines
-        for part in coil_parts:
-            for contour_line in part.contour_lines:
-                [DBxdxyz, DBydxyz, DBzdxyz] = direct_biot_savart_gradient_calc(contour_line.v,
-                                                                                target_field.coords)
-                layout_gradient.dBxdxyz += DBxdxyz
-                layout_gradient.dBydxyz += DBydxyz
-                layout_gradient.dBzdxyz += DBzdxyz
+    for coil_part in coil_parts:
+        if hasattr(coil_part, 'wire_path'):
+            DBxdxyz, DBydxyz, DBzdxyz = direct_biot_savart_gradient_calc(
+                coil_part.wire_path.v, target_field.coords)
+        else:
+            for loop_ind in range(len(coil_part.contour_lines)):
+                DBxdxyz, DBydxyz, DBzdxyz = direct_biot_savart_gradient_calc(
+                    coil_part.contour_lines[loop_ind].v, target_field.coords)
 
-    my_fun = eval("@(x,y,z)" + field_function)
+        layout_gradient.dBxdxyz += DBxdxyz
+        layout_gradient.dBydxyz += DBydxyz
+        layout_gradient.dBzdxyz += DBzdxyz
+
+    # Define field_function as a lambda function
+    #my_fun = eval("@(x,y,z)" + field_function)
+    def my_fun(x, y, z): return eval(field_function)  
+
     norm_dir_x = my_fun(1, 0, 0)
     norm_dir_y = my_fun(0, 1, 0)
     norm_dir_z = my_fun(0, 0, 1)
@@ -58,12 +62,10 @@ def calculate_gradient(coil_parts, target_field, input):
     layout_gradient.gradient_in_target_direction = np.sqrt((gradient_direction[0] * layout_gradient.dBzdxyz[0])**2 +
                                                            (gradient_direction[1] * layout_gradient.dBzdxyz[1])**2 +
                                                            (gradient_direction[2] * layout_gradient.dBzdxyz[2])**2)
-    layout_gradient.mean_gradient_in_target_direction = np.mean(layout_gradient.gradient_in_target_direction,
-                                                                 axis=None, where=~np.isnan(layout_gradient.gradient_in_target_direction))
-    layout_gradient.std_gradient_in_target_direction = np.std(layout_gradient.gradient_in_target_direction,
-                                                               axis=None, where=~np.isnan(layout_gradient.gradient_in_target_direction))
+    layout_gradient.mean_gradient_in_target_direction = np.nanmean(layout_gradient.gradient_in_target_direction)
+    layout_gradient.std_gradient_in_target_direction = np.nanstd(layout_gradient.gradient_in_target_direction)
 
-    # Adjust to the unit [mT/m/A]
+    # Convert units to [mT/m/A]
     layout_gradient.dBxdxyz *= 1000
     layout_gradient.dBydxyz *= 1000
     layout_gradient.dBzdxyz *= 1000
@@ -76,85 +78,83 @@ def calculate_gradient(coil_parts, target_field, input):
 
 def direct_biot_savart_gradient_calc(wire_elements, target_coords):
     """
-    Calculate the magnetic field gradient using Biot-Savart law for wire elements.
+    Calculate the gradient of magnetic field using Biot-Savart law.
 
     Args:
-        wire_elements: Wire elements represented as a sequence of coordinate points.
-        target_coords: Target coordinates.
+        wire_elements (numpy.ndarray): Array of wire element coordinates. Shape: (m, 3).
+        target_coords (numpy.ndarray): Array of target coordinates. Shape: (n, 3).
 
     Returns:
-        DBxdxyz: Gradient of the x-component of the magnetic field.
-        DBydxyz: Gradient of the y-component of the magnetic field.
-        DBzdxyz: Gradient of the z-component of the magnetic field.
+        numpy.ndarray: Gradient components dBxdxyz, DBydxyz, DBzdxyz. Shape: (3, n).
+
     """
-    num_tp = target_coords.shape[1]
+    num_tp = target_coords.shape[0]
     track_part_length = 1000
 
-    if wire_elements.shape[1] > track_part_length:
-        track_part_inds = np.arange(1, wire_elements.shape[1], track_part_length)
-        track_part_inds = np.append(track_part_inds, wire_elements.shape[1])
+    if wire_elements.shape[0] > track_part_length:
+        track_part_inds = np.arange(0, wire_elements.shape[0], track_part_length)
+        track_part_inds = np.append(wire_elements.shape[0])
         if track_part_inds[-2] == track_part_inds[-1]:
             track_part_inds = track_part_inds[:-1]
+
         wire_parts = []
         for i in range(len(track_part_inds) - 1):
             wire_part = WirePart()
-            wire_part.coord = wire_elements[:, track_part_inds[i]:track_part_inds[i + 1]]
-            wire_part.seg_coords = (wire_part.coord[:, :-1] + wire_part.coord[:, 1:]) / 2
-            wire_part.currents = wire_part.coord[:, 1:] - wire_part.coord[:, :-1]
+            wire_part.coord = wire_elements[track_part_inds[i]:track_part_inds[i + 1], :]
+            wire_part.seg_coords = (wire_part.coord[:-1, :] + wire_part.coord[1:, :]) / 2
+            wire_part.currents = wire_part.coord[1:, :] - wire_part.coord[:-1, :]
             wire_parts.append(wire_part)
     else:
         wire_part = WirePart()
         wire_part.coord = wire_elements
-        wire_part.seg_coords = (wire_part.coord[:, :-1] + wire_part.coord[:, 1:]) / 2
-        wire_part.currents = wire_part.coord[:, 1:] - wire_part.coord[:, :-1]
-        wire_parts = [wire_part]
+        wire_part.seg_coords = (wire_part.coord[:-1, :] + wire_part.coord[1:, :]) / 2
+        wire_part.currents = wire_part.coord[1:, :] - wire_part.coord[:-1, :]
 
-    DBxdxyz = np.zeros((3, num_tp))
-    DBydxyz = np.zeros((3, num_tp))
-    DBzdxyz = np.zeros((3, num_tp))
-
+    DBxdxyz = np.zeros((num_tp, 3))
+    DBydxyz = np.zeros((num_tp, 3))
+    DBzdxyz = np.zeros((num_tp, 3))
     for wire_part in wire_parts:
-        target_p = np.tile(target_coords, (1, 1, wire_part.seg_coords.shape[1]))
+        target_p = np.repeat(target_coords[:, np.newaxis, :], wire_part.seg_coords.shape[0], axis=1)
         target_p = np.transpose(target_p, (0, 2, 1))
-        cur_pos = np.tile(wire_part.seg_coords[:, :, np.newaxis], (1, 1, num_tp))
-        cur_dir = np.tile(wire_part.currents[:, :, np.newaxis], (1, 1, num_tp))
+        cur_pos = np.repeat(wire_part.seg_coords[np.newaxis, :, :], num_tp, axis=0)
+        cur_dir = np.repeat(wire_part.currents[np.newaxis, :, :], num_tp, axis=0)
 
-        x = target_p[0, :, :]
-        y = target_p[1, :, :]
-        z = target_p[2, :, :]
-        l_x = cur_pos[0, :, :]
-        l_y = cur_pos[1, :, :]
-        l_z = cur_pos[2, :, :]
-        d_l_x = cur_dir[0, :, :]
-        d_l_y = cur_dir[1, :, :]
-        d_l_z = cur_dir[2, :, :]
+        x = target_p[:, :, 0]
+        y = target_p[:, :, 1]
+        z = target_p[:, :, 2]
+        l_x = cur_pos[:, :, 0]
+        l_y = cur_pos[:, :, 1]
+        l_z = cur_pos[:, :, 2]
+        d_l_x = cur_dir[:, :, 0]
+        d_l_y = cur_dir[:, :, 1]
+        d_l_z = cur_dir[:, :, 2]
 
-        E = ((x - l_x) ** 2 + (y - l_y) ** 2 + (z - l_z) ** 2) ** (3 / 2)
-        dEdx = 3 * (x - l_x) * ((x - l_x) ** 2 + (y - l_y) ** 2 + (z - l_z) ** 2) ** (1 / 2)
-        dEdy = 3 * (y - l_y) * ((x - l_x) ** 2 + (y - l_y) ** 2 + (z - l_z) ** 2) ** (1 / 2)
-        dEdz = 3 * (z - l_z) * ((x - l_x) ** 2 + (y - l_y) ** 2 + (z - l_z) ** 2) ** (1 / 2)
-        C = 10 ** (-7)
+        E = ((x - l_x)**2 + (y - l_y)**2 + (z - l_z)**2)**(3/2)
+        dEdx = 3 * (x - l_x) * ((x - l_x)**2 + (y - l_y)**2 + (z - l_z)**2)**(1/2)
+        dEdy = 3 * (y - l_y) * ((x - l_x)**2 + (y - l_y)**2 + (z - l_z)**2)**(1/2)
+        dEdz = 3 * (z - l_z) * ((x - l_x)**2 + (y - l_y)**2 + (z - l_z)**2)**(1/2)
+        C = 1e-7
 
-        phi_x = (d_l_y * (z - l_z) - d_l_z * (y - l_y))
-        phi_y = (d_l_z * (x - l_x) - d_l_x * (z - l_z))
-        phi_z = (d_l_x * (y - l_y) - d_l_y * (x - l_x))
+        phi_x = d_l_y * (z - l_z) - d_l_z * (y - l_y)
+        phi_y = d_l_z * (x - l_x) - d_l_x * (z - l_z)
+        phi_z = d_l_x * (y - l_y) - d_l_y * (x - l_x)
 
-        theta_factor = ((E * E) ** (-1)) * (-1) * C
+        theta_factor = ((E**2)**(-1)) * (-1) * C
 
         dBx_dx = theta_factor * dEdx * phi_x
-        dBx_dy = theta_factor * dEdy * phi_x + (E ** (-1)) * C * (-1) * d_l_z
-        dBx_dz = theta_factor * dEdz * phi_x + (E ** (-1)) * C * d_l_y
+        dBx_dy = theta_factor * dEdy * phi_x + (E**(-1)) * C * (-1) * d_l_z
+        dBx_dz = theta_factor * dEdz * phi_x + (E**(-1)) * C * d_l_y
 
-        dBy_dx = theta_factor * dEdx * phi_y + (E ** (-1)) * C * d_l_z
+        dBy_dx = theta_factor * dEdx * phi_y + (E**(-1)) * C * d_l_z
         dBy_dy = theta_factor * dEdy * phi_y
-        dBy_dz = theta_factor * dEdz * phi_y + (E ** (-1)) * C * (-1) * d_l_x
+        dBy_dz = theta_factor * dEdz * phi_y + (E**(-1)) * C * (-1) * d_l_x
 
-        dBz_dx = theta_factor * dEdx * phi_z + (E ** (-1)) * C * (-1) * d_l_y
-        dBz_dy = theta_factor * dEdy * phi_z + (E ** (-1)) * C * d_l_x
+        dBz_dx = theta_factor * dEdx * phi_z + (E**(-1)) * C * (-1) * d_l_y
+        dBz_dy = theta_factor * dEdy * phi_z + (E**(-1)) * C * d_l_x
         dBz_dz = theta_factor * dEdz * phi_z
 
-        DBxdxyz += np.array([np.sum(dBx_dx, axis=1), np.sum(dBx_dy, axis=1), np.sum(dBx_dz, axis=1)])
-        DBydxyz += np.array([np.sum(dBy_dx, axis=1), np.sum(dBy_dy, axis=1), np.sum(dBy_dz, axis=1)])
-        DBzdxyz += np.array([np.sum(dBz_dx, axis=1), np.sum(dBz_dy, axis=1), np.sum(dBz_dz, axis=1)])
+        DBxdxyz += np.array([np.sum(dBx_dx, axis=0), np.sum(dBx_dy, axis=0), np.sum(dBx_dz, axis=0)])
+        DBydxyz += np.array([np.sum(dBy_dx, axis=0), np.sum(dBy_dy, axis=0), np.sum(dBy_dz, axis=0)])
+        DBzdxyz += np.array([np.sum(dBz_dx, axis=0), np.sum(dBz_dy, axis=0), np.sum(dBz_dz, axis=0)])
 
     return DBxdxyz, DBydxyz, DBzdxyz
