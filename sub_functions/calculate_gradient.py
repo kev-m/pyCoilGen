@@ -189,6 +189,7 @@ def direct_biot_savart_gradient_calc_3(wire_elements, target_coords):
         wire_part.coord = wire_elements
         wire_part.seg_coords = (wire_part.coord[:-1, :] + wire_part.coord[1:, :]) / 2
         wire_part.currents = wire_part.coord[1:, :] - wire_part.coord[:-1, :]
+        wire_parts = [wire_part]
 
     DBxdxyz = np.zeros((num_tp, 3))
     DBydxyz = np.zeros((num_tp, 3))
