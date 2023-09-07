@@ -1065,6 +1065,7 @@ def CoilGen(log, input=None):
     timer.start()
     coil_parts, solution_errors = evaluate_field_errors(coil_parts, input_args, solution.target_field, solution.sf_b_field)
     timer.stop()
+    solution.solution_errors = solution_errors
     save(persistence_dir, project_name, '21', solution)
 
     # WIP
