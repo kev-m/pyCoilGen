@@ -1690,8 +1690,9 @@ def develop_load_preoptimized_data():
 def develop_evaluate_field_errors():
     from sub_functions.evaluate_field_errors import evaluate_field_errors
 
-    which = 'ygradient_coil_0_5'  # Fails
+    # which = 'ygradient_coil_0_5'  # Fails
     # which = 'biplanar_xgradient_0_5' # ALL PASS!!
+    which = 'biplanar_xgradient_1_10' # Fails
     # which = 'shielded_ygradient_coil_0_9' # Fails
     # which = 'Preoptimzed_Breast_Coil_0_10' # Fails
     # which = 'Preoptimzed_SVD_Coil_0_10'
@@ -1727,7 +1728,10 @@ def develop_evaluate_field_errors():
     #   wire_path
     #   field_by_loops, if skip_postprocessing = True
     p_coil_parts = []
+    m_debug1 = m_c_parts[0].evaluate_field_errors
     for index1, m_c_part in enumerate(m_c_parts):
+        m_debug = m_c_part.evaluate_field_errors
+
         p_coil_part = CoilPart()
 
         # contour_step
@@ -1735,12 +1739,12 @@ def develop_evaluate_field_errors():
 
         # contour_lines
         p_coil_part.contour_lines = []
-        for index2, m_contour in enumerate(passify_matlab(m_c_part.contour_lines)):
-            p_line = ContourLine(v=m_contour.v, uv=m_contour.uv)
+        for index2, m_contour in enumerate(passify_matlab(m_debug.debug1.input.contour_lines)):
+            p_line = ContourLine(v=m_contour.v, uv=m_contour.uv.astype(np.float64))
             p_coil_part.contour_lines.append(p_line)
 
         # wire_path
-        p_coil_part.wire_path = m_c_part.wire_path
+        p_coil_part.wire_path = m_debug.debug1.input.wire_path
 
         # Add this coil_part to the list
         p_coil_parts.append(p_coil_part)
@@ -1750,12 +1754,16 @@ def develop_evaluate_field_errors():
     #######################################################
     assert solution.input_args.skip_postprocessing == m_out.input_data.skip_postprocessing
 
+    assert compare(target_field.b, m_debug1.debug2.target_field.b)
+    assert compare(target_field.coords, m_debug1.debug2.target_field.coords)
+
+
     input_args = DataStructure(skip_postprocessing=solution.input_args.skip_postprocessing)
     ###################################################################################
     # Function under test
     timer = Timing()
     timer.start()
-    t_coil_parts, solution_errors = evaluate_field_errors(p_coil_parts, input_args, target_field, sf_b_field, m_c_parts)
+    t_coil_parts, solution_errors = evaluate_field_errors(p_coil_parts, input_args, target_field, sf_b_field)# , m_c_parts)
     timer.stop()
     ###################################################################################
 
@@ -1765,11 +1773,11 @@ def develop_evaluate_field_errors():
     #   field_by_layout
     for index, m_c_part in enumerate(m_c_parts):
         t_coil_part = t_coil_parts[index]
-        assert compare(t_coil_part.field_by_loops2, m_c_part.field_by_loops, fail_result=True) # Fail, passes if *= -1.0??!?
+        assert compare(t_coil_part.field_by_loops2, m_c_part.field_by_loops) # Pass
         assert compare(t_coil_part.field_by_layout, m_c_part.field_by_layout, fail_result=True) # Fail, -4.00852600e-05 -6.55700983e-05 -3.89525354e-05 -1.25023994e-05
 
 
-    assert compare(float(solution_errors.opt_current_layout), m_out.needed_current_layout, fail_result=True)  # Fail  -0.001406
+    assert compare(float(solution_errors.opt_current_layout), m_out.needed_current_layout, fail_result=True)  # Fail  0.006486
 
     assert compare(solution_errors.combined_field_layout, m_out.field_by_layout, fail_result=True)  # Fail, -4.00852600e-05 -6.55700983e-05 -3.89525354e-05 -1.25023994e-05
     assert compare(solution_errors.combined_field_layout_per1Amp, m_out.field_layout_per1Amp, fail_result=True)  # Fail, -7.01195006e-08 -1.14699083e-07 -6.81380721e-08 -2.18699344e-08
@@ -1791,7 +1799,7 @@ def develop_evaluate_field_errors():
                    m_fe.mean_rel_error_unconnected_contours_vs_target)  # Pass
 
     assert compare(fe.max_rel_error_layout_vs_stream_function_field,
-                   m_fe.max_rel_error_layout_vs_stream_function_field, fail_result=True)  # Fail, -0.028297
+                   m_fe.max_rel_error_layout_vs_stream_function_field, fail_result=True)  # Fail, -0.032763
     assert compare(fe.mean_rel_error_layout_vs_stream_function_field,
                    m_fe.mean_rel_error_layout_vs_stream_function_field, fail_result=True)  # Fail, -0.025473
 
