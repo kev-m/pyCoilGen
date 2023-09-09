@@ -178,12 +178,16 @@ def direct_biot_savart_gradient_calc_3(wire_elements, target_coords):
             track_part_inds = track_part_inds[:-1]
 
         wire_parts = []
+        part_ind_start = track_part_inds[0]
         for i in range(len(track_part_inds) - 1):
+            part_ind_end = track_part_inds[i + 1]
             wire_part = WirePart()
-            wire_part.coord = wire_elements[track_part_inds[i]:track_part_inds[i + 1], :]
+            wire_part.coord = wire_elements[part_ind_start:part_ind_end, :]
             wire_part.seg_coords = (wire_part.coord[:-1, :] + wire_part.coord[1:, :]) / 2
             wire_part.currents = wire_part.coord[1:, :] - wire_part.coord[:-1, :]
             wire_parts.append(wire_part)
+            # Start next loop before the last point of the previous, since the last point is not used in the loop below
+            part_ind_start = part_ind_end-1
     else:
         wire_part = WirePart()
         wire_part.coord = wire_elements
