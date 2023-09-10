@@ -354,12 +354,11 @@ def CoilGen(log, input_args=None):
     # Calculate the gradient
     print('Calculate the gradient:')
     timer.start()
-    coil_gradient = calculate_gradient(coil_parts, target_field, input_args)
+    coil_gradient = calculate_gradient(coil_parts, input_args, target_field)
     timer.stop()
     solution.coil_gradient = coil_gradient
     save(persistence_dir, project_name, '22', solution)
 
-    # WIP
     timer.stop()
     return solution
 
