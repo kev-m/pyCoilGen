@@ -80,25 +80,33 @@ Elapsed time is 59.712511 seconds.
 Find the minimal distance between the contour lines:
 Elapsed time is 0.005178 seconds.
 Group the contour loops in topological order:
-Elapsed time is 9.266655 seconds.
+Elapsed time is 9.096230 seconds.
 Calculate center locations of groups:
-Elapsed time is 0.042878 seconds.
+Elapsed time is 0.103303 seconds.
 Interconnect the single groups:
-Elapsed time is 0.254066 seconds.
+Elapsed time is 0.410112 seconds.
 Interconnect the groups to a single wire path:
-Elapsed time is 5.473644 seconds.
+Elapsed time is 5.595537 seconds.
 Shift the return paths over the surface:
-Elapsed time is 6.134210 seconds.
+Elapsed time is 6.271574 seconds.
 Create PCB Print:
-Elapsed time is 0.008580 seconds.
+Elapsed time is 0.028241 seconds.
 Generate volumetric coil body:
-Elapsed time is 6.501566 seconds.
+Elapsed time is 6.916382 seconds.
+Calculate the inductance with fast henry:
+ FastHenry2 is not installed in the Folder- "Program Files (x86)" -", magnetic inductance will not be calculated.. 
+Elapsed time is 0.092656 seconds.
+Evaluate the result for the final wire track:
+Elapsed time is 112.334284 seconds.
+Calculate the resuting gradient field:
+Elapsed time is 48.145139 seconds.
 
 filename = 
 
-    "debug/Preoptimzed_SVD_Coil.mat"
+    "debug/Preoptimzed_SVD_Coil_0_10.mat"
 
 >> 
+    
 """
 
 """

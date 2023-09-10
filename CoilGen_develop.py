@@ -47,9 +47,7 @@ from sub_functions.create_sweep_along_surface import create_sweep_along_surface
 from sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
 from sub_functions.load_preoptimized_data import load_preoptimized_data
 from sub_functions.evaluate_field_errors import evaluate_field_errors
-"""
-from calculate_gradient import calculate_gradient
-"""
+from sub_functions.calculate_gradient import calculate_gradient
 
 log = logging.getLogger(__name__)
 
@@ -1068,14 +1066,15 @@ def CoilGen(log, input=None):
     solution.solution_errors = solution_errors
     save(persistence_dir, project_name, '21', solution)
 
-    # WIP
-    timer.stop()
-    return solution
-
     # Calculate the gradient
     print('Calculate the gradient:')
-    coil_gradient = calculate_gradient(coil_parts, target_field, input_args)
+    timer.start()
+    coil_gradient = calculate_gradient(coil_parts, input_args, target_field)
+    timer.stop()
+    solution.coil_gradient = coil_gradient
+    save(persistence_dir, project_name, '22', solution)
 
+    timer.stop()
     return solution
 
 

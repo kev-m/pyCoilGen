@@ -692,9 +692,9 @@ class LayoutGradient:
     """
     Used by calculate_gradient.py
     """
-    dBxdxyz: np.ndarray
-    dBydxyz: np.ndarray
-    dBzdxyz: np.ndarray
+    dBxdxyz: np.ndarray = None
+    dBydxyz: np.ndarray = None
+    dBzdxyz: np.ndarray = None
     gradient_in_target_direction: np.ndarray = None
     mean_gradient_in_target_direction: float = None
     std_gradient_in_target_direction: float = None
