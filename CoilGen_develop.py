@@ -1101,7 +1101,6 @@ if __name__ == "__main__":
         #"cylinder_mesh_parameter_list": [0.4, 0.1125, 50, 50, 0.0, 1.0, 0.0, 0.0],
         #"double_cone_mesh_parameter_list": [0.8, 0.3, 0.3, 0.1, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "field_shape_function": "x",
-        "fmincon_parameter": [500.0, 10000000000.0, 1e-10, 1e-10, 1e-10],
         "force_cut_selection": ['high'],
         #"gauss_order": 2,
         #"group_interconnection_method": "crossed",
@@ -1126,7 +1125,10 @@ if __name__ == "__main__":
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
         "set_roi_into_mesh_center": True,
-        #"sf_opt_method": "tikhonov",
+        # "sf_opt_method": "minimize", # "tikhonov"
+        # "minimize_method": "SLSQP", # Only used when 'sf_opt_method' is not tikhonov
+        # "minimize_method_parameters" : "{'tol':1.e-6}",
+        # "minimize_method_options" : "{'disp': True, 'ftol': 1e-6, 'maxiter' : 1000}",
         "sf_source_file": "none",
         #"skip_calculation_min_winding_distance": True,  # Default: 1
         "skip_inductance_calculation": False,
@@ -1170,7 +1172,6 @@ if __name__ == "__main__":
         "cylinder_mesh_parameter_list": [0.8, 0.3, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "double_cone_mesh_parameter_list": [0.8, 0.3, 0.3, 0.1, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "field_shape_function": "y",
-        "fmincon_parameter": [1000.0, 10000000000.0, 1e-10, 1e-10, 1e-10],
         "force_cut_selection": ['high'],
         "gauss_order": 2,
         # "geometry_source_path": "/MATLAB Drive/CoilGen/Geometry_Data",
@@ -1196,7 +1197,10 @@ if __name__ == "__main__":
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
         "set_roi_into_mesh_center": True,
-        "sf_opt_method": "tikhonov",
+        "sf_opt_method": "tikhonov", # "tikhonov"
+        # "minimize_method": "SLSQP", # Only used when 'sf_opt_method' is not tikhonov
+        # "minimize_method_parameters" : "{'tol':1.e-6}",
+        # "minimize_method_options" : "{'disp': True, 'ftol': 1e-6, 'maxiter' : 1000}",
         "sf_source_file": "none",
         "skip_calculation_min_winding_distance": True,  # Default 1
         "skip_inductance_calculation": False,
@@ -1225,6 +1229,5 @@ if __name__ == "__main__":
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 2m11
 
-    # Run and compare with MATLAB results
     solution1 = CoilGen(log, arg_dict1)
     solution2 = CoilGen(log, arg_dict2)
