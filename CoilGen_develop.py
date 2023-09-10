@@ -1128,8 +1128,8 @@ if __name__ == "__main__":
         "save_stl_flag": 1,
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
-        "set_roi_into_mesh_center": 1,
-        "sf_opt_method": "tikkonov",
+        "set_roi_into_mesh_center": True,
+        #"sf_opt_method": "tikhonov",
         "sf_source_file": "none",
         "skip_calculation_min_winding_distance": 1,  # Default: 1
         "skip_inductance_calculation": 0,
@@ -1146,7 +1146,7 @@ if __name__ == "__main__":
         "target_mesh_file": "none",
         "target_region_radius": 0.1,        
         "target_region_resolution": 5, # MATLAB 10 is the default but 5 is faster
-        "tikonov_reg_factor": 10,
+        "tikhonov_reg_factor": 10,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
         "use_only_target_mesh_verts": False,
@@ -1200,7 +1200,7 @@ if __name__ == "__main__":
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
         "set_roi_into_mesh_center": True,
-        "sf_opt_method": "tikkonov",
+        "sf_opt_method": "tikhonov",
         "sf_source_file": "none",
         "skip_calculation_min_winding_distance": 1,  # Default 1
         "skip_inductance_calculation": 0,
@@ -1217,7 +1217,7 @@ if __name__ == "__main__":
         "target_mesh_file": "none",
         "target_region_radius": 0.15,
         "target_region_resolution": 5,  # MATLAB 10 is the default but 5 is faster
-        "tikonov_reg_factor": 100,
+        "tikhonov_reg_factor": 100,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
         "use_only_target_mesh_verts": False,

@@ -64,12 +64,12 @@ def parse_input(parse_cli=True):
                         default='none', help="Field name of the target field definition")
 
     # Add the stream function optimization method
-    parser.add_argument('--sf_opt_method', type=str, default='tikkonov',
+    parser.add_argument('--sf_opt_method', type=str, default='tikhonov',
                         help="Stream function optimization method")
 
-    # Add the Tikonov regularization factor
-    parser.add_argument('--tikonov_reg_factor', type=float, default=1,
-                        help="Tikonov regularization factor for the stream function optimization")
+    # Add the Tikhonov regularization factor
+    parser.add_argument('--tikhonov_reg_factor', type=float, default=1,
+                        help="Tikhonov regularization factor for the stream function optimization")
 
     # Add the fmincon parameter list
     parser.add_argument('--fmincon_parameter', nargs='+', type=float, default=[

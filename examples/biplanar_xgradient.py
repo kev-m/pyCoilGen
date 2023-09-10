@@ -46,7 +46,7 @@ if __name__ == '__main__':
         'interconnection_method': 'regular',
         'skip_postprocessing': False,
         'skip_inductance_calculation': False,
-        'tikonov_reg_factor': 10,  # Tikonov regularization factor for the SF optimization
+        'tikhonov_reg_factor': 10,  # Tikhonov regularization factor for the SF optimization
 
         'output_directory': 'images',
         'project_name': 'biplanar_xgradient',

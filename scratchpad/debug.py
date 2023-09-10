@@ -612,7 +612,7 @@ def develop_stream_function_optimization():
     m_coil_parts = mat_data_out.coil_parts
     m_coil_part = m_coil_parts
 
-    input_args = DataStructure(tikonov_reg_factor=10, sf_opt_method='tikkonov',
+    input_args = DataStructure(tikhonov_reg_factor=10, sf_opt_method='tikhonov',
                                fmincon_parameter=[500.0, 10000000000.0, 1e-10, 1e-10, 1e-10])
     # target_field = mat_data_out.target_field
 
