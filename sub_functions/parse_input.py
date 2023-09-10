@@ -71,9 +71,19 @@ def parse_input(parse_cli=True):
     parser.add_argument('--tikhonov_reg_factor', type=float, default=1,
                         help="Tikhonov regularization factor for the stream function optimization")
 
-    # Add the fmincon parameter list
-    parser.add_argument('--fmincon_parameter', nargs='+', type=float, default=[
-                        500, 10**10, 1.0e-10, 1.0e-10, 1.0e-10], help="Parameters for the iterative optimization with fmincon")
+    # See: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
+    # Add the Stream function optimisation method
+    parser.add_argument('--minimize_method', type=str, default='SLSQP', help="Stream function minimisation method to use, Default: 'SLSQP'")
+    # See: https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html
+    # Add the Stream function optimisation method parameters
+    parser.add_argument('--minimize_method_parameters', type=str, default="{'tol': 1e-6}",
+                        help="Parameters for the minimize method parameters. Default: \"{'tol': 1e-6}\"")
+    # Add the Stream function optimisation method options.
+    parser.add_argument('--minimize_method_options', type=str, default="{'disp': True, 'maxiter' : 1000}",
+                        help="Parameters for the minimize method options. Default: \"{'disp': True, 'maxiter' : 1000}\"")
+
+    #parser.add_argument('--minimize_options', nargs='+', type=float, default=[
+    #                    500, 10**10, 1.0e-10, 1.0e-10, 1.0e-10], help="Parameters for the iterative optimization with 'minimize'")
 
     # Add the number of potential levels
     parser.add_argument('--levels', type=int, default=10,

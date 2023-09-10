@@ -1884,6 +1884,47 @@ def develop_calculate_gradient():
     assert compare(float(layout_gradient.std_gradient_in_target_direction),
                    m_layout_gradient.std_gradient_in_target_direction, double_tolerance=1e-4) # Pass
 
+def minimize_testing():
+
+    import argparse
+    from scipy.optimize import minimize
+    import ast
+
+    def objective_function(x):
+        return x[0]**2 + x[1]**2
+
+    # Initial guess
+    x0 = np.array([1.0, 1.0])    
+
+    # Define the command-line arguments
+    parser = argparse.ArgumentParser(description="Script using SciPy minimize function.")
+
+    # Add an argument for the minimize method parameters
+    parser.add_argument('--minimize_method', type=str, default='SLSQP', help="Stream function minimisation method to use, Default: 'SLSQP'")
+    parser.add_argument('--minimize_method_parameters', type=str, default=None,
+                        help="Parameters for the minimize method parameters, e.g. \"{'tol': 1e-6}\", Default: None")
+    parser.add_argument('--minimize_method_options', type=str, default=None,
+                        help="Parameters for the minimize method options, e.g. \"{'disp': True, 'ftol': 1e-6, 'maxiter' : 1000}\", Default: None")
+
+    # Parse the command-line arguments
+    input_args = parser.parse_args()
+
+    # Convert the string to a dictionary
+    if input_args.minimize_method_parameters is not None:
+        method_params = ast.literal_eval(input_args.minimize_method_parameters)
+    else:
+        method_params = {}
+
+    # Convert the string to a dictionary
+    if input_args.minimize_method_options is not None:
+        minimize_method_options = ast.literal_eval(input_args.minimize_method_options)
+    else:
+        minimize_method_options = {}
+
+    # Call the minimize function with the specified parameters
+    result = minimize(objective_function, x0, method=input_args.minimize_method, **method_params, options=minimize_method_options)
+    log.info("Result: %s", result)
+
 
 if __name__ == "__main__":
     # Set up logging
@@ -1921,8 +1962,9 @@ if __name__ == "__main__":
     # develop_create_sweep_along_surface()
     # develop_calculate_inductance_by_coil_layout()
     # develop_load_preoptimized_data()
-    develop_evaluate_field_errors()
+    # develop_evaluate_field_errors()
     # develop_calculate_gradient()
+    minimize_testing()
     #
     # test_smooth_track_by_folding()
     # from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file1, \

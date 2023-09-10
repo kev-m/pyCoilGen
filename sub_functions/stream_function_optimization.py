@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import minimize
+import ast # For minimization function parameter parsing
 
 from typing import List
 
@@ -8,7 +9,7 @@ import logging
 
 # Local imports
 from sub_functions.data_structures import DataStructure, CoilPart
-from sub_functions.constants import get_level, DEBUG_VERBOSE
+from sub_functions.constants import get_level, DEBUG_NONE, DEBUG_VERBOSE
 from helpers.common import blkdiag
 
 log = logging.getLogger(__name__)
@@ -149,11 +150,28 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         bounds = [(lb[i], ub[i]) for i in range(len(lb))]
 
         # Define the options
-        options = {'disp': True, 'maxiter': input_args.fmincon_parameter[0], 'maxfev': input_args.fmincon_parameter[1],
-                   'gtol': input_args.fmincon_parameter[2], 'tol': input_args.fmincon_parameter[3]}
+        # Convert the string to a dictionary
+        if input_args.minimize_method_parameters is not None:
+            method_params = ast.literal_eval(input_args.minimize_method_parameters)
+        else:
+            method_params = {}
+
+        # Convert the string to a dictionary
+        if input_args.minimize_method_options is not None:
+            minimize_method_options = ast.literal_eval(input_args.minimize_method_options)
+        else:
+            minimize_method_options = {}
+
+        if get_level() > DEBUG_NONE:
+            log.debug("Calling 'minimize' with parameters: \"%s\" and options=\"%s\"", 
+                      method_params, minimize_method_options)
 
         # Perform the optimization
-        result = minimize(cost_function, reduced_sf, method='SLSQP', bounds=bounds, options=options)
+        result = minimize(cost_function, reduced_sf, method=input_args.minimize_method, bounds=bounds, 
+                          **method_params, options=minimize_method_options)
+        log.debug("Detailed minimize result: Success: %s, message: %s", result.success, result.message)
+        if get_level() >= DEBUG_VERBOSE:
+            log.debug("Detailed minimize result: %s", result)
         reduced_sf = result.x
 
     # Reexpand the stream potential to the boundary nodes
@@ -278,6 +296,7 @@ def reexpand_stream_function_for_boundary_nodes(reduced_sf, boundary_nodes, is_n
     # Assign the stream function values for the non-boundary nodes
     sf[is_not_boundary_node] = reduced_sf[len(boundary_nodes):]
     return sf
+
 
 def generate_combined_mesh(coil_parts: List[CoilPart]):
     # Generate a combined mesh container
