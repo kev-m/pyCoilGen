@@ -460,7 +460,6 @@ if __name__ == "__main__":
         "cylinder_mesh_parameter_list": [0.8, 0.3, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "double_cone_mesh_parameter_list": [0.8, 0.3, 0.3, 0.1, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "field_shape_function": "y",
-        "fieldtype_to_evaluate": ['', 'MCOS', 'string', [3707764736, 2, 1, 1, 1, 1]],
         "fmincon_parameter": [1000.0, 10000000000.0, 1e-10, 1e-10, 1e-10],
         "force_cut_selection": ['high'],
         "gauss_order": 2,
