@@ -400,7 +400,7 @@ if __name__ == "__main__":
         "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 14,
-        #"make_cylindrical_pcb": 0,
+        #"make_cylindrical_pcb": False,
         #"max_allowed_angle_within_coil_track": 120,
         #"min_allowed_angle_within_coil_track": 0.0001,
         #"min_loop_significance": 1,
@@ -410,7 +410,7 @@ if __name__ == "__main__":
         #"pcb_interconnection_method": "spiral_in_out",
         #"pcb_spiral_end_shift_factor": 10,
         #"planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        #"plot_flag": 1,
+        #"plot_flag": True,
         "pot_offset_factor": 0.25,
         #"save_stl_flag": True,
         "secondary_target_mesh_file": "none",
@@ -418,15 +418,15 @@ if __name__ == "__main__":
         "set_roi_into_mesh_center": True,
         #"sf_opt_method": "tikhonov",
         "sf_source_file": "none",
-        #"skip_calculation_min_winding_distance": 1,  # Default: 1
+        #"skip_calculation_min_winding_distance": True,  # Default: 1
         "skip_inductance_calculation": False,
-        #"skip_normal_shift": 0,
+        #"skip_normal_shift": False,
         "skip_postprocessing": False,
-        #"skip_sweep": 0,
+        #"skip_sweep": False,
         #"smooth_factor": 1,
-        #"smooth_flag": 1,
+        #"smooth_flag": True,
         #"specific_conductivity_conductor": 1.8e-8,
-        "surface_is_cylinder_flag": 1,
+        "surface_is_cylinder_flag": True,
         #"target_field_definition_field_name": "none",
         #"target_field_definition_file": "none",
         #"target_gradient_strength": 1,
@@ -471,7 +471,7 @@ if __name__ == "__main__":
         "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 20,
-        "make_cylindrical_pcb": 1,
+        "make_cylindrical_pcb": True,
         "max_allowed_angle_within_coil_track": 120,
         "min_allowed_angle_within_coil_track": 0.0001,
         "min_loop_significance": 1, # Was 0.1, a bug?
@@ -481,21 +481,21 @@ if __name__ == "__main__":
         "pcb_interconnection_method": "spiral_in_out",
         "pcb_spiral_end_shift_factor": 10,
         "planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        "plot_flag": 1,
+        "plot_flag": True,
         "pot_offset_factor": 0.25,
-        "save_stl_flag": 1,
+        "save_stl_flag": True,
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
         "set_roi_into_mesh_center": True,
         "sf_opt_method": "tikhonov",
         "sf_source_file": "none",
-        "skip_calculation_min_winding_distance": 1,  # Default 1
-        "skip_inductance_calculation": 0,
-        "skip_normal_shift": 0,
-        "skip_postprocessing": 0,
-        "skip_sweep": 0,
+        "skip_calculation_min_winding_distance": True,  # Default 1
+        "skip_inductance_calculation": False,
+        "skip_normal_shift": False,
+        "skip_postprocessing": False,
+        "skip_sweep": False,
         "smooth_factor": 1,
-        "smooth_flag": 1,
+        "smooth_flag": True,
         "specific_conductivity_conductor": 1.8e-08,
         "surface_is_cylinder_flag": True,
         "target_field_definition_field_name": "none",
@@ -516,5 +516,5 @@ if __name__ == "__main__":
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 2m11
 
-    solution = CoilGen(log, arg_dict1)
-    solution = CoilGen(log, arg_dict2)
+    solution1 = CoilGen(log, arg_dict1)
+    solution2 = CoilGen(log, arg_dict2)
