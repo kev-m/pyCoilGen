@@ -16,9 +16,26 @@ from sub_functions.constants import *
 log = logging.getLogger(__name__)
 
 
-def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args):
+def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_args) -> TargetField:
     """
     Define the target field.
+
+    Initialises the following properties of a CoilPart:
+        - None
+
+    Updates the following properties of a CoilPart:
+        - None
+
+    Depends on the following input_args:
+        - target_field_definition_file
+        - target_field_definition_field_name
+        - use_only_target_mesh_verts
+        - target_region_resolution
+        - target_region_radius
+        - set_roi_into_mesh_center
+        - field_shape_function
+        - target_gradient_strength
+        - secondary_target_weight
 
     Args:
         coil_parts (list): List of coil parts.
@@ -27,7 +44,7 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
         input (object): Input parameters.
 
     Returns:
-        target_field_out (ndarray): Target field information (3 x m).
+        target_field_out (TargetField): Target field information (3 x m).
         is_supressed_point (ndarray): Array indicating whether a point is suppressed or not (m).
     """
     target_field_out = TargetField()
@@ -36,9 +53,7 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
     if input_args.target_field_definition_file != 'none':
         # Load target field definition file
         target_field_definition_file = os.path.join("target_fields", input_args.target_field_definition_file)
-        # loaded_target_field = loadmat(target_field_definition_file)
         loaded_target_field = np.load(target_field_definition_file)
-        # struct_name = loaded_target_field.keys()[0]
         struct_name = list(loaded_target_field.keys())[0]
         loaded_target_field = loaded_target_field[struct_name]
 
@@ -170,13 +185,16 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
     return target_field_out, is_supressed_point
 
 
-def symbolic_calculation_of_gradient(input, target_field):
+def symbolic_calculation_of_gradient(input_args, target_field):
     """
     Calculate the gradients from the symbolic definition of the target field.
 
     Args:
-        input (object): Input parameters.
-        target_field (ndarray): Target field values.
+        input_args (DataStructure): Input parameters.
+        target_field (ndarray): (3,m) Target field values.
+
+    Depends on the following input_args:
+        - field_shape_function
 
     Returns:
         target_dbzbx (ndarray): Gradient in x-direction.
@@ -186,30 +204,17 @@ def symbolic_calculation_of_gradient(input, target_field):
     try:
 
         x, y, z = symbols('x y z')
-        dbzdx_expr = diff(input.field_shape_function, x)
-        dbzdy_expr = diff(input.field_shape_function, y)
-        dbzdz_expr = diff(input.field_shape_function, z)
+        dbzdx_expr = diff(input_args.field_shape_function, x)
+        dbzdy_expr = diff(input_args.field_shape_function, y)
+        dbzdz_expr = diff(input_args.field_shape_function, z)
 
         # Convert expressions to string representations
         dbzdx_str = str(dbzdx_expr)
         dbzdy_str = str(dbzdy_expr)
         dbzdz_str = str(dbzdz_expr)
 
-        # Modify string representations for array-wise operations
-        dbzdx_str = dbzdx_str.replace("/", "./")
-        dbzdx_str = dbzdx_str.replace("^", ".^")
-        dbzdx_str = dbzdx_str.replace("*", ".*")
-
-        dbzdy_str = dbzdy_str.replace("/", "./")
-        dbzdy_str = dbzdy_str.replace("^", ".^")
-        dbzdy_str = dbzdy_str.replace("*", ".*")
-
-        dbzdz_str = dbzdz_str.replace("/", "./")
-        dbzdz_str = dbzdz_str.replace("^", ".^")
-        dbzdz_str = dbzdz_str.replace("*", ".*")
-
         # DEBUG
-        if input.debug >= DEBUG_BASIC:
+        if input_args.debug >= DEBUG_BASIC:
             log.debug(' - dbzdx_fun: %s', dbzdx_str)
             log.debug(' - dbzdy_fun: %s', dbzdy_str)
             log.debug(' - dbzdz_fun: %s', dbzdz_str)
@@ -235,8 +240,8 @@ def symbolic_calculation_of_gradient(input, target_field):
 
     except Exception as e:
         log.error(' Exception: %s', e)
-        target_dbzbx = np.zeros_like(target_field[2, :])
-        target_dbzby = np.zeros_like(target_field[2, :])
+        target_dbzbx = np.zeros_like(target_field[0, :])
+        target_dbzby = np.zeros_like(target_field[1, :])
         target_dbzbz = np.zeros_like(target_field[2, :])
         log.error('Gradient Calculation from Symbolic Target failed')
 

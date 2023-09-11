@@ -1964,7 +1964,7 @@ if __name__ == "__main__":
     # develop_load_preoptimized_data()
     # develop_evaluate_field_errors()
     # develop_calculate_gradient()
-    minimize_testing()
+    # minimize_testing()
     #
     # test_smooth_track_by_folding()
     # from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file1, \
@@ -1984,3 +1984,5 @@ if __name__ == "__main__":
     # from tests.test_biot_savart_calc_b import test_biot_savart_calc_b_arrays2
     # test_biot_savart_calc_b_arrays2()
 
+    from tests.test_symbolic_calculation_of_gradient import test_symbolic_calculation_of_gradient
+    test_symbolic_calculation_of_gradient()
