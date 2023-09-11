@@ -69,7 +69,7 @@ Project Link: [https://github.com/Philipp-MR/pyCoilGen](https://github.com/Phili
 
 ## Issues
 
-For issues related to the project, please visit the project [Issues](issues) page.
+For issues related to the project, please visit the project [Issues](Issues) page.
 
 ## Citation
 
