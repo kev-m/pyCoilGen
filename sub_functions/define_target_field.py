@@ -36,9 +36,7 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
     if input_args.target_field_definition_file != 'none':
         # Load target field definition file
         target_field_definition_file = os.path.join("target_fields", input_args.target_field_definition_file)
-        # loaded_target_field = loadmat(target_field_definition_file)
         loaded_target_field = np.load(target_field_definition_file)
-        # struct_name = loaded_target_field.keys()[0]
         struct_name = list(loaded_target_field.keys())[0]
         loaded_target_field = loaded_target_field[struct_name]
 
@@ -194,19 +192,6 @@ def symbolic_calculation_of_gradient(input, target_field):
         dbzdx_str = str(dbzdx_expr)
         dbzdy_str = str(dbzdy_expr)
         dbzdz_str = str(dbzdz_expr)
-
-        # Modify string representations for array-wise operations
-        dbzdx_str = dbzdx_str.replace("/", "./")
-        dbzdx_str = dbzdx_str.replace("^", ".^")
-        dbzdx_str = dbzdx_str.replace("*", ".*")
-
-        dbzdy_str = dbzdy_str.replace("/", "./")
-        dbzdy_str = dbzdy_str.replace("^", ".^")
-        dbzdy_str = dbzdy_str.replace("*", ".*")
-
-        dbzdz_str = dbzdz_str.replace("/", "./")
-        dbzdz_str = dbzdz_str.replace("^", ".^")
-        dbzdz_str = dbzdz_str.replace("*", ".*")
 
         # DEBUG
         if input.debug >= DEBUG_BASIC:
