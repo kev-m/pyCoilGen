@@ -49,7 +49,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
         mesh_faces = mesh_part.get_faces()
 
         # DEBUG
-        if input.debug >= DEBUG_BASIC:
+        if input.debug > DEBUG_BASIC:
             log.debug(" - processing %d, vertices shape: %s", part_ind, mesh_part.get_vertices().shape)
 
         # Compute face and vertex normals
@@ -62,7 +62,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
         max_face_normal_std = np.max(max_face_normal)
 
         # DEBUG
-        if input.debug >= DEBUG_BASIC:
+        if input.debug > DEBUG_BASIC:
             log.debug(" - max_face_normal: %s, max_face_normal_std: %s", max_face_normal, max_face_normal_std)
 
         mesh_part.v = mesh_vertices
@@ -156,7 +156,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 mesh_part.uv = mesh_vertices[:, :2]
 
             # DEBUG
-            if input.debug >= DEBUG_BASIC:
+            if input.debug > DEBUG_BASIC:
                 log.debug(" - mesh_part.uv shape: %s", mesh_part.uv.shape)
 
             mesh_part.boundary = mesh_part.boundary_indices() # get_boundary_loop_nodes(mesh_part)

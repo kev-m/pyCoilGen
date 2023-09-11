@@ -24,7 +24,7 @@ def temp_evaluation(coil_solution : CoilSolution, input, target_field):
     """
     preoptimization_input_hash = generate_DataHash([input.coil_mesh_file, input.iteration_num_mesh_refinement,
                                                     input.surface_is_cylinder_flag, target_field])
-    optimized_input_hash = generate_DataHash([input.sf_opt_method, input.tikonov_reg_factor, input.fmincon_parameter])
+    optimized_input_hash = generate_DataHash([input.sf_opt_method, input.tikhonov_reg_factor, input.fmincon_parameter])
 
     coil_solution.optimisation.use_preoptimization_temp = False
     coil_solution.optimisation.use_optimized_temp = False

@@ -371,6 +371,8 @@ def CoilGen(log, input_args=None):
 
 
 if __name__ == "__main__":
+    # Set up logging
+    # log = logging.getLogger(__name__)
     # logging.basicConfig(level=logging.DEBUG)
     logging.basicConfig(level=logging.INFO)
 
@@ -391,7 +393,6 @@ if __name__ == "__main__":
         #"cylinder_mesh_parameter_list": [0.4, 0.1125, 50, 50, 0.0, 1.0, 0.0, 0.0],
         #"double_cone_mesh_parameter_list": [0.8, 0.3, 0.3, 0.1, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "field_shape_function": "x",
-        "fmincon_parameter": [500.0, 10000000000.0, 1e-10, 1e-10, 1e-10],
         "force_cut_selection": ['high'],
         #"gauss_order": 2,
         #"group_interconnection_method": "crossed",
@@ -400,7 +401,7 @@ if __name__ == "__main__":
         "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 14,
-        #"make_cylindrical_pcb": 0,
+        #"make_cylindrical_pcb": False,
         #"max_allowed_angle_within_coil_track": 120,
         #"min_allowed_angle_within_coil_track": 0.0001,
         #"min_loop_significance": 1,
@@ -410,30 +411,33 @@ if __name__ == "__main__":
         #"pcb_interconnection_method": "spiral_in_out",
         #"pcb_spiral_end_shift_factor": 10,
         #"planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        #"plot_flag": 1,
+        #"plot_flag": True,
         "pot_offset_factor": 0.25,
         #"save_stl_flag": True,
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
         "set_roi_into_mesh_center": True,
-        #"sf_opt_method": "tikkonov",
+        "sf_opt_method": "minimize", # "tikhonov"
+        # "minimize_method": "SLSQP", # Only used when 'sf_opt_method' is not tikhonov
+        # "minimize_method_parameters" : "{'tol':1.e-6}",
+        # "minimize_method_options" : "{'disp': True, 'maxiter' : 1000}",
         "sf_source_file": "none",
-        #"skip_calculation_min_winding_distance": 1,  # Default: 1
+        #"skip_calculation_min_winding_distance": True,  # Default: 1
         "skip_inductance_calculation": False,
-        #"skip_normal_shift": 0,
+        #"skip_normal_shift": False,
         "skip_postprocessing": False,
-        #"skip_sweep": 0,
+        #"skip_sweep": False,
         #"smooth_factor": 1,
-        #"smooth_flag": 1,
+        #"smooth_flag": True,
         #"specific_conductivity_conductor": 1.8e-8,
-        "surface_is_cylinder_flag": 1,
+        "surface_is_cylinder_flag": True,
         #"target_field_definition_field_name": "none",
         #"target_field_definition_file": "none",
         #"target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.1,    # GitHub
         "target_region_resolution": 5, # MATLAB 10 is the default but 5 is faster
-        "tikonov_reg_factor": 10,
+        "tikhonov_reg_factor": 10,
         #"tiny_segment_length_percentage": 0,
         #"track_width_factor": 0.5,
         "use_only_target_mesh_verts": False,
@@ -460,8 +464,6 @@ if __name__ == "__main__":
         "cylinder_mesh_parameter_list": [0.8, 0.3, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "double_cone_mesh_parameter_list": [0.8, 0.3, 0.3, 0.1, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "field_shape_function": "y",
-        "fieldtype_to_evaluate": ['', 'MCOS', 'string', [3707764736, 2, 1, 1, 1, 1]],
-        "fmincon_parameter": [1000.0, 10000000000.0, 1e-10, 1e-10, 1e-10],
         "force_cut_selection": ['high'],
         "gauss_order": 2,
         # "geometry_source_path": "/MATLAB Drive/CoilGen/Geometry_Data",
@@ -471,7 +473,7 @@ if __name__ == "__main__":
         "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 20,
-        "make_cylindrical_pcb": 1,
+        "make_cylindrical_pcb": True,
         "max_allowed_angle_within_coil_track": 120,
         "min_allowed_angle_within_coil_track": 0.0001,
         "min_loop_significance": 1, # Was 0.1, a bug?
@@ -481,21 +483,24 @@ if __name__ == "__main__":
         "pcb_interconnection_method": "spiral_in_out",
         "pcb_spiral_end_shift_factor": 10,
         "planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        "plot_flag": 1,
+        "plot_flag": True,
         "pot_offset_factor": 0.25,
-        "save_stl_flag": 1,
+        "save_stl_flag": True,
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
         "set_roi_into_mesh_center": True,
-        "sf_opt_method": "tikkonov",
+        "sf_opt_method": "tikhonov",
+        # "minimize_method": "SLSQP", # Only used when 'sf_opt_method' is not tikhonov
+        # "minimize_method_parameters" : "{'tol':1.e-6}",
+        # "minimize_method_options" : "{'disp': True, 'ftol': 1e-6, 'maxiter' : 1000}",
         "sf_source_file": "none",
-        "skip_calculation_min_winding_distance": 1,  # Default 1
-        "skip_inductance_calculation": 0,
-        "skip_normal_shift": 0,
-        "skip_postprocessing": 0,
-        "skip_sweep": 0,
+        "skip_calculation_min_winding_distance": True,  # Default 1
+        "skip_inductance_calculation": False,
+        "skip_normal_shift": False,
+        "skip_postprocessing": False,
+        "skip_sweep": False,
         "smooth_factor": 1,
-        "smooth_flag": 1,
+        "smooth_flag": True,
         "specific_conductivity_conductor": 1.8e-08,
         "surface_is_cylinder_flag": True,
         "target_field_definition_field_name": "none",
@@ -504,7 +509,7 @@ if __name__ == "__main__":
         "target_mesh_file": "none",
         "target_region_radius": 0.15,
         "target_region_resolution": 5,  # MATLAB 10 is the default but 5 is faster
-        "tikonov_reg_factor": 100,
+        "tikhonov_reg_factor": 100,
         "tiny_segment_length_percentage": 0,
         "track_width_factor": 0.5,
         "use_only_target_mesh_verts": False,
@@ -516,5 +521,5 @@ if __name__ == "__main__":
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 2m11
 
-    solution = CoilGen(log, arg_dict1)
-    solution = CoilGen(log, arg_dict2)
+    solution1 = CoilGen(log, arg_dict1)
+    solution2 = CoilGen(log, arg_dict2)

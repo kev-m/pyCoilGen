@@ -48,9 +48,9 @@ if __name__ == '__main__':
         'conductor_cross_section_width': 0.015,
         'cross_sectional_points': np.array([np.sin(np.linspace(0, 2 * np.pi, 10)),
                                      np.cos(np.linspace(0, 2 * np.pi, 10))]) * 0.01,
-        'sf_opt_method': 'tikkonov', # ...
+        'sf_opt_method': 'tikhonov', # ...
         'fmincon_parameter': [1000.0, 10 ^ 10, 1.000000e-10, 1.000000e-10, 1.000000e-10],
-        'tikonov_reg_factor': 100,  # %Tikonov regularization factor for the SF optimization
+        'tikhonov_reg_factor': 100,  # %Tikhonov regularization factor for the SF optimization
 
         'output_directory': 'images',
         'project_name': 'ygradient_coil',
