@@ -20,21 +20,21 @@ def build_biplanar_mesh(planar_height, planar_width,
     """
     Create a biplanar regular mesh in any orientation.
 
-    Parameters:
-    - planar_height (float): Height of the planar mesh.
-    - planar_width (float): Width of the planar mesh.
-    - num_lateral_divisions (int): Number of divisions in the lateral direction.
-    - num_longitudinal_divisions (int): Number of divisions in the longitudinal direction.
-    - target_normal_x (float): X-component of the target normal vector.
-    - target_normal_y (float): Y-component of the target normal vector.
-    - target_normal_z (float): Z-component of the target normal vector.
-    - center_position_x (float): X-coordinate of the center position.
-    - center_position_y (float): Y-coordinate of the center position.
-    - center_position_z (float): Z-coordinate of the center position.
-    - plane_distance (float): Distance between the two planes.
+    Args:
+        planar_height (float): Height of the planar mesh.
+        planar_width (float): Width of the planar mesh.
+        num_lateral_divisions (int): Number of divisions in the lateral direction.
+        num_longitudinal_divisions (int): Number of divisions in the longitudinal direction.
+        target_normal_x (float): X-component of the target normal vector.
+        target_normal_y (float): Y-component of the target normal vector.
+        target_normal_z (float): Z-component of the target normal vector.
+        center_position_x (float): X-coordinate of the center position.
+        center_position_y (float): Y-coordinate of the center position.
+        center_position_z (float): Z-coordinate of the center position.
+        plane_distance (float): Distance between the two planes.
 
     Returns:
-    - biplanar_mesh (dict): Dictionary containing the mesh faces and vertices.
+        biplanar_mesh (dict): Dictionary containing the mesh faces and vertices.
     """
 
     simple_vertices1, faces1 = simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions)
