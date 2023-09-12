@@ -1,25 +1,6 @@
 from dataclasses import dataclass
 import numpy as np
 
-# TODO: Move into data_structures.py
-@dataclass
-class Mesh:
-    vertices: np.ndarray
-    faces: np.ndarray
-
-@dataclass
-class BasisElement:
-    triangles: np.ndarray
-    area: np.ndarray
-    current: np.ndarray
-
-@dataclass
-class CoilPart:
-    coil_mesh: Mesh
-    basis_elements: list
-    node_adjacency_mat: np.ndarray = None
-    nodal_neighbor_distances: np.ndarray = None
-    resistance_matrix: np.ndarray = None
 
 def calculate_force_and_torque_matrix(coil_parts, gauss_order, conductor_thickness, specific_conductivity_copper):
     """
