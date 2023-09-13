@@ -11,16 +11,16 @@ import sys
 from pathlib import Path
 sub_functions_path = Path(__file__).resolve().parent / '..'
 sys.path.append(str(sub_functions_path))
-from CoilGen import CoilGen
+from pyCoilGen import pyCoilGen
 #from CoilGen_develop import CoilGen
 from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
 """
-Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology,
+Author: Philipp Amrein, University Freiburg, Medical Center, Radiology,
 Medical Physics
 February 2022
 
-This genearets a targeted SVD coil for the human brain. An already optimized solution for the stream function is
+This generates a targeted SVD coil for the human brain. An already optimized solution for the stream function is
 loaded.
 
 For the background of this project refer to: Design of a shim coil array matched to the human brain anatomy
@@ -59,7 +59,7 @@ if __name__ == '__main__':
         'debug': DEBUG_BASIC,
     }
 
-    result = CoilGen(log, arg_dict)
+    result = pyCoilGen(log, arg_dict)
 
 """
 Timing information (MATLAB online server):

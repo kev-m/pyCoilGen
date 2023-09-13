@@ -10,7 +10,7 @@ import logging
 sub_functions_path = Path(__file__).resolve().parent / '..'
 sys.path.append(str(sub_functions_path))
 
-from CoilGen import CoilGen
+from pyCoilGen import pyCoilGen
 from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
 if __name__ == '__main__':
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         'debug': DEBUG_BASIC,
     }
 
-    result = CoilGen(log, arg_dict)
+    result = pyCoilGen(log, arg_dict)
 
 """
 Load geometry:

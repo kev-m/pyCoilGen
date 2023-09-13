@@ -58,9 +58,9 @@ def save(output_dir, project_name, tag, solution):
     np.save(filename, np.asarray([solution], dtype=object))
 
 
-def CoilGen(log, input_args=None):
+def pyCoilGen(log, input_args=None):
     # Create optimized coil finished coil layout
-    # Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
+    # Author: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
     # 5.10.2021
 
     # The following external functions were used in modified form:
@@ -417,7 +417,7 @@ if __name__ == "__main__":
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
         "set_roi_into_mesh_center": True,
-        "sf_opt_method": "minimize", # "tikhonov"
+        "sf_opt_method": "tikhonov", # "tikhonov"
         # "minimize_method": "SLSQP", # Only used when 'sf_opt_method' is not tikhonov
         # "minimize_method_parameters" : "{'tol':1.e-6}",
         # "minimize_method_options" : "{'disp': True, 'maxiter' : 1000}",
@@ -521,5 +521,5 @@ if __name__ == "__main__":
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 2m11
 
-    solution1 = CoilGen(log, arg_dict1)
-    solution2 = CoilGen(log, arg_dict2)
+    solution1 = pyCoilGen(log, arg_dict1)
+    solution2 = pyCoilGen(log, arg_dict2)

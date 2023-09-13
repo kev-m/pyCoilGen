@@ -59,7 +59,7 @@ def save(output_dir, project_name, tag, solution):
     np.save(filename, np.asarray([solution], dtype=object))
 
 
-def CoilGen(log, input=None):
+def pyCoilGen(log, input=None):
     # Create optimized coil finished coil layout
     # Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
     # 5.10.2021
@@ -1229,5 +1229,5 @@ if __name__ == "__main__":
         "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # 2m11
 
-    solution1 = CoilGen(log, arg_dict1)
-    solution2 = CoilGen(log, arg_dict2)
+    solution1 = pyCoilGen(log, arg_dict1)
+    solution2 = pyCoilGen(log, arg_dict2)
