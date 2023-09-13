@@ -51,11 +51,13 @@ from sub_functions.calculate_gradient import calculate_gradient
 log = logging.getLogger(__name__)
 
 
-def save(output_dir, project_name, tag, solution):
+def save(output_dir, project_name, tag, solution) -> str:
     filename = f'{output_dir}/{project_name}_{tag}.npy'
     if get_level() > DEBUG_NONE:
         log.debug("Saving solution to '%s'", filename)
     np.save(filename, np.asarray([solution], dtype=object))
+
+    return filename
 
 
 def pyCoilGen(log, input_args=None):
@@ -363,10 +365,14 @@ def pyCoilGen(log, input_args=None):
         solution.coil_gradient = coil_gradient
         runpoint_tag = '22'
 
+        # Finally, save the completed solution.
+        runpoint_tag = 'final'
+        print(f'Solution saved to "{save(persistence_dir, project_name, runpoint_tag, solution)}"')
+
         timer.stop()
     except Exception as e:
         log.error("Caught exception: %s", e)
-        save(persistence_dir, project_name, runpoint_tag, solution)
+        save(persistence_dir, project_name, f'{runpoint_tag}_exception', solution)
         raise e
     return solution
 
@@ -396,9 +402,7 @@ if __name__ == "__main__":
         "field_shape_function": "x",
         "force_cut_selection": ['high'],
         #"gauss_order": 2,
-        #"group_interconnection_method": "crossed",
         "interconnection_cut_width": 0.05,
-        "interconnection_method": "regular",
         "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 14,
