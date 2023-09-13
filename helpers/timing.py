@@ -14,7 +14,7 @@ class Timing:
         if self.start_times:
             elapsed_time = time.time() - self.start_times.pop()
             if len(self.start_times) == 0:
-                log.debug(f"Total elapsed time: {elapsed_time:.6f} seconds")
+                log.info(f"Total elapsed time: {elapsed_time:.6f} seconds")
             else:
                 log.debug(f"Elapsed time: {elapsed_time:.6f} seconds")
         else:
