@@ -18,6 +18,16 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
         - shift_array
         - points_to_shift
 
+    Depends on the following properties of the CoilParts:
+        - coil_mesh
+        - wire_path
+
+    Depends on the following input_args:
+        - skip_normal_shift
+        - normal_shift_smooth_factors
+        - normal_shift_length
+        - smooth_factor
+
     Updates the following properties of a CoilPart:
         - wire_path
 
@@ -49,7 +59,7 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
             wire_path_out.uv = np.delete(wire_path_out.uv, indices_to_delete, axis=1)
             wire_path_out.v = np.delete(wire_path_out.v, indices_to_delete, axis=1)
 
-            if input_args.smooth_flag and input_args.smooth_factor > 1:
+            if input_args.smooth_factor > 1:
                 # Apply smoothing to the wire path
                 wire_path_out.uv = smooth_track_by_folding(wire_path_out.uv, input_args.smooth_factor)
                 wire_path_out.v, wire_path_out.uv = coil_mesh.uv_to_xyz(wire_path_out.uv, coil_mesh.uv)

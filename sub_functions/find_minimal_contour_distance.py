@@ -19,12 +19,18 @@ def find_minimal_contour_distance(coil_parts: List[CoilPart], input_args):
     Initialises the following properties of a CoilPart:
         - None
 
+    Depends on the following properties of the CoilParts:
+        - contour_lines
+
+    Depends on the following input_args:
+        - skip_calculation_min_winding_distance
+
     Updates the following properties of a CoilPart:
         - pcb_track_width
 
     Args:
         coil_parts (List[CoilPart]): List of CoilPart structures.
-        input_value: The 'input' value (provided as an argument but not used in the function).
+        input_args (DataStructure): The application command-line arguments.
 
     Returns:
         List[CoilPart]: List of CoilPart structures with the 'pcb_track_width' attribute updated.

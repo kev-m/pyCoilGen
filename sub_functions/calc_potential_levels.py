@@ -18,6 +18,14 @@ def calc_potential_levels(coil_parts: List[CoilPart], combined_mesh, input_args)
         - contour_step: float
         - potential_level_list: ndarray
 
+    Depends on the following properties of the CoilParts:
+        - stream_function
+
+    Depends on the following input_args:
+        - levels
+        - pot_offset_factor
+        - level_set_method
+
     Updates the following properties of a CoilPart:
         - None
 
