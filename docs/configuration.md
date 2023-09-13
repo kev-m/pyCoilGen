@@ -19,10 +19,13 @@
   - [Build Contour Lines](#build-contour-lines)
     - [Contour Parameters](#contour-parameters)
   - [Find Contour Topology](#find-contour-topology)
-    - [Contour Topology Parameters](#contour-topology-parameters)
+    - [Topology Parameters](#topology-parameters)
   - [Interconnect Contours / Build Wire Path](#interconnect-contours--build-wire-path)
+    - [Return Paths](#return-paths)
+  - [Generate Outputs](#generate-outputs)
+    - [Generate Cylindrical PCB Output](#generate-cylindrical-pcb-output)
+    - [Generate 3D Wire Path](#generate-3d-wire-path)
     - [Interconnection Parameters](#interconnection-parameters)
-  - [Manage Overlaps](#manage-overlaps)
     - [Overlap Management Parameters](#overlap-management-parameters)
   - [Evaluate Results](#evaluate-results)
     - [Evaluation Parameters](#evaluation-parameters)
@@ -258,37 +261,118 @@ A pre-existing mesh and optimised stream function solution can be loaded from pe
 Specify the filename of the Numpy pickle file of the already optimized stream function. The file is loaded from the `Pre_Optimized_Solutions` directory.
 
 
-
 ## Build Contour Lines
-The 3D mesh of the coil winding surface needs to be projected onto a 2D surface.
+The optimised current density must be analysed to determine the candidate wire paths. This is done by computing the equipotential contours.
 
 ### Contour Parameters
 `--levels` (Type: int, Default: 10)
-  Number of potential levels.
+Specify the number of potential levels.
 
 `--level_set_method` (Type: str, Default: 'primary')
 Specify the method for calculating the level sets. One of 'primary', 'combined' or 'independent'.
 
 The contour levels are calculated from the stream function with contributions from the different coil meshes (if more than one), according to the level set method.
 
-Use `primary` to calculate the contour potentials from primary coil mesh only. 
-Use `combined` to calculate the potentials from the combined mesh. 
-Use `independent` to calculate the potentials for each coil mesh independently.
+- Use `primary` to calculate the contour potentials from primary coil mesh only. 
+- Use `combined` to calculate the potentials from the combined mesh. 
+- Use `independent` to calculate the potentials for each coil mesh independently.
 
 The best method depends on each application. Users can examine the final computed gradient field and computed errors to inform their decision.
 
 `--pot_offset_factor` (Type: float, Default: 1/2)
 This factor is used to control the contour level step, according to the stream function range.
 
+The equipotential contours are further processed to determine their contribution to the gradient field.
 
+`--smooth_factor` (Type: int, Default: 1)
+Specifies how many points along the contour are to be used for smoothing. 
 
+Each point is replaced with the moving average of the specified number of neighbouring points. Smoothing only takes place when the `smooth_factor` is greater than 1.
 
+`--skip_calculation_min_winding_distance` (Type: bool, Default: True)
+A flag to skip calculation of minimum distance between calculated contour lines.
 
-
+The application can calculate the PCB track width using the minimum width between contours if this flag is `False`.
 
 ## Find Contour Topology
+Once the equipotential contours have been identified, they are processed and grouped topologically.
 
-### Contour Topology Parameters
+[Figure showing stream function discretization and contour generation](https://onlinelibrary.wiley.com/doi/10.1002/mrm.29294#mrm29294-fig-0003)
+
+
+### Topology Parameters
+
+[Figure showing details of contour interconnections](https://onlinelibrary.wiley.com/doi/10.1002/mrm.29294#mrm29294-fig-0004)
+
+Neighbouring equipotential contours within a topological group are cut and joined with their neighbours.
+In order to reduce distortions induced by the cuts, they are performed along the intersection of the plane oriented with the magnetic field and the coil surface.
+Each contours thus has two cut points, one in the positive B0 direction and one against the B0 direction. 
+These cut locations are termed "high" and "low" cuts, respectively.
+
+## Interconnect Contours / Build Wire Path
+
+Connect the groups and shift the return paths over the surface.
+
+`--force_cut_selection` (Type: list, Default: [])
+Specify the direction of cuts that join neighbouring contours, to form a topological group. The allowed options are `'high'` or `'low'`. 
+
+The array must either contain a single entry, which is used for all cut points, or match the number of topological groups, which is displayed by the application during processing.
+
+`--b_0_direction` (Type: float array, Default: [0, 0, 1])
+Direction (vector) along which the interconnections will be aligned.
+
+`--interconnection_cut_width` (Type: float, Default: 0.01)
+Width (in metres) of the cut used to connect neighbouring contours and to join contour groups to form a single wire path.
+
+### Return Paths
+These parameters affect the generation of the return paths (Figure 4(c)).
+
+`--skip_normal_shift` (Type: bool, Default: False)
+Flag to skip the shifting of return paths around the contour loop.
+
+Shifting the return paths helps to align segments so that multiple segments of a single return path can all be raised together.
+
+`--normal_shift_smooth_factors` (Type: list of int, Default: [2, 3, 2])
+Parameters used to smooth the shape of the return paths that are displaced in the direction of the coil mesh normal.
+
+
+
+## Generate Outputs
+
+### Generate Cylindrical PCB Output
+
+The application can optionally generate a PCB wire path that is suitable for wrapping around a cylinder.
+
+`--make_cylindrical_pcb` (Type: bool, Default: False)
+Flag to generate a rectangular pcb pattern to wrap around a cylinder.
+
+`--pcb_interconnection_method` (Type: str, Default: 'spiral_in_out')
+Interconnection method for PCB: 'spiral_in_out' or 'other'.
+
+`--pcb_spiral_end_shift_factor` (Type: int, Default: 10)
+Factor of shifting the open ends of the spirals in order to avoid overlaps; in percent.
+
+### Generate 3D Wire Path
+
+The application can optionally generate a 3D .stl trace by sweeping out a conductor profile along the computed wire path.
+
+`--skip_sweep` (Type: bool, Default: False)
+Flag to skip the generation of a volumetric (3D) coil body.
+
+The calculated 3D surface is stored in `layout_surface_mesh` property.
+
+`--save_stl_flag` (Type: bool, Default: True)
+Flag to save the swept conductor profile to an .stl file.
+
+If `skip_sweep` is False and `save_stl_flag` is True, the generated result is saved in the output_directory, with a name corresponding 
+to `{project_name}_surface_part{part_ind}_{field_shape_function}.stl`, where `part_ind` is the zero-based index of the winding coil mesh parts.
+
+The `field_shape_function` is stripped of any `*`, `^`, and `,` symbols.
+
+
+
+
+
 `--min_point_loop_number` (Type: int, Default: 20)
   Minimal required number of points of a single loop; otherwise loops will be removed.
 
@@ -301,8 +385,6 @@ This factor is used to control the contour level step, according to the stream f
 `--max_allowed_angle_within_coil_track` (Type: int, Default: 120)
   Maximum allowed angle of the track of the contours.
 
-## Interconnect Contours / Build Wire Path
-
 ### Interconnection Parameters
 `--interconnection_method` (Type: str, Default: 'regular')
   Interconnection method: 'regular' or 'spiral' in/out.
@@ -310,23 +392,8 @@ This factor is used to control the contour level step, according to the stream f
 `--group_interconnection_method` (Type: str, Default: 'crossed')
   Group interconnection method: 'straight' or 'crossed'.
 
-`--interconnection_cut_width` (Type: float, Default: 0.01)
-  Width in meter of the opening cut for the interconnection of the loops.
-
-`--skip_calculation_min_winding_distance` (Type: bool, Default: True)
-  Flag to skip calculation of minimal winding distance.
-
-## Manage Overlaps
-
 ### Overlap Management Parameters
-`--skip_normal_shift` (Type: bool, Default: False)
-  Flag to skip the shifting of return paths.
 
-`--normal_shift_smooth_factors` (Type: list of int, Default: [2, 3, 2])
-  Smoothing parameters regarding the normal shift.
-
-`--skip_sweep` (Type: bool, Default: False)
-  Flag to skip the generation of a volumetric (3D) coil body.
 
 ## Evaluate Results
 
@@ -337,17 +404,6 @@ This factor is used to control the contour level step, according to the stream f
 `--skip_postprocessing` (Type: bool, Default: False)
   Flag to skip post-processing.
 
-`--make_cylindrical_pcb` (Type: bool, Default: False)
-  Flag to generate a rectangular pcb pattern to wrap around a cylinder.
-
-`--pcb_interconnection_method` (Type: str, Default: 'spiral_in_out')
-  Interconnection method for PCB: 'spiral_in_out' or other options.
-
-`--pcb_spiral_end_shift_factor` (Type: int, Default: 10)
-  Factor of shifting the open ends of the spirals in order to avoid overlaps; in percent.
-
-`--force_cut_selection` (Type: list, Default: [])
-  Force cut selection.
 
 `--track_width_factor` (Type: float, Default: 0.5)
   Track width factor for PCB layout.
@@ -360,4 +416,8 @@ This factor is used to control the contour level step, according to the stream f
 
 `--cross_sectional_points` (Type: list of float, Default: [0, 0])
   2D edge points for direct definition of the cross section of the conductor (build circular cut shapes).
+
+
+
+
 
