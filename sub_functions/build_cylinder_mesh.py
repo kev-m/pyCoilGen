@@ -80,26 +80,3 @@ def build_cylinder_mesh(
     cylinder_mesh = DataStructure(vertices=vertices, faces=faces, normal=normal_rep)
 
     return cylinder_mesh
-
-
-if __name__ == "__main__":
-    # Set up logging
-    log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.DEBUG)
-
-    params = [0.4,  0.1125, 50, 50,  0.,  1.,  0., 0.]
-    mesh = build_cylinder_mesh(*params)
-
-    log.debug(" faces: %s, %s, min: %s, max: %s", mesh.faces, mesh.faces.shape, np.min(mesh.faces), np.max(mesh.faces))
-    log.debug(" Should be:\n [2500 2499 2549]], (5000, 3)")
-
-    log.debug(" vertices: %s, %s", mesh.vertices, mesh.vertices.shape)
-    log.debug(" Should be:\n [-1.40999888e-02  1.11612904e-01  1.96078431e-01]], (2550, 3)")
-
-    from sub_functions.data_structures import Mesh
-    tri_mesh = Mesh(vertices=mesh.vertices, faces=mesh.faces)
-
-    t_faces = tri_mesh.get_faces()
-    log.debug(" t_faces: %s, %s, min: %s, max: %s", t_faces, t_faces.shape, np.min(t_faces), np.max(t_faces))
-    # tri_mesh.display()
-
