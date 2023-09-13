@@ -40,7 +40,7 @@ def read_mesh(input_args):
         coil_mesh = Mesh.load_from_file(input_args.geometry_source_path + '/' + input_args.coil_mesh_file)
         # TODO: Need to populate normal_rep with representative normal.
         # HACK: Assume [0,0,1]
-        log.warn(" Loaded mesh from STL. Assuming shape representative normal is [0,0,1]!")
+        log.warning(" Loaded mesh from STL. Assuming shape representative normal is [0,0,1]!")
         coil_mesh.normal_rep = np.array([0.0, 0.0, 1.0])
 
     elif input_args.coil_mesh_file == 'create cylinder mesh':

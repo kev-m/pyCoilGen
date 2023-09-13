@@ -21,6 +21,14 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         - contour_lines
         - raw
 
+    Depends on the following properties of the CoilParts:
+        - coil_mesh
+        - potential_level_list
+        - stream_function
+
+    Depends on the following input_args:
+        - None
+
     Updates the following properties of a CoilPart:
         - None
 
@@ -54,7 +62,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             log.debug(" -- edge_faces shape: %s, max(%d)", edge_faces.shape, np.max(edge_faces))  # 696,2: Max: 263
             log.debug(" -- edge_nodes shape: %s, max(%d)", edge_nodes.shape, np.max(edge_nodes))  # 696,2: Max: 263
 
-        # NOTE: Vertix arrays order is reversed compared to MATLAB: [0,1,2] [0,7,1]	vs [1,8,2]	[1,2,3]
+        # NOTE: Vertex arrays order is reversed compared to MATLAB: [0,1,2] [0,7,1]	vs [1,8,2]	[1,2,3]
         edge_attached_triangles = np.empty((num_edges, 2, 3), dtype=int)
         for index, edges in enumerate(edge_faces):
             # Must swap node indices, to correct index order
@@ -92,6 +100,8 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         edge_potential_span = edge_node_potentials[:, 1] - edge_node_potentials[:, 0]
         edge_potential_span = np.tile(edge_potential_span[:, np.newaxis], (1, num_potentials))
 
+        np.warnings.filterwarnings('ignore')
+
         pot_dist_to_step = rep_contour_level_list - np.tile(edge_node_potentials[:, 0][:, np.newaxis],
                                                             (1, num_potentials))
         cut_point_distance_to_edge_node_1 = np.abs(pot_dist_to_step / edge_potential_span * edge_lengths)
@@ -108,6 +118,8 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         v_cut_point = potential_cut_criteria * (
             first_edge_node_v + v_component_edge_vectors * cut_point_distance_to_edge_node_1 / edge_lengths)
 
+        np.warnings.filterwarnings('default')
+
         # Create cell by sorting the cut points to the corresponding potential levels
         potential_sorted_cut_points = np.zeros((num_potentials), dtype=object)  # 20 x M x 3
         value3 = np.arange(edge_nodes.shape[0], dtype=int)
@@ -119,9 +131,11 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # End of Part 1
 
         # Start of Part 2
-        # Create the unsorted points structure
+        # NOTE: The 'raw' RawPart does not need to be part of a CoilPart.
+        #       Consider renaming 'part.raw' to 'raw_part' and removing 'raw' from the CoilPart structure.
+        # Create the unsorted points structure        
         part.raw = RawPart()
-        empty_potential_groups = [potential_sorted_cut_points[i] == [] for i in range(len(potential_sorted_cut_points))]
+        empty_potential_groups = [len(potential_sorted_cut_points[i]) == 0 for i in range(len(potential_sorted_cut_points))]
         num_false = len(empty_potential_groups) - sum(empty_potential_groups)
         part.raw.unsorted_points = [UnsortedPoints() for _ in range(num_false)]
         part.raw.unarranged_loops = [UnarrangedLoopContainer(loop=[]) for _ in range(num_false)]
