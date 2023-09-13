@@ -25,6 +25,16 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
         - ohmian_resistance
         - wire_path.v_length
 
+    Depends on the following properties of the CoilParts:
+        - coil_mesh
+        - wire_path
+
+    Depends on the following input_args:
+        - skip_sweep
+        - save_stl_flag
+        - output_directory
+        - specific_conductivity_conductor
+
     Updates the following properties of a CoilPart:
         - wire_path.uv
         - wire_path.v
@@ -269,8 +279,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             # Save the mesh as an .stl file
             if save_mesh:
                 project = input_args.project_name
-                filename = input_args.field_shape_function.replace(
-                    '*', '').replace('.', '').replace('^', '').replace(',', '')
+                filename = input_args.field_shape_function.replace('*', '').replace('^', '').replace(',', '')
                 stl_file_path_layout = path.join(
                     output_directory, f"{project}_swept_layout_part{part_ind}_{filename}.stl")
                 stl_file_path_surface = path.join(output_directory, f"{project}_surface_part{part_ind}_{filename}.stl")
