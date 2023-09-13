@@ -107,9 +107,9 @@ def parse_input(parse_cli=True):
     parser.add_argument('--circular_diameter_factor', type=float, default=1,
                         help="Circular diameter factor for cylinder parameterization")
 
-    # Add the width in meter of the opening cut for the interconnection of the loops
+    # Add the width in metres of the opening cut for the interconnection of the loops
     parser.add_argument('--interconnection_cut_width', type=float, default=0.01,
-                        help="Width in meter of the opening cut for the interconnection of the loops")
+                        help="Width in metres of the opening cut for the interconnection of the loops")
 
     # Add the radius of a spherical target field
     parser.add_argument('--target_region_radius', type=float,
@@ -119,9 +119,9 @@ def parse_input(parse_cli=True):
     parser.add_argument('--target_region_resolution', type=int, default=10,
                         help="Number of target points per dimension within the target region")
 
-    # Add the distance in meter for which crossing lines will be separated along the normal direction of the surface
+    # Add the distance in metres for which crossing lines will be separated along the normal direction of the surface
     parser.add_argument('--normal_shift_length', type=float, default=0.001,
-                        help="Distance in meter for which crossing lines will be separated along the normal direction of the surface")
+                        help="Distance in metres for which crossing lines will be separated along the normal direction of the surface")
 
     # Add the minimal required number of point of a single loop; otherwise loops will be removed
     parser.add_argument('--min_point_loop_number', type=int, default=20,
@@ -152,8 +152,8 @@ def parse_input(parse_cli=True):
                         help="Number of refinement iterations of the mesh together with the stream function")
 
     # Add the direction (vector) along which the interconnections will be aligned
-    parser.add_argument('--b_0_direction', nargs='+', type=float, default=[
-                        0, 0, 1], help="Direction (vector) along which the interconnections will be aligned")
+    parser.add_argument('--b_0_direction', nargs='+', type=float, default=[0, 0, 1], 
+                        help="Direction (vector) along which the interconnections will be aligned")
 
     # Add the directory of the .stl geometry files
     parser.add_argument('--geometry_source_path', type=str, default=str(
@@ -183,7 +183,7 @@ def parse_input(parse_cli=True):
     parser.add_argument('--group_interconnection_method', type=str, default='crossed',
                         help="Group interconnection method: 'straight' or 'crossed'")
 
-    # Add flag to skip calculation of minimal winding distance
+    # Specify or calculate the pcb track width
     parser.add_argument('--skip_calculation_min_winding_distance', type=bool, default=True,
                         help="Flag to skip calculation of minimal winding distance")
 
@@ -235,13 +235,13 @@ def parse_input(parse_cli=True):
     parser.add_argument('--track_width_factor', type=float,
                         default=0.5, help="Track width factor for PCB layout")
 
-    # Add the cross_section_width of the conductor (for the inductance calculation) in meter
+    # Add the cross_section_width of the conductor (for the inductance calculation) in metres
     parser.add_argument('--conductor_cross_section_width', type=float, default=0.002,
-                        help="Cross-section width of the conductor (for the inductance calculation) in meter")
+                        help="Cross-section width of the conductor (for the inductance calculation) in metres")
 
-    # Add the cross_section_height of the conductor (for the inductance calculation) in meter
+    # Add the cross_section_height of the conductor (for the inductance calculation) in metres
     parser.add_argument('--conductor_cross_section_height', type=float, default=0.002,
-                        help="Cross-section height of the conductor (for the inductance calculation) in meter")
+                        help="Cross-section height of the conductor (for the inductance calculation) in metres")
 
     # Add the conductor conductivity
     parser.add_argument('--specific_conductivity_conductor',
