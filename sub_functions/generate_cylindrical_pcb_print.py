@@ -10,15 +10,25 @@ import logging
 
 log = logging.getLogger(__name__)
 
-#TODO DEBUG: remove this
-from helpers.visualisation import compare
-
 def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
     """
     Generate a 2D pattern that can be rolled around a cylinder.
 
     Initialises the following properties of a CoilPart:
         - pcb_tracks
+
+    Depends on the following properties of the CoilParts:
+        - wire_path
+        - points_to_shift
+        - connected_group
+
+    Depends on the following input_args:
+        - surface_is_cylinder_flag
+        - make_cylindrical_pcb
+        - conductor_cross_section_width
+        - cylinder_mesh_parameter_list
+        - pcb_interconnection_method
+        - pcb_spiral_end_shift_factor
 
     Updates the following properties of a CoilPart:
         - None
@@ -31,18 +41,20 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
         coil_parts (List[CoilPart]): The updated CoilParts list.
     """
 
-    pcb_track_width = input_args.conductor_cross_section_width
-    cylinder_radius = input_args.cylinder_mesh_parameter_list[1]
-    rot_mat = calc_3d_rotation_matrix_by_vector(
-        np.array([
-            input_args.cylinder_mesh_parameter_list[4],
-            input_args.cylinder_mesh_parameter_list[5],
-            input_args.cylinder_mesh_parameter_list[6]
-        ]),
-        input_args.cylinder_mesh_parameter_list[7]
-    )
-
     if input_args.surface_is_cylinder_flag and input_args.make_cylindrical_pcb:
+
+        pcb_track_width = input_args.conductor_cross_section_width
+        cylinder_radius = input_args.cylinder_mesh_parameter_list[1]
+        rot_mat = calc_3d_rotation_matrix_by_vector(
+            np.array([
+                input_args.cylinder_mesh_parameter_list[4],
+                input_args.cylinder_mesh_parameter_list[5],
+                input_args.cylinder_mesh_parameter_list[6]
+            ]),
+            input_args.cylinder_mesh_parameter_list[7]
+        )
+
+
         if input_args.pcb_interconnection_method != 'spiral_in_out':
             for part_ind, coil_part in enumerate(coil_parts):
                 coil_part = coil_parts[part_ind]
@@ -198,6 +210,8 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                             )
                             pcb_parts[point_ind] = pcb_part
 
+                        np.warnings.filterwarnings('ignore')
+
                         for wrap_ind in range(len(pcb_parts)):
                             intersection_cut = find_segment_intersections(pcb_parts[wrap_ind].uv, cut_rectangle)
                             real_cuts = [np.any(~np.isnan(cut.segment_inds)) for cut in intersection_cut]
@@ -219,6 +233,8 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                                         wire_part_points[:, cut_segment_ind+1:-1]
                                     ))
 
+                        np.warnings.filterwarnings('default')
+
                         for wrap_ind in range(1, len(pcb_parts)):
                             if pcb_parts[wrap_ind - 1].uv[0, -1] > 0:
                                 pcb_parts[wrap_ind].uv = np.hstack((
@@ -234,7 +250,6 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                         pcb_parts = [part for part in pcb_parts if part.uv.shape[1] >= 2]  # delete fragments
 
                         # Generate the track shapes for the individual wire parts
-                        # np.warnings.filterwarnings('ignore')
                         for wire_part_ind in range(len(pcb_parts)):
                             if pcb_parts[wire_part_ind].uv.shape[1] > 5:
                                 arr1 = pcb_parts[wire_part_ind].uv[:, 0].reshape(-1, 1)
@@ -269,8 +284,6 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
 
                             pcb_parts[wire_part_ind].polygon_track = Polygon(data=pcb_parts[wire_part_ind].track_shape)
 
-                        # np.warnings.filterwarnings('default')
-
                         # Write the outputs
                         if group_layer == 'upper':
                             upper_layer.group_layouts[group_ind].wire_parts = pcb_parts
@@ -289,9 +302,6 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                 #    phi_coords_mesh * cylinder_radius,
                 #    rot_cylinder_vertices[2, :]
                 #])
-                #if m_c_part is not None:
-                #    assert compare(phi_coords_mesh, debug_out.phi_coords_mesh)
-                #    assert compare(unrolled_cylinder, debug_out.unrolled_cylinder)
 
                 # save_pcb_tracks_as_svg(coil_part.pcb_tracks, input_args['field_shape_function'], 'pcb_layout', part_ind, unrolled_cylinder, input_args['output_directory'])
             # end
