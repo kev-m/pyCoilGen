@@ -14,7 +14,7 @@ print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
-from CoilGen import CoilGen
+from pyCoilGen import pyCoilGen
 from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
 from sub_functions.parameterize_mesh import parameterize_mesh
 from sub_functions.read_mesh import create_unique_noded_mesh
@@ -194,7 +194,7 @@ def debug3():
         'field_shape_function': 'x',  # definition of the target field
         'debug': 0
     }
-    x = CoilGen(log, arg_dict)
+    x = pyCoilGen(log, arg_dict)
 
     mesh_part = x.coil_parts[0].coil_mesh
     # visualize_vertex_connections(mesh_part.uv, 800, 'images/dental_gradient_projected2.png')
