@@ -16,7 +16,7 @@ from helpers.visualisation import visualize_vertex_connections
 log = logging.getLogger(__name__)
 
 
-def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
+def parameterize_mesh(coil_parts: List[Mesh], input_args) -> List[Mesh]:
     """
     Create the parameterized 2D mesh.
 
@@ -29,9 +29,16 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
     Updates the following properties of a CoilPart:
         - None
 
+    Depends on the following input_args:
+        - surface_is_cylinder_flag
+        - circular_diameter_factor
+
+    Initialises the following properties of the CoilParts:
+        - None
+
     Args:
-        coil_parts (object): Coil parts object with attributes 'coil_mesh'.
-        input (object): Input object with attributes 'surface_is_cylinder_flag' and 'circular_diameter_factor_cylinder_parameterization'.
+        coil_parts (List[Mesh]): Coil parts list with attributes 'coil_mesh'.
+        input_args (object): Input object with attributes 'surface_is_cylinder_flag' and 'circular_diameter_factor_cylinder_parameterization'.
 
     Returns:
         object: Updated coil parts object with parameterized mesh.
@@ -40,8 +47,8 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
     # The non-cylindrical parameterization is taken from "matlabmesh @ Ryan Schmidt  rms@dgp.toronto.edu"
     # based on desbrun et al (2002), "Intrinsic Parameterizations of {Surface} Meshes"
 
-    surface_is_cylinder = input.surface_is_cylinder_flag
-    circular_factor = input.circular_diameter_factor
+    surface_is_cylinder = input_args.surface_is_cylinder_flag
+    circular_factor = input_args.circular_diameter_factor
 
     for part_ind in range(len(coil_parts)):
         mesh_part = coil_parts[part_ind].coil_mesh
@@ -49,7 +56,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
         mesh_faces = mesh_part.get_faces()
 
         # DEBUG
-        if input.debug > DEBUG_BASIC:
+        if input_args.debug > DEBUG_BASIC:
             log.debug(" - processing %d, vertices shape: %s", part_ind, mesh_part.get_vertices().shape)
 
         # Compute face and vertex normals
@@ -62,7 +69,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
         max_face_normal_std = np.max(max_face_normal)
 
         # DEBUG
-        if input.debug > DEBUG_BASIC:
+        if input_args.debug > DEBUG_BASIC:
             log.debug(" - max_face_normal: %s, max_face_normal_std: %s", max_face_normal, max_face_normal_std)
 
         mesh_part.v = mesh_vertices
@@ -134,7 +141,7 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
         else:
             # The 3D mesh is already planar, but the normals must be aligned to the z-axis
             # DEBUG
-            if input.debug >= DEBUG_BASIC:
+            if input_args.debug >= DEBUG_BASIC:
                 log.debug(" - 3D mesh is already planar")
 
             # Rotate the planar mesh in the xy plane
@@ -156,10 +163,10 @@ def parameterize_mesh(coil_parts: List[Mesh], input) -> List[Mesh]:
                 mesh_part.uv = mesh_vertices[:, :2]
 
             # DEBUG
-            if input.debug > DEBUG_BASIC:
+            if input_args.debug > DEBUG_BASIC:
                 log.debug(" - mesh_part.uv shape: %s", mesh_part.uv.shape)
 
-            mesh_part.boundary = mesh_part.boundary_indices() # get_boundary_loop_nodes(mesh_part)
+            mesh_part.boundary = mesh_part.boundary_indices()  # get_boundary_loop_nodes(mesh_part)
 
     return coil_parts
 
@@ -194,4 +201,3 @@ def align_normals(vertices, original_normal, desired_normal):
     transformed_vertices = np.matmul(vertices, rot_mat.T)
 
     return transformed_vertices
-

@@ -15,6 +15,15 @@ def split_disconnected_mesh(coil_mesh_in: Mesh) -> List[CoilPart]:
     Split the mesh and the stream function if there are disconnected pieces
     such as shielded gradients.
 
+    Initialises the following properties of the CoilParts:
+        - None
+
+    Depends on the following properties of the CoilParts:
+        - None
+
+    Depends on the following input_args:
+        - None
+
     Args:
         coil_mesh_in (Mesh): Input mesh to be split.
 

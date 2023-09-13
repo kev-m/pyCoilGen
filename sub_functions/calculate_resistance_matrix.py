@@ -14,13 +14,20 @@ from sub_functions.constants import get_level, DEBUG_VERBOSE
 from sub_functions.data_structures import CoilPart
 
 
-def calculate_resistance_matrix(coil_parts: List[CoilPart], input) -> List[CoilPart]:
+def calculate_resistance_matrix(coil_parts: List[CoilPart], input_args) -> List[CoilPart]:
     """
     Calculate the resistance matrix for coil parts.
 
     Initialises the following properties of a CoilPart:
         - resistance_matrix
         - node_adjacency_mat
+
+    Depends on the following properties of the CoilParts:
+        - basis_elements
+
+    Depends on the following input_args:
+        - conductor_thickness
+        - specific_conductivity_conductor
 
     Updates the following properties of a CoilPart:
         - None
@@ -30,13 +37,12 @@ def calculate_resistance_matrix(coil_parts: List[CoilPart], input) -> List[CoilP
         input: The input parameters.
 
     Returns:
-        list: Updated coil parts with resistance matrix.
+        coil_parts (List[CoilPart]): Updated list of coil parts with resistance matrix.
 
     """
 
-    gauss_order = input.gauss_order
-    conductor_thickness = input.conductor_thickness
-    specific_conductivity_copper = input.specific_conductivity_conductor
+    conductor_thickness = input_args.conductor_thickness
+    specific_conductivity_copper = input_args.specific_conductivity_conductor
     material_factor = specific_conductivity_copper / conductor_thickness
 
     for part_ind in range(len(coil_parts)):
@@ -60,7 +66,7 @@ def calculate_resistance_matrix(coil_parts: List[CoilPart], input) -> List[CoilP
 
         face_0 = np.hstack((np.arange(num_nodes), mesh_edges[:, 0]))
         face_1 = np.hstack((np.arange(num_nodes), mesh_edges[:, 1]))
-        mesh_edges_non_unique = np.vstack((face_0,face_1))
+        mesh_edges_non_unique = np.vstack((face_0, face_1))
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" mesh_edges_non_unique shape: %s", mesh_edges_non_unique.shape)
 

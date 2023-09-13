@@ -3,9 +3,21 @@ import numpy as np
 from sub_functions.gauss_legendre_integration_points_triangle import gauss_legendre_integration_points_triangle
 
 
-def calculate_gradient_sensitivity_matrix(coil_parts, target_field, input):
+def calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args):
     """
     Calculate the gradient sensitivity matrix for coil parts.
+
+    Initialises the following properties of the CoilParts:
+        - gradient_sensitivity_matrix
+
+    Depends on the following properties of the CoilParts:
+        - basis_elements
+
+    Depends on the following input_args:
+        - gauss_order
+
+    Updates the following properties of a CoilPart:
+        - None
 
     Args:
         coil_parts (list): List of coil parts.
@@ -17,7 +29,7 @@ def calculate_gradient_sensitivity_matrix(coil_parts, target_field, input):
     """
 
     target_points = target_field.coords
-    gauss_order = input.gauss_order
+    gauss_order = input_args.gauss_order
     u_coord, v_coord, gauss_weight = gauss_legendre_integration_points_triangle(gauss_order)
 
     # Calculate the sensitivity matrix for each coil part
