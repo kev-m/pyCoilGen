@@ -1,12 +1,18 @@
 # Installation
 ## pyCoilGen
 
-To install `pyCoilGen`, you can use `pip`, the Python package manager. Additionally, there are optional extras available for enhanced functionality.
+To install **pyCoilGen**, you can use `pip`, the Python package manager. Additionally, there are optional extras available for enhanced functionality.
+
+## Install Python
+
+**pyCoilGen** depends on Python >= 3.6. It has been tested with Python 3.7.3 and 3.9.2.
+
+Please follow the instructions for your operating system to install Python.
 
 ## Installing pyCoilGen
 
 ```bash
-pip install pyCoilGen
+$ pip install pyCoilGen
 ```
 
 ## Optional Extras
@@ -16,7 +22,7 @@ pip install pyCoilGen
 To install additional geometry data, use the `Geometry_Data` extra:
 
 ```bash
-pip install pyCoilGen[Geometry_Data]
+$ pip install pyCoilGen[Geometry_Data]
 ```
 
 ### Installing Pre-Optimized Solutions
@@ -24,7 +30,7 @@ pip install pyCoilGen[Geometry_Data]
 For pre-optimized solutions, use the `Pre_Optimized_Solutions` extra:
 
 ```bash
-pip install pyCoilGen[Pre_Optimized_Solutions]
+$ pip install pyCoilGen[Pre_Optimized_Solutions]
 ```
 
 This will install the specified extras along with the main package. You can combine extras by separating them with commas in the square brackets, e.g., `pip install pyCoilGen[Geometry_Data,Pre_Optimized_Solutions]`.
@@ -37,7 +43,7 @@ This will install the specified extras along with the main package. You can comb
 
 You may need to also manually install BLAS. On some Linux systems, BLAS also depends on gfortran.
 ```bash
- $ sudo apt-get install libopenblas-dev gfortran
+$ sudo apt-get install libopenblas-dev gfortran
 ```
 
 ## FastHenry2
