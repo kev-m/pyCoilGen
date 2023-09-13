@@ -26,14 +26,12 @@
   - [Generate Outputs](#generate-outputs)
     - [Generate Cylindrical PCB Output](#generate-cylindrical-pcb-output)
     - [Generate 3D Wire Path](#generate-3d-wire-path)
-- [TBD](#tbd)
-    - [Interconnection Parameters](#interconnection-parameters)
-    - [Overlap Management Parameters](#overlap-management-parameters)
   - [Evaluate Results](#evaluate-results)
-    - [Evaluation Parameters](#evaluation-parameters)
+    - [Calculate Inductance](#calculate-inductance)
+    - [Evaluate Gradient Field Errors](#evaluate-gradient-field-errors)
 
 
-This section outlines the command-line parameters for pyCoilGen.
+The behaviour of the **pyCoilGen** application is configured by numerous parameters. 
 
 **Note:** All values are specified in SI units, i.e. metres, Amperes, Tesla.
 
@@ -45,7 +43,7 @@ Specify the output directory, where intermediate images and the final output wil
 
 - `--project_name` (Type: str, Default: 'CoilGen')
 
-Specify a name which is used to create output files.
+Specify a project name. The project name is used to create output files.
 
 - `--persistence_dir` (Type: str, Default: 'debug')
 
@@ -53,13 +51,17 @@ Specify the directory where project snapshots are written. A snapshot of the int
 
 - `--debug` (Type: int, Default: 0)
 
-Control the Debug verbosity level: 0 = None, 1 = Basic, 2 = Verbose. With 
+Control the Debug verbosity level: 0 = None, 1 = Basic, 2 = Verbose.
 
-- `--fasthenry_bin` (Type: str, Default: '/usr/bin/fasthenry')
+This only has any effect if logging is configured to include the debugging level.
+```python
+if __name__ == "__main__":
+    # Set up logging
+    log = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.DEBUG)
 
-Specify the location of the FastHenry2 binary. 
-
-In Windows, the default installation location is 'C:\Program Files (x86)\FastFieldSolvers\FastHenry2\FastHenry2.exe'.
+    ...
+```
 
 - `--geometry_source_path` (Type: str, Default: Current Working Directory + '/Geometry_Data')
 
@@ -86,7 +88,7 @@ To use one of the built-in types, set `--coil_mesh_file` to one of the following
 
 - `create cylinder mesh`
 
-Create a cylindrical mesh according to `--cylinder_mesh_parameter_list` (Type: list of float, Default: [0.8, 0.3, 20, 20, 1, 0, 0, 0])
+Create a cylindrical mesh according to `--cylinder_mesh_parameter_list` (Type: list of numeric, Default: [0.8, 0.3, 20, 20, 1, 0, 0, 0])
 
         cylinder_height (float): Height of the cylinder.
         cylinder_radius (float): Radius of the cylinder.
@@ -100,7 +102,7 @@ Create a cylindrical mesh according to `--cylinder_mesh_parameter_list` (Type: l
 
 - `create planar mesh` 
 
-Create a planar mesh according to `--planar_mesh_parameter_list` (Type: list of float, Default: [0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0])
+Create a planar mesh according to `--planar_mesh_parameter_list` (Type: list of numeric, Default: [0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0])
 
         planar_height (float): Height of the planar mesh.
         planar_width (float): Width of the planar mesh.
@@ -117,7 +119,7 @@ Create a planar mesh according to `--planar_mesh_parameter_list` (Type: list of 
 
 - `create bi-planar mesh`
 
-Create a bi-planar mesh according to `--biplanar_mesh_parameter_list` (Type: list of float, Default: [0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2])
+Create a bi-planar mesh according to `--biplanar_mesh_parameter_list` (Type: list of numeric, Default: [0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2])
 
         planar_height (float): Height of the planar mesh.
         planar_width (float): Width of the planar mesh.
@@ -142,11 +144,11 @@ Create a bi-planar mesh according to `--biplanar_mesh_parameter_list` (Type: lis
 
 ### Subdividing the Mesh
 
-Once the mesh has been loaded, the mesh resolution can be increased using mesh subdivision.
+Once the mesh has been loaded, the mesh resolution can be increased using subdivision.
 
 - `--iteration_num_mesh_refinement` (Type: int, Default: 0)
 
-Specify the number of refinement iterations of the mesh. At each iteration, every mesh face is further subdivided into four faces.
+Specify the number of refinement iterations of the mesh. At each iteration, every mesh face is subdivided into four faces.
 
 
 ## Parameterise Mesh
@@ -157,7 +159,7 @@ The 3D mesh of the coil winding surface needs to be projected onto a 2D surface.
 
 Provide a hint to the application that the 3D coil mesh can be projected onto 2D using a simple cylindrical projection.
 
-If cylindrical projection is inappropriate then an iterative mesh parameterisation approach is used.
+If the cylindrical projection is inappropriate then an iterative mesh parameterisation approach is used.
 
 - `--circular_diameter_factor` (Type: float, default: 1)
 
@@ -321,6 +323,11 @@ Specifies how many points along the contour are to be used for smoothing.
 
 Each point is replaced with the moving average of the specified number of neighbouring points. Smoothing only takes place when the `smooth_factor` is greater than 1.
 
+- `--min_loop_significance` (Type: int, Default: 1)
+
+Specify the minimal required field contribution (in percent) to the target field. Contours that contribute less than this are deleted.
+
+
 - `--skip_calculation_min_winding_distance` (Type: bool, Default: True)
 
 A flag to skip calculation of minimum distance between calculated contour lines.
@@ -403,6 +410,15 @@ Flag to skip the generation of a volumetric (3D) coil body.
 
 The calculated 3D surface is stored in `layout_surface_mesh` property.
 
+- `--cross_sectional_points` (Type: list of float, Default: [0, 0])
+
+This parameter describes the 2D profile of the conductor surface. 
+
+The default values of `[0,0]` instructs the application to generate a 10-sided circular profile with a radius  determined by the `--conductor_thickness` parameter.
+
+A custom shape defined by specifying the x/y co-ordinates in metres in a 2xm array of the form `[[x0, x1, x2, x3, ...], [y0, y1, y2, y3, ...]]`.
+
+
 - `--save_stl_flag` (Type: bool, Default: True)
 
 Flag to save the swept conductor profile to an .stl file.
@@ -413,14 +429,42 @@ to `{project_name}_surface_part{part_ind}_{field_shape_function}.stl`, where `pa
 The `field_shape_function` is stripped of any `*`, `^`, and `,` symbols.
 
 
-# TBD
+## Evaluate Results
+
+### Calculate Inductance
+- `--skip_inductance_calculation` (Type: bool, Default: False)
+
+Flag to skip calculating the resistance and inductance of the coil solution using [FastHenry2](https://www.fastfieldsolvers.com/software.htm).
+
+- `--conductor_cross_section_width` (Type: float, Default: 0.002)
+
+Cross-section width of the conductor (for the inductance calculation) in metres.
+
+- `--conductor_cross_section_height` (Type: float, Default: 0.002)
+
+Cross-section height of the conductor (for the inductance calculation) in metres.
+
+- `--fasthenry_bin` (Type: str, Default: '/usr/bin/fasthenry')
+
+Specify the location of the FastHenry2 binary. 
+
+In Windows, the default installation location is `'C:\Program Files (x86)\FastFieldSolvers\FastHenry2\FastHenry2.exe'`.
+
+### Evaluate Gradient Field Errors
+
+`--skip_postprocessing` (Type: bool, Default: False)
+
+Use this flag to skip calculating the field errors during post-processing.
+
+
+<!-- 
+
+Unused parameters
 
 
 `--min_point_loop_number` (Type: int, Default: 20)
   Minimal required number of points of a single loop; otherwise loops will be removed.
 
-`--min_loop_significance` (Type: int, Default: 1)
-  Minimal required field contribution (in percent) to the target field; loops that contribute less than that can be deleted.
 
 `--area_perimeter_deletion_ratio` (Type: int, Default: 5)
   Additional loop removal criteria which relates to the perimeter to surface ratio of the loop.
@@ -438,29 +482,7 @@ The `field_shape_function` is stripped of any `*`, `^`, and `,` symbols.
 ### Overlap Management Parameters
 
 
-## Evaluate Results
-
-### Evaluation Parameters
-`--skip_inductance_calculation` (Type: bool, Default: False)
-  Flag to skip inductance calculation.
-
-`--skip_postprocessing` (Type: bool, Default: False)
-  Flag to skip post-processing.
-
-
 `--track_width_factor` (Type: float, Default: 0.5)
   Track width factor for PCB layout.
 
-`--conductor_cross_section_width` (Type: float, Default: 0.002)
-  Cross-section width of the conductor (for the inductance calculation) in meter.
-
-`--conductor_cross_section_height` (Type: float, Default: 0.002)
-  Cross-section height of the conductor (for the inductance calculation) in meter.
-
-`--cross_sectional_points` (Type: list of float, Default: [0, 0])
-  2D edge points for direct definition of the cross section of the conductor (build circular cut shapes).
-
-
-
-
-
+-->
