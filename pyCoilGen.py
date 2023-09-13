@@ -254,9 +254,11 @@ def pyCoilGen(log, input_args=None):
             # Group the contour loops in topological order
             print('Group the contour loops in topological order:')
             timer.start()
-            coil_parts = topological_loop_grouping(coil_parts, input_args)  # 13
+            coil_parts = topological_loop_grouping(coil_parts)  # 13
             timer.stop()
             runpoint_tag = '13'
+            for index, coil_part in enumerate(coil_parts):
+                print(f'  -- Part {index} has {len(coil_part.groups)} topological groups')
 
             # Calculate center locations of groups
             print('Calculate center locations of groups:')

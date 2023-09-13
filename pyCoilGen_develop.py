@@ -716,8 +716,11 @@ def pyCoilGen(log, input=None):
 
         # Group the contour loops in topological order
         print('Group the contour loops in topological order:')
-        coil_parts = topological_loop_grouping(coil_parts, input_args)  # 13
+        coil_parts = topological_loop_grouping(coil_parts)  # 13
         save(persistence_dir, project_name, '13', solution)
+
+        for index, coil_part in enumerate(coil_parts):
+            print(f'  -- Part {index} has {len(coil_part.groups)} topological groups')
 
         #####################################################
         # DEVELOPMENT: Remove this
