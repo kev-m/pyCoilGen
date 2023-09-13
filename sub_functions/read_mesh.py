@@ -16,12 +16,12 @@ from sub_functions.data_structures import DataStructure, Mesh
 log = logging.getLogger(__name__)
 
 
-def read_mesh(input):
+def read_mesh(input_args):
     """
     Read the input mesh and return the coil, target, and shielded meshes.
 
     Args:
-        input (object): Input parameters for reading the mesh.
+        input_args (object): Input parameters for reading the mesh.
 
     Returns:
         coil_mesh (object): Coil mesh object.
@@ -32,57 +32,55 @@ def read_mesh(input):
     coil_mesh = None
 
     # Read the input mesh
-    if input.sf_source_file == 'none':
-        log.debug("Loading mesh: %s", input.coil_mesh_file)
+    log.debug("Loading mesh: %s", input_args.coil_mesh_file)
 
-        if input.coil_mesh_file.endswith('.stl'):
-            log.debug("Loading STL")
-            # Load the stl file; read the coil mesh surface
-            coil_mesh = Mesh.load_from_file(input.geometry_source_path + '/' + input.coil_mesh_file)
-            # TODO: Need to populate normal_rep with representative normal.
-            # HACK: Assume [0,0,1]
-            log.warn(" Loaded mesh from STL. Assuming shape representative normal is [0,0,1]!")
-            coil_mesh.normal_rep = np.array([0.0, 0.0, 1.0])
+    if input_args.coil_mesh_file.endswith('.stl'):
+        log.debug("Loading STL")
+        # Load the stl file; read the coil mesh surface
+        coil_mesh = Mesh.load_from_file(input_args.geometry_source_path + '/' + input_args.coil_mesh_file)
+        # TODO: Need to populate normal_rep with representative normal.
+        # HACK: Assume [0,0,1]
+        log.warn(" Loaded mesh from STL. Assuming shape representative normal is [0,0,1]!")
+        coil_mesh.normal_rep = np.array([0.0, 0.0, 1.0])
 
-        elif input.coil_mesh_file == 'create cylinder mesh':
-            # No external mesh is specified by stl file; create default cylindrical mesh
-            mesh_data = build_cylinder_mesh(*input.cylinder_mesh_parameter_list)
-            coil_mesh = create_unique_noded_mesh(mesh_data)
+    elif input_args.coil_mesh_file == 'create cylinder mesh':
+        # No external mesh is specified by stl file; create default cylindrical mesh
+        mesh_data = build_cylinder_mesh(*input_args.cylinder_mesh_parameter_list)
+        coil_mesh = create_unique_noded_mesh(mesh_data)
 
-        elif input.coil_mesh_file == 'create double cone mesh':
-            # No external mesh is specified by stl file; create default double cone mesh
-            mesh_data = build_double_cone_mesh(*input.double_cone_mesh_parameter_list)
-            coil_mesh = create_unique_noded_mesh(mesh_data)
+    elif input_args.coil_mesh_file == 'create planar mesh':
+        # No external mesh is specified by stl file; create default planar mesh
+        mesh_data = build_planar_mesh(*input_args.planar_mesh_parameter_list)
+        coil_mesh = create_unique_noded_mesh(mesh_data)
 
-        elif input.coil_mesh_file == 'create planar mesh':
-            # No external mesh is specified by stl file; create default planar mesh
-            mesh_data = build_planar_mesh(*input.planar_mesh_parameter_list)
-            coil_mesh = create_unique_noded_mesh(mesh_data)
+    elif input_args.coil_mesh_file == 'create bi-planar mesh':
+        # No external mesh is specified by stl file; create default biplanar mesh
+        mesh_data = build_biplanar_mesh(*input_args.biplanar_mesh_parameter_list)
+        coil_mesh = create_unique_noded_mesh(mesh_data)
 
-        elif input.coil_mesh_file == 'create circular mesh':
-            # No external mesh is specified by stl file; create default circular mesh
-            mesh_data = build_circular_mesh(*input.circular_mesh_parameter_list)
-            coil_mesh = create_unique_noded_mesh(mesh_data)
+    """
+    elif input.coil_mesh_file == 'create double cone mesh':
+        # No external mesh is specified by stl file; create default double cone mesh
+        mesh_data = build_double_cone_mesh(*input.double_cone_mesh_parameter_list)
+        coil_mesh = create_unique_noded_mesh(mesh_data)
 
-        elif input.coil_mesh_file == 'create bi-planary mesh':
-            # No external mesh is specified by stl file; create default biplanar mesh
-            mesh_data = build_biplanar_mesh(*input.biplanar_mesh_parameter_list)
-            coil_mesh = create_unique_noded_mesh(mesh_data)
-
-    else:
-        loaded_file = load(cd() + '/' + input.sf_source_file)
-        coil_mesh = loaded_file.coil_mesh
+    elif input.coil_mesh_file == 'create circular mesh':
+        # No external mesh is specified by stl file; create default circular mesh
+        mesh_data = build_circular_mesh(*input.circular_mesh_parameter_list)
+        coil_mesh = create_unique_noded_mesh(mesh_data)
+    """
 
     # Read the target mesh surface
-    if input.target_mesh_file != 'none':
-        target_mesh = Mesh.load_from_file(input.geometry_source_path + '/' + input.target_mesh_file)
+    if input_args.target_mesh_file != 'none':
+        target_mesh = Mesh.load_from_file(input_args.geometry_source_path + '/' + input_args.target_mesh_file)
         target_mesh = create_unique_noded_mesh(target_mesh)
     else:
         target_mesh = None
 
     # Read the shielded mesh surface
-    if input.secondary_target_mesh_file != 'none':
-        shielded_mesh = Mesh.load_from_file(input.geometry_source_path + '/' + input.secondary_target_mesh_file)
+    if input_args.secondary_target_mesh_file != 'none':
+        shielded_mesh = Mesh.load_from_file(input_args.geometry_source_path + '/' +
+                                            input_args.secondary_target_mesh_file)
         # Removing this, it's not required?
         # shielded_mesh = create_unique_noded_mesh(shielded_mesh)
     else:

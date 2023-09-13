@@ -111,9 +111,21 @@ def refine_mesh_elements2(vertices, faces):
     return new_vertices, new_faces
 
 
-def refine_mesh_delegated(coil_parts, input):
+def refine_mesh_delegated(coil_parts, input_args):
     """
     Increase the resolution of the mesh.
+
+    Initialises the following properties of the CoilParts:
+        - None
+
+    Depends on the following properties of the CoilParts:
+        - coil_mesh
+
+    Depends on the following input_args:
+        - sf_source_file
+
+    Updates the following properties of a CoilPart:
+        - coil_mesh
 
     Args:
         coil_parts (List[Mesh]): A list of Mesh objects.
@@ -123,8 +135,8 @@ def refine_mesh_delegated(coil_parts, input):
         (List[Mesh]): Updated coil parts object with refined mesh.
 
     """
-    iteration_num_mesh_refinement = input.iteration_num_mesh_refinement
-    sf_source_file = input.sf_source_file
+    iteration_num_mesh_refinement = input_args.iteration_num_mesh_refinement
+    sf_source_file = input_args.sf_source_file
 
     if sf_source_file == 'none':
         log.debug(" - iteration_num_mesh_refinement: %d", iteration_num_mesh_refinement)
@@ -151,5 +163,5 @@ if __name__ == "__main__":
     log.debug(" New faces: %s -> %s", new_faces.shape, new_faces)
 
     # Local imports
-    ## from sub_functions.data_structures import Mesh
+    # from sub_functions.data_structures import Mesh
     # mesh = Mesh(vertices=vertices, faces=faces)

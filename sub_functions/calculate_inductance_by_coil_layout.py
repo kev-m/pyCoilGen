@@ -32,11 +32,10 @@ def calculate_inductance_by_coil_layout(solution: CoilSolution, input_args) -> C
         - conductor_cross_section_width
         - conductor_cross_section_height
         - fasthenry_bin
-        
+
     Updates the following properties of a CoilPart:
         - None
-    
-    
+
     Args:
         solution (CoilSolution): List of CoilPart structures.
         input_args: Input arguments.
@@ -50,7 +49,6 @@ def calculate_inductance_by_coil_layout(solution: CoilSolution, input_args) -> C
         # Calculate the length of the coil
         wire_path = coil_part.wire_path
         coil_part.coil_length = np.sum(np.linalg.norm(wire_path.v[:, 1:] - wire_path.v[:, :-1], axis=0))
-
 
     skip_inductance_calculation = input_args.skip_inductance_calculation
 
@@ -86,9 +84,10 @@ def calculate_inductance_by_coil_layout(solution: CoilSolution, input_args) -> C
                 for coil_part in coil_parts:
 
                     script_file = create_fast_henry_file(coil_part.wire_path, conductor_width, conductor_height,
-                                                        sim_freq, material_conductivity, down_sample_factor)
+                                                         sim_freq, material_conductivity, down_sample_factor)
 
-                    results = fast_henry_function(fasthenry_bin, script_file, conductor_height, conductor_height, sim_freq)
+                    results = fast_henry_function(fasthenry_bin, script_file,
+                                                  conductor_height, conductor_height, sim_freq)
 
                     coil_part.coil_resistance = results.coil_resistance
                     coil_part.coil_inductance = results.coil_inductance
@@ -107,7 +106,7 @@ def calculate_inductance_by_coil_layout(solution: CoilSolution, input_args) -> C
     return solution
 
 
-def create_fast_henry_file(wire_path:Shape3D, conductor_width, conductor_height, sim_freq, material_conductivity, down_sample_factor):
+def create_fast_henry_file(wire_path: Shape3D, conductor_width, conductor_height, sim_freq, material_conductivity, down_sample_factor):
     """
     Create a FASTHENRY2 input file, run it with fasthenry2 and read out the result.
 
@@ -207,7 +206,7 @@ def execute_fast_henry_file_script_windows(binary: str, fast_henry_file_name: st
             coil_resistance = np.nan  # in Ohm
 
         # Remove the created script files
-        try:            
+        try:
             os.remove('Zc.mat')
             os.remove('run_FH2.vbs')
             os.remove('coil_track_FH2_input.inp')
@@ -250,7 +249,7 @@ def execute_fast_henry_file_script_linux(binary: str, fast_henry_file_name: str,
             coil_resistance = np.nan  # in Ohm
 
         # Remove the created script files
-        try:            
+        try:
             os.remove('Zc.mat')
             os.remove(fast_henry_file_name)
             os.remove('output.log')

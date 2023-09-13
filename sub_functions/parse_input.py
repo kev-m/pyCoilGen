@@ -4,6 +4,7 @@ from pathlib import Path
 # local imports
 from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
+
 def parse_input(parse_cli=True):
     """
     Parse the input arguments using argparse.
@@ -73,16 +74,17 @@ def parse_input(parse_cli=True):
 
     # See: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
     # Add the Stream function optimisation method
-    parser.add_argument('--minimize_method', type=str, default='SLSQP', help="Stream function minimisation method to use, Default: 'SLSQP'")
+    parser.add_argument('--minimize_method', type=str, default='SLSQP',
+                        help="Stream function minimisation method to use, Default: 'SLSQP'")
     # See: https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html
     # Add the Stream function optimisation method parameters
     parser.add_argument('--minimize_method_parameters', type=str, default="{'tol': 1e-6}",
                         help="Parameters for the minimize method parameters. Default: \"{'tol': 1e-6}\"")
     # Add the Stream function optimisation method options.
-    parser.add_argument('--minimize_method_options', type=str, default="{'disp': True, 'maxiter' : 1000}",
-                        help="Parameters for the minimize method options. Default: \"{'disp': True, 'maxiter' : 1000}\"")
+    parser.add_argument('--minimize_method_options', type=str, default="{'disp': True, 'maxiter' : 100}",
+                        help="Parameters for the minimize method options. Default: \"{'disp': True, 'maxiter' : 100}\"")
 
-    #parser.add_argument('--minimize_options', nargs='+', type=float, default=[
+    # parser.add_argument('--minimize_options', nargs='+', type=float, default=[
     #                    500, 10**10, 1.0e-10, 1.0e-10, 1.0e-10], help="Parameters for the iterative optimization with 'minimize'")
 
     # Add the number of potential levels
@@ -190,11 +192,11 @@ def parse_input(parse_cli=True):
                         help="Flag to skip calculation of minimal winding distance")
 
     # Add flag to skip post processing
-    parser.add_argument('--skip_postprocessing', type=bool, default=False, 
+    parser.add_argument('--skip_postprocessing', type=bool, default=False,
                         help="Flag to skip post-processing")
 
     # Add flag to skip inductance_calculation
-    parser.add_argument('--skip_inductance_calculation', type=bool, default=False, 
+    parser.add_argument('--skip_inductance_calculation', type=bool, default=False,
                         help="Flag to skip inductance calculation")
 
     # Flag to skip the shifting of return paths
@@ -265,6 +267,7 @@ def parse_input(parse_cli=True):
     parser.add_argument('--planar_mesh_parameter_list', nargs='+', type=float, default=[
                         0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0], help="Parameters for the generation of the (default) planar mesh")
 
+    """ Currently not implemented
     # Add the parameters for the generation of a double cone ("diabolo") shaped mesh
     parser.add_argument('--double_cone_mesh_parameter_list', nargs='+', type=float, default=[
                         0.8, 0.3, 0.3, 0.1, 20, 20, 1, 0, 0, 0], help="Parameters for the generation of a double cone ('diabolo') shaped mesh")
@@ -272,13 +275,15 @@ def parse_input(parse_cli=True):
     # Add the parameters for the generation of the (default) circular mesh
     parser.add_argument('--circular_mesh_parameter_list', nargs='+', type=float, default=[
                         0.25, 20, 1, 0, 0, 0, 0, 0, 0], help="Parameters for the generation of the (default) circular mesh")
+    """
 
     # Add the parameters for the generation of the (default) biplanar mesh
     parser.add_argument('--biplanar_mesh_parameter_list', nargs='+', type=float, default=[
                         0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2], help="Parameters for the generation of the (default) biplanar mesh")
 
     # Add the parameters for the generation of the (default) biplanar mesh
-    parser.add_argument('--debug', type=int, default=0, help=f"Debug verbosity level: 0 = None, {DEBUG_BASIC} = Basic, {DEBUG_VERBOSE} = Verbose")
+    parser.add_argument('--debug', type=int, default=0,
+                        help=f"Debug verbosity level: 0 = None, {DEBUG_BASIC} = Basic, {DEBUG_VERBOSE} = Verbose")
 
     # Add the parameters for the generation of the (default) biplanar mesh
     parser.add_argument('--project_name', type=str, default='CoilGen', help=f"Project name for saved data")
@@ -287,7 +292,8 @@ def parse_input(parse_cli=True):
     parser.add_argument('--persistence_dir', type=str, default='debug', help=f"Directory to write persistence data")
 
     # Add a parameter for the location of the FastHenry2 executable
-    parser.add_argument('--fasthenry_bin', type=str, default='/usr/bin/fasthenry', help=f"Location of the FastHenry2 binary")
+    parser.add_argument('--fasthenry_bin', type=str, default='/usr/bin/fasthenry',
+                        help=f"Location of the FastHenry2 binary")
 
     # Parse the input arguments
     if parse_cli == False:

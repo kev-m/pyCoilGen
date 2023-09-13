@@ -20,6 +20,9 @@ def calculate_one_ring_by_mesh(coil_parts: List[CoilPart]):
         - node_triangles
         - node_triangle_mat
 
+    Depends on the following input_args:
+        - None
+
     Updates the following properties of a CoilPart:
         - None
 
@@ -43,31 +46,6 @@ def calculate_one_ring_by_mesh(coil_parts: List[CoilPart]):
         node_triangles_corners = [
             part_faces[x, :] for x in node_triangles
         ]  # Get triangle corners for each node
-
-        ##############################################################
-        # MATLAB data
-        # m_or_one_ring_list[0:2].T:
-        # [
-        #    [7 1]
-        #    [1 2]
-        # ],
-        # [
-        #    [2 0] y
-        #    [0 7] x
-        #    [7 6] y
-        #    [6 8] x
-        #    [8 9] x
-        #    [9 3] y
-        #    [3 2] x
-        # ],
-        # [
-        #   [0 1] x
-        #   [1 3] y
-        #   [3 4] x
-        #   [4 5] y
-        # ]
-        #
-        ##############################################################
 
         # Create array with the vertex indices of neighboring vertices for each vertex in the mesh.
         one_ring_list = np.empty(num_vertices, dtype=object)  # []

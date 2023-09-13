@@ -3,9 +3,6 @@ import numpy as np
 import os
 from sympy import symbols, diff, lambdify
 
-
-from scipy.io import loadmat
-
 # Logging
 import logging
 
@@ -114,7 +111,7 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
             target_grid_x, target_grid_y, target_grid_z = np.meshgrid(target_x_coords, target_y_coords, target_z_coords)
 
             # For some unknown reason I need to swap y and z coords to match MATLAB
-            #target_points = np.vstack((target_grid_x.ravel(), target_grid_y.ravel(), target_grid_z.ravel()))
+            # target_points = np.vstack((target_grid_x.ravel(), target_grid_y.ravel(), target_grid_z.ravel()))
             target_points = np.vstack((target_grid_x.ravel(), target_grid_z.ravel(), target_grid_y.ravel()))
 
             # Select points inside a sphere
@@ -124,9 +121,8 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
             # Filter out points outside the target region radius
             target_points2 = target_points[:, distances <= input_args.target_region_radius]
 
-            all_verts = np.vstack([part.coil_mesh.get_vertices() for part in coil_parts])
-
             if input_args.set_roi_into_mesh_center:
+                all_verts = np.vstack([part.coil_mesh.get_vertices() for part in coil_parts])
                 mean_pos = np.mean(all_verts, axis=0, keepdims=True)
                 target_points3 = target_points2 - mean_pos.T
             else:
@@ -160,7 +156,8 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
         max_field_difference = np.max(target_field[2, :]) - np.min(target_field[2, :])
 
         if abs(max_field_difference) > 10**(-10):
-            target_field = target_field / (max_field_difference / max_target_distance) * input_args.target_gradient_strength
+            target_field = target_field / (max_field_difference / max_target_distance) * \
+                input_args.target_gradient_strength
         else:
             target_field = target_field * input_args.target_gradient_strength
 
