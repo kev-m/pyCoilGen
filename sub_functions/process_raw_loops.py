@@ -23,6 +23,13 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
         - loop_significance (double)
         - field_by_loops (3, # , num contours)
 
+    Depends on the following properties of the CoilParts:
+        - contour_lines
+
+    Depends on the following input_args:
+        - smooth_factor
+        - min_loop_significance
+
     Updates the following properties of a CoilPart:
         - contour_lines
 
@@ -36,7 +43,7 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
     """
 
     # Smooth the contours if smooth_flag is True
-    if input_args.smooth_flag and input_args.smooth_factor > 1:
+    if input_args.smooth_factor > 1:
         for coil_part in coil_parts:
             for index, contour in enumerate(coil_part.contour_lines):
                 smoothed = smooth_track_by_folding(contour.uv, input_args.smooth_factor)

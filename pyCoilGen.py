@@ -230,7 +230,6 @@ def pyCoilGen(log, input_args=None):
             for part_index in range(len(coil_parts)):
                 coil_part = coil_parts[part_index]
                 coil_mesh = coil_part.coil_mesh
-                c_group_centers = coil_part.group_centers
 
                 visualize_compare_contours(coil_mesh.uv, 800, f'images/10_{project_name}_contours_{part_index}_p.png',
                                             coil_part.contour_lines)
@@ -428,7 +427,6 @@ if __name__ == "__main__":
         "skip_postprocessing": False,
         #"skip_sweep": False,
         #"smooth_factor": 1,
-        #"smooth_flag": True,
         #"specific_conductivity_conductor": 1.8e-8,
         "surface_is_cylinder_flag": True,
         #"target_field_definition_field_name": "none",
@@ -500,7 +498,6 @@ if __name__ == "__main__":
         "skip_postprocessing": False,
         "skip_sweep": False,
         "smooth_factor": 1,
-        "smooth_flag": True,
         "specific_conductivity_conductor": 1.8e-08,
         "surface_is_cylinder_flag": True,
         "target_field_definition_field_name": "none",
