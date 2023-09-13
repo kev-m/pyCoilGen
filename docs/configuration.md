@@ -26,6 +26,7 @@
   - [Generate Outputs](#generate-outputs)
     - [Generate Cylindrical PCB Output](#generate-cylindrical-pcb-output)
     - [Generate 3D Wire Path](#generate-3d-wire-path)
+- [TBD](#tbd)
     - [Interconnection Parameters](#interconnection-parameters)
     - [Overlap Management Parameters](#overlap-management-parameters)
   - [Evaluate Results](#evaluate-results)
@@ -38,29 +39,29 @@ This section outlines the command-line parameters for pyCoilGen.
 
 ## Basic Settings
 
-`--output_directory` (Type: str, Default: Current Working Directory)
+- `--output_directory` (Type: str, Default: Current Working Directory)
 
 Specify the output directory, where intermediate images and the final output will be written to.
 
-`--project_name` (Type: str, Default: 'CoilGen')
+- `--project_name` (Type: str, Default: 'CoilGen')
 
 Specify a name which is used to create output files.
 
-`--persistence_dir` (Type: str, Default: 'debug')
+- `--persistence_dir` (Type: str, Default: 'debug')
 
 Specify the directory where project snapshots are written. A snapshot of the internal state is automatically written to this location when any unhandled exception occurs.
 
-`--debug` (Type: int, Default: 0)
+- `--debug` (Type: int, Default: 0)
 
 Control the Debug verbosity level: 0 = None, 1 = Basic, 2 = Verbose. With 
 
-`--fasthenry_bin` (Type: str, Default: '/usr/bin/fasthenry')
+- `--fasthenry_bin` (Type: str, Default: '/usr/bin/fasthenry')
 
 Specify the location of the FastHenry2 binary. 
 
 In Windows, the default installation location is 'C:\Program Files (x86)\FastFieldSolvers\FastHenry2\FastHenry2.exe'.
 
-`--geometry_source_path` (Type: str, Default: Current Working Directory + '/Geometry_Data')
+- `--geometry_source_path` (Type: str, Default: Current Working Directory + '/Geometry_Data')
 
 The directory where .stl geometry files are located.
 
@@ -69,7 +70,7 @@ The directory where .stl geometry files are located.
 The coil mesh geometry must be specified. It can either be loaded from a pre-optimised Numpy pickle file or specified in parts.
 
 ### Mesh Files
-`--coil_mesh_file` (Type: str, Default: 'none')
+- `--coil_mesh_file` (Type: str, Default: 'none')
 
 Specify that defines the winding coil surface. 
 
@@ -143,7 +144,7 @@ Create a bi-planar mesh according to `--biplanar_mesh_parameter_list` (Type: lis
 
 Once the mesh has been loaded, the mesh resolution can be increased using mesh subdivision.
 
-`--iteration_num_mesh_refinement` (Type: int, Default: 0)
+- `--iteration_num_mesh_refinement` (Type: int, Default: 0)
 
 Specify the number of refinement iterations of the mesh. At each iteration, every mesh face is further subdivided into four faces.
 
@@ -152,13 +153,13 @@ Specify the number of refinement iterations of the mesh. At each iteration, ever
 
 The 3D mesh of the coil winding surface needs to be projected onto a 2D surface.
 
-`--surface_is_cylinder_flag` (Type: bool, Default: True)
+- `--surface_is_cylinder_flag` (Type: bool, Default: True)
 
 Provide a hint to the application that the 3D coil mesh can be projected onto 2D using a simple cylindrical projection.
 
 If cylindrical projection is inappropriate then an iterative mesh parameterisation approach is used.
 
-`--circular_diameter_factor` (Type: float, default: 1)
+- `--circular_diameter_factor` (Type: float, default: 1)
 
 Circular diameter factor for projecting the 3D coil mesh to 2D.
 
@@ -168,13 +169,13 @@ The target gradient field can be either loaded from a Numpy pickle file, or defi
 
 ### Using a Numpy Pickle file
   
-`--target_field_definition_file` (Type: str, Default: 'none')
+- `--target_field_definition_file` (Type: str, Default: 'none')
 
 Specify the name of the Numpy pickle file that contains the target field co-ordinates and field value. 
 
 If used, the target field file is loaded from the `target_fields` directory.
 
-`--target_field_definition_field_name` (Type: str, Default: 'none')
+- `--target_field_definition_field_name` (Type: str, Default: 'none')
 
 Specify the field name of the target field definition within the Numpy pickle file.
 
@@ -182,34 +183,34 @@ Specify the field name of the target field definition within the Numpy pickle fi
 
 The mesh defines the boundary of the target field and these parameters fine-tune the target field point selection.
 
-`--target_mesh_file` (Type: str, Default: 'none')
+- `--target_mesh_file` (Type: str, Default: 'none')
 
 Specify the mesh used to define the target field. Further
 
-`--secondary_target_mesh_file` (Type: str, Default: 'none')
+- `--secondary_target_mesh_file` (Type: str, Default: 'none')
 
 File of the secondary target mesh.
 
-`--target_region_resolution` (Type: int, Default: 10)
+- `--target_region_resolution` (Type: int, Default: 10)
 
 Defines how many target points to create per dimension within the target region defined by the mesh.
 
 Only used if `--use_only_target_mesh_verts` is False.
 
-`--use_only_target_mesh_verts` (Type: bool, Default: False)
+- `--use_only_target_mesh_verts` (Type: bool, Default: False)
 
 If True, specifies that only the vertices of the mesh are to be used.
 
 ### Specifying the Gradient Field Co-ordinates Using a Sphere
 When both `--target_field_definition_file` and `--target_field_definition_file` are `'none'` then the target field co-ordinates are specified using a spherical volume.
 
-`--target_region_radius` (Type: float, Default: 0.15)
+- `--target_region_radius` (Type: float, Default: 0.15)
 
 Specifies the radius of the spherical target field. 
 
 The target field co-ordinates are then created by sub-dividing the radius using  `--target_region_resolution`, which specifies how many co-ordinates to create along each axis.
 
-`--set_roi_into_mesh_center` (Type: bool, Default: False)
+- `--set_roi_into_mesh_center` (Type: bool, Default: False)
 
 This flag is used to set the ROI into the geometric center of the mesh. If set, the centre of the target sphere is moved to the mean of the target field vertices.
 
@@ -218,11 +219,11 @@ This flag is used to set the ROI into the geometric center of the mesh. If set, 
 
 Once the target gradient field co-ordinates have been specified, then the gradient field vectors can be calculated.
 
-`--field_shape_function` (Type: str, Default: 'x')
+- `--field_shape_function` (Type: str, Default: 'x')
 
 Specifies the spatial function that defines the field.
 
-`--target_gradient_strength` (Type: float, Default: 1)
+- `--target_gradient_strength` (Type: float, Default: 1)
 
 Specifies the target gradient field strength in T/m.
 
@@ -234,6 +235,7 @@ Specifies the target gradient field strength in T/m.
 The magnetic field contribution and the gradient field sensitivity is calculated at every corresponding co-ordinate.
 
 - `--gauss_order` (Type: int, Default: 2)
+
 This parameter determines the Gauss integration order used in the winding magnetic field calculations.
 
 
@@ -241,9 +243,11 @@ This parameter determines the Gauss integration order used in the winding magnet
 The winding coil resistance affects the gradient magnetic field due to the winding coil.
 
 - `--specific_conductivity_conductor` (Type: float, Default: 0.018e-6)
+
 Specify the conductivity of the winding coil.
 
 - `--conductor_thickness` (Type: float, Default: 0.005)
+
 Specify the thickness of the sheet current density within the stream function representation.
 
 
@@ -253,20 +257,24 @@ The stream function represents the relationship between the coil parts and the g
 
 The CoilGen application performs an optimisation calculation of the stream function.
 
-`--sf_opt_method` (Type: str, Default: 'tikhonov')
+- `--sf_opt_method` (Type: str, Default: 'tikhonov')
+
 Determines the stream function optimization method.
 
-`--tikhonov_reg_factor` (Type: float, Default: 1)
+- `--tikhonov_reg_factor` (Type: float, Default: 1)
+
 Tikhonov regularization factor for the stream function optimization
 
-`--minimize_method` (Type: str, Default: 'SLSQP')
+- `--minimize_method` (Type: str, Default: 'SLSQP')
 
 If the `--sf_opt_method` is not `'tikhonov'`, then the Numpy `minimize` function is used and this parameter specifies which minimisation method to use.
 
-`--minimize_method_parameters` (Type:str, Default:"{'tol': 1e-6}")
+- `--minimize_method_parameters` (Type:str, Default:"{'tol': 1e-6}")
+
 Specify additional method parameters.
 
-`--minimize_method_options` (Type: str, Default: "{'disp': True, 'maxiter' : 100}")
+- `--minimize_method_options` (Type: str, Default: "{'disp': True, 'maxiter' : 100}")
+
 Specify additional method options, specific to the method.
 
 Please refer to the [official documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html)
@@ -276,7 +284,8 @@ for detailed information on some optimization-related parameters.
 
 A pre-existing mesh and optimised stream function solution can be loaded from persistence.
 
-`--sf_source_file` (Type: str, Default: 'none')
+- `--sf_source_file` (Type: str, Default: 'none')
+
 Specify the filename of the Numpy pickle file of the already optimized stream function. The file is loaded from the `Pre_Optimized_Solutions` directory.
 
 
@@ -284,10 +293,12 @@ Specify the filename of the Numpy pickle file of the already optimized stream fu
 The optimised current density must be analysed to determine the candidate wire paths. This is done by computing the equipotential contours.
 
 ### Contour Parameters
-`--levels` (Type: int, Default: 10)
+- `--levels` (Type: int, Default: 10)
+
 Specify the number of potential levels.
 
-`--level_set_method` (Type: str, Default: 'primary')
+- `--level_set_method` (Type: str, Default: 'primary')
+
 Specify the method for calculating the level sets. One of 'primary', 'combined' or 'independent'.
 
 The contour levels are calculated from the stream function with contributions from the different coil meshes (if more than one), according to the level set method.
@@ -298,17 +309,20 @@ The contour levels are calculated from the stream function with contributions fr
 
 The best method depends on each application. Users can examine the final computed gradient field and computed errors to inform their decision.
 
-`--pot_offset_factor` (Type: float, Default: 1/2)
+- `--pot_offset_factor` (Type: float, Default: 1/2)
+
 This factor is used to control the contour level step, according to the stream function range.
 
 The equipotential contours are further processed to determine their contribution to the gradient field.
 
-`--smooth_factor` (Type: int, Default: 1)
+- `--smooth_factor` (Type: int, Default: 1)
+
 Specifies how many points along the contour are to be used for smoothing. 
 
 Each point is replaced with the moving average of the specified number of neighbouring points. Smoothing only takes place when the `smooth_factor` is greater than 1.
 
-`--skip_calculation_min_winding_distance` (Type: bool, Default: True)
+- `--skip_calculation_min_winding_distance` (Type: bool, Default: True)
+
 A flag to skip calculation of minimum distance between calculated contour lines.
 
 The application can calculate the PCB track width using the minimum width between contours if this flag is `False`.
@@ -332,27 +346,31 @@ These cut locations are termed "high" and "low" cuts, respectively.
 
 Connect the groups and shift the return paths over the surface.
 
-`--force_cut_selection` (Type: list, Default: [])
+- `--force_cut_selection` (Type: list, Default: [])
 
 Specify the direction of cuts that join neighbouring contours, to form a topological group. The allowed options are `'high'` or `'low'`. 
 
 The array must either contain a single entry, which is used for all cut points, or match the number of topological groups, which is displayed by the application during processing.
 
-`--b_0_direction` (Type: float array, Default: [0, 0, 1])
+- `--b_0_direction` (Type: float array, Default: [0, 0, 1])
+
 Direction (vector) along which the interconnections will be aligned.
 
-`--interconnection_cut_width` (Type: float, Default: 0.01)
+- `--interconnection_cut_width` (Type: float, Default: 0.01)
+
 Width (in metres) of the cut used to connect neighbouring contours and to join contour groups to form a single wire path.
 
 ### Return Paths
 These parameters affect the generation of the return paths (Figure 4(c)).
 
-`--skip_normal_shift` (Type: bool, Default: False)
+- `--skip_normal_shift` (Type: bool, Default: False)
+
 Flag to skip the shifting of return paths around the contour loop.
 
 Shifting the return paths helps to align segments so that multiple segments of a single return path can all be raised together.
 
-`--normal_shift_smooth_factors` (Type: list of int, Default: [2, 3, 2])
+- `--normal_shift_smooth_factors` (Type: list of int, Default: [2, 3, 2])
+
 Parameters used to smooth the shape of the return paths that are displaced in the direction of the coil mesh normal.
 
 
@@ -363,25 +381,30 @@ Parameters used to smooth the shape of the return paths that are displaced in th
 
 The application can optionally generate a PCB wire path that is suitable for wrapping around a cylinder.
 
-`--make_cylindrical_pcb` (Type: bool, Default: False)
+- `--make_cylindrical_pcb` (Type: bool, Default: False)
+
 Flag to generate a rectangular pcb pattern to wrap around a cylinder.
 
-`--pcb_interconnection_method` (Type: str, Default: 'spiral_in_out')
+- `--pcb_interconnection_method` (Type: str, Default: 'spiral_in_out')
+
 Interconnection method for PCB: 'spiral_in_out' or 'other'.
 
-`--pcb_spiral_end_shift_factor` (Type: int, Default: 10)
+- `--pcb_spiral_end_shift_factor` (Type: int, Default: 10)
+
 Factor of shifting the open ends of the spirals in order to avoid overlaps; in percent.
 
 ### Generate 3D Wire Path
 
 The application can optionally generate a 3D .stl trace by sweeping out a conductor profile along the computed wire path.
 
-`--skip_sweep` (Type: bool, Default: False)
+- `--skip_sweep` (Type: bool, Default: False)
+
 Flag to skip the generation of a volumetric (3D) coil body.
 
 The calculated 3D surface is stored in `layout_surface_mesh` property.
 
-`--save_stl_flag` (Type: bool, Default: True)
+- `--save_stl_flag` (Type: bool, Default: True)
+
 Flag to save the swept conductor profile to an .stl file.
 
 If `skip_sweep` is False and `save_stl_flag` is True, the generated result is saved in the output_directory, with a name corresponding 
@@ -390,7 +413,7 @@ to `{project_name}_surface_part{part_ind}_{field_shape_function}.stl`, where `pa
 The `field_shape_function` is stripped of any `*`, `^`, and `,` symbols.
 
 
-
+# TBD
 
 
 `--min_point_loop_number` (Type: int, Default: 20)
