@@ -163,13 +163,9 @@ def parse_input(parse_cli=True):
     parser.add_argument('--output_directory', type=str,
                         default=str(Path.cwd()), help="Output directory")
 
-    # Add flag if the track should be smoothed
-    parser.add_argument('--smooth_flag', type=bool, default=True,
-                        help="Flag if the track should be smoothed")
-
     # Add the smoothing parameter
     parser.add_argument('--smooth_factor', type=int,
-                        default=1, help="Smoothing parameter")
+                        default=1, help="Smoothing parameter if tracks should be smoothed (i.e. when > 1).")
 
     # Add flag to save sweeped .stl
     parser.add_argument('--save_stl_flag', type=bool, default=True,
