@@ -9,19 +9,27 @@ from sub_functions.check_mutual_loop_inclusion import check_mutual_loop_inclusio
 log = logging.getLogger(__name__)
 
 
-def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
+def topological_loop_grouping(coil_parts: List[CoilPart]):
     """
     Group the contour loops in topological order.
 
     Initialises the following properties of a CoilPart:
-        - loop_groups: ?
+        - loop_groups:
         - group_levels: 
-        - level_positions: ?
-        - groups: ?
+        - level_positions:
+        - groups:
+
+    Depends on the following properties of the CoilParts:
+        - contour_lines
+
+    Depends on the following input_args:
+        - None
+
+    Updates the following properties of a CoilPart:
+        - contour_lines
 
     Args:
         coil_parts (List[CoilPart]): List of CoilPart structures, each containing contour_lines.
-        input_args: The input arguments (structure).
 
     Returns:
         List[CoilPart]: Updated list of CoilPart structures with contour loop groups.
@@ -59,7 +67,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         group_levels = [None] * num_total_loops
 
         for loop_to_test in range(num_total_loops):
-            group_levels[loop_to_test] = [ind for ind, lower_loop in enumerate(lower_loops) if 
+            group_levels[loop_to_test] = [ind for ind, lower_loop in enumerate(lower_loops) if
                                           lower_loop == lower_loops[loop_to_test]]
 
         # Delete the repetition in the parallel levels and the singular levels
@@ -119,7 +127,6 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
             # Order the loop_groups
             loop_groups[iiii] = np.array(sorted(list(diff)))
 
-
         # Order the groups based on the number of loops
         # Generating the list of group lengths
         # Sorting the indices based on the lengths in descending order
@@ -130,8 +137,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         for i in range(len(loop_groups)):
             coil_part.loop_groups[i] = loop_groups[sort_ind[i]]
 
-        loop_groups = coil_part.loop_groups # Use the np.array from here on.
-
+        loop_groups = coil_part.loop_groups  # Use the np.array from here on.
 
         # Renumber (=rename) the groups (also in the levels)
         renamed_group_levels = group_levels.copy()
@@ -147,7 +153,6 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
         coil_part.group_levels = np.empty((len(group_levels)), dtype=object)
         for i in range(len(renamed_group_levels)):
             coil_part.group_levels[i] = np.asarray(renamed_group_levels[sort_ind_level[i]])
-
 
         # Find for each parallel level the groups that contain that level
         loops_per_level = []
@@ -181,16 +186,13 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
             setdiff = set(level_positions[aaaa]) - set(coil_part.group_levels[aaaa])
             level_positions[aaaa] = list(sorted(setdiff))
 
-
         # Sort the level_positions according to their rank
         rank_of_group = [0] * len(loop_groups)
-        for aaaa in range(len(loop_groups)): # = 1:numel(coil_parts(part_ind).loop_groups)
-            x = [aaaa in x for x in coil_part.group_levels] # cellfun(@(x) ismember(aaaa, x), coil_parts(part_ind).group_levels)
+        for aaaa in range(len(loop_groups)):
+            x = [aaaa in x for x in coil_part.group_levels]
             x_i = [index for index, value in enumerate(x) if value]
             assert len(x_i) == 1
-            rank_of_group[aaaa] = len(level_positions[x_i[0]]) # numel(coil_parts(part_ind).level_positions{x})
-
-
+            rank_of_group[aaaa] = len(level_positions[x_i[0]])
 
         for level_index in range(len(group_levels)):
             level_positions[level_index] = sorted(level_positions[level_index], key=lambda x: rank_of_group[x])
@@ -204,9 +206,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart], input_args):
             content = [len(higher_loops[x]) for x in loop_group]
             sort_ind_loops = sorted(range(len(content)), key=lambda x: content[x], reverse=True)
 
-
-
-            this_group = TopoGroup()    # Create Topopological group container
+            this_group = TopoGroup()    # Create Topological group container
             this_group.loops = []       # Assign loops member
             for jjjj in sort_ind_loops:
                 loop_group_index = coil_part.loop_groups[iiii][jjjj]

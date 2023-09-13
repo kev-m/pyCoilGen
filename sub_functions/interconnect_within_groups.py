@@ -12,6 +12,7 @@ from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
 
 log = logging.getLogger(__name__)
 
+
 def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
     """
     Interconnects the loops within each group for each coil part.
@@ -20,12 +21,23 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
         - connected_group
         - groups.opened_loop
 
+    Depends on the following properties of the CoilParts:
+        - groups
+        - loop_groups
+        - group_centers
+        - coil_mesh
+
+    Depends on the following input_args:
+        - force_cut_selection
+        - b_0_direction
+        - interconnection_cut_width
+
     Updates the following properties of a CoilPart:
         - None
-        
+
     Parameters:
         coil_parts (List[CoilPart]): List of CoilPart structures containing coil_mesh and other data.
-        input_args (Any): Input arguments (Structure or any other type).
+        input_args (DataStructure): Command-line arguments.
 
     Returns:
         List[CoilPart]: The updated list of CoilPart structures with interconnected loops and cutshapes.
@@ -78,8 +90,8 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                 uv_nan = np.array([np.nan, np.nan])
                 v_nan = np.array([np.nan, np.nan, np.nan])
                 part_group.opened_loop = [shape3d]
-                part_group.cutshape = [Shape2D(uv=uv_nan.reshape(1,-1).T)]
-                part_connected_group.return_path = Shape3D(uv=uv_nan.reshape(1,-1).T, v=v_nan.reshape(1,-1).T)
+                part_group.cutshape = [Shape2D(uv=uv_nan.reshape(1, -1).T)]
+                part_connected_group.return_path = Shape3D(uv=uv_nan.reshape(1, -1).T, v=v_nan.reshape(1, -1).T)
                 part_connected_group.uv = shape3d.uv.copy()
                 part_connected_group.v = shape3d.v.copy()
                 part_connected_group.spiral_in = shape3d.copy()
@@ -121,7 +133,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
                 part_connected_group.spiral_in = Shape3D()
                 part_connected_group.spiral_out = Shape3D()
                 # for loop_ind = 1:numel(coil_parts(part_ind).groups(group_ind).loops)
-                for loop_ind in range(0, len(part_group.loops)): # [Loop 1]
+                for loop_ind in range(0, len(part_group.loops)):  # [Loop 1]
                     opened_loop = part_group.opened_loop[loop_ind]
                     # part_connected_group.uv = [part_connected_group.uv opened_loop.uv];
                     part_connected_group.add_uv(opened_loop.uv)
@@ -129,14 +141,14 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
 
                     part_connected_group.spiral_in.add_uv(opened_loop.uv)
                     part_connected_group.spiral_in.add_v(opened_loop.v)
-                    
+
                     other_item = part_group.opened_loop[len(part_group.loops) - loop_ind - 1]
                     part_connected_group.spiral_out.add_uv(other_item.uv)
                     part_connected_group.spiral_out.add_v(other_item.v)
 
                 # Add the return path
                 part_connected_group.return_path = Shape3D()
-                for loop_ind in range(len(part_group.loops)-1, -1, -1): # Loop2
+                for loop_ind in range(len(part_group.loops)-1, -1, -1):  # Loop2
                     opened_loop = part_group.opened_loop[loop_ind]
                     part_connected_group.return_path.add_uv(np.mean(opened_loop.uv[:, [0, -1]], axis=1).reshape(-1, 1))
                     part_connected_group.return_path.add_v(np.mean(opened_loop.v[:, [0, -1]], axis=1).reshape(-1, 1))

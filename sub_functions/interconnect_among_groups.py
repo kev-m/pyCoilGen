@@ -18,7 +18,16 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
     Interconnects groups to generate a single wire track.
 
     Initialises the following properties of a CoilPart:
+        - opening_cuts_among_groups
         - wire_path
+
+    Depends on the following properties of the CoilParts:
+        - connected_group
+        - level_positions
+        - group_levels
+
+    Depends on the following input_args:
+        - interconnection_cut_width
 
     Updates the following properties of a CoilPart:
         - None
