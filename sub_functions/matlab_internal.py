@@ -6,6 +6,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 class triangulation:
     """
     Create an in-memory representation of a 2-D or 3-D triangulation data.
@@ -25,6 +26,7 @@ class triangulation:
     >>> faces = np.array([[0, 1, 2], [1, 3, 2]])
     >>> triangulation = triangulation(vertices, faces)
     """
+
     def __init__(self, vertices, faces):
         self._vertices = vertices
         self._faces = faces
@@ -34,7 +36,7 @@ class triangulation:
         if self._tri is None:
             self._tri = Delaunay(self._vertices)
         return self._tri.convex_hull
-    
+
     def normals(self):
         if self._tri is None:
             self._tri = Delaunay(self._vertices)
@@ -43,9 +45,10 @@ class triangulation:
             boundary_tri.points[boundary_tri.simplices][:, 1] - boundary_tri.points[boundary_tri.simplices][:, 0],
             boundary_tri.points[boundary_tri.simplices][:, 2] - boundary_tri.points[boundary_tri.simplices][:, 0]
         )
-        normals /= np.linalg.norm(normals, axis=0, keepdims=True)        
+        normals /= np.linalg.norm(normals, axis=0, keepdims=True)
         return normals
-    
+
+
 def freeBoundary(triangulation):
     """
     Find the free boundary facets of the triangles or tetrahedra in a triangulation.
@@ -64,6 +67,7 @@ def freeBoundary(triangulation):
     """
 
     return triangulation.freeBoundary()
+
 
 def faceNormal(triangulation):
     """
@@ -121,37 +125,3 @@ def calculate_face_normals(vertices, faces):
     normals /= np.linalg.norm(normals, axis=-1, keepdims=True)
 
     return normals
-
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-
-    # triangulation
-    vertices = np.array([[2.5, 8.0],
-                         [6.5, 8.0],
-                         [2.5, 5.0],
-                         [6.5, 5.0],
-                         [1.0, 6.5],
-                         [8.0, 6.5]])
-
-    faces = np.array([[5, 3, 1],
-                      [3, 2, 1],
-                      [3, 4, 2],
-                      [4, 6, 2]])-1
-
-    """
-    triangulations = triangulation(vertices, faces)
-    print("triangulation:", triangulations)
-
-    # faceNormal
-    faceNormals = faceNormal(triangulations)
-    print("faceNormals", faceNormals)
-
-    # freeBoundary
-    boundaryFacets = freeBoundary(triangulations)
-    print("freeBoundary:", boundaryFacets)
-    """
-
-    faceNormals2 = calculate_face_normals(vertices=vertices, faces=faces)
-    print("faceNormals", faceNormals2)

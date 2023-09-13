@@ -315,6 +315,3 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
     return coil_parts
 
-
-if __name__ == "__main__":
-    pass

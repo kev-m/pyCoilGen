@@ -3,9 +3,6 @@ import numpy as np
 from typing import List
 import logging
 
-# Logging
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger(__name__)
 
 # Local imports
 from sub_functions.constants import *
@@ -17,6 +14,8 @@ from sub_functions.stream_function_optimization import generate_combined_mesh
 # For timing
 from helpers.timing import Timing
 
+# Logging
+log = logging.getLogger(__name__)
 
 def load_preoptimized_data(input_args) -> CoilSolution:
     """
@@ -92,10 +91,3 @@ def load_preoptimized_data(input_args) -> CoilSolution:
     return CoilSolution(input_args=input_args, coil_parts=coil_parts, target_field=target_field,
                         is_suppressed_point=is_suppressed_point, combined_mesh=combined_mesh,
                         sf_b_field=sf_b_field)
-
-
-# Example usage
-if __name__ == "__main__":
-    # Load pre-optimised data using the defined function
-    input_args = DataStructure(sf_source_file='source_data_breast_coil.npy')
-    preoptimized_solution = load_preoptimized_data(input_args)

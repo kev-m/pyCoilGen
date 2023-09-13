@@ -147,21 +147,3 @@ def refine_mesh_delegated(coil_parts, input_args):
 
     return coil_parts
 
-
-if __name__ == "__main__":
-    # Set up logging
-    log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.DEBUG)
-
-    # Test 1: Trivial case: A single face
-    vertices = np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0]])
-    faces = np.array([[0, 1, 2]])
-
-    new_vertices, new_faces = refine_mesh_elements2(vertices, faces)
-
-    log.debug(" New vertices: %s -> %s", new_vertices.shape, new_vertices)
-    log.debug(" New faces: %s -> %s", new_faces.shape, new_faces)
-
-    # Local imports
-    # from sub_functions.data_structures import Mesh
-    # mesh = Mesh(vertices=vertices, faces=faces)

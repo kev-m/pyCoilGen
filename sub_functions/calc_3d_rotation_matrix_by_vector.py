@@ -1,13 +1,14 @@
 import numpy as np
 
+
 def calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle):
     """
     Calculate the 3D rotation matrix around a rotation axis given by a vector and an angle.
-    
+
     Parameters:
         rot_vec (numpy.ndarray): Rotation axis vector.
         rot_angle (float): Rotation angle in radians.
-    
+
     Returns:
         numpy.ndarray: 3x3 rotation matrix.
     """
@@ -26,30 +27,13 @@ def calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle):
     rot_mat_out[0, 0] = tmp2 + u_x * u_x * tmp3
     rot_mat_out[1, 0] = u_x * u_y * tmp3 - u_z * tmp1
     rot_mat_out[2, 0] = u_x * u_z * tmp3 + u_y * tmp1
-                  
+
     rot_mat_out[0, 1] = u_y * u_x * tmp3 + u_z * tmp1
     rot_mat_out[1, 1] = tmp2 + u_y * u_y * tmp3
     rot_mat_out[2, 1] = u_y * u_z * tmp3 - u_x * tmp1
-                  
+
     rot_mat_out[0, 2] = u_z * u_x * tmp3 - u_y * tmp1
     rot_mat_out[1, 2] = u_z * u_y * tmp3 + u_x * tmp1
     rot_mat_out[2, 2] = tmp2 + u_z * u_z * tmp3
 
     return rot_mat_out
-
-if __name__ == "__main__":
-    # Example usage
-    rot_vec = np.array([0, 0, 1])  # Rotation axis vector
-    rot_angle = np.pi / 4  # Rotation angle in radians
-
-    # Call the function
-    rotation_matrix = calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle)
-
-    # Print the resulting rotation matrix
-    print(rotation_matrix)
-
-"""
-[[ 0.70710678 -0.70710678  0.        ]
- [ 0.70710678  0.70710678  0.        ]
- [ 0.          0.          1.        ]]
-"""
