@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def calc_gradient_along_vector(field, field_coords, target_endcoding_function):
     """
     Calculate the mean gradient in a given direction and angle.
@@ -12,9 +13,6 @@ def calc_gradient_along_vector(field, field_coords, target_endcoding_function):
     Returns:
         mean_gradient_strength (float): Mean gradient strength.
         gradient_out (array): Gradient values.
-
-    Raises:
-        None
     """
     def my_fun(x, y, z):
         # Define the target encoding function
@@ -29,8 +27,10 @@ def calc_gradient_along_vector(field, field_coords, target_endcoding_function):
     gradient_direction /= np.linalg.norm(gradient_direction)
 
     if np.linalg.norm(np.cross(gradient_direction, target_direction)) != 0:
-        rot_vector = np.cross(gradient_direction, target_direction) / np.linalg.norm(np.cross(gradient_direction, target_direction))
-        rot_angle = np.arcsin(np.linalg.norm(np.cross(gradient_direction, target_direction)) / (np.linalg.norm(target_direction) * np.linalg.norm(gradient_direction)))
+        rot_vector = np.cross(gradient_direction, target_direction) / \
+            np.linalg.norm(np.cross(gradient_direction, target_direction))
+        rot_angle = np.arcsin(np.linalg.norm(np.cross(gradient_direction, target_direction)) /
+                              (np.linalg.norm(target_direction) * np.linalg.norm(gradient_direction)))
     else:
         rot_vector = np.array([1, 0, 0])
         rot_angle = 0

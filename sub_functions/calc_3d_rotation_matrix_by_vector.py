@@ -5,7 +5,7 @@ def calc_3d_rotation_matrix_by_vector(rot_vec, rot_angle):
     """
     Calculate the 3D rotation matrix around a rotation axis given by a vector and an angle.
 
-    Parameters:
+    Args:
         rot_vec (numpy.ndarray): Rotation axis vector.
         rot_angle (float): Rotation angle in radians.
 

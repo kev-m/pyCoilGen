@@ -10,7 +10,7 @@ def plane_line_intersect(plane_normal: np.ndarray, plane_pos: np.ndarray, point_
     """
     Compute the intersection point between a plane and a line segment defined by two points.
 
-    Parameters:
+    Args:
         plane_normal (np.ndarray): The normal vector of the plane.
         plane_pos (np.ndarray): A point on the plane.
         point_0 (np.ndarray): The first point of the line segment.

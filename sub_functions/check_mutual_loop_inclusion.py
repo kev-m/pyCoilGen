@@ -5,26 +5,19 @@ from typing import List
 def check_mutual_loop_inclusion(test_poly: np.ndarray, target_poly: np.ndarray) -> bool:
     """
     Check if the test polygon lies fully enclosed within the second polygon.
+
     This check is done with the winding number algorithm test for each vertex towards the second polygon.
 
-    Parameters:
+    Args:
         test_poly (np.ndarray): Array representing the test polygon's 2D coordinates (shape: (2, num_vertices)).
         target_poly (np.ndarray): Array representing the target polygon's 2D coordinates (shape: (2, num_vertices)).
 
     Returns:
         bool: True if the test polygon is fully enclosed within the target polygon, False otherwise.
-
-    Example:
-        # Define the test polygon and target polygon coordinates as 2D arrays
-        test_poly = np.array([[x1, x2, x3, ...], [y1, y2, y3, ...]])
-        target_poly = np.array([[xt1, xt2, xt3, ...], [yt1, yt2, yt3, ...]])
-
-        # Check if the test polygon is fully enclosed within the target polygon
-        inside_flag = check_mutual_loop_inclusion(test_poly, target_poly)
     """
 
     if len(test_poly.shape) == 1:
-        test_poly = test_poly.reshape((2,1))
+        test_poly = test_poly.reshape((2, 1))
     num_entries = test_poly.shape[1]
     winding_numbers = np.zeros(num_entries)
     for point_ind in range(num_entries):
@@ -43,6 +36,7 @@ def check_mutual_loop_inclusion(test_poly: np.ndarray, target_poly: np.ndarray) 
     inside_flag = np.all(winding_numbers == 1)
 
     return inside_flag
+
 
 """
 In this Python implementation, the function check_mutual_loop_inclusion takes two 2D arrays, test_poly and target_poly,

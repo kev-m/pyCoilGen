@@ -16,10 +16,6 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
     """
     Create a volumetric coil body by surface sweep.
 
-    Args:
-        coil_parts (List[CoilPart]): List of CoilPart structures containing coil_mesh.
-        input_args: Input arguments structure.
-
     Initialises the following properties of a CoilPart:
         - layout_surface_mesh
         - ohmian_resistance
@@ -38,6 +34,10 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
     Updates the following properties of a CoilPart:
         - wire_path.uv
         - wire_path.v
+
+    Args:
+        coil_parts (List[CoilPart]): List of CoilPart structures containing coil_mesh.
+        input_args: Input arguments structure.
 
     Returns:
         List[CoilPart]: List of CoilPart structures with modified properties.

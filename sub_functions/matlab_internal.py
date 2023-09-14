@@ -11,14 +11,14 @@ class triangulation:
     """
     Create an in-memory representation of a 2-D or 3-D triangulation data.
 
-    Parameters:
-    - vertices (ndarray): The vertices of the triangulation as a 2-D array.
+    Args:
+        vertices (ndarray): The vertices of the triangulation as a 2-D array.
                           Each row contains the coordinates of a vertex.
-    - faces (ndarray): The faces of the triangulation as a 2-D array.
+        faces (ndarray): The faces of the triangulation as a 2-D array.
                        Each row contains the indices of the vertices forming a face.
 
     Returns:
-    - triangulation (ndarray): The triangulation data represented as a 3-D array.
+        triangulation (ndarray): The triangulation data represented as a 3-D array.
                                Each row contains the coordinates of the three vertices of a triangle.
 
     Examples:
@@ -53,12 +53,12 @@ def freeBoundary(triangulation):
     """
     Find the free boundary facets of the triangles or tetrahedra in a triangulation.
 
-    Parameters:
-    - triangulation (ndarray): The triangulation data represented as a 2-D or 3-D array.
+    Args:
+        triangulation (ndarray): The triangulation data represented as a 2-D or 3-D array.
                                Each row contains the indices of the vertices forming a triangle or tetrahedron.
 
     Returns:
-    - boundaryFacets (ndarray): The free boundary facets of the triangulation.
+        boundaryFacets (ndarray): The free boundary facets of the triangulation.
                                A facet is on the free boundary if it is referenced by only one triangle or tetrahedron.
 
     Examples:
@@ -73,16 +73,16 @@ def faceNormal(triangulation):
     """
     Compute the unit normal vectors to all triangles in a 2-D triangulation.
 
-    Parameters:
-    - triangulation (ndarray): The triangulation data represented as a 2-D array.
+    Args:
+        triangulation (ndarray): The triangulation data represented as a 2-D array.
                                Each row contains the indices of the three vertices of a triangle.
 
     Returns:
-    - faceNormals (ndarray): A 2-D array where each row contains the unit normal coordinates
+        faceNormals (ndarray): A 2-D array where each row contains the unit normal coordinates
                              corresponding to a triangle in the triangulation.
 
     Note:
-    - This function supports 2-D triangulations only.
+        This function supports 2-D triangulations only.
 
     Examples:
     >>> triangulation = np.array([[0, 1, 2], [1, 3, 2], [2, 3, 4]])
