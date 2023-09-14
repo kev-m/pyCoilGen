@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 def temp_evaluation(coil_solution : CoilSolution, input, target_field):
     """
-    Evaluates whether precalculated values can be used from previous calculations.
+    Evaluates whether pre-calculated values can be used from previous calculations.
 
     Args:
         CoilSolution

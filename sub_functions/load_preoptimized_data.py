@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 def load_preoptimized_data(input_args) -> CoilSolution:
     """
-    Load preoptimized data.
+    Load pre-calculated data from a previous run.
 
     Initialises the following properties of the CoilParts:
         - v,n (np.ndarray)  : vertices and vertex normals (m,3), (m,3)
