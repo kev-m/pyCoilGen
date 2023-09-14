@@ -1,5 +1,5 @@
 import numpy as np
-from helpers.pyshull import PySHull
+from pyCoilGen.helpers.pyshull import PySHull
 
 # Logging
 import logging

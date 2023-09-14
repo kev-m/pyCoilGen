@@ -5,7 +5,7 @@ from scipy.io import loadmat
 import logging
 
 # Local imports
-from sub_functions.constants import *
+from pyCoilGen.sub_functions.constants import *
 
 log = logging.getLogger(__name__)
 

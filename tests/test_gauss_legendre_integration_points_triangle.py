@@ -3,7 +3,7 @@ import numpy as np
 # Test support
 from pytest import approx
 # Code under test
-from sub_functions.gauss_legendre_integration_points_triangle import gauss_legendre_integration_points_triangle, calc_weights_gauss
+from pyCoilGen.sub_functions.gauss_legendre_integration_points_triangle import gauss_legendre_integration_points_triangle, calc_weights_gauss
 
 
 def test_calc_weights_gauss():

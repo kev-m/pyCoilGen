@@ -5,8 +5,8 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilSolution, BasisElement, CoilPart
-from sub_functions.gauss_legendre_integration_points_triangle import gauss_legendre_integration_points_triangle
+from .data_structures import CoilSolution, BasisElement, CoilPart
+from .gauss_legendre_integration_points_triangle import gauss_legendre_integration_points_triangle
 
 log = logging.getLogger(__name__)
 

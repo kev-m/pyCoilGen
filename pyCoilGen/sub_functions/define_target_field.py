@@ -7,8 +7,8 @@ from sympy import symbols, diff, lambdify
 import logging
 
 # Local imports
-from sub_functions.data_structures import TargetField
-from sub_functions.constants import *
+from .data_structures import TargetField
+from .constants import *
 
 log = logging.getLogger(__name__)
 

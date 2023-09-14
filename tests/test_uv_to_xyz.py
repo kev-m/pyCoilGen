@@ -4,16 +4,11 @@ from trimesh.proximity import ProximityQuery
 import numpy as np
 import json
 
-# Set up paths: Add the project root directory to the Python path
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 # Test support
-from sub_functions.build_planar_mesh import build_planar_mesh
-from sub_functions.data_structures import Mesh
+from pyCoilGen.sub_functions.build_planar_mesh import build_planar_mesh
+from pyCoilGen.sub_functions.data_structures import Mesh
 # Code under test
-from sub_functions.uv_to_xyz import uv_to_xyz_obsolete, which_face, get_target_triangle_obsolete, pointLocation, point_inside_triangle
+from pyCoilGen.sub_functions.uv_to_xyz import uv_to_xyz_obsolete, which_face, get_target_triangle_obsolete, pointLocation, point_inside_triangle
 
 def test_uv_to_xyz_planar():
     val = build_planar_mesh(0.30, 0.60, 3, 3, 0, 0, 1, 0, 0, 0, 1.0)

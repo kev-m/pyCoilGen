@@ -1,8 +1,8 @@
 import numpy as np
 
-from sub_functions.data_structures import TargetField
+from pyCoilGen.sub_functions.data_structures import TargetField
 # Code under test
-from sub_functions.process_raw_loops import biot_savart_calc_b
+from pyCoilGen.sub_functions.process_raw_loops import biot_savart_calc_b
 
 def test_biot_savart_calc_b_trivial():
     wire_path = np.asarray(([-0.5, 0.5], [0.0, 0.0], [0.0, 0.0])).reshape(3,2)

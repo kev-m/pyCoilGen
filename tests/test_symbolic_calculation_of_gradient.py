@@ -1,8 +1,8 @@
 import numpy as np
 
-from sub_functions.data_structures import DataStructure, TargetField
+from pyCoilGen.sub_functions.data_structures import DataStructure, TargetField
 # Code under test
-from sub_functions.define_target_field import symbolic_calculation_of_gradient
+from pyCoilGen.sub_functions.define_target_field import symbolic_calculation_of_gradient
 
 
 def test_symbolic_calculation_of_gradient():

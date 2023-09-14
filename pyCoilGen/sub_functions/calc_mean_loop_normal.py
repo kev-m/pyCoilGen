@@ -2,7 +2,7 @@ import numpy as np
 
 from typing import List
 
-from sub_functions.data_structures import TopoGroup, Mesh
+from .data_structures import TopoGroup, Mesh
 
 
 def calc_mean_loop_normal(group: TopoGroup, coil_mesh: Mesh):

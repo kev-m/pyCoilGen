@@ -5,7 +5,7 @@ import numpy as np
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart, Mesh
+from .data_structures import CoilPart, Mesh
 
 log = logging.getLogger(__name__)
 

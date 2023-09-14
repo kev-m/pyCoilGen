@@ -6,7 +6,7 @@ import struct
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilSolution
+from .data_structures import CoilSolution
 
 log = logging.getLogger(__name__)
 

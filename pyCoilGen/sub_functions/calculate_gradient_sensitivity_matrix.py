@@ -1,6 +1,6 @@
 import numpy as np
 
-from sub_functions.gauss_legendre_integration_points_triangle import gauss_legendre_integration_points_triangle
+from .gauss_legendre_integration_points_triangle import gauss_legendre_integration_points_triangle
 
 
 def calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args):

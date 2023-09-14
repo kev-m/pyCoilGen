@@ -3,8 +3,8 @@ import numpy as np
 from typing import List
 
 # Local imports
-from sub_functions.data_structures import ContourLine
-from helpers.common import nearest_approaches
+from .data_structures import ContourLine
+from pyCoilGen.helpers.common import nearest_approaches
 
 
 def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only_point_flag: bool, only_min_dist=False):

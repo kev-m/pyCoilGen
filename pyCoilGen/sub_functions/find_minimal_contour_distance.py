@@ -6,8 +6,8 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart
-from sub_functions.find_min_mutual_loop_distance import find_min_mutual_loop_distance
+from .data_structures import CoilPart
+from .find_min_mutual_loop_distance import find_min_mutual_loop_distance
 
 log = logging.getLogger(__name__)
 

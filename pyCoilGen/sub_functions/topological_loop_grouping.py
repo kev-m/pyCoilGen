@@ -3,8 +3,8 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart, TopoGroup
-from sub_functions.check_mutual_loop_inclusion import check_mutual_loop_inclusion
+from .data_structures import CoilPart, TopoGroup
+from .check_mutual_loop_inclusion import check_mutual_loop_inclusion
 
 log = logging.getLogger(__name__)
 

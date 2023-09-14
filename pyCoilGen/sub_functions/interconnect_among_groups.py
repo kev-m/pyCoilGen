@@ -1,4 +1,3 @@
-from helpers.visualisation import compare
 import numpy as np
 
 from typing import List
@@ -7,9 +6,9 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart, Shape3D, Cuts, DataStructure
-from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
-from sub_functions.remove_points_from_loop import remove_points_from_loop
+from .data_structures import CoilPart, Shape3D, Cuts, DataStructure
+from .open_loop_with_3d_sphere import open_loop_with_3d_sphere
+from .remove_points_from_loop import remove_points_from_loop
 
 log = logging.getLogger(__name__)
 

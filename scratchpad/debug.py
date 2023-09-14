@@ -10,7 +10,8 @@ import logging
 import sys
 from pathlib import Path
 sub_functions_path = Path(__file__).resolve().parent / '..'
-print(sub_functions_path)
+sys.path.append(str(sub_functions_path))
+sub_functions_path = Path(__file__).resolve().parent / '../pyCoilGen'
 sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
@@ -1967,13 +1968,14 @@ if __name__ == "__main__":
     # minimize_testing()
     #
     # test_smooth_track_by_folding()
-    # from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file1, \
-    #        test_split_disconnected_mesh_stl_file2, test_split_disconnected_mesh_simple_planar_mesh, \
-    #        test_split_disconnected_mesh_biplanar_mesh
+    from tests.test_split_disconnected_mesh import test_split_disconnected_mesh_stl_file1, \
+            test_split_disconnected_mesh_stl_file2, test_split_disconnected_mesh_simple_planar_mesh, \
+            test_split_disconnected_mesh_biplanar_mesh, test_load_from_file
     # test_split_disconnected_mesh_simple_planar_mesh()
     # test_split_disconnected_mesh_biplanar_mesh()
     # test_split_disconnected_mesh_stl_file1()
     # test_split_disconnected_mesh_stl_file2()
+    test_load_from_file()
     #
     # from tests.test_mesh import test_get_face_index2
     # test_get_face_index2()
@@ -1984,5 +1986,5 @@ if __name__ == "__main__":
     # from tests.test_biot_savart_calc_b import test_biot_savart_calc_b_arrays2
     # test_biot_savart_calc_b_arrays2()
 
-    from tests.test_symbolic_calculation_of_gradient import test_symbolic_calculation_of_gradient
-    test_symbolic_calculation_of_gradient()
+    # from tests.test_symbolic_calculation_of_gradient import test_symbolic_calculation_of_gradient
+    # test_symbolic_calculation_of_gradient()

@@ -6,9 +6,9 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart, Shape2D, Shape3D, ConnectedGroup
-from sub_functions.find_group_cut_position import find_group_cut_position
-from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
+from .data_structures import CoilPart, Shape2D, Shape3D, ConnectedGroup
+from .find_group_cut_position import find_group_cut_position
+from .open_loop_with_3d_sphere import open_loop_with_3d_sphere
 
 log = logging.getLogger(__name__)
 

@@ -6,9 +6,9 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.constants import *
-from sub_functions.data_structures import CoilPart, WirePart, TargetField
-from sub_functions.smooth_track_by_folding import smooth_track_by_folding
+from .constants import *
+from .data_structures import CoilPart, WirePart, TargetField
+from .smooth_track_by_folding import smooth_track_by_folding
 
 log = logging.getLogger(__name__)
 

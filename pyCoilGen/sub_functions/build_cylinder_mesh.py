@@ -4,8 +4,8 @@ import numpy as np
 import logging
 
 # Local imports
-from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
-from sub_functions.data_structures import DataStructure
+from .calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
+from .data_structures import DataStructure
 
 log = logging.getLogger(__name__)
 
