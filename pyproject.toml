@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pycoilgen"
-version = "0.0.1"
+version = "0.1.0"
 description = "A small example package"
 authors = [
         {name = "Kevin Meyer", email = "kevin@kmz.co.za"},
@@ -43,9 +43,14 @@ name = "pyCoilGen"
 
 [tool.flit.sdist]
 include = [
-    "Geometry_Data",
-    "Pre_Optimized_Solutions",
-    "target_fields",
+    "data",
+]
+exclude = [
+    "docs",
+    "examples",
+    "scratchpad",
+    "tests",
 ]
 
-
+[tool.flit.external-data]
+directory = "data"
