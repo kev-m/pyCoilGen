@@ -2,7 +2,7 @@ import numpy as np
 # Test support
 from pytest import approx
 # Code under test
-from sub_functions.build_cylinder_mesh import build_cylinder_mesh
+from pyCoilGen.sub_functions.build_cylinder_mesh import build_cylinder_mesh
 
 
 def test_build_cylinder_mesh_basic():

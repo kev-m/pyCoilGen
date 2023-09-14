@@ -1,5 +1,5 @@
 from numpy import dot, sum, ndarray, zeros
-
+from os import path
 
 def nearest_approaches(point: ndarray, starts: ndarray, ends: ndarray):
     """
@@ -43,3 +43,18 @@ def blkdiag(arr1: ndarray, arr2:ndarray)->ndarray:
     result[rows1:, cols1:] = arr2
 
     return result
+
+# A list of possible paths to try: 'data' in both the local and site-packages installed directories.
+__directory_list = ['data', path.join(__file__[:-(len(__package__))], 'data')]
+def find_file(file_directory, file_name):
+    """
+    Iterates through candidate paths to find a file on the file system.
+    """
+    dir_path = path.join(file_directory, file_name)
+    if path.exists(dir_path):
+        return dir_path
+    for new_path in __directory_list:
+        new_file_name = path.join(new_path, dir_path)
+        if path.exists(new_file_name):
+            return new_file_name
+    raise FileNotFoundError(f"Unable to find {dir_path} in local path or {__directory_list}")

@@ -14,7 +14,7 @@ sys.path.append(str(sub_functions_path))
 import numpy as np
 
 # Code under test
-import helpers.visualisation as vs
+import pyCoilGen.helpers.visualisation as vs
 
 def test_compare_1d():
     val1 = np.array([0.1])

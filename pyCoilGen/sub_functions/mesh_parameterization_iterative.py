@@ -6,7 +6,7 @@ from scipy.sparse import coo_matrix, find, hstack, vstack, linalg
 import logging
 
 # Local imports
-from sub_functions.data_structures import DataStructure, Mesh
+from .data_structures import DataStructure, Mesh
 
 log = logging.getLogger(__name__)
 

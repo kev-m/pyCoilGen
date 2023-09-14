@@ -6,7 +6,7 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilPart
+from .data_structures import CoilPart
 
 log = logging.getLogger(__name__)
 

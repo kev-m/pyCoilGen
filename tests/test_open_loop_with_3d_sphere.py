@@ -9,13 +9,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 
 # Test support
-from helpers.extraction import load_matlab
-from sub_functions.data_structures import Shape3D, DataStructure
-from helpers.visualisation import compare
+from pyCoilGen.helpers.extraction import load_matlab
+from pyCoilGen.sub_functions.data_structures import Shape3D, DataStructure
+from pyCoilGen.helpers.visualisation import compare
 
 
 # Code under test
-from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere, add_nearest_ref_point_to_curve
+from pyCoilGen.sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere, add_nearest_ref_point_to_curve
 
 
 def test_open_loop_with_3d_sphere():

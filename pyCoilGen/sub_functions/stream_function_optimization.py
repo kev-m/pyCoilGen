@@ -8,9 +8,9 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import DataStructure, CoilPart
-from sub_functions.constants import get_level, DEBUG_NONE, DEBUG_VERBOSE
-from helpers.common import blkdiag
+from .data_structures import DataStructure, CoilPart
+from .constants import get_level, DEBUG_NONE, DEBUG_VERBOSE
+from pyCoilGen.helpers.common import blkdiag
 
 log = logging.getLogger(__name__)
 

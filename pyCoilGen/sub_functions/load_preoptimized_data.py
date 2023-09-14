@@ -5,14 +5,14 @@ import logging
 
 
 # Local imports
-from sub_functions.constants import *
-from sub_functions.data_structures import CoilSolution, TargetField, Mesh, DataStructure
-from sub_functions.split_disconnected_mesh import split_disconnected_mesh
-from sub_functions.parameterize_mesh import parameterize_mesh
-from sub_functions.stream_function_optimization import generate_combined_mesh
+from .constants import *
+from .data_structures import CoilSolution, TargetField, Mesh, DataStructure
+from .split_disconnected_mesh import split_disconnected_mesh
+from .parameterize_mesh import parameterize_mesh
+from .stream_function_optimization import generate_combined_mesh
 
 # For timing
-from helpers.timing import Timing
+from pyCoilGen.helpers.timing import Timing
 
 # Logging
 log = logging.getLogger(__name__)

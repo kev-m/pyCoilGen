@@ -2,7 +2,7 @@ import numpy as np
 
 from typing import List
 
-from sub_functions.data_structures import CoilPart, TargetField, LayoutGradient, WirePart
+from .data_structures import CoilPart, TargetField, LayoutGradient, WirePart
 
 
 def calculate_gradient(coil_parts: List[CoilPart], input_args, target_field: TargetField) -> LayoutGradient:

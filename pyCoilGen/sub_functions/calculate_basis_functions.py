@@ -5,8 +5,8 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.data_structures import CoilSolution, BasisElement, CoilPart
-from sub_functions.constants import get_level, DEBUG_VERBOSE
+from .data_structures import CoilSolution, BasisElement, CoilPart
+from .constants import get_level, DEBUG_VERBOSE
 
 log = logging.getLogger(__name__)
 

@@ -7,8 +7,8 @@ import logging
 
 
 # Local imports
-from sub_functions.constants import get_level, DEBUG_VERBOSE
-from sub_functions.data_structures import CoilPart
+from .constants import get_level, DEBUG_VERBOSE
+from .data_structures import CoilPart
 
 log = logging.getLogger(__name__)
 

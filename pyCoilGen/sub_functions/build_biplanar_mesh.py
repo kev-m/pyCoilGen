@@ -5,10 +5,10 @@ import numpy as np
 import logging
 
 # Local imports
-from sub_functions.constants import get_level, DEBUG_BASIC
-from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
-from sub_functions.data_structures import DataStructure
-from sub_functions.build_planar_mesh import simple_planar_mesh, apply_rotation_translation
+from .constants import get_level, DEBUG_BASIC
+from .calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
+from .data_structures import DataStructure
+from .build_planar_mesh import simple_planar_mesh, apply_rotation_translation
 
 log = logging.getLogger(__name__)
 

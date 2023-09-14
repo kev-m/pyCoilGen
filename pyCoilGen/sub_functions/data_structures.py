@@ -2,7 +2,6 @@
 from typing import List, Tuple
 import numpy as np
 from dataclasses import dataclass
-
 # Mesh implementation
 import trimesh
 
@@ -10,8 +9,9 @@ import trimesh
 import logging
 
 # Local imports
-from sub_functions.constants import *
-from sub_functions.uv_to_xyz import pointLocation, barycentric_to_cartesian
+from .constants import *
+from .uv_to_xyz import pointLocation, barycentric_to_cartesian
+from pyCoilGen.helpers.common import find_file
 
 log = logging.getLogger(__name__)
 
@@ -93,17 +93,23 @@ class Mesh:
         return as_string(self)
 
     @staticmethod
-    def load_from_file(filename):
+    def load_from_file(default_path, filename):
         """
         Load a mesh from a file.
+
+        Tries to load the file from the given path locally, in the data directory and in the installed package data
+        directory.
 
         Args:
             filename (str): The path to the mesh file.
 
         Returns:
             Mesh: An instance of Mesh representing the loaded mesh.
+        
+        Raises:
+            FileNotFoundError if the file is not found.
         """
-        trimesh_obj = trimesh.load_mesh(filename)
+        trimesh_obj = trimesh.load_mesh(find_file(default_path, filename))
         return Mesh(trimesh_obj=trimesh_obj)
 
     def get_vertices(self):

@@ -1,10 +1,10 @@
 import numpy as np
 from typing import List
 
-from sub_functions.data_structures import CoilPart, PCBTrack, PCBLayer, GroupLayout, PCBPart, Polygon
-from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
-from sub_functions.find_segment_intersections import find_segment_intersections
-from sub_functions.smooth_track_by_folding import smooth_track_by_folding
+from .data_structures import CoilPart, PCBTrack, PCBLayer, GroupLayout, PCBPart, Polygon
+from .calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
+from .find_segment_intersections import find_segment_intersections
+from .smooth_track_by_folding import smooth_track_by_folding
 
 import logging
 

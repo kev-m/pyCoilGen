@@ -2,8 +2,8 @@ import numpy as np
 from typing import List
 import logging
 
-from sub_functions.data_structures import CoilPart, DataStructure, FieldErrors, SolutionErrors, TargetField
-from sub_functions.process_raw_loops import biot_savart_calc_b
+from .data_structures import CoilPart, DataStructure, FieldErrors, SolutionErrors, TargetField
+from .process_raw_loops import biot_savart_calc_b
 
 log = logging.getLogger(__name__)
 

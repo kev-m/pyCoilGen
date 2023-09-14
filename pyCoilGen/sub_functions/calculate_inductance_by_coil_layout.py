@@ -9,7 +9,7 @@ import logging
 from typing import List
 
 # Local imports
-from sub_functions.data_structures import CoilSolution, DataStructure, Shape3D
+from .data_structures import CoilSolution, DataStructure, Shape3D
 
 log = logging.getLogger(__name__)
 

@@ -5,13 +5,13 @@ import os
 import logging
 
 # Local imports
-from sub_functions.build_cylinder_mesh import build_cylinder_mesh
+from .build_cylinder_mesh import build_cylinder_mesh
 # from build_double_cone_mesh import build_double_cone_mesh
-from sub_functions.build_planar_mesh import build_planar_mesh
+from .build_planar_mesh import build_planar_mesh
 # from build_circular_mesh import build_circular_mesh
-from sub_functions.build_biplanar_mesh import build_biplanar_mesh
+from .build_biplanar_mesh import build_biplanar_mesh
 
-from sub_functions.data_structures import DataStructure, Mesh
+from .data_structures import DataStructure, Mesh
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def read_mesh(input_args):
     if input_args.coil_mesh_file.endswith('.stl'):
         log.debug("Loading STL")
         # Load the stl file; read the coil mesh surface
-        coil_mesh = Mesh.load_from_file(input_args.geometry_source_path + '/' + input_args.coil_mesh_file)
+        coil_mesh = Mesh.load_from_file(input_args.geometry_source_path,  input_args.coil_mesh_file)
         # TODO: Need to populate normal_rep with representative normal.
         # HACK: Assume [0,0,1]
         log.warning(" Loaded mesh from STL. Assuming shape representative normal is [0,0,1]!")
@@ -72,15 +72,14 @@ def read_mesh(input_args):
 
     # Read the target mesh surface
     if input_args.target_mesh_file != 'none':
-        target_mesh = Mesh.load_from_file(input_args.geometry_source_path + '/' + input_args.target_mesh_file)
+        target_mesh = Mesh.load_from_file(input_args.geometry_source_path,  input_args.target_mesh_file)
         target_mesh = create_unique_noded_mesh(target_mesh)
     else:
         target_mesh = None
 
     # Read the shielded mesh surface
     if input_args.secondary_target_mesh_file != 'none':
-        shielded_mesh = Mesh.load_from_file(input_args.geometry_source_path + '/' +
-                                            input_args.secondary_target_mesh_file)
+        shielded_mesh = Mesh.load_from_file(input_args.geometry_source_path, input_args.secondary_target_mesh_file)
         # Removing this, it's not required?
         # shielded_mesh = create_unique_noded_mesh(shielded_mesh)
     else:

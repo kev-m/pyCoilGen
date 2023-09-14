@@ -1,21 +1,13 @@
 import json
 import numpy as np
 
-# Hack code
-# Set up paths: Add the project root directory to the Python path
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-
 # Test support
-from helpers.extraction import load_matlab
-from sub_functions.data_structures import Shape3D, DataStructure
-from helpers.visualisation import compare
-
+from pyCoilGen.helpers.extraction import load_matlab
+from pyCoilGen.sub_functions.data_structures import Shape3D, DataStructure
+from pyCoilGen.helpers.visualisation import compare
 
 # Code under test
-from sub_functions.remove_points_from_loop import remove_points_from_loop
+from pyCoilGen.sub_functions.remove_points_from_loop import remove_points_from_loop
 
 def test_remove_points_from_loop():
     result = np.load('tests/test_data/test_remove_points_from_loop1.npy', allow_pickle=True)[0]

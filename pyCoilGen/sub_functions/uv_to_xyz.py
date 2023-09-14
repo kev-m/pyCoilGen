@@ -5,7 +5,7 @@ from trimesh import Trimesh
 from trimesh.proximity import ProximityQuery
 
 # Local imports
-from sub_functions.constants import get_level, DEBUG_VERBOSE
+from .constants import get_level, DEBUG_VERBOSE
 
 # Logging
 import logging

@@ -1,11 +1,10 @@
-from helpers.visualisation import compare
 import numpy as np
 
 # Logging
 import logging
 
-from sub_functions.data_structures import Shape3D
-from helpers.common import nearest_approaches
+from .data_structures import Shape3D
+from pyCoilGen.helpers.common import nearest_approaches
 
 log = logging.getLogger(__name__)
 

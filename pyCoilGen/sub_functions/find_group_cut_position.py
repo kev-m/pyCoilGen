@@ -6,9 +6,9 @@ from typing import List
 import logging
 
 # Local imports
-from sub_functions.plane_line_intersect import plane_line_intersect
-from sub_functions.calc_mean_loop_normal import calc_mean_loop_normal
-from sub_functions.data_structures import TopoGroup, Mesh, CutPoint, CutPosition
+from .plane_line_intersect import plane_line_intersect
+from .calc_mean_loop_normal import calc_mean_loop_normal
+from .data_structures import TopoGroup, Mesh, CutPoint, CutPosition
 
 log = logging.getLogger(__name__)
 

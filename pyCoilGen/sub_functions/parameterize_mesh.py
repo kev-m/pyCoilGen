@@ -6,12 +6,10 @@ import numpy as np
 import logging
 
 # Local imports
-from sub_functions.data_structures import Mesh
-from sub_functions.mesh_parameterization_iterative import mesh_parameterization_iterative
-from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
-from sub_functions.constants import *
-# Debugging
-from helpers.visualisation import visualize_vertex_connections
+from .data_structures import Mesh
+from .mesh_parameterization_iterative import mesh_parameterization_iterative
+from .calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
+from .constants import *
 
 log = logging.getLogger(__name__)
 

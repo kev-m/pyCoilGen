@@ -1,18 +1,11 @@
-# Hack code
-# Set up paths: Add the project root directory to the Python path
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-
 import numpy as np
 import json
 
 # Test support
-from helpers.visualisation import compare
-from sub_functions.data_structures import Mesh
+from pyCoilGen.helpers.visualisation import compare
+from pyCoilGen.sub_functions.data_structures import Mesh
 # Code under test
-from sub_functions.split_disconnected_mesh import split_disconnected_mesh
+from pyCoilGen.sub_functions.split_disconnected_mesh import split_disconnected_mesh
 
 
 def test_split_disconnected_mesh_simple_planar_mesh():
@@ -75,12 +68,12 @@ def test_split_disconnected_mesh_biplanar_mesh():
     assert compare(split_mesh1.get_faces(), part1_faces)
 
 def test_split_disconnected_mesh_stl_file1():
-    mesh = Mesh.load_from_file('data/Geometry_Data/cylinder_radius500mm_length1500mm.stl')
+    mesh = Mesh.load_from_file('Geometry_Data', 'cylinder_radius500mm_length1500mm.stl')
     test_vertices = mesh.get_vertices()
     test_faces = mesh.get_faces()
 
     ##################################################
-    # Funtion under test
+    # Function under test
     parts = split_disconnected_mesh(mesh)
     ##################################################
 
@@ -90,12 +83,12 @@ def test_split_disconnected_mesh_stl_file1():
     assert compare(split_mesh.get_vertices(), test_vertices)
 
 def test_split_disconnected_mesh_stl_file2():
-    mesh = Mesh.load_from_file('data/Geometry_Data/bi_planer_rectangles_width_1000mm_distance_500mm.stl')
+    mesh = Mesh.load_from_file('Geometry_Data', 'bi_planer_rectangles_width_1000mm_distance_500mm.stl')
     test_vertices = mesh.get_vertices()
     test_faces = mesh.get_faces()
 
     ##################################################
-    # Funtion under test
+    # Function under test
     parts = split_disconnected_mesh(mesh)
     ##################################################
 
@@ -104,6 +97,12 @@ def test_split_disconnected_mesh_stl_file2():
 
     assert len(split_mesh.get_faces()) == len(test_faces)/2
     assert len(split_mesh.get_vertices()) == len(test_vertices)/2
+
+def test_load_from_file():
+    ##################################################
+    # Function under test
+    mesh = Mesh.load_from_file('Geometry_Data', 'cylinder_radius500mm_length1500mm.stl')
+    ##################################################
 
 
 if __name__ == "__main__":

@@ -3,8 +3,8 @@ from typing import List
 
 from os import path
 # Local functions
-from sub_functions.data_structures import CoilPart, Mesh
-from helpers.triangulation import Triangulate
+from .data_structures import CoilPart, Mesh
+from pyCoilGen.helpers.triangulation import Triangulate
 
 # Logging
 import logging

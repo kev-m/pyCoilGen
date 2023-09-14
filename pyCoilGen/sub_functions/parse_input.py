@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 
 # local imports
-from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
+from .constants import DEBUG_BASIC, DEBUG_VERBOSE
 
 
 def parse_input(parse_cli=True):
@@ -164,18 +164,18 @@ def parse_input(parse_cli=True):
                         help="Direction (vector) along which the interconnections will be aligned")
 
     # Add the directory of the .stl geometry files
-    parser.add_argument('--geometry_source_path', type=str, default=str(
-        Path.cwd() / 'Geometry_Data'), help="Directory of the .stl geometry files")
+    parser.add_argument('--geometry_source_path', type=str, default='Geometry_Data', 
+                        help="Directory of the .stl geometry files")
 
     # Add the output directory
-    parser.add_argument('--output_directory', type=str,
-                        default=str(Path.cwd()), help="Output directory")
+    parser.add_argument('--output_directory', type=str, default=str(Path.cwd()), 
+                        help="Output directory")
 
     # Add the smoothing parameter
     parser.add_argument('--smooth_factor', type=int,
                         default=1, help="Smoothing parameter if tracks should be smoothed (i.e. when > 1).")
 
-    # Add flag to save sweeped .stl
+    # Add flag to save swept .stl
     parser.add_argument('--save_stl_flag', type=bool, default=True,
                         help="Flag to save swept .stl")
 

@@ -1,7 +1,7 @@
 import numpy as np
 
 # Code under test
-from sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
+from pyCoilGen.sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
 
 def test_calc_3d_rotation_matrix_by_vector_basic():
     vec = [0,0,1]
