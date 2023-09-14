@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pycoilgen"
+version = "0.0.1"
+description = "A small example package"
+authors = [
+        {name = "Kevin Meyer", email = "kevin@kmz.co.za"},
+        {name = "Phillip Amrein"},
+]
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.6"
+keywords = [
+    "MRI",
+    "Gradient Field",
+    "Physics",
+    "Coil",
+]
+dependencies = [
+    "numpy==1.21.6",
+    "scipy==1.7.3",
+    "trimesh==3.21.7",
+    "pyglet<2",
+    "networkx==2.6.3",
+    "sympy==1.10.1",
+    "pillow<=9.5",
+]
+
+[project.urls]
+Home = "https://github.com/kev-m/pyCoilGen"
+Documentation = "https://github.com/kev-m/pyCoilGen"
+Source = "https://github.com/kev-m/pyCoilGen"
+
+[tool.flit.module]
+name = "pyCoilGen"
+
+[tool.flit.sdist]
+include = [
+    "Geometry_Data",
+    "Pre_Optimized_Solutions",
+    "target_fields",
+]
+
+

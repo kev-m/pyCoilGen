@@ -1,0 +1,8 @@
+##################################
+autopep8==2.0.2
+
+# For testing
+pytest==7.4.0
+
+# For packaging
+flit==3.9.0
