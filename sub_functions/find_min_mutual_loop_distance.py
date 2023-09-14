@@ -7,7 +7,7 @@ from sub_functions.data_structures import ContourLine
 from helpers.common import nearest_approaches
 
 
-def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only_point_flag: bool, only_min_dist = False):
+def find_min_mutual_loop_distance(loop_a: ContourLine, loop_b: ContourLine, only_point_flag: bool, only_min_dist=False):
     """
     Calculate the mutual nearest positions and segment indices between two loops.
 

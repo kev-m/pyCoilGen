@@ -6,12 +6,11 @@ import numpy as np
 import logging
 
 
-log = logging.getLogger(__name__)
-
-
 # Local imports
 from sub_functions.constants import get_level, DEBUG_VERBOSE
 from sub_functions.data_structures import CoilPart
+
+log = logging.getLogger(__name__)
 
 
 def calculate_resistance_matrix(coil_parts: List[CoilPart], input_args) -> List[CoilPart]:

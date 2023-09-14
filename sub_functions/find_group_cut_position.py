@@ -13,7 +13,7 @@ from sub_functions.data_structures import TopoGroup, Mesh, CutPoint, CutPosition
 log = logging.getLogger(__name__)
 
 
-def find_group_cut_position(loop_group: TopoGroup, group_center : np.ndarray, mesh : Mesh, b_0_direction: np.ndarray, cut_plane_definition) -> List[CutPosition]:
+def find_group_cut_position(loop_group: TopoGroup, group_center: np.ndarray, mesh: Mesh, b_0_direction: np.ndarray, cut_plane_definition) -> List[CutPosition]:
     """
     Define the cut plane orientation for the group.
     Find the opening shapes and cut points, separated into higher and lower cut points.
@@ -109,7 +109,7 @@ def find_group_cut_position(loop_group: TopoGroup, group_center : np.ndarray, me
                 cut_direction = cut_direction * (-1)
 
             # Project the coordinates of the cut pairs
-            arr_sum = np.sum(cut_position.cut_point.v[first_pair, :] * cut_direction, axis=1) # Result (2,)
+            arr_sum = np.sum(cut_position.cut_point.v[first_pair, :] * cut_direction, axis=1)  # Result (2,)
             min_ind = np.argmin(arr_sum)
             high_ind = first_pair[min_ind]
             low_ind = first_pair[1 - min_ind]

@@ -1,3 +1,4 @@
+import numpy.linalg as la
 import numpy as np
 
 from trimesh import Trimesh
@@ -11,7 +12,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def uv_to_xyz_obsolete(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: Trimesh, num_attempts = 1000):
+def uv_to_xyz_obsolete(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curved_mesh: Trimesh, num_attempts=1000):
     """
     Convert 2D surface coordinates to 3D xyz coordinates of the 3D coil surface.
 
@@ -50,7 +51,7 @@ def uv_to_xyz_obsolete(points_in_2d_in: np.ndarray, planary_uv: np.ndarray, curv
         target_triangle, barycentric = get_target_triangle_obsolete(point, planary_mesh, proximity)
 
         attempts = 0
-        np.random.seed(3) # Setting the seed to improve testing robustness
+        np.random.seed(3)  # Setting the seed to improve testing robustness
         while target_triangle is None:
             # If the point is not directly on a triangle, perturb the point slightly and try again
             rand = (0.5 - np.random.rand(2))
@@ -125,6 +126,7 @@ def which_face(point, face_indices, face_vertices):
     coords = [sublist[1] for sublist in combined_results]
     return face_indices[result_index], combined_results[result_index][1]
 
+
 def pointLocation(point_2D: np.ndarray, face_indices: np.ndarray, mesh_vertices: np.ndarray):
     """
     Determine which of the provided faces contains a given point.
@@ -140,13 +142,14 @@ def pointLocation(point_2D: np.ndarray, face_indices: np.ndarray, mesh_vertices:
         index (int): The index of the possible face or None if the point intersects multiple faces.
         barycentric (list): The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
     """
-    for index in range(len(face_indices)-1, -1,-1):
+    for index in range(len(face_indices)-1, -1, -1):
         face = face_indices[index]
         triangle_vertices = mesh_vertices[face]
         found, barycentric = point_inside_triangle(point_2D, triangle_vertices)
         if found:
             return index, barycentric
     return None, None
+
 
 def get_target_triangle_def_obsolete(point, planary_mesh: Trimesh):
     """
@@ -163,7 +166,8 @@ def get_target_triangle_def_obsolete(point, planary_mesh: Trimesh):
         barycentric (ndarray): The barycentric coordinates of the point as a 1x3 array [alpha, beta, gamma].
 
     """
-    return get_target_triangle(point, planary_mesh, ProximityQuery(planary_mesh))
+    return get_target_triangle_obsolete(point, planary_mesh, ProximityQuery(planary_mesh))
+
 
 def get_target_triangle_obsolete(point, planary_mesh: Trimesh, proximity: ProximityQuery):
     """
@@ -190,7 +194,7 @@ def get_target_triangle_obsolete(point, planary_mesh: Trimesh, proximity: Proxim
     log.debug("Unable to find any face for point %s", point)
     return None, None
 
-import numpy.linalg as la
+
 def barycentric_coords(point, vertices):
     T = (np.array(vertices[:-1])-vertices[-1]).T
     v = np.dot(la.inv(T), np.array(point)-vertices[-1])
@@ -198,6 +202,7 @@ def barycentric_coords(point, vertices):
     # v[-1] = 1-v.sum()
     v = np.append(v, 1-v.sum())
     return v
+
 
 def barycentric_coordinates(point, triangle_vertices):
     """
@@ -222,10 +227,10 @@ def barycentric_coordinates(point, triangle_vertices):
     beta = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / triangle_area
     gamma = 1 - alpha - beta
 
-
     v = barycentric_coords(point, triangle_vertices)
 
-    return v # [alpha, beta, gamma]
+    return v  # [alpha, beta, gamma]
+
 
 def barycentric_to_cartesian(bary_coords, triangle_vertices):
     """
