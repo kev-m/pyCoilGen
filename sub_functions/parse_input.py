@@ -45,8 +45,8 @@ def parse_input(parse_cli=True):
                         default='none', help="File of the secondary target mesh")
 
     # Add the secondary target weight
-    parser.add_argument('--secondary_target_weight', type=float,
-                        default=1, help="Weight for the secondary target points")
+    parser.add_argument('--secondary_target_weight', type=float, default=1, 
+                        help="Weight for the secondary target points")
 
     # Add flag to use only target mesh vertices as target coordinates
     parser.add_argument('--use_only_target_mesh_verts', type=bool, default=False,
@@ -95,9 +95,10 @@ def parse_input(parse_cli=True):
     parser.add_argument('--level_set_method', type=str, default='primary',
                         help="Method for calculating the level sets")
 
+    """ Unused
     # Add the field type to evaluate
-    parser.add_argument('--fieldtype_to_evaluate', type=str,
-                        default='field', help="Field type to evaluate")
+    parser.add_argument('--fieldtype_to_evaluate', type=str, default='field', help="Field type to evaluate")
+    """
 
     # Add flag for cylindrical surface
     parser.add_argument('--surface_is_cylinder_flag', type=bool, default=True,
@@ -123,14 +124,17 @@ def parse_input(parse_cli=True):
     parser.add_argument('--normal_shift_length', type=float, default=0.001,
                         help="Distance in metres for which crossing lines will be separated along the normal direction of the surface")
 
+    """ Unused
     # Add the minimal required number of point of a single loop; otherwise loops will be removed
     parser.add_argument('--min_point_loop_number', type=int, default=20,
                         help="Minimal required number of points of a single loop; otherwise loops will be removed")
+    """
 
     # Add the minimal required field contribution (in percent) to the target field; loops that contribute less than that can be deleted
     parser.add_argument('--min_loop_significance', type=int, default=1,
                         help="Minimal required field contribution (in percent) to the target field; loops that contribute less than that can be deleted")
 
+    """ Unused
     # Add additional loop removal criteria which relates to the perimeter to surface ratio of the loop
     parser.add_argument('--area_perimeter_deletion_ratio', type=int, default=5,
                         help="Additional loop removal criteria which relates to the perimeter to surface ratio of the loop")
@@ -146,6 +150,7 @@ def parse_input(parse_cli=True):
     # Add the minimum relative percentage for which points will be deleted which contribute to segments which are extremely short
     parser.add_argument('--tiny_segment_length_percentage', type=float, default=0,
                         help="Minimum relative percentage for which points will be deleted which contribute to segments which are extremely short")
+    """
 
     # Add the number of refinement iterations of the mesh together with the stream function
     parser.add_argument('--iteration_num_mesh_refinement', type=int, default=0,
@@ -175,6 +180,7 @@ def parse_input(parse_cli=True):
     parser.add_argument('--plot_flag', type=bool, default=True,
                         help="Flag to plot results")
 
+    """ Unused
     # Add interconnection_method: Regular or spiral in/out
     parser.add_argument('--interconnection_method', type=str, default='regular',
                         help="Interconnection method: 'regular' or 'spiral' in/out")
@@ -182,6 +188,7 @@ def parse_input(parse_cli=True):
     # Add group_interconnection_method: 'straight' or 'crossed'
     parser.add_argument('--group_interconnection_method', type=str, default='crossed',
                         help="Group interconnection method: 'straight' or 'crossed'")
+    """
 
     # Specify or calculate the pcb track width
     parser.add_argument('--skip_calculation_min_winding_distance', type=bool, default=True,
@@ -231,9 +238,11 @@ def parse_input(parse_cli=True):
     parser.add_argument('--set_roi_into_mesh_center', type=bool, default=False,
                         help="Flag to set the ROI into the geometric center of the mesh")
 
+    """ Unused
     # In case of pcb layout, specify the track width
     parser.add_argument('--track_width_factor', type=float,
                         default=0.5, help="Track width factor for PCB layout")
+    """
 
     # Add the cross_section_width of the conductor (for the inductance calculation) in metres
     parser.add_argument('--conductor_cross_section_width', type=float, default=0.002,
@@ -309,26 +318,3 @@ def create_input(dictionary):
             print(f"Attribute '{key}' does not exist in the data structure.")
 
     return parser, input
-
-
-if __name__ == "__main__":
-    import logging
-    # Set up logging
-    log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.DEBUG)
-    # logging.basicConfig(level=logging.INFO)
-
-    # Check that boolean works as expected
-    arg_list = ["--skip_sweep"]
-    parser, input = parse_input(arg_list)
-    log.debug("input.skip_sweep: %s", input.skip_sweep)
-
-    arg_list = []
-    parser, input = parse_input(arg_list)
-    log.debug("input.skip_sweep: %s", input.skip_sweep)
-    log.debug("skip_calculation_min_winding_distance: %s ? Is True?", input.skip_calculation_min_winding_distance)
-
-    # Random other checks
-    log.debug("input.track_width_factor: %s", input.track_width_factor)
-    log.debug("input.cylinder_mesh_parameter_list: %s", input.cylinder_mesh_parameter_list)
-    log.debug("input.coil_mesh_file: %s", input.coil_mesh_file)

@@ -387,7 +387,6 @@ if __name__ == "__main__":
 
     # Examples/biplanar_xgradient.m
     arg_dict1 = {
-        #"area_perimeter_deletion_ratio": 5,
         #"b_0_direction": [0, 0, 1],
         #"biplanar_mesh_parameter_list": [0.25, 0.25, 20, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
         #"circular_diameter_factor": 1.0,  # was circular_diameter_factor_cylinder_parameterization
@@ -398,7 +397,6 @@ if __name__ == "__main__":
         #"conductor_thickness": 0.005,
         #"cross_sectional_points": [0, 0],
         #"cylinder_mesh_parameter_list": [0.4, 0.1125, 50, 50, 0.0, 1.0, 0.0, 0.0],
-        #"double_cone_mesh_parameter_list": [0.8, 0.3, 0.3, 0.1, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "field_shape_function": "x",
         "force_cut_selection": ['high'],
         #"gauss_order": 2,
@@ -407,10 +405,7 @@ if __name__ == "__main__":
         "level_set_method": "primary",
         "levels": 14,
         #"make_cylindrical_pcb": False,
-        #"max_allowed_angle_within_coil_track": 120,
-        #"min_allowed_angle_within_coil_track": 0.0001,
         #"min_loop_significance": 1,
-        #"min_point_loop_number": 20,
         "normal_shift_length": 0.01,
         #"normal_shift_smooth_factors": [2, 3, 2],
         #"pcb_interconnection_method": "spiral_in_out",
@@ -442,8 +437,6 @@ if __name__ == "__main__":
         "target_region_radius": 0.1,    # GitHub
         "target_region_resolution": 5, # MATLAB 10 is the default but 5 is faster
         "tikhonov_reg_factor": 10,
-        #"tiny_segment_length_percentage": 0,
-        #"track_width_factor": 0.5,
         "use_only_target_mesh_verts": False,
 
         "output_directory": "images",
@@ -455,33 +448,25 @@ if __name__ == "__main__":
 
     # cylinder_radius500mm_length1500mm
     arg_dict2 = {
-        "area_perimeter_deletion_ratio": 5,
         "b_0_direction": [0, 0, 1],
         "biplanar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
         "circular_diameter_factor": 1.0,  # was circular_diameter_factor_cylinder_parameterization
-        "circular_mesh_parameter_list": [0.25, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         "coil_mesh_file": "cylinder_radius500mm_length1500mm.stl",
         "conductor_cross_section_height": 0.002,
         "conductor_cross_section_width": 0.015,
         "conductor_thickness": 0.005,
         "cross_sectional_points": [[0.0, 0.006427876096865392, 0.00984807753012208, 0.008660254037844387, 0.0034202014332566887, -0.0034202014332566865, -0.008660254037844388, -0.009848077530122082, -0.006427876096865396, -2.4492935982947064e-18], [0.01, 0.007660444431189781, 0.0017364817766693042, -0.0049999999999999975, -0.009396926207859084, -0.009396926207859084, -0.004999999999999997, 0.0017364817766692998, 0.007660444431189778, 0.01]],
         "cylinder_mesh_parameter_list": [0.8, 0.3, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
-        "double_cone_mesh_parameter_list": [0.8, 0.3, 0.3, 0.1, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0],
         "field_shape_function": "y",
         "force_cut_selection": ['high'],
         "gauss_order": 2,
         # "geometry_source_path": "/MATLAB Drive/CoilGen/Geometry_Data",
-        "group_interconnection_method": "crossed",
         "interconnection_cut_width": 0.1,
-        "interconnection_method": "regular",
         "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 20,
         "make_cylindrical_pcb": True,
-        "max_allowed_angle_within_coil_track": 120,
-        "min_allowed_angle_within_coil_track": 0.0001,
         "min_loop_significance": 1, # Was 0.1, a bug?
-        "min_point_loop_number": 20,
         "normal_shift_length": 0.025,
         "normal_shift_smooth_factors": [2, 3, 2],
         "pcb_interconnection_method": "spiral_in_out",
@@ -513,8 +498,6 @@ if __name__ == "__main__":
         "target_region_radius": 0.15,
         "target_region_resolution": 5,  # MATLAB 10 is the default but 5 is faster
         "tikhonov_reg_factor": 100,
-        "tiny_segment_length_percentage": 0,
-        "track_width_factor": 0.5,
         "use_only_target_mesh_verts": False,
 
         "debug": DEBUG_BASIC,
