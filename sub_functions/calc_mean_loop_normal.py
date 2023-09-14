@@ -25,10 +25,10 @@ def calc_mean_loop_normal(group: TopoGroup, coil_mesh: Mesh):
         group_center = np.mean(group.loops[loop_ind].v, axis=1)
         loop_vecs = group.loops[loop_ind].v[:, 1:] - group.loops[loop_ind].v[:, :-1]
         center_vecs = group.loops[loop_ind].v[:, :-1] - group_center[:, np.newaxis]
-        
+
         # Calculate cross products to get loop normals
         loop_normals = np.cross(loop_vecs, center_vecs, axis=0)
-        
+
         # Calculate mean loop normal
         all_loop_normals[:, loop_ind] = np.mean(loop_normals, axis=1)
 
@@ -41,6 +41,7 @@ def calc_mean_loop_normal(group: TopoGroup, coil_mesh: Mesh):
         loop_normal *= -1
 
     return loop_normal
+
 
 """
 Please note that in the above code, we are assuming that Group is a data structure that holds the loop information and

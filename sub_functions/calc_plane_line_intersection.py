@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def calc_plane_line_intersection(n, V0, P0, P1):
     """
     Calculate the intersection point between a plane and a line segment.

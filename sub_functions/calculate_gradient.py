@@ -29,14 +29,15 @@ def calculate_gradient(coil_parts: List[CoilPart], input_args, target_field: Tar
     target_field_coords_T = target_field.coords.T
     db_shape = target_field_coords_T.shape
     layout_gradient = LayoutGradient(
-        dBxdxyz=np.zeros(db_shape), 
+        dBxdxyz=np.zeros(db_shape),
         dBydxyz=np.zeros(db_shape),
         dBzdxyz=np.zeros(db_shape)
     )
 
     for coil_part in coil_parts:
         if hasattr(coil_part, 'wire_path'):
-            DBxdxyz, DBydxyz, DBzdxyz = direct_biot_savart_gradient_calc_3(coil_part.wire_path.v.T, target_field_coords_T)
+            DBxdxyz, DBydxyz, DBzdxyz = direct_biot_savart_gradient_calc_3(
+                coil_part.wire_path.v.T, target_field_coords_T)
         else:
             for contour in coil_part.contour_lines:
                 DBxdxyz, DBydxyz, DBzdxyz = direct_biot_savart_gradient_calc_3(contour.v.T, target_field_coords_T)
@@ -47,7 +48,7 @@ def calculate_gradient(coil_parts: List[CoilPart], input_args, target_field: Tar
 
     # Define field_function as a lambda function
     my_fun = eval('lambda x,y,z: ' + field_function)
-    #def my_fun(x, y, z): return eval(field_function)  
+    # def my_fun(x, y, z): return eval(field_function)
 
     norm_dir_x = my_fun(1., 0., 0.)
     norm_dir_y = my_fun(0., 1., 0.)
@@ -56,9 +57,9 @@ def calculate_gradient(coil_parts: List[CoilPart], input_args, target_field: Tar
     gradient_direction /= np.linalg.norm(gradient_direction)
 
     # Project the gradient direction to the full set of cartesian gradients
-    layout_gradient.gradient_in_target_direction = np.sqrt((gradient_direction[0] * layout_gradient.dBzdxyz[:,0])**2 +
-                                                           (gradient_direction[1] * layout_gradient.dBzdxyz[:,1])**2 +
-                                                           (gradient_direction[2] * layout_gradient.dBzdxyz[:,2])**2)
+    layout_gradient.gradient_in_target_direction = np.sqrt((gradient_direction[0] * layout_gradient.dBzdxyz[:, 0])**2 +
+                                                           (gradient_direction[1] * layout_gradient.dBzdxyz[:, 1])**2 +
+                                                           (gradient_direction[2] * layout_gradient.dBzdxyz[:, 2])**2)
     layout_gradient.mean_gradient_in_target_direction = np.nanmean(layout_gradient.gradient_in_target_direction)
     layout_gradient.std_gradient_in_target_direction = np.nanstd(layout_gradient.gradient_in_target_direction)
 
@@ -155,6 +156,7 @@ def direct_biot_savart_gradient_calc_2(wire_elements, target_coords):
         DBzdxyz += np.column_stack((np.sum(dBz_dx, axis=0), np.sum(dBz_dy, axis=0), np.sum(dBz_dz, axis=0)))
 
     return DBxdxyz, DBydxyz, DBzdxyz
+
 
 def direct_biot_savart_gradient_calc_3(wire_elements, target_coords):
     """

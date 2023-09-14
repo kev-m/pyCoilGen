@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def gauss_legendre_integration_points_triangle(n):
     """
     Calculate the coordinates and weighting coefficients for Gauss-Legendre integration on a triangle.
@@ -44,7 +45,7 @@ def calc_weights_gauss(n):
 
     """
 
-    g_abscissa = np.zeros(n)  # Preallocations. 
+    g_abscissa = np.zeros(n)  # Preallocations.
     g_weights = np.zeros(n)
     m = int((n + 1) / 2)
 

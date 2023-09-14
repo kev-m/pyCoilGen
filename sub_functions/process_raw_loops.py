@@ -199,4 +199,3 @@ def biot_savart_calc_b(wire_elements: np.ndarray, target_f: TargetField):
 
     # NOTE: Returning MATLAB 3xM layout
     return b_field.T
-

@@ -10,6 +10,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
     """
     Generate a 2D pattern that can be rolled around a cylinder.
@@ -32,7 +33,7 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
 
     Updates the following properties of a CoilPart:
         - None
-    
+
     Args:
         coil_parts (List[CoilPart]): List of CoilPart structures.
         input_args: Input arguments structure.
@@ -53,7 +54,6 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
             ]),
             input_args.cylinder_mesh_parameter_list[7]
         )
-
 
         if input_args.pcb_interconnection_method != 'spiral_in_out':
             for part_ind, coil_part in enumerate(coil_parts):
@@ -76,7 +76,7 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                     np.where(np.diff(coil_part.points_to_shift) == 1)[0] + 1,
                     np.where(np.diff(coil_part.points_to_shift) == -1)[0] + 2
                 ]))
-    
+
                 num_segments = len(segment_starts)
                 pcb_parts = [PCBPart()] * num_segments
 
@@ -94,7 +94,7 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                         long_vecs[1, :],
                         long_vecs[0, :] * -1
                     ]) / np.linalg.norm(long_vecs, axis=0)
-                    
+
                     pcb_track_shape = np.hstack((
                         segment_points + ortho_vecs * (pcb_track_width / 2),
                         np.fliplr(segment_points) - np.fliplr(ortho_vecs) * (pcb_track_width / 2)
@@ -127,8 +127,10 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                     aligned_wire_path_spiral_in = np.dot(rot_mat, track_spiral_in)
                     aligned_wire_path_spiral_out = np.dot(rot_mat, track_spiral_out)
 
-                    phi_coord_spiral_in = np.arctan2(aligned_wire_path_spiral_in[1, :], aligned_wire_path_spiral_in[0, :])
-                    phi_coord_spiral_out = np.arctan2(aligned_wire_path_spiral_out[1, :], aligned_wire_path_spiral_out[0, :])
+                    phi_coord_spiral_in = np.arctan2(
+                        aligned_wire_path_spiral_in[1, :], aligned_wire_path_spiral_in[0, :])
+                    phi_coord_spiral_out = np.arctan2(
+                        aligned_wire_path_spiral_out[1, :], aligned_wire_path_spiral_out[0, :])
                     layout_2d_spiral_in = np.array([
                         phi_coord_spiral_in,
                         aligned_wire_path_spiral_in[2, :]
@@ -141,7 +143,7 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                     point_1 = (layout_2d_spiral_in[:, 0] + layout_2d_spiral_out[:, -1]) / 2
                     point_2 = (layout_2d_spiral_in[:, -1] + layout_2d_spiral_out[:, 0]) / 2
                     center_position = (layout_2d_spiral_in[:, 0] + layout_2d_spiral_in[:, -1] +
-                                      layout_2d_spiral_out[:, 0] + layout_2d_spiral_out[:, -1]) / 4
+                                       layout_2d_spiral_out[:, 0] + layout_2d_spiral_out[:, -1]) / 4
 
                     point_1 = point_1 + (point_1 - center_position) * (input_args.pcb_spiral_end_shift_factor / 100)
                     point_2 = point_2 + (point_2 - center_position) * (input_args.pcb_spiral_end_shift_factor / 100)
@@ -189,10 +191,14 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                         cut_rectangle = np.array([
                             [-np.pi, np.pi, np.pi, -np.pi],
                             [
-                                np.max(aligned_wire_path_spiral_in[2, :]) + np.abs(np.max(aligned_wire_path_spiral_in[2, :])) * 0.1,
-                                np.max(aligned_wire_path_spiral_in[2, :]) + np.abs(np.max(aligned_wire_path_spiral_in[2, :])) * 0.1,
-                                np.min(aligned_wire_path_spiral_in[2, :]) - np.abs(np.max(aligned_wire_path_spiral_in[2, :])) * 0.1,
-                                np.min(aligned_wire_path_spiral_in[2, :]) - np.abs(np.max(aligned_wire_path_spiral_in[2, :])) * 0.1
+                                np.max(aligned_wire_path_spiral_in[2, :]) +
+                                np.abs(np.max(aligned_wire_path_spiral_in[2, :])) * 0.1,
+                                np.max(aligned_wire_path_spiral_in[2, :]) +
+                                np.abs(np.max(aligned_wire_path_spiral_in[2, :])) * 0.1,
+                                np.min(aligned_wire_path_spiral_in[2, :]) -
+                                np.abs(np.max(aligned_wire_path_spiral_in[2, :])) * 0.1,
+                                np.min(aligned_wire_path_spiral_in[2, :]) -
+                                np.abs(np.max(aligned_wire_path_spiral_in[2, :])) * 0.1
                             ]
                         ])
 
@@ -204,9 +210,10 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                         pcb_parts = [None] * (len(full_wrap_spart_inds) - 1)
                         for point_ind in range(len(full_wrap_spart_inds) - 1):
                             pcb_part = PCBPart(
-                                uv = layout_2d[:, full_wrap_spart_inds[point_ind] + 1:full_wrap_spart_inds[point_ind + 1]+1],
-                                ind1 = full_wrap_spart_inds[point_ind] + 1,
-                                ind2 = full_wrap_spart_inds[point_ind + 1]
+                                uv=layout_2d[:, full_wrap_spart_inds[point_ind] +
+                                             1:full_wrap_spart_inds[point_ind + 1]+1],
+                                ind1=full_wrap_spart_inds[point_ind] + 1,
+                                ind2=full_wrap_spart_inds[point_ind + 1]
                             )
                             pcb_parts[point_ind] = pcb_part
 
@@ -238,12 +245,14 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                         for wrap_ind in range(1, len(pcb_parts)):
                             if pcb_parts[wrap_ind - 1].uv[0, -1] > 0:
                                 pcb_parts[wrap_ind].uv = np.hstack((
-                                    pcb_parts[wrap_ind - 1].uv[:, -1].reshape(-1, 1) - np.array([2 * np.pi * cylinder_radius, 0]),
+                                    pcb_parts[wrap_ind - 1].uv[:, -
+                                                               1].reshape(-1, 1) - np.array([2 * np.pi * cylinder_radius, 0]),
                                     pcb_parts[wrap_ind].uv
                                 ))
                             else:
                                 pcb_parts[wrap_ind].uv = np.hstack((
-                                    pcb_parts[wrap_ind - 1].uv[:, -1].reshape(-1, 1) + np.array([2 * np.pi * cylinder_radius, 0]),
+                                    pcb_parts[wrap_ind - 1].uv[:, -
+                                                               1].reshape(-1, 1) + np.array([2 * np.pi * cylinder_radius, 0]),
                                     pcb_parts[wrap_ind].uv
                                 ))
 
@@ -292,16 +301,16 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                             lower_layer.group_layouts[group_ind].wire_parts = pcb_parts
                             # np.savetxt(f"lower_layer_part{part_ind}_group{group_ind}_wire_part{wire_part_ind}.txt", wire_part.track_shape.T, fmt="%f")
 
-                coil_part.pcb_tracks = PCBTrack(upper_layer = upper_layer, lower_layer = lower_layer)
+                coil_part.pcb_tracks = PCBTrack(upper_layer=upper_layer, lower_layer=lower_layer)
 
                 # Save the tracks as a vector file
-                #coil_mesh = coil_part.coil_mesh
-                #rot_cylinder_vertices = np.dot(rot_mat, coil_mesh.get_vertices().T) # Need to tranpose into MATLAB shape
-                #phi_coords_mesh = np.arctan2(rot_cylinder_vertices[1, :], rot_cylinder_vertices[0, :])
-                #unrolled_cylinder = np.array([
+                # coil_mesh = coil_part.coil_mesh
+                # rot_cylinder_vertices = np.dot(rot_mat, coil_mesh.get_vertices().T) # Need to tranpose into MATLAB shape
+                # phi_coords_mesh = np.arctan2(rot_cylinder_vertices[1, :], rot_cylinder_vertices[0, :])
+                # unrolled_cylinder = np.array([
                 #    phi_coords_mesh * cylinder_radius,
                 #    rot_cylinder_vertices[2, :]
-                #])
+                # ])
 
                 # save_pcb_tracks_as_svg(coil_part.pcb_tracks, input_args['field_shape_function'], 'pcb_layout', part_ind, unrolled_cylinder, input_args['output_directory'])
             # end
