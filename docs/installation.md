@@ -16,6 +16,11 @@ $ pip install pyCoilGen
 ```
 
 ## Optional Extras
+There are two optional extras that can be installed.
+
+```bash
+$ pip install pyCoilGen[geometry,solutions]
+```
 
 ### Installing Geometry Data
 
