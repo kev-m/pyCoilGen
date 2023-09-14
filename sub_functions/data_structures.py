@@ -309,7 +309,6 @@ class Mesh:
         if face_index is not None:
             return possible_face_indices[face_index], barycentric
 
-        # log.debug("get_face_index(%s), No found face", vertex)
         return -1, None
 
     def uv_to_xyz(self, points_in_2d_in: np.ndarray, planary_uv: np.ndarray, num_attempts=1000):
