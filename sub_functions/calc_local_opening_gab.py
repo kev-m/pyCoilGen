@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def calc_local_opening_gab(loop, point_1, point_2, opening_gab):
     """
     Calculate the local opening gap based on the given inputs.
@@ -12,9 +13,6 @@ def calc_local_opening_gab(loop, point_1, point_2, opening_gab):
 
     Returns:
         local_opening_gab (float): Local opening gap value.
-
-    Raises:
-        None
     """
     if point_2 is not None:  # Two points are specified
         uv_distance = np.linalg.norm(loop.uv[:, point_2] - loop.uv[:, point_1])

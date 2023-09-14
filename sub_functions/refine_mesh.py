@@ -9,14 +9,14 @@ log = logging.getLogger(__name__)
 
 def refine_mesh(coil_parts, input_args):
     """
-    Increase the resolution of the mesh and interpolate the stream function by splitting every existing face into four.
+    Increase the resolution of the mesh by splitting every existing face into four.
 
     Args:
-    - coil_parts (list): List of coil parts.
-    - input (dict): Input parameters.
+        coil_parts (list): List of coil parts.
+        input (dict): Input parameters.
 
     Returns:
-    - coil_parts (list): List of coil parts with refined mesh.
+        coil_parts (list): List of coil parts with refined mesh.
     """
 
     iteration_num_mesh_refinement = input_args.iteration_num_mesh_refinement

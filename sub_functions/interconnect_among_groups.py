@@ -13,6 +13,7 @@ from sub_functions.remove_points_from_loop import remove_points_from_loop
 
 log = logging.getLogger(__name__)
 
+
 def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=None):
     """
     Interconnects groups to generate a single wire track.
@@ -32,7 +33,7 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
     Updates the following properties of a CoilPart:
         - None
 
-    Parameters:
+    Args:
         coil_parts (List[CoilPart]): List of CoilPart structures, each containing a coil_mesh.
         input_args (Any): The input argument (structure) used in the MATLAB function (not used in the Python function).
 
@@ -76,7 +77,7 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
                 if num_connections_to_do > 0:
                     coil_part.opening_cuts_among_groups = [Cuts() for _ in range(num_connections_to_do)]
 
-                    for connect_ind in range(num_connections_to_do): # 3
+                    for connect_ind in range(num_connections_to_do):  # 3
                         # Get the tracks to connect
                         grouptracks_to_connect = [connected_group_buff[group] for group in groups_to_connect]
 

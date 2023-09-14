@@ -6,14 +6,14 @@ def build_cut_rectangle(loop, center_point, segment_ind, cut_width, cut_height_r
     Build a rectangular cut shape.
 
     Args:
-    - loop (ndarray): Array of loop coordinates.
-    - center_point: Center point of the rectangle
-    - segment_ind: Index of the segment within the loop
-    - cut_width: Width of the cut rectangle
-    - cut_height_ratio: Height ratio of the cut rectangle
+        loop (ndarray): Array of loop coordinates.
+        center_point: Center point of the rectangle
+        segment_ind: Index of the segment within the loop
+        cut_width: Width of the cut rectangle
+        cut_height_ratio: Height ratio of the cut rectangle
 
     Returns:
-    - cut_rectangle: Array containing the coordinates of the rectangular cut shape
+        cut_rectangle: Array containing the coordinates of the rectangular cut shape
     """
 
     cut_points_left = loop[:, segment_ind + 1]

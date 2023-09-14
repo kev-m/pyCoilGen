@@ -9,8 +9,11 @@ def parse_input(parse_cli=True):
     """
     Parse the input arguments using argparse.
 
+    Args:
+        parse_cli (bool): Whether to parse the command-line or not. Default: True
+    
     Returns:
-    input (argparse.Namespace): Parsed input arguments.
+        input (argparse.Namespace): Parsed input arguments.
     """
 
     # Create argument parser

@@ -10,14 +10,12 @@ from sub_functions.data_structures import Shape3D
 
 log = logging.getLogger(__name__)
 
-# TODO: Remove this debug data
-from helpers.visualisation import compare
 
-def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, boundary_threshold: int):
+def remove_points_from_loop(loop: Shape3D, points_to_remove: np.ndarray, boundary_threshold: int):
     """
     Remove points with identical uv coordinates from a loop, even with some additional more points around.
 
-    Parameters:
+    Args:
         loop (Shape3D): The loop data containing 'uv' and 'v'.
         points_to_remove (np.ndarray): The points to be removed (shape: (2, num_points)).
         boundary_threshold (int): The number of additional points around each identical point to be removed.
@@ -38,7 +36,7 @@ def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, bounda
     arr3 = arr1 & arr2
 
     identical_point_inds1 = np.where(arr3)
-    identical_point_inds = identical_point_inds1[1] # Magic number chose to reproduce MATLAB results
+    identical_point_inds = identical_point_inds1[1]  # Magic number chose to reproduce MATLAB results
 
     if len(identical_point_inds) > 0:
         below_inds = np.arange(min(identical_point_inds) - boundary_threshold, min(identical_point_inds)+1)
@@ -61,6 +59,7 @@ def remove_points_from_loop(loop : Shape3D, points_to_remove: np.ndarray, bounda
         loop_out_v = loop.v
 
     return loop_out_uv, loop_out_v
+
 
 """
 Note: The code assumes that the data structure Shape3D is already defined elsewhere or imported. Additionally, the

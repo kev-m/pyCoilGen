@@ -5,12 +5,12 @@ def build_cut_circle(center_point, cut_width):
     """
     Build a rectangular cut shape in the form of a circular opening.
 
-    Parameters:
-    - center_point (ndarray): Array containing the x and y coordinates of the center point.
-    - cut_width (float): Width of the cut.
+    Args:
+        center_point (ndarray): Array containing the x and y coordinates of the center point.
+        cut_width (float): Width of the cut.
 
     Returns:
-    - cut_circle (ndarray): Array containing the x and y coordinates of the circular cut shape.
+        cut_circle (ndarray): Array containing the x and y coordinates of the circular cut shape.
     """
 
     circular_resolution = 10

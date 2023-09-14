@@ -35,7 +35,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
     Updates the following properties of a CoilPart:
         - None
 
-    Parameters:
+    Args:
         coil_parts (List[CoilPart]): List of CoilPart structures containing coil_mesh and other data.
         input_args (DataStructure): Command-line arguments.
 

@@ -9,7 +9,7 @@ def find_segment_intersections(loop: np.ndarray, test_polygon: np.ndarray):
     """
     Find intersection points between a loop and a polygon (2D).
 
-    Parameters:
+    Args:
         loop (np.ndarray): Array representing the loop's 2D coordinates (shape: (2, num_vertices)).
         test_polygon (np.ndarray): Array representing the polygon's 2D coordinates (shape: (2, num_vertices)).
 
@@ -18,14 +18,6 @@ def find_segment_intersections(loop: np.ndarray, test_polygon: np.ndarray):
                     'segment_inds' holds indices of the segments where intersections occur.
                     'uv' holds the intersection points as a 2xN array.
                     Values contain np.nan if there is no intersection.
-
-    Example:
-        # Define the loop and test polygon coordinates as 2D arrays
-        loop = np.array([[x1, x2, x3, ...], [y1, y2, y3, ...]])
-        test_polygon = np.array([[xt1, xt2, xt3, ...], [yt1, yt2, yt3, ...]])
-
-        # Find intersection points between the loop and the test polygon
-        intersection_points = find_segment_intersections(loop, test_polygon)
     """
 
     intersection_points = []

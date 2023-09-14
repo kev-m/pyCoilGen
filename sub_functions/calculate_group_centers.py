@@ -17,24 +17,17 @@ def calculate_group_centers(coil_parts: List[CoilPart]) -> List[CoilPart]:
     """
     Calculate group centers for each coil part.
 
-    Parameters:
-        coil_parts (List[CoilPart]): A list of CoilPart structures, each containing a coil_mesh.
-
     Initialises the following properties of a CoilPart:
         - group_centers
 
     Updates the following properties of a CoilPart:
         - None
-        
+
+    Args:
+        coil_parts (List[CoilPart]): A list of CoilPart structures, each containing a coil_mesh.
+
     Returns:
         coil_parts (List[CoilPart]): The updated list of CoilParts
-
-    Example:
-        # Create a list of CoilPart structures with coil_mesh information
-        coil_parts = [CoilPart(coil_mesh=mesh1), CoilPart(coil_mesh=mesh2), ...]
-
-        # Calculate group centers for each CoilPart
-        calculate_group_centers(coil_parts)
     """
 
     for part_ind in range(len(coil_parts)):
@@ -97,12 +90,13 @@ def calculate_group_centers(coil_parts: List[CoilPart]) -> List[CoilPart]:
         group_centers_3d = np.zeros((3, group_centers_2d.shape[1]))
 
         planar_mesh = Mesh(faces=part_mesh.get_faces(), vertices=part_mesh.uv)
-        curved_mesh = part_mesh.trimesh_obj # Trimesh(faces=part_mesh.get_faces(), vertices=part_mesh.get_vertices())
+        curved_mesh = part_mesh.trimesh_obj  # Trimesh(faces=part_mesh.get_faces(), vertices=part_mesh.get_vertices())
 
         for rrrr in range(len(coil_part.groups)):
             # Set centers outside the 2D mesh in the center of the 3D volume
             point = [group_centers_2d[0, rrrr], group_centers_2d[1, rrrr]]
-            target_triangle, bary_centric_coord = planar_mesh.get_face_index(point) # get_target_triangle_def(point, planar_mesh)
+            target_triangle, bary_centric_coord = planar_mesh.get_face_index(
+                point)  # get_target_triangle_def(point, planar_mesh)
 
             # TypeError: ufunc 'isnan' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
             if target_triangle != -1:
@@ -115,6 +109,7 @@ def calculate_group_centers(coil_parts: List[CoilPart]) -> List[CoilPart]:
         coil_part.group_centers = Shape3D(uv=group_centers_2d, v=group_centers_3d)
 
     return coil_parts
+
 
 """
 Please note that the find_segment_intersections, check_mutual_loop_inclusion, triangulation, pointLocation, and
