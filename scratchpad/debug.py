@@ -1689,26 +1689,17 @@ def develop_load_preoptimized_data():
 def develop_evaluate_field_errors():
     from pyCoilGen.sub_functions.evaluate_field_errors import evaluate_field_errors
 
-    # which = 'ygradient_coil_0_5'              # All Pass!
+    which = 'ygradient_coil_0_5'              # All Pass!
     # which = 'biplanar_xgradient_0_5'          # All Pass!
     # which = 'biplanar_xgradient_1_10'         # All Pass!
     # which = 'shielded_ygradient_coil_0_9'     # All Pass!
     # which = 'Preoptimzed_Breast_Coil_0_10'    # All Pass!
-    which = 'Preoptimzed_SVD_Coil_0_10'       # All Pass!
+    # which = 'Preoptimzed_SVD_Coil_0_10'       # All Pass!
 
-    # Python saved data 13 : After topological_loop_grouping
-    if which == 'biplanar':
-        matlab_data = load_matlab('debug/biplanar_xgradient')
-        m_out = matlab_data['coil_layouts'].out
-        solution = load_numpy('debug/coilgen_biplanar_False_19.npy')
-    elif which == 'cylinder':
-        matlab_data = load_matlab('debug/ygradient_coil')
-        m_out = matlab_data['coil_layouts'].out
-        solution = load_numpy('debug/coilgen_cylinder_False_19_patched.npy')
-    else:
-        matlab_data = load_matlab(f'debug/{which}')
-        m_out = matlab_data['coil_layouts'].out
-        solution = load_numpy(f'debug/{which}_19.npy')
+    # Python saved data 19 : After ...
+    matlab_data = load_matlab(f'debug/{which}')
+    m_out = matlab_data['coil_layouts'].out
+    solution = load_numpy(f'debug/{which}_False_19.npy')
 
     m_c_parts = m_out.coil_parts
     if not isinstance(m_c_parts, np.ndarray):
@@ -1808,17 +1799,17 @@ def develop_evaluate_field_errors():
 def develop_calculate_gradient():
     from pyCoilGen.sub_functions.calculate_gradient import calculate_gradient
 
-    # which = 'ygradient_coil_0_5'              # All Pass!
+    which = 'ygradient_coil_0_5'              # All Pass!
     # which = 'biplanar_xgradient_0_5'          # All Pass!
     # which = 'biplanar_xgradient_1_10'         # All Pass!
     # which = 'shielded_ygradient_coil_0_9'     # All Pass!
     # which = 'Preoptimzed_Breast_Coil_0_10'    # All Pass!
-    which = 'Preoptimzed_SVD_Coil_0_10'       # All Pass!
+    # which = 'Preoptimzed_SVD_Coil_0_10'       # All Pass!
 
     # Python saved data 13 : After topological_loop_grouping
     matlab_data = load_matlab(f'debug/{which}')
     m_out = matlab_data['coil_layouts'].out
-    solution = load_numpy(f'debug/{which}_20.npy')
+    solution = load_numpy(f'debug/{which}_False_20.npy')
 
     m_c_parts = m_out.coil_parts
     if not isinstance(m_c_parts, np.ndarray):
@@ -1961,8 +1952,8 @@ if __name__ == "__main__":
     # develop_create_sweep_along_surface()
     # develop_calculate_inductance_by_coil_layout()
     # develop_load_preoptimized_data()
-    # develop_evaluate_field_errors()
-    develop_calculate_gradient()
+    develop_evaluate_field_errors()
+    # develop_calculate_gradient()
     # minimize_testing()
     #
     # test_smooth_track_by_folding()
