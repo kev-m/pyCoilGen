@@ -18,8 +18,6 @@ def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions
     Returns:
         None
     """
-    # The rest of your code...
-
     max_rel_error_layout_vs_target = np.array([coil_solutions[x].solution_errors.field_error_vals.max_rel_error_layout_vs_target for x in solutions_to_plot])
     mean_rel_error_layout_vs_target = np.array([coil_solutions[x].solution_errors.field_error_vals.mean_rel_error_layout_vs_target for x in solutions_to_plot])
     max_rel_error_loops_vs_target = np.array([coil_solutions[x].solution_errors.field_error_vals.max_rel_error_unconnected_contours_vs_target for x in solutions_to_plot])
