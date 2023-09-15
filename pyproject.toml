@@ -17,6 +17,10 @@ classifiers = [
 requires-python = ">=3.6"
 keywords = [
     "MRI",
+    "Magnetic Resonance Imaging",
+    "NMR",
+    "Nuclear Resonance Imaging",
+    "Target Field",
     "Gradient Field",
     "Physics",
     "Coil",

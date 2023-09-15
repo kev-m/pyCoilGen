@@ -6,6 +6,7 @@ build-backend = "flit_core.buildapi"
 name = "pycoilgen_data"
 authors = [
         {name = "Kevin Meyer", email = "kevin@kmz.co.za"},
+        {name = "Philipp Amrein", email="none@noreply.com"},
 ]
 readme = "README.md"
 license = {file = "LICENSE.txt"}
@@ -16,6 +17,10 @@ classifiers = [
 requires-python = ">=3.6"
 keywords = [
     "MRI",
+    "Magnetic Resonance Imaging",
+    "NMR",
+    "Nuclear Resonance Imaging",
+    "Target Field",
     "Gradient Field",
     "Physics",
     "Coil",
