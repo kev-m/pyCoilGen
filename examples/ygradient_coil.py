@@ -48,15 +48,13 @@ if __name__ == '__main__':
         'set_roi_into_mesh_center': True,
         'force_cut_selection': ['high'],  # ...
         'level_set_method': 'primary',  # ... %Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
-        'interconnection_method': 'regular',
         'skip_postprocessing': False,
         'skip_inductance_calculation': False,
-        'make_cylndrical_pcb': True,
+        'make_cylindrical_pcb': True,
         'conductor_cross_section_width': 0.015,
         'cross_sectional_points': np.array([np.sin(np.linspace(0, 2 * np.pi, 10)),
                                      np.cos(np.linspace(0, 2 * np.pi, 10))]) * 0.01,
         'sf_opt_method': 'tikhonov', # ...
-        'fmincon_parameter': [1000.0, 10 ^ 10, 1.000000e-10, 1.000000e-10, 1.000000e-10],
         'tikhonov_reg_factor': 100,  # %Tikhonov regularization factor for the SF optimization
 
         'output_directory': 'images',
