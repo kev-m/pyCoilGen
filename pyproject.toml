@@ -34,19 +34,20 @@ dynamic = ["version", "description"]
 
 [project.urls]
 Home = "https://github.com/kev-m/pyCoilGen"
-Documentation = "https://github.com/kev-m/pyCoilGen"
+Documentation = "https://github.com/kev-m/pyCoilGen/docs"
+Source = "https://github.com/kev-m/pyCoilGen"
 
 [tool.flit.module]
 name = "pyCoilGen"
 
 [tool.flit.sdist]
 include = [
-    "data/",
 ]
 exclude = [
     "docs",
     "examples",
     "scratchpad",
     "tests",
+    "data",
     "pyCoilGen/pyCoilGen_develop.py",
 ]
