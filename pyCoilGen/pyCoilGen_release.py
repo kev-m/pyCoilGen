@@ -197,7 +197,8 @@ def pyCoilGen(log, input_args=None):
             # Optimize the stream function toward target field and further constraints
             print('Optimize the stream function toward target field and secondary constraints:')
             timer.start()
-            coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)  # 08
+            coil_parts, combined_mesh, sf_b_field = stream_function_optimization(
+                coil_parts, target_field, input_args)  # 08
             timer.stop()
             solution.combined_mesh = combined_mesh
             solution.sf_b_field = sf_b_field
@@ -236,7 +237,7 @@ def pyCoilGen(log, input_args=None):
                 coil_mesh = coil_part.coil_mesh
 
                 visualize_compare_contours(coil_mesh.uv, 800, f'images/10_{project_name}_contours_{part_index}_p.png',
-                                            coil_part.contour_lines)
+                                           coil_part.contour_lines)
         #
         #####################################################
 
@@ -280,7 +281,7 @@ def pyCoilGen(log, input_args=None):
                     c_group_centers = coil_part.group_centers
 
                     visualize_compare_contours(coil_mesh.uv, 800, f'images/14_{project_name}_contour_centres_{part_index}_p.png',
-                                            coil_part.contour_lines, c_group_centers.uv)
+                                               coil_part.contour_lines, c_group_centers.uv)
             #
             #####################################################
 
@@ -345,7 +346,7 @@ def pyCoilGen(log, input_args=None):
 
         # Calculate the inductance by coil layout
         print('Calculate the inductance by coil layout:')
-        # coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance 
+        # coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance
         timer.start()
         solution = calculate_inductance_by_coil_layout(solution, input_args)
         timer.stop()
@@ -354,11 +355,12 @@ def pyCoilGen(log, input_args=None):
         # Evaluate the field errors
         print('Evaluate the field errors:')
         timer.start()
-        coil_parts, solution_errors = evaluate_field_errors(coil_parts, input_args, solution.target_field, solution.sf_b_field)
+        coil_parts, solution_errors = evaluate_field_errors(
+            coil_parts, input_args, solution.target_field, solution.sf_b_field)
         timer.stop()
         solution.solution_errors = solution_errors
         runpoint_tag = '21'
-        
+
         # Calculate the gradient
         print('Calculate the gradient:')
         timer.start()
@@ -378,6 +380,7 @@ def pyCoilGen(log, input_args=None):
         raise e
     return solution
 
+
 if __name__ == "__main__":
     # Set up logging
     log = logging.getLogger(__name__)
@@ -388,55 +391,55 @@ if __name__ == "__main__":
 
     # Examples/biplanar_xgradient.m
     arg_dict1 = {
-        #"b_0_direction": [0, 0, 1],
-        #"biplanar_mesh_parameter_list": [0.25, 0.25, 20, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
-        #"circular_diameter_factor": 1.0,  # was circular_diameter_factor_cylinder_parameterization
-        #"circular_mesh_parameter_list": [0.25, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        # "b_0_direction": [0, 0, 1],
+        # "biplanar_mesh_parameter_list": [0.25, 0.25, 20, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
+        # "circular_diameter_factor": 1.0,  # was circular_diameter_factor_cylinder_parameterization
+        # "circular_mesh_parameter_list": [0.25, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         "coil_mesh_file": "bi_planer_rectangles_width_1000mm_distance_500mm.stl",
-        #"conductor_cross_section_height": 0.002,
-        #"conductor_cross_section_width": 0.002,
-        #"conductor_thickness": 0.005,
-        #"cross_sectional_points": [0, 0],
-        #"cylinder_mesh_parameter_list": [0.4, 0.1125, 50, 50, 0.0, 1.0, 0.0, 0.0],
+        # "conductor_cross_section_height": 0.002,
+        # "conductor_cross_section_width": 0.002,
+        # "conductor_thickness": 0.005,
+        # "cross_sectional_points": [0, 0],
+        # "cylinder_mesh_parameter_list": [0.4, 0.1125, 50, 50, 0.0, 1.0, 0.0, 0.0],
         "field_shape_function": "x",
         "force_cut_selection": ['high'],
-        #"gauss_order": 2,
+        # "gauss_order": 2,
         "interconnection_cut_width": 0.05,
         "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 14,
-        #"make_cylindrical_pcb": False,
-        #"min_loop_significance": 1,
+        # "make_cylindrical_pcb": False,
+        # "min_loop_significance": 1,
         "normal_shift_length": 0.01,
-        #"normal_shift_smooth_factors": [2, 3, 2],
-        #"pcb_interconnection_method": "spiral_in_out",
-        #"pcb_spiral_end_shift_factor": 10,
-        #"planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        #"plot_flag": True,
+        # "normal_shift_smooth_factors": [2, 3, 2],
+        # "pcb_interconnection_method": "spiral_in_out",
+        # "pcb_spiral_end_shift_factor": 10,
+        # "planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        # "plot_flag": True,
         "pot_offset_factor": 0.25,
-        #"save_stl_flag": True,
+        # "save_stl_flag": True,
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
         "set_roi_into_mesh_center": True,
-        "sf_opt_method": "tikhonov", # "tikhonov"
+        "sf_opt_method": "tikhonov",  # "tikhonov"
         # "minimize_method": "SLSQP", # Only used when 'sf_opt_method' is not tikhonov
         # "minimize_method_parameters" : "{'tol':1.e-6}",
         # "minimize_method_options" : "{'disp': True, 'maxiter' : 1000}",
         "sf_source_file": "none",
-        #"skip_calculation_min_winding_distance": True,  # Default: 1
+        # "skip_calculation_min_winding_distance": True,  # Default: 1
         "skip_inductance_calculation": False,
-        #"skip_normal_shift": False,
+        # "skip_normal_shift": False,
         "skip_postprocessing": False,
-        #"skip_sweep": False,
-        #"smooth_factor": 1,
-        #"specific_conductivity_conductor": 1.8e-8,
+        # "skip_sweep": False,
+        # "smooth_factor": 1,
+        # "specific_conductivity_conductor": 1.8e-8,
         "surface_is_cylinder_flag": True,
-        #"target_field_definition_field_name": "none",
-        #"target_field_definition_file": "none",
-        #"target_gradient_strength": 1,
+        # "target_field_definition_field_name": "none",
+        # "target_field_definition_file": "none",
+        # "target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.1,    # GitHub
-        "target_region_resolution": 5, # MATLAB 10 is the default but 5 is faster
+        "target_region_resolution": 5,  # MATLAB 10 is the default but 5 is faster
         "tikhonov_reg_factor": 10,
         "use_only_target_mesh_verts": False,
 
@@ -467,7 +470,7 @@ if __name__ == "__main__":
         "level_set_method": "primary",
         "levels": 20,
         "make_cylindrical_pcb": True,
-        "min_loop_significance": 1, # Was 0.1, a bug?
+        "min_loop_significance": 1,  # Was 0.1, a bug?
         "normal_shift_length": 0.025,
         "normal_shift_smooth_factors": [2, 3, 2],
         "pcb_interconnection_method": "spiral_in_out",
