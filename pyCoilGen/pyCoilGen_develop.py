@@ -114,7 +114,6 @@ def pyCoilGen(log, input=None):
         log.debug('Parse inputs: %s', input_args)
 
     persistence_dir = input_args.persistence_dir
-    #project_name = f'coilgen_{debug_key}_{use_matlab_data}'
     project_name = f'{input_args.project_name}_{input_args.iteration_num_mesh_refinement}_{input_args.target_region_resolution}_{use_matlab_data}'
 
     solution = CoilSolution()
