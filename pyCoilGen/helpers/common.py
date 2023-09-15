@@ -1,8 +1,11 @@
-from numpy import dot, sum, ndarray, zeros
-from os import path
+from numpy import dot, sum, ndarray, zeros, save as np_save, asarray
+from os import path, makedirs
 
 # Logging
 import logging
+
+
+from pyCoilGen.sub_functions.constants import get_level, DEBUG_NONE
 
 log = logging.getLogger(__name__)
 
@@ -68,17 +71,52 @@ def __add_pyCoilGenData(to_list: list):
         log.debug("Package 'pyCoilGenData' is not installed. Unable to retrieve the data directory. Install with 'pip install pycoilgen_data'")
 
 
-def find_file(file_directory, file_name):
+def find_file(file_directory: str, file_name: str) -> str:
     """
     Iterates through candidate paths to find a file on the file system.
+
+    Args:
+        file_directory (str): The default directory to search in.
+        file_name (str): The filename to load.
+
+    Returns:
+        new_file_name (str): The actual file name, if it has been found.
+
+    Raises:
+        FileNotFoundError: If the file can not be found anywhere.
     """
     path_list = __directory_list.copy()
     __add_pyCoilGenData(path_list)
     dir_path = path.join(file_directory, file_name)
     if path.exists(dir_path):
+        log.debug("Found '%s'", dir_path)
         return dir_path
     for new_path in path_list:
         new_file_name = path.join(new_path, dir_path)
         if path.exists(new_file_name):
+            log.debug("Found '%s'", new_file_name)
             return new_file_name
     raise FileNotFoundError(f"Unable to find {dir_path} in local path or {__directory_list}")
+
+
+def save(output_dir: str, project_name: str, tag: str, solution) -> str:
+    """
+    Iterates through candidate paths to find a file on the file system.
+
+    Args:
+        output_dir (str): The default directory to write to.
+        project_name (str): The project name.
+        tag (str): A tag to distinguish this save from any others.
+        solution (CoilSolution): The .
+
+    Returns:
+        filename (str): The actual filename that the solution has been saved to.
+    """
+    # Create the output_dir if it does not exist
+    makedirs(output_dir, exist_ok=True)
+    filename = f'{output_dir}/{project_name}_{tag}.npy'
+    if get_level() > DEBUG_NONE:
+        log.debug("Saving solution to '%s'", filename)
+    np_save(filename, asarray([solution], dtype=object))
+
+    return filename
