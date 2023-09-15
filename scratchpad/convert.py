@@ -7,16 +7,19 @@ import json
 # Logging
 import logging
 
-# Local imports
 # Add the sub_functions directory to the Python module search path
+# Only required for the development environment
+import sys
+from pathlib import Path
 sub_functions_path = Path(__file__).resolve().parent / '..'
-print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
 
-# Local imports
-from sub_functions.constants import *
-from helpers.extraction import load_matlab, print_structure
-from sub_functions.data_structures import DataStructure, TargetField, CoilSolution
+## Local imports
+from pyCoilGen.pyCoilGen_release import pyCoilGen
+from pyCoilGen.sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
+from pyCoilGen.sub_functions.data_structures import DataStructure, TargetField, CoilSolution
+from pyCoilGen.helpers.extraction import load_matlab, print_structure
+
 
 log = logging.getLogger(__name__)
 
@@ -48,20 +51,20 @@ def convert_matlab_to_python(data_name):
     target_field = TargetField(b=target_field_data.b.T, coords=target_field_data.coords.T)
 
     data = DataStructure(coil_mesh=mesh, stream_function=stream_function, target_field=target_field)
-    np.save(f'Pre_Optimized_Solutions/{data_name}.npy', [data])
+    np.save(f'data/pyCoilGenData/Pre_Optimized_Solutions/{data_name}.npy', [data])
 
 
 def preoptimzed_breast_coil():
     data_name = 'source_data_breast_coil'
     convert_matlab_to_python(data_name)
-    blah = np.load(f'Pre_Optimized_Solutions/{data_name}.npy', allow_pickle=True)
+    blah = np.load(f'data/pyCoilGenData/Pre_Optimized_Solutions/{data_name}.npy', allow_pickle=True)
     pass
 
 
 def preoptimzed_SVD_coil():
     data_name = 'source_data_SVD_coil'
     convert_matlab_to_python(data_name)
-    blah = np.load(f'Pre_Optimized_Solutions/{data_name}.npy', allow_pickle=True)
+    blah = np.load(f'data/pyCoilGenData/Pre_Optimized_Solutions/{data_name}.npy', allow_pickle=True)
     pass
 
 
@@ -178,7 +181,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     # logging.basicConfig(level=logging.INFO)
 
-    # preoptimzed_breast_coil()
-    # preoptimzed_SVD_coil()
-    dump_biot_savart_data_p()
-    dump_biot_savart_data_m()
+    preoptimzed_breast_coil()
+    preoptimzed_SVD_coil()
+    # dump_biot_savart_data_p()
+    # dump_biot_savart_data_m()
