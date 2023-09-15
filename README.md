@@ -4,15 +4,15 @@
 
 The tool is based on a boundary element method and creates interconnected, non-overlapping wire-tracks on 3D support structures.
 
-For detailed documentation, please refer to the [pyCoilGen Documentation](docs/index.md).
+For detailed documentation, please refer to the [pyCoilGen Documentation](https://github.com/kev-m/pyCoilGen/docs/index.md).
 
 ## Installation
 
-Please refer to the [Installation Guide](docs/installation.md) for detailed instructions on how to install and set up pyCoilGen.
+Please refer to the [Installation Guide](https://github.com/kev-m/pyCoilGen/docs/installation.md) for detailed instructions on how to install and set up pyCoilGen.
 
 ## Examples
 
-The [`examples`](./examples) directory contains several usage examples for pyCoilGen. These examples demonstrate different scenarios and configurations for generating coil layouts.
+The [`examples`](https://github.com/kev-m/pyCoilGen/examples) directory contains several usage examples for pyCoilGen. These examples demonstrate different scenarios and configurations for generating coil layouts.
 
 ## Acknowledgements
 
@@ -22,7 +22,7 @@ Additional cross-checking was done using the [online MATLAB](https://matlab.math
 
 ## Contributing
 
-If you'd like to contribute to pyCoilGen, please follow the guidelines outlined in the [Contributing Guide](CONTRIBUTING.md).
+If you'd like to contribute to pyCoilGen, please follow the guidelines outlined in the [Contributing Guide](https://github.com/kev-m/pyCoilGen/docs/CONTRIBUTING.md).
 
 ## License
 
