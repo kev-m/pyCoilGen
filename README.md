@@ -1,6 +1,6 @@
 # pyCoilGen
 
-**pyCoilGen** is a Python conversion of the [CoilGen MatLab project](https://github.com/Philipp-MR/CoilGen) application for generating gradient field coil layouts within the MRI/NMR environment. 
+**pyCoilGen** is a Python conversion of the [CoilGen MatLab project](https://github.com/Philipp-MR/CoilGen) application for generating coil layouts that satisfy a target field solution, for example, to generate coil windings to produce a desired gradient field for the MRI/NMR environment. 
 
 The tool is based on a boundary element method and creates interconnected, non-overlapping wire-tracks on 3D support structures.
 
