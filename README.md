@@ -26,7 +26,7 @@ If you'd like to contribute to pyCoilGen, please follow the guidelines outlined 
 
 ## License
 
-See [`LICENSE.txt`](./LICENSE.txt) for more information.
+See [`LICENSE.txt`](https://github.com/kev-m/pyCoilGen/LICENSE.txt) for more information.
 
 ## Contact
 
