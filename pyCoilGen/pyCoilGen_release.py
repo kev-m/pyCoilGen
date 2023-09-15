@@ -3,6 +3,7 @@ import logging
 
 # System imports
 import numpy as np
+from os import makedirs
 
 # Logging
 import logging
@@ -17,6 +18,9 @@ from .helpers.visualisation import visualize_vertex_connections, visualize_compa
 
 # For timing
 from .helpers.timing import Timing
+
+# For saving Pickle files
+from .helpers.common import save
 
 # From original project
 from .sub_functions.read_mesh import read_mesh
@@ -53,15 +57,6 @@ from .sub_functions.calculate_gradient import calculate_gradient
 log = logging.getLogger(__name__)
 
 
-def save(output_dir, project_name, tag, solution) -> str:
-    filename = f'{output_dir}/{project_name}_{tag}.npy'
-    if get_level() > DEBUG_NONE:
-        log.debug("Saving solution to '%s'", filename)
-    np.save(filename, np.asarray([solution], dtype=object))
-
-    return filename
-
-
 def pyCoilGen(log, input_args=None):
     # Create optimized coil finished coil layout
     # Author: Philipp Amrein, University Freiburg, Medical Center, Radiology, Medical Physics
@@ -91,6 +86,11 @@ def pyCoilGen(log, input_args=None):
 
     project_name = f'{input_args.project_name}_{input_args.iteration_num_mesh_refinement}_{input_args.target_region_resolution}'
     persistence_dir = input_args.persistence_dir
+    image_dir = input_args.output_directory
+
+    # Create directories if they do not exist
+    makedirs(persistence_dir, exist_ok=True)
+    makedirs(image_dir, exist_ok=True)
 
     # Print the input variables
     # DEBUG
@@ -236,7 +236,7 @@ def pyCoilGen(log, input_args=None):
                 coil_part = coil_parts[part_index]
                 coil_mesh = coil_part.coil_mesh
 
-                visualize_compare_contours(coil_mesh.uv, 800, f'images/10_{project_name}_contours_{part_index}_p.png',
+                visualize_compare_contours(coil_mesh.uv, 800, f'{image_dir}/10_{project_name}_contours_{part_index}_p.png',
                                            coil_part.contour_lines)
         #
         #####################################################
@@ -280,7 +280,7 @@ def pyCoilGen(log, input_args=None):
                     coil_mesh = coil_part.coil_mesh
                     c_group_centers = coil_part.group_centers
 
-                    visualize_compare_contours(coil_mesh.uv, 800, f'images/14_{project_name}_contour_centres_{part_index}_p.png',
+                    visualize_compare_contours(coil_mesh.uv, 800, f'{image_dir}/14_{project_name}_contour_centres_{part_index}_p.png',
                                                coil_part.contour_lines, c_group_centers.uv)
             #
             #####################################################
@@ -307,7 +307,7 @@ def pyCoilGen(log, input_args=None):
                     c_wire_path = c_part.wire_path
 
                     visualize_vertex_connections(
-                        c_wire_path.uv.T, 800, f'images/16_{project_name}_wire_path2_uv_{index1}_p.png')
+                        c_wire_path.uv.T, 800, f'{image_dir}/16_{project_name}_wire_path2_uv_{index1}_p.png')
             #
             #####################################################
 
@@ -326,7 +326,7 @@ def pyCoilGen(log, input_args=None):
                     c_wire_path = c_part.wire_path
 
                     visualize_vertex_connections(
-                        c_wire_path.uv.T, 800, f'images/17_{project_name}_wire_path2_uv_{index1}_p.png')
+                        c_wire_path.uv.T, 800, f'{image_dir}/17_{project_name}_wire_path2_uv_{index1}_p.png')
             #
             #####################################################
 
