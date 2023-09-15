@@ -1,6 +1,12 @@
 from numpy import dot, sum, ndarray, zeros
 from os import path
 
+# Logging
+import logging
+
+log = logging.getLogger(__name__)
+
+
 def nearest_approaches(point: ndarray, starts: ndarray, ends: ndarray):
     """
     Calculate the nearest approach of a point to arrays of line segments.
@@ -20,7 +26,8 @@ def nearest_approaches(point: ndarray, starts: ndarray, ends: ndarray):
     t1 = sum(vec_targets2 * diffs, axis=0) / sum(diffs * diffs, axis=0)
     return t1, diffs
 
-def blkdiag(arr1: ndarray, arr2:ndarray)->ndarray:
+
+def blkdiag(arr1: ndarray, arr2: ndarray) -> ndarray:
     """
     Compute the block diagonal matrix created by aligning the input matrices along the diagonal.
 
@@ -44,16 +51,33 @@ def blkdiag(arr1: ndarray, arr2:ndarray)->ndarray:
 
     return result
 
+
 # A list of possible paths to try: 'data' in both the local and site-packages installed directories.
-__directory_list = ['data', path.join(__file__[:-(len(__package__))], 'data')]
+__directory_list = [
+    path.join('data', 'pyCoilGenData'),
+]
+
+
+def __add_pyCoilGenData(to_list: list):
+    try:
+        from pyCoilGenData import data_directory
+        data_directory_str = data_directory()
+        to_list.append(data_directory_str)
+        log.debug("Adding '%s' to data search path", data_directory_str)
+    except ImportError:
+        log.debug("Package 'pyCoilGenData' is not installed. Unable to retrieve the data directory. Install with 'pip install pycoilgen_data'")
+
+
 def find_file(file_directory, file_name):
     """
     Iterates through candidate paths to find a file on the file system.
     """
+    path_list = __directory_list.copy()
+    __add_pyCoilGenData(path_list)
     dir_path = path.join(file_directory, file_name)
     if path.exists(dir_path):
         return dir_path
-    for new_path in __directory_list:
+    for new_path in path_list:
         new_file_name = path.join(new_path, dir_path)
         if path.exists(new_file_name):
             return new_file_name
