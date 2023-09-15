@@ -6,3 +6,6 @@ pytest==7.4.0
 
 # For packaging
 flit==3.9.0
+
+# For mesh visualisation (optional)
+pyglet<2
