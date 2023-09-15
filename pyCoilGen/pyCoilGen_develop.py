@@ -1,3 +1,6 @@
+# Logging
+import logging
+
 # System imports
 import numpy as np
 
@@ -5,58 +8,55 @@ import numpy as np
 import logging
 
 # Debug and development checking imports
-from helpers.extraction import get_element_by_name, load_matlab, get_and_show_debug
-from helpers.visualisation import compare, compare_contains, visualize_vertex_connections, \
+from .helpers.extraction import get_element_by_name, load_matlab, get_and_show_debug
+from .helpers.visualisation import compare, compare_contains, visualize_vertex_connections, \
     visualize_multi_connections, visualize_compare_vertices, visualize_compare_contours, get_linenumber, \
     visualize_projected_vertices, passify_matlab
-from sub_functions.data_structures import Mesh
 
 # Local imports
-from sub_functions.constants import *
-from sub_functions.data_structures import DataStructure, CoilSolution, OptimisationParameters
+from .sub_functions.constants import *
+from .sub_functions.data_structures import Mesh, DataStructure, CoilSolution, OptimisationParameters
+
 
 # For timing
-from helpers.timing import Timing
+from .helpers.timing import Timing
+
+# For saving Pickle files
+from .helpers.common import save
 
 # From original project
-from sub_functions.read_mesh import read_mesh
-from sub_functions.parse_input import parse_input, create_input
-from sub_functions.split_disconnected_mesh import split_disconnected_mesh
-from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
-# from sub_functions.refine_mesh import refine_mesh # Broken
-from sub_functions.parameterize_mesh import parameterize_mesh
-from sub_functions.define_target_field import define_target_field
-# from sub_functions.temp_evaluation import temp_evaluation
-from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
-from sub_functions.calculate_basis_functions import calculate_basis_functions
-from sub_functions.calculate_sensitivity_matrix import calculate_sensitivity_matrix
-from sub_functions.calculate_gradient_sensitivity_matrix import calculate_gradient_sensitivity_matrix
-from sub_functions.calculate_resistance_matrix import calculate_resistance_matrix
-from sub_functions.stream_function_optimization import stream_function_optimization
-from sub_functions.calc_potential_levels import calc_potential_levels
-from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
-from sub_functions.process_raw_loops import process_raw_loops
-from sub_functions.find_minimal_contour_distance import find_minimal_contour_distance
-from sub_functions.topological_loop_grouping import topological_loop_grouping
-from sub_functions.calculate_group_centers import calculate_group_centers
-from sub_functions.interconnect_within_groups import interconnect_within_groups
-from sub_functions.interconnect_among_groups import interconnect_among_groups
-from sub_functions.shift_return_paths import shift_return_paths
-from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
-from sub_functions.create_sweep_along_surface import create_sweep_along_surface
-from sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
-from sub_functions.load_preoptimized_data import load_preoptimized_data
-from sub_functions.evaluate_field_errors import evaluate_field_errors
-from sub_functions.calculate_gradient import calculate_gradient
+from .sub_functions.read_mesh import read_mesh
+from .sub_functions.parse_input import parse_input, create_input
+from .sub_functions.split_disconnected_mesh import split_disconnected_mesh
+from .sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
+# from .sub_functions.refine_mesh import refine_mesh # Broken
+from .sub_functions.parameterize_mesh import parameterize_mesh
+from .sub_functions.define_target_field import define_target_field
+# from .sub_functions.temp_evaluation import temp_evaluation
+from .sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
+from .sub_functions.calculate_basis_functions import calculate_basis_functions
+from .sub_functions.calculate_sensitivity_matrix import calculate_sensitivity_matrix
+from .sub_functions.calculate_gradient_sensitivity_matrix import calculate_gradient_sensitivity_matrix
+from .sub_functions.calculate_resistance_matrix import calculate_resistance_matrix
+from .sub_functions.stream_function_optimization import stream_function_optimization
+from .sub_functions.calc_potential_levels import calc_potential_levels
+from .sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
+from .sub_functions.process_raw_loops import process_raw_loops
+from .sub_functions.find_minimal_contour_distance import find_minimal_contour_distance
+from .sub_functions.topological_loop_grouping import topological_loop_grouping
+from .sub_functions.calculate_group_centers import calculate_group_centers
+from .sub_functions.interconnect_within_groups import interconnect_within_groups
+from .sub_functions.interconnect_among_groups import interconnect_among_groups
+from .sub_functions.shift_return_paths import shift_return_paths
+from .sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
+from .sub_functions.create_sweep_along_surface import create_sweep_along_surface
+from .sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
+from .sub_functions.load_preoptimized_data import load_preoptimized_data
+from .sub_functions.evaluate_field_errors import evaluate_field_errors
+from .sub_functions.calculate_gradient import calculate_gradient
 
+# Set up logging
 log = logging.getLogger(__name__)
-
-
-def save(output_dir, project_name, tag, solution):
-    filename = f'{output_dir}/{project_name}_{tag}.npy'
-    if get_level() > DEBUG_NONE:
-        log.debug("Saving solution to '%s'", filename)
-    np.save(filename, np.asarray([solution], dtype=object))
 
 
 def pyCoilGen(log, input=None):
@@ -106,7 +106,7 @@ def pyCoilGen(log, input=None):
 
     persistence_dir = input_args.persistence_dir
     #project_name = f'coilgen_{debug_key}_{use_matlab_data}'
-    project_name = f'{input_args.project_name}_{use_matlab_data}_{input_args.iteration_num_mesh_refinement}_{input_args.target_region_resolution}'
+    project_name = f'{input_args.project_name}_{input_args.iteration_num_mesh_refinement}_{input_args.target_region_resolution}_{use_matlab_data}'
 
     solution = CoilSolution()
     solution.input_args = input_args
