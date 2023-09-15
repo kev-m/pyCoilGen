@@ -11,18 +11,9 @@ trimesh==3.21.7
 pyglet<2
 # Missing Trimesh dependency
 networkx==2.6.3
-# Missing Trimesh dependency for nearest.on_surface
-##rtree==1.0.1
 
 # For target field calculations
 sympy==1.10.1
 
-
-##################################
-autopep8==2.0.2
-# Development-only dependencies
 # For visualisation of matrices
 pillow<=9.5
-
-# For testing
-pytest==7.4.0

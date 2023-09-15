@@ -5,22 +5,28 @@ import numpy as np
 # Logging
 import logging
 
-# Local imports
+
+#######################################################################
 # Add the sub_functions directory to the Python module search path
+# Only required for the development environment
 import sys
 from pathlib import Path
 sub_functions_path = Path(__file__).resolve().parent / '..'
 sys.path.append(str(sub_functions_path))
-from CoilGen import CoilGen
-#from CoilGen_develop import CoilGen
-from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
+#
+#######################################################################
+
+
+## Local imports
+from pyCoilGen.pyCoilGen_release import pyCoilGen
+from pyCoilGen.sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
 """
-Autor: Philipp Amrein, University Freiburg, Medical Center, Radiology,
+Author: Philipp Amrein, University Freiburg, Medical Center, Radiology,
 Medical Physics
 February 2022
 
-This genearets a targeted SVD coil for the human brain. An already optimized solution for the stream function is
+This generates a targeted SVD coil for the human brain. An already optimized solution for the stream function is
 loaded.
 
 For the background of this project refer to: Design of a shim coil array matched to the human brain anatomy
@@ -48,7 +54,6 @@ if __name__ == '__main__':
         'interconnection_cut_width': 0.01,  # the width for the interconnections are interconnected; in meter
         'normal_shift_length': 0.01,  # the length for which overlapping return paths will be shifted along the surface normals; in meter
         'level_set_method': 'primary',  # Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
-        'interconnection_method': 'regular',
         'skip_postprocessing': False,
         'skip_inductance_calculation': False,
 
@@ -59,7 +64,7 @@ if __name__ == '__main__':
         'debug': DEBUG_BASIC,
     }
 
-    result = CoilGen(log, arg_dict)
+    result = pyCoilGen(log, arg_dict)
 
 """
 Timing information (MATLAB online server):

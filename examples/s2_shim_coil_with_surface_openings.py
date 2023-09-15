@@ -5,12 +5,20 @@ from pathlib import Path
 # Logging
 import logging
 
-# Local imports
+#######################################################################
 # Add the sub_functions directory to the Python module search path
+# Only required for the development environment
+import sys
+from pathlib import Path
 sub_functions_path = Path(__file__).resolve().parent / '..'
 sys.path.append(str(sub_functions_path))
-from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
-from CoilGen import CoilGen
+#
+#######################################################################
+
+
+## Local imports
+from pyCoilGen.pyCoilGen_release import pyCoilGen
+from pyCoilGen.sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
 
 """
@@ -63,7 +71,7 @@ if __name__ == '__main__':
         'debug': DEBUG_BASIC,
     }
 
-    result = CoilGen(log, arg_dict)
+    result = pyCoilGen(log, arg_dict)
 
 
 """

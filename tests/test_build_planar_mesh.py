@@ -2,7 +2,7 @@ import numpy as np
 
 # Test support
 # Code under test
-from sub_functions.build_planar_mesh import build_planar_mesh
+from pyCoilGen.sub_functions.build_planar_mesh import build_planar_mesh
 
 
 def test_build_planar_mesh_basic():

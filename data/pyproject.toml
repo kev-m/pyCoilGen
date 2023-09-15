@@ -1,0 +1,38 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "pycoilgen_data"
+authors = [
+        {name = "Kevin Meyer", email = "kevin@kmz.co.za"},
+        {name = "Philipp Amrein", email="none@noreply.com"},
+]
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.6"
+keywords = [
+    "MRI",
+    "Magnetic Resonance Imaging",
+    "NMR",
+    "Nuclear Resonance Imaging",
+    "Target Field",
+    "Gradient Field",
+    "Physics",
+    "Coil",
+]
+dependencies = [ "pycoilgen" ]
+dynamic = ["version", "description"]
+
+[project.urls]
+Home = "https://github.com/kev-m/pyCoilGen"
+Documentation = "https://github.com/kev-m/pyCoilGen"
+Source = "https://github.com/kev-m/pyCoilGen/data"
+
+
+[tool.flit.module]
+name = "pyCoilGenData"
