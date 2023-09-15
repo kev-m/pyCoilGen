@@ -11,19 +11,17 @@ import sys
 from pathlib import Path
 sub_functions_path = Path(__file__).resolve().parent / '..'
 sys.path.append(str(sub_functions_path))
-sub_functions_path = Path(__file__).resolve().parent / '../pyCoilGen'
-sys.path.append(str(sub_functions_path))
 
 # Do not move import from here!
-from pyCoilGen import pyCoilGen
-from sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
-from sub_functions.parameterize_mesh import parameterize_mesh
-from sub_functions.read_mesh import create_unique_noded_mesh
-from sub_functions.data_structures import DataStructure, Mesh, CoilPart, CoilSolution, ConnectedGroup, Shape3D, \
+from pyCoilGen.pyCoilGen_release import pyCoilGen
+from pyCoilGen.sub_functions.refine_mesh import refine_mesh_delegated as refine_mesh
+from pyCoilGen.sub_functions.parameterize_mesh import parameterize_mesh
+from pyCoilGen.sub_functions.read_mesh import create_unique_noded_mesh
+from pyCoilGen.sub_functions.data_structures import DataStructure, Mesh, CoilPart, CoilSolution, ConnectedGroup, Shape3D, \
     TopoGroup, ContourLine
-from helpers.timing import Timing
-from helpers.extraction import load_matlab
-from helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, compare_contains, \
+from pyCoilGen.helpers.timing import Timing
+from pyCoilGen.helpers.extraction import load_matlab
+from pyCoilGen.helpers.visualisation import visualize_vertex_connections, visualize_3D_boundary, compare, compare_contains, \
     get_linenumber, visualize_compare_vertices, visualize_projected_vertices, visualize_compare_contours, \
     passify_matlab
 
@@ -35,7 +33,7 @@ def load_numpy(filename) -> CoilSolution:
 
 def debug1():
     print("Planar mesh")
-    from sub_functions.build_planar_mesh import build_planar_mesh
+    from pyCoilGen.sub_functions.build_planar_mesh import build_planar_mesh
 
     planar_height = 2.0
     planar_width = 3.0
@@ -83,7 +81,7 @@ def debug1():
 # Save a small bi-planar mesh to file
 def debug1b():
     print("Bi-planar mesh")
-    from sub_functions.build_biplanar_mesh import build_biplanar_mesh
+    from pyCoilGen.sub_functions.build_biplanar_mesh import build_biplanar_mesh
 
     planar_height = 2.0
     planar_width = 3.0
@@ -207,7 +205,7 @@ def debug3():
 # Plain cylindrical mesh
 def debug4():
     print("Cylindrical mesh")
-    from sub_functions.build_cylinder_mesh import build_cylinder_mesh
+    from pyCoilGen.sub_functions.build_cylinder_mesh import build_cylinder_mesh
 
     # planar_mesh_parameter_list
     cylinder_height = 0.5
@@ -235,7 +233,7 @@ def debug4():
     # DEBUG
     mesh.display()
 
-    from sub_functions.data_structures import DataStructure
+    from pyCoilGen.sub_functions.data_structures import DataStructure
     parts = [DataStructure(coil_mesh=mesh)]
 
     input_params = DataStructure(surface_is_cylinder_flag=True, circular_diameter_factor=1.0, debug=1)
@@ -277,7 +275,7 @@ def debug5():
 
 def debug6():
     # Load mesh
-    from sub_functions.read_mesh import stlread_local
+    from pyCoilGen.sub_functions.read_mesh import stlread_local
     output = stlread_local('Geometry_Data/cylinder_radius500mm_length1500mm.stl')
     log.debug(" cylinder_radius500mm_length1500mm: vertices: %s, faces: %s, normals: %s",
               np.shape(output.vertices), np.shape(output.faces), np.shape(output.normals))
@@ -295,7 +293,7 @@ def get_connected_vertices(vertex_index, face_indices):
 
 
 def develop_split_disconnected_mesh():
-    from sub_functions.split_disconnected_mesh import split_disconnected_mesh
+    from pyCoilGen.sub_functions.split_disconnected_mesh import split_disconnected_mesh
 
     # which = 'shielded_ygradient_coil'
     project_name = 'Preoptimzed_SVD_Coil'
@@ -350,7 +348,7 @@ def develop_split_disconnected_mesh():
 
 
 def develop_parameterize_mesh():
-    from sub_functions.parameterize_mesh import parameterize_mesh
+    from pyCoilGen.sub_functions.parameterize_mesh import parameterize_mesh
     project_name = 'Preoptimzed_SVD_Coil'
     # project_name = 'ygradient_coil'
     # project_name = 'biplanar'
@@ -425,7 +423,7 @@ def develop_parameterize_mesh():
 
 
 def develop_calculate_one_ring_by_mesh():  # PAUSED
-    from sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
+    from pyCoilGen.sub_functions.calculate_one_ring_by_mesh import calculate_one_ring_by_mesh
 
     class MockMesh():
         def __init__(self, m_coil_part) -> None:
@@ -498,7 +496,7 @@ def develop_calculate_one_ring_by_mesh():  # PAUSED
 
 
 def develop_calculate_basis_functions():
-    from sub_functions.calculate_basis_functions import calculate_basis_functions
+    from pyCoilGen.sub_functions.calculate_basis_functions import calculate_basis_functions
     # Given the MATLAB inputs, below:
     # - node_triangles
     # - one_ring_list
@@ -554,7 +552,7 @@ def develop_calculate_basis_functions():
 
 
 def develop_calculate_sensitivity_matrix():
-    from sub_functions.calculate_sensitivity_matrix import calculate_sensitivity_matrix
+    from pyCoilGen.sub_functions.calculate_sensitivity_matrix import calculate_sensitivity_matrix
     # Given the MATLAB inputs, below:
     # - node_triangles
     # - one_ring_list
@@ -592,7 +590,7 @@ def develop_calculate_sensitivity_matrix():
 
 
 def develop_stream_function_optimization():
-    from sub_functions.stream_function_optimization import stream_function_optimization
+    from pyCoilGen.sub_functions.stream_function_optimization import stream_function_optimization
 
     which = 'biplanar'
     # MATLAB saved data
@@ -625,7 +623,7 @@ def develop_stream_function_optimization():
 
 
 def develop_calc_potential_levels():
-    from sub_functions.calc_potential_levels import calc_potential_levels
+    from pyCoilGen.sub_functions.calc_potential_levels import calc_potential_levels
 
     which = 'shielded_gradient_coil'
     # MATLAB saved data
@@ -656,7 +654,7 @@ def develop_calc_potential_levels():
 
 
 def develop_calc_contours_by_triangular_potential_cuts():
-    from sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
+    from pyCoilGen.sub_functions.calc_contours_by_triangular_potential_cuts import calc_contours_by_triangular_potential_cuts
 
     # which = 'shielded_ygradient_coil'
     which = 'Preoptimzed_Breast_Coil_0_10'
@@ -814,7 +812,7 @@ def develop_calc_contours_by_triangular_potential_cuts():
 
 
 def develop_process_raw_loops():
-    from sub_functions.process_raw_loops import process_raw_loops
+    from pyCoilGen.sub_functions.process_raw_loops import process_raw_loops
 
     # which = 'ygradient_coil_0_5'
     # which = 'biplanar_xgradient_0_5'
@@ -945,7 +943,7 @@ def develop_process_raw_loops():
 
 
 def develop_topological_loop_grouping():
-    from sub_functions.topological_loop_grouping import topological_loop_grouping
+    from pyCoilGen.sub_functions.topological_loop_grouping import topological_loop_grouping
 
     # which = 'shielded_ygradient_coil'
     # which = 'Preoptimzed_Breast_Coil_0_10'
@@ -1035,7 +1033,7 @@ def develop_topological_loop_grouping():
 
 
 def develop_calculate_group_centers():
-    from sub_functions.calculate_group_centers import calculate_group_centers
+    from pyCoilGen.sub_functions.calculate_group_centers import calculate_group_centers
 
     # which = 'shielded_ygradient_coil_0_9'
     # which = 'Preoptimzed_Breast_Coil_0_10'
@@ -1118,7 +1116,7 @@ def develop_calculate_group_centers():
 
 
 def develop_open_loop_with_3d_sphere():
-    from sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
+    from pyCoilGen.sub_functions.open_loop_with_3d_sphere import open_loop_with_3d_sphere
 
     # which = 'shielded_ygradient_coil'
     # which = 'Preoptimzed_Breast_Coil'
@@ -1198,7 +1196,7 @@ def develop_open_loop_with_3d_sphere():
 
 
 def develop_interconnect_within_groups():
-    from sub_functions.interconnect_within_groups import interconnect_within_groups
+    from pyCoilGen.sub_functions.interconnect_within_groups import interconnect_within_groups
 
     # which = 'shielded_ygradient_coil'
     # which = 'Preoptimzed_Breast_Coil'
@@ -1310,7 +1308,7 @@ def develop_interconnect_within_groups():
 
 
 def develop_interconnect_among_groups():
-    from sub_functions.interconnect_among_groups import interconnect_among_groups
+    from pyCoilGen.sub_functions.interconnect_among_groups import interconnect_among_groups
 
     # which = 'shielded_ygradient_coil'
     # which = 'Preoptimzed_Breast_Coil_0_10'
@@ -1412,7 +1410,7 @@ def develop_interconnect_among_groups():
 
 
 def test_smooth_track_by_folding():
-    from sub_functions.smooth_track_by_folding import smooth_track_by_folding  # 1
+    from pyCoilGen.sub_functions.smooth_track_by_folding import smooth_track_by_folding  # 1
     mat_data = load_matlab('debug/cylinder_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
@@ -1426,7 +1424,7 @@ def test_smooth_track_by_folding():
 
 
 def develop_shift_return_paths():
-    from sub_functions.shift_return_paths import shift_return_paths
+    from pyCoilGen.sub_functions.shift_return_paths import shift_return_paths
 
     # which = 'shielded_ygradient_coil'
     # which = 'Preoptimzed_Breast_Coil_0_10'
@@ -1524,7 +1522,7 @@ def develop_shift_return_paths():
 
 
 def develop_generate_cylindrical_pcb_print():
-    from sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
+    from pyCoilGen.sub_functions.generate_cylindrical_pcb_print import generate_cylindrical_pcb_print
     mat_data = load_matlab('debug/cylinder_coil')
     m_coil_parts = mat_data['coil_layouts'].out.coil_parts
     m_c_part = m_coil_parts
@@ -1567,7 +1565,7 @@ def develop_generate_cylindrical_pcb_print():
 
 
 def develop_create_sweep_along_surface():
-    from sub_functions.create_sweep_along_surface import create_sweep_along_surface
+    from pyCoilGen.sub_functions.create_sweep_along_surface import create_sweep_along_surface
 
     which = 'shielded_ygradient_coil'
     # MATLAB saved data
@@ -1629,7 +1627,7 @@ def develop_create_sweep_along_surface():
 
 
 def develop_calculate_inductance_by_coil_layout():
-    from sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
+    from pyCoilGen.sub_functions.calculate_inductance_by_coil_layout import calculate_inductance_by_coil_layout
 
     which = 'biplanarX'
     # MATLAB saved data
@@ -1670,7 +1668,7 @@ def develop_calculate_inductance_by_coil_layout():
 
 
 def develop_load_preoptimized_data():
-    from sub_functions.load_preoptimized_data import load_preoptimized_data
+    from pyCoilGen.sub_functions.load_preoptimized_data import load_preoptimized_data
 
     project_name = 'Preoptimzed_Breast_Coil'
 
@@ -1689,7 +1687,7 @@ def develop_load_preoptimized_data():
 
 
 def develop_evaluate_field_errors():
-    from sub_functions.evaluate_field_errors import evaluate_field_errors
+    from pyCoilGen.sub_functions.evaluate_field_errors import evaluate_field_errors
 
     # which = 'ygradient_coil_0_5'              # All Pass!
     # which = 'biplanar_xgradient_0_5'          # All Pass!
@@ -1808,7 +1806,7 @@ def develop_evaluate_field_errors():
 
 
 def develop_calculate_gradient():
-    from sub_functions.calculate_gradient import calculate_gradient
+    from pyCoilGen.sub_functions.calculate_gradient import calculate_gradient
 
     # which = 'ygradient_coil_0_5'              # All Pass!
     # which = 'biplanar_xgradient_0_5'          # All Pass!
@@ -1964,7 +1962,7 @@ if __name__ == "__main__":
     # develop_calculate_inductance_by_coil_layout()
     # develop_load_preoptimized_data()
     # develop_evaluate_field_errors()
-    # develop_calculate_gradient()
+    develop_calculate_gradient()
     # minimize_testing()
     #
     # test_smooth_track_by_folding()
