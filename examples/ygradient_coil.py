@@ -6,13 +6,20 @@ import numpy as np
 # Logging
 import logging
 
-# Local imports
+#######################################################################
 # Add the sub_functions directory to the Python module search path
+# Only required for the development environment
+import sys
+from pathlib import Path
 sub_functions_path = Path(__file__).resolve().parent / '..'
-print(sub_functions_path)
 sys.path.append(str(sub_functions_path))
-from pyCoilGen import pyCoilGen
-from sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
+#
+#######################################################################
+
+
+## Local imports
+from pyCoilGen.pyCoilGen_release import pyCoilGen
+from pyCoilGen.sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
 
 if __name__ == '__main__':
