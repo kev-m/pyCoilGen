@@ -14,6 +14,10 @@ from .stream_function_optimization import generate_combined_mesh
 # For timing
 from pyCoilGen.helpers.timing import Timing
 
+# For loading data files
+from pyCoilGen.helpers.common import find_file
+
+
 # Logging
 log = logging.getLogger(__name__)
 
@@ -43,7 +47,7 @@ def load_preoptimized_data(input_args) -> CoilSolution:
         coilSolution (CoilSolution): Pre-optimised coil solution containing mesh and stream function information.
     """
     # Load pre-optimised data
-    load_path = 'Pre_Optimized_Solutions/' + input_args.sf_source_file
+    load_path = find_file('Pre_Optimized_Solutions', input_args.sf_source_file)
 
     # Load data from load_path
     loaded_data = np.load(load_path, allow_pickle=True)[0]
