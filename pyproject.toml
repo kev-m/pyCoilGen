@@ -6,7 +6,7 @@ build-backend = "flit_core.buildapi"
 name = "pycoilgen"
 authors = [
         {name = "Kevin Meyer", email = "kevin@kmz.co.za"},
-        {name = "Phillip Amrein", email="none@noreply.com"},
+        {name = "Philipp Amrein", email="none@noreply.com"},
 ]
 readme = "README.md"
 license = {file = "LICENSE.txt"}
