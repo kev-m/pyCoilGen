@@ -84,3 +84,26 @@ $ git clone https://github.com/ediloren/FastHenry2.git
 $ cd FastHenry2/src
 $ make
 ```
+
+## Packaging and Publishing
+
+The sources are published as two packages using `flit` to build and publish the artifacts.
+
+The project details are defined in the `pyproject.toml` files. The version and description are defined in the top-level `__init__.py` file for each package.
+
+This package uses [semantic versioning](https://semver.org/).
+
+Build and publish the main artifact (temporary: to the `testpypi` server):
+
+```bash
+$ flit build
+$ flit publish --repository testpypi
+```
+
+Build and publish the data artifact (temporary: to the `testpypi` server):
+
+```bash
+$ cd data
+$ flit build
+$ flit publish --repository testpypi
+```
