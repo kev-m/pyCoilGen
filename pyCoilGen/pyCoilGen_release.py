@@ -84,7 +84,7 @@ def pyCoilGen(log, input_args=None):
 
     set_level(input_args.debug)
 
-    project_name = f'{input_args.project_name}_{input_args.iteration_num_mesh_refinement}_{input_args.target_region_resolution}'
+    project_name = f'{input_args.project_name}'
     persistence_dir = input_args.persistence_dir
     image_dir = input_args.output_directory
 
@@ -197,8 +197,7 @@ def pyCoilGen(log, input_args=None):
             # Optimize the stream function toward target field and further constraints
             print('Optimize the stream function toward target field and secondary constraints:')
             timer.start()
-            coil_parts, combined_mesh, sf_b_field = stream_function_optimization(
-                coil_parts, target_field, input_args)  # 08
+            coil_parts, combined_mesh, sf_b_field = stream_function_optimization(coil_parts, target_field, input_args)
             timer.stop()
             solution.combined_mesh = combined_mesh
             solution.sf_b_field = sf_b_field
@@ -317,18 +316,6 @@ def pyCoilGen(log, input_args=None):
             coil_parts = shift_return_paths(coil_parts, input_args)  # 17
             timer.stop()
             runpoint_tag = '17'
-
-            #####################################################
-            # Visualisation
-            if get_level() > DEBUG_NONE:
-                for index1 in range(len(coil_parts)):
-                    c_part = coil_parts[index1]
-                    c_wire_path = c_part.wire_path
-
-                    visualize_vertex_connections(
-                        c_wire_path.uv.T, 800, f'{image_dir}/17_{project_name}_wire_path2_uv_{index1}_p.png')
-            #
-            #####################################################
 
             # Create Cylindrical PCB Print
             print('Create PCB Print:')
