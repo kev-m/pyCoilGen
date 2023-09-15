@@ -42,6 +42,13 @@ Refer to the [Configuration Parameters Guide](configuration.md) for information 
 
 This includes details on available settings, options, and their default values.
 
+## Interpreting the Results
+
+Refer to the [results guide](results.md) for information on how to interpret the `CoilSolution` computed by pyCoilGen. 
+
+This includes a description of the .stl output files and how to interpret the `SolutionErrors` and its `FieldErrors` data.
+
+
 ## Contributing
 
 If you'd like to contribute to **pyCoilGen**, please follow the guidelines outlined in the [Contributing Guide](CONTRIBUTING.md).
