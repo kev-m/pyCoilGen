@@ -64,7 +64,6 @@ def plot_3D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
     plt.ylabel('y[m]')
     ax.set_zlabel('z[m]')
     plt.gca().set_box_aspect([1, 1, 1])  # Set the aspect ratio to be equal
-    plt.gca().patch.set_facecolor('white')
 
     # Save the figure if specified
     if save_figure:
