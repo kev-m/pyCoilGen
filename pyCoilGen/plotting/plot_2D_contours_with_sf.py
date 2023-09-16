@@ -18,6 +18,8 @@ def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
     """
     Plot a single solution with all steps.
 
+    If requested, with save_figure, images are saved to an 'images' subdirectory.
+
     Args:
         coil_layout (list[CoilSolution]): List of CoilSolution objects.
         single_ind_to_plot (int): Index of the solution to plot.
@@ -121,6 +123,6 @@ def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
 
     plt.tight_layout()
     if save_figure:
-        plt.savefig(f'{plot_title}.png', dpi=75)
+        plt.savefig(f'images/{plot_title}.png', dpi=75)
     else:
         plt.show()

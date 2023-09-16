@@ -9,6 +9,8 @@ def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions
     """
     Plots error metrics for different coil solutions.
 
+    If requested, with save_figure, images are saved to an 'images' subdirectory.
+
     Args:
         coil_solutions (List[CoilSolution]): List of CoilSolution objects.
         solutions_to_plot (List[int]): List of indices indicating which solutions to plot.
@@ -45,6 +47,6 @@ def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions
     plt.title(plot_title)
     plt.grid(True)
     if save_figure:
-        plt.savefig(f'{plot_title}.png', dpi=75)
+        plt.savefig(f'images/{plot_title}.png', dpi=75)
     else:
         plt.show()

@@ -10,6 +10,8 @@ def plot_various_error_metrics(coil_layouts: List[CoilSolution], single_ind_to_p
     """
     Plots various error metrics for a specific coil layout.
 
+    If requested, with save_figure, images are saved to an 'images' subdirectory.
+
     Args:
         coil_layouts (List[CoilSolution]): List of coil solutions.
         single_ind_to_plot (int): Index of the coil layout to be plotted.
@@ -68,6 +70,6 @@ def plot_various_error_metrics(coil_layouts: List[CoilSolution], single_ind_to_p
 
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     if save_figure:
-        plt.savefig(f'{plot_title}.png', dpi=75)
+        plt.savefig(f'images/{plot_title}.png', dpi=75)
     else:
         plt.show()
