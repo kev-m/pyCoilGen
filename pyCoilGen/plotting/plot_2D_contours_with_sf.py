@@ -22,6 +22,8 @@ def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
         coil_layout (list[CoilSolution]): List of CoilSolution objects.
         single_ind_to_plot (int): Index of the solution to plot.
         plot_title (str): Title of the plot.
+        save_figure (bool, optional): Whether to save the figure as an image file (default is False).
+        group_colours (list of colour strings, optional): A list of colours to use when plotting group contours.
 
     Returns:
         None
