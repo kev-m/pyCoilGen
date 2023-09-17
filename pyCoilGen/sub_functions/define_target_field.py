@@ -42,7 +42,7 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
 
     Returns:
         target_field_out (TargetField): Target field information (3 x m).
-        is_supressed_point (ndarray): Array indicating whether a point is suppressed or not (m).
+        is_suppressed_point (ndarray): Array indicating whether a point is suppressed or not (m).
     """
     target_field_out = TargetField()
 
@@ -62,7 +62,7 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
             else:
                 target_field_out.b = loaded_field
 
-            is_supressed_point = np.zeros(target_field_out.b.shape[1])
+            is_suppressed_point = np.zeros(target_field_out.b.shape[1])
             target_field_out.coords = loaded_target_field['coords']
             target_field_out.weights = np.ones_like(target_field_out.b)
             target_field_out.target_field_group_inds = np.ones(target_field_out.b.shape[1])
@@ -143,10 +143,10 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
             num_suppressed_points = secondary_target_mesh.get_vertices().shape[0]
             target_points = np.hstack((target_points, secondary_target_mesh.get_vertices().T))
             target_field = np.hstack((target_field, np.zeros((target_field.shape[0], num_suppressed_points))))
-            is_supressed_point = np.zeros(target_points.shape[1], dtype=bool)
-            is_supressed_point[-num_suppressed_points:] = True
+            is_suppressed_point = np.zeros(target_points.shape[1], dtype=bool)
+            is_suppressed_point[-num_suppressed_points:] = True
         else:
-            is_supressed_point = np.zeros(target_points.shape[1], dtype=bool)
+            is_suppressed_point = np.zeros(target_points.shape[1], dtype=bool)
 
         # Scale the fields to a targeted strength
         max_field_point_ind = np.argmax(target_field[2, :])
@@ -163,9 +163,9 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
 
         # Define weightings from 0 to 1 that weights the significance of target points
         target_field_weighting = np.ones(target_field.shape[1])
-        target_field_weighting[is_supressed_point] = input_args.secondary_target_weight
+        target_field_weighting[is_suppressed_point] = input_args.secondary_target_weight
         target_field_group_inds = np.ones(target_field.shape[1])
-        target_field_group_inds[is_supressed_point] = 2
+        target_field_group_inds[is_suppressed_point] = 2
 
         # Calculate the gradients from the symbolic definition of the target field
         target_dbzbx, target_dbzby, target_dbzbz = symbolic_calculation_of_gradient(input_args, target_field)
@@ -179,7 +179,7 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
         target_field_out.target_field_group_inds = target_field_group_inds
         target_field_out.target_gradient_dbdxyz = np.array([target_dbzbx, target_dbzby, target_dbzbz])
 
-    return target_field_out, is_supressed_point
+    return target_field_out, is_suppressed_point
 
 
 def symbolic_calculation_of_gradient(input_args, target_field):
