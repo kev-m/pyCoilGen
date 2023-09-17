@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from pyCoilGen.pyCoilGen_release import pyCoilGen
 from pyCoilGen.sub_functions.constants import DEBUG_BASIC
-from pyCoilGen.sub_functions.data_structures import CoilSolution, SolutionErrors, FieldErrors
+from pyCoilGen.sub_functions.data_structures import CoilSolution, SolutionErrors, FieldErrors, TargetField
 
 # Plotting
 import pyCoilGen.plotting as pcg_plt
@@ -46,11 +46,31 @@ arg_dict = {
 # solution = pyCoilGen(log, arg_dict) # Calculate the solution
 which = arg_dict['project_name']
 # Calculate the errors
-[solution] = np.load(f'debug/{which}_final.npy', allow_pickle=True)
+# [loaded] = np.load(f'debug/{which}_final.npy', allow_pickle=True)
+[loaded] = np.load('debug/biplanar_xgradient_final.npy', allow_pickle=True)
+# [loaded] = np.load('debug/Preoptimzed_SVD_Coil_final.npy', allow_pickle=True)
+# [loaded] = np.load('debug/Preoptimzed_Breast_Coil_final.npy', allow_pickle=True)
+# [loaded] = np.load('debug/s2_shim_coil_final.npy', allow_pickle=True)
+# [loaded] = np.load('debug/shielded_ygradient_coil_final.npy', allow_pickle=True)
 # print(solution.input_args)
+solution:CoilSolution = loaded
 
-coil_solutions = [solution]
+# coil_solutions = [solution]
 # pcg_plt.plot_error_different_solutions(coil_solutions, [0], 'gradient study')
 # pcg_plt.plot_various_error_metrics(coil_solutions, 0, 'ygradient_cylinder')
 # pcg_plt.plot_2D_contours_with_sf(coil_solutions, 0, which, True)
-pcg_plt.plot_3D_contours_with_sf(coil_solutions, 0, which)
+# pcg_plt.plot_3D_contours_with_sf(coil_solutions, 0, which)
+
+coords = solution.target_field.coords
+field = solution.solution_errors.combined_field_layout_per1Amp
+
+plot_title='Target Field '
+pcg_plt.plot_vector_field_xy(coords, field, plot_title=plot_title, save_figure=True)
+pcg_plt.plot_vector_field_yz(coords, field, plot_title=plot_title, save_figure=True)
+pcg_plt.plot_vector_field_xz(coords, field, plot_title=plot_title, save_figure=True)
+
+plot_title='Target Field Error '
+field = solution.solution_errors.combined_field_layout - solution.target_field.b
+pcg_plt.plot_vector_field_xy(coords, field, plot_title=plot_title, save_figure=True)
+pcg_plt.plot_vector_field_yz(coords, field, plot_title=plot_title, save_figure=True)
+pcg_plt.plot_vector_field_xz(coords, field, plot_title=plot_title, save_figure=True)
