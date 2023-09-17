@@ -51,7 +51,7 @@ def plot_3D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
         poly = Poly3DCollection(face_vertices, facecolors=face_colors, alpha=0.6)
         ax.add_collection3d(poly)
 
-        if hasattr(coil_part, 'groups'):
+        if coil_part.groups is not None: # Attribute is always present, but not always initialised
             group_ind = 0
             for group in coil_part.groups:
                 group_color = group_colours[group_ind % len(group_colours)]

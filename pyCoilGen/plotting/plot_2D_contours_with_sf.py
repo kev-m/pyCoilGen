@@ -35,7 +35,7 @@ def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
     coil_solution = coil_layout[single_ind_to_plot]
 
     # Plot a single solution with all steps
-    if hasattr(coil_solution.coil_parts[0], 'groups'):
+    if coil_solution.coil_parts[0].groups is not None:  # Attribute is always present, but not always initialised
         # If 'groups' attribute is present in coil_parts
         # Create a figure with tiled layout
         num_parts = len(coil_solution.coil_parts)
@@ -72,7 +72,7 @@ def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
                         '-o',
                         linewidth=2,
                         markersize=0.5,
-                        color=group_colours[group_index % len(group_colours)] # Cycle through the default colours
+                        color=group_colours[group_index % len(group_colours)]  # Cycle through the default colours
                     )
                 group_index += 1
 
@@ -81,7 +81,8 @@ def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
             ax_part.set_aspect('equal')
             ax_part.set_facecolor('white')
 
-    elif hasattr(coil_solution.coil_parts[0], 'contour_lines'):
+    # Attribute is always present, but not always initialised
+    elif coil_solution.coil_parts[0].contour_lines is not None:
         # If 'contour_lines' attribute is present in coil_parts
         # Create a figure with tiled layout
         num_parts = len(coil_solution.coil_parts)
