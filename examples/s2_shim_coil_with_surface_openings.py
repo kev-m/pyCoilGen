@@ -1,22 +1,11 @@
 # System imports
 import sys
-from pathlib import Path
 
 # Logging
 import logging
 
-#######################################################################
-# Add the sub_functions directory to the Python module search path
-# Only required for the development environment
-import sys
-from pathlib import Path
-sub_functions_path = Path(__file__).resolve().parent / '..'
-sys.path.append(str(sub_functions_path))
-#
-#######################################################################
 
-
-## Local imports
+# Local imports
 from pyCoilGen.pyCoilGen_release import pyCoilGen
 from pyCoilGen.sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
@@ -65,7 +54,7 @@ if __name__ == '__main__':
 
 
         'output_directory': 'images',
-        'project_name': 'shielded_ygradient_coil',
+        'project_name': 's2_shim_coil',
         'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug',
         'debug': DEBUG_BASIC,

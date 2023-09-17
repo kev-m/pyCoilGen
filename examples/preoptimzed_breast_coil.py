@@ -1,24 +1,13 @@
 # System imports
 import sys
-from pathlib import Path
 
 import numpy as np
 
 # Logging
 import logging
 
-#######################################################################
-# Add the sub_functions directory to the Python module search path
-# Only required for the development environment
-import sys
-from pathlib import Path
-sub_functions_path = Path(__file__).resolve().parent / '..'
-sys.path.append(str(sub_functions_path))
-#
-#######################################################################
 
-
-## Local imports
+# Local imports
 from pyCoilGen.pyCoilGen_release import pyCoilGen
 from pyCoilGen.sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
@@ -47,23 +36,24 @@ if __name__ == '__main__':
     cross_section *= np.array([[0.002], [0.002]])
 
     arg_dict = {
-        'field_shape_function':'none', # definition of the target field
-        'coil_mesh_file':'none',    
+        'field_shape_function': 'none',  # definition of the target field
+        'coil_mesh_file': 'none',
         # 'min_loop_significance':1,
-        'use_only_target_mesh_verts':False,
-        'sf_source_file':'source_data_breast_coil.npy',
-        'levels':14, # the number of potential steps that determines the later number of windings (Stream function discretization)
-        'pot_offset_factor':0.25, # a potential offset value for the minimal and maximal contour potential ; must be between 0 and 1
-        'surface_is_cylinder_flag':False,
-        'interconnection_cut_width':0.01, # the width for the interconnections are interconnected; in meter
-        'normal_shift_length':0.01, # the length for which overlapping return paths will be shifted along the surface normals; in meter
-        'force_cut_selection':['high'],
-        'level_set_method':'primary',  #Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
-        'interconnection_method':'regular',
-        'skip_postprocessing':False,
+        'use_only_target_mesh_verts': False,
+        'sf_source_file': 'source_data_breast_coil.npy',
+        # the number of potential steps that determines the later number of windings (Stream function discretization)
+        'levels': 14,
+        'pot_offset_factor': 0.25,  # a potential offset value for the minimal and maximal contour potential ; must be between 0 and 1
+        'surface_is_cylinder_flag': False,
+        'interconnection_cut_width': 0.01,  # the width for the interconnections are interconnected; in meter
+        'normal_shift_length': 0.01,  # the length for which overlapping return paths will be shifted along the surface normals; in meter
+        'force_cut_selection': ['high'],
+        'level_set_method': 'primary',  # Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
+        'interconnection_method': 'regular',
+        'skip_postprocessing': False,
         'cross_sectional_points': cross_section,
-        'skip_sweep':False,
-        'skip_inductance_calculation':False,
+        'skip_sweep': False,
+        'skip_inductance_calculation': False,
 
         'project_name': 'Preoptimzed_Breast_Coil',
         'fasthenry_bin': '../FastHenry2/bin/fasthenry',
