@@ -75,8 +75,6 @@ def build_cylinder_mesh(
 
     # Calculate representative normal
     normal = np.array([0.0, 0.0, 1.0])
-    normal_rep = np.dot(normal, rot_mat)
-
-    cylinder_mesh = DataStructure(vertices=vertices, faces=faces, normal=normal_rep)
+    cylinder_mesh = DataStructure(vertices=vertices, faces=faces, normal=normal)
 
     return cylinder_mesh
