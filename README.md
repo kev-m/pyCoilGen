@@ -9,11 +9,11 @@ For detailed documentation, refer to the [pyCoilGen Documentation](docs/index.md
 
 ## Installation
 
-Refer to the [Installation Guide](https://github.com/kev-m/pyCoilGen/docs/installation.md) for detailed instructions on how to install and set up **pyCoilGen**.
+Refer to the [Installation Guide](docs/installation.md) for detailed instructions on how to install and set up **pyCoilGen**.
 
 ## Examples
 
-The [`examples`](https://github.com/kev-m/pyCoilGen/examples) directory contains several examples for how to use **pyCoilGen**. These examples demonstrate different scenarios and configurations for generating coil layouts.
+The [`examples`](examples) directory contains several examples for how to use **pyCoilGen**. These examples demonstrate different scenarios and configurations for generating coil layouts.
 
 ## Acknowledgements
 
@@ -23,19 +23,19 @@ Additional cross-checking was done using [MATLAB Online](https://www.mathworks.c
 
 ## Contributing
 
-If you'd like to contribute to **pyCoilGen**, follow the guidelines outlined in the [Contributing Guide](https://github.com/kev-m/pyCoilGen/docs/CONTRIBUTING.md).
+If you'd like to contribute to **pyCoilGen**, follow the guidelines outlined in the [Contributing Guide](docs/CONTRIBUTING.md).
 
 ## License
 
-See [`LICENSE.txt`](https://github.com/kev-m/pyCoilGen/LICENSE.txt) for more information.
+See [`LICENSE.txt`](LICENSE.txt) for more information.
 
 ## Contact
 
-For inquiries and discussion, use [pyCoilGen Discussions](https://github.com/kev-m/pyCoilGen/discussions).
+For inquiries and discussion, use [pyCoilGen Discussions](discussions).
 
 ## Issues
 
-For issues related to this Python implementation, visit the [Issues](https://github.com/kev-m/pyCoilGen/issues) page.
+For issues related to this Python implementation, visit the [Issues](issues) page.
 
 ## Citation
 

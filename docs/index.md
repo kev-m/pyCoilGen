@@ -54,11 +54,11 @@ See [`LICENSE.txt`](../LICENSE.txt) for more information.
 
 ## Contact
 
-For inquiries and discussion, use [Discussions](https://github.com/kev-m/pyCoilGen/discussions).
+For inquiries and discussion, use [Discussions](discussions).
 
 ## Issues
 
-For issues related to this Python implementation, visit the [Issues](https://github.com/kev-m/pyCoilGen/issues) page.
+For issues related to this Python implementation, visit the [Issues](issues) page.
 
 ## Citation
 

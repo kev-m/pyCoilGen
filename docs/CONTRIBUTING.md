@@ -6,7 +6,7 @@ Thank you for considering contributing to pyCoilGen! We welcome your contributio
 
 ### Communication
 
-We recommend that interested contributors start by visiting our [GitHub Discussions page](https://github.com/kev-m/pyCoilGen/discussions). Here, you can engage with the community, discuss ideas, and coordinate efforts.
+We recommend that interested contributors start by visiting our [GitHub Discussions page](discussions). Here, you can engage with the community, discuss ideas, and coordinate efforts.
 
 ### Branching and Development
 
@@ -15,7 +15,7 @@ We recommend that interested contributors start by visiting our [GitHub Discussi
 
 ### Code Style and Documentation
 
-- Please adhere to the [Google DocString formatting](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) conventions when documenting your code.
+- Adhere to the [Google DocString formatting](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) conventions when documenting your code.
 - Follow PEP 8 guidelines for code style.
 
 ## Submitting Changes
@@ -27,11 +27,11 @@ We recommend that interested contributors start by visiting our [GitHub Discussi
 
 ## Reporting Issues
 
-If you find a bug, have a feature request, or would like to suggest an improvement, open an issue on the [GitHub Issues page](https://github.com/kev-m/pyCoilGen/issues).
+If you find a bug, have a feature request, or would like to suggest an improvement, open an issue on the [GitHub Issues page](issues).
 
 ## Code of Conduct
 
-Please read and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Treat all contributors and users with respect and kindness.
+Read and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Treat all contributors and users with respect and kindness.
 
 ## License
 
