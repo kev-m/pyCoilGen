@@ -4,7 +4,7 @@ In solving for coil paths, the `pyCoilGen` application also generates various ou
 
 If the `debug` input parameter is larger than 0, it produces some output images.
 
-Unless suppressed by `save_stl_flag`, it generates 3D .stl mesh files.
+Unless suppressed by `save_stl_flag`, it generates 3D ``.stl`` mesh files.
 
 Unless suppressed by `skip_postprocessing`, it computes `SolutionErrors`.
 
@@ -21,7 +21,7 @@ For example:
 
 ## Output Meshes
 
-Unless suppressed by `save_stl_flag`, the application generates two 3D .stl mesh files per detected coil part with a filename derived from the `project_name`.
+Unless suppressed by `save_stl_flag`, the application generates two 3D `.stl` mesh files per detected coil part with a filename derived from the `project_name`.
 
 For example:
 

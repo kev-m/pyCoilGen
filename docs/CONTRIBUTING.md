@@ -1,6 +1,6 @@
 # Contributing to pyCoilGen
 
-Thank you for considering contributing to pyCoilGen! We welcome your contributions to help make this project even better. Before you get started, please take a moment to review the following guidelines.
+Thank you for considering contributing to pyCoilGen! We welcome your contributions to help make this project even better. Before you get started, take a moment to review the following guidelines.
 
 ## Getting Started
 
@@ -11,7 +11,7 @@ We recommend that interested contributors start by visiting our [GitHub Discussi
 ### Branching and Development
 
 - Development should be done on new branches created from the `master` branch.
-- When you're ready to submit your changes, please create a pull request (PR) targeting the `master` branch. 
+- When you're ready to submit your changes, create a pull request (PR) targeting the `master` branch. 
 
 ### Code Style and Documentation
 
@@ -27,7 +27,7 @@ We recommend that interested contributors start by visiting our [GitHub Discussi
 
 ## Reporting Issues
 
-If you find a bug, have a feature request, or would like to suggest an improvement, please open an issue on the [GitHub Issues page](https://github.com/kev-m/pyCoilGen/issues).
+If you find a bug, have a feature request, or would like to suggest an improvement, open an issue on the [GitHub Issues page](https://github.com/kev-m/pyCoilGen/issues).
 
 ## Code of Conduct
 
