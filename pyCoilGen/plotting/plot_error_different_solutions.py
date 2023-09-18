@@ -7,7 +7,8 @@ from pyCoilGen.sub_functions.data_structures import CoilSolution
 from pyCoilGen.helpers.common import title_to_filename
 
 
-def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions_to_plot: List[int], plot_title: str, save_figure=False):
+def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions_to_plot: List[int], plot_title: str, 
+                                   x_ticks:dict=None, save_figure=False):
     """
     Plots error metrics for different coil solutions.
 
@@ -17,6 +18,7 @@ def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions
         coil_solutions (List[CoilSolution]): List of CoilSolution objects.
         solutions_to_plot (List[int]): List of indices indicating which solutions to plot.
         plot_title (str): Title of the plot.
+        x_ticks (dict): A single key-values dictionary to specify custom x-ticks. The key is used to label the x-axis.
         save_figure (bool, optional): Whether to save the figure as an image file (default is False).
 
     Returns:
@@ -53,7 +55,13 @@ def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions
 
     plt.legend(['max_rel_error_loops_vs_sf', 'max_rel_error_layout_vs_sf', 'mean_rel_error_loops_vs_sf', 'mean_rel_error_layout_vs_sf',
                 'max_rel_error_loops_vs_target', 'max_rel_error_layout_vs_target', 'mean_rel_error_loops_vs_target', 'mean_rel_error_layout_vs_target'])
-    plt.xlabel('solutions_to_plot')
+    if x_ticks is not None:
+        x_tick = next(iter(x_ticks.keys()))
+        x_labels = [str(tick) for tick in x_ticks[x_tick]]
+        plt.xlabel(x_tick)
+        plt.xticks(solutions_to_plot, x_labels)
+    else:
+        plt.xlabel('solutions_to_plot')
     plt.ylabel('Error Values')
     plt.title(plot_title)
     plt.grid(True)
