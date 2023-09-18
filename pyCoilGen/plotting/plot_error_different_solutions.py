@@ -4,6 +4,7 @@ from typing import List
 import matplotlib.pyplot as plt
 
 from pyCoilGen.sub_functions.data_structures import CoilSolution
+from pyCoilGen.helpers.common import title_to_filename
 
 
 def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions_to_plot: List[int], plot_title: str, save_figure=False):
@@ -57,6 +58,6 @@ def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions
     plt.title(plot_title)
     plt.grid(True)
     if save_figure:
-        plt.savefig(f'images/{plot_title}.png', dpi=75)
+        plt.savefig(f'images/{title_to_filename(plot_title)}.png', dpi=75)
     else:
         plt.show()
