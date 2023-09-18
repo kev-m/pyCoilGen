@@ -318,6 +318,6 @@ def create_input(dictionary):
         if hasattr(input, key):
             setattr(input, key, value)
         else:
-            print(f"Attribute '{key}' does not exist in the data structure.")
+            raise KeyError(f"Attribute '{key}' is not a valid parameter.")
 
     return parser, input
