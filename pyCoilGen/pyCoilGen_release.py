@@ -74,8 +74,11 @@ def pyCoilGen(log, input_args=None):
 
     # Parse the input variables
     if type(input_args) is dict:
-        if input_args['debug'] >= DEBUG_VERBOSE:
-            log.debug(" - converting input dict to input type.")
+        try:
+            if input_args['debug'] >= DEBUG_VERBOSE:
+                log.debug(" - converting input dict to input type.")
+        except KeyError:
+            pass
         input_parser, input_args = create_input(input_args)
     elif input_args is None:
         input_parser, input_args = parse_input(input_args)
