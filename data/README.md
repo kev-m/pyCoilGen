@@ -6,7 +6,7 @@ The tool is based on a boundary element method and creates interconnected, non-o
 
 This package provides optional extra data for **pyCoilGen** that provides coil mesh surface `.stl` files, pre-calculated target fields and solutions.
 
-For detailed documentation, refer to the [pyCoilGen Documentation](https://github.com/kev-m/pyCoilGen/docs/index.md).
+For detailed documentation, refer to the [pyCoilGen Documentation](docs/index.md).
 
 ## Installation
 
