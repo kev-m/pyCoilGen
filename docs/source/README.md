@@ -16,7 +16,7 @@ For a detailed description of the algorithm, please refer to the [research paper
 
 ## Examples
 
-The [`examples`](../examples) directory contains several usage examples for pyCoilGen. 
+The [`examples`](https://github.com/kev-m/pyCoilGen/examples) directory contains several usage examples for pyCoilGen. 
 
 These examples demonstrate different scenarios and configurations for generating coil layouts.
 
@@ -53,7 +53,7 @@ If you'd like to contribute to **pyCoilGen**, please follow the guidelines outli
 
 ## License
 
-See [`LICENSE.txt`](../LICENSE.txt) for more information.
+See [`LICENSE.txt`](https://github.com/kev-m/pyCoilGen/LICENSE.txt) for more information.
 
 ## Contact
 

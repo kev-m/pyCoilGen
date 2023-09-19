@@ -35,7 +35,7 @@ Please read and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Treat all c
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the [LICENSE.txt](LICENSE.txt) file.
+By contributing, you agree that your contributions will be licensed under the [LICENSE.txt](https://github.com/kev-m/pyCoilGen/LICENSE.txt) file.
 
 We appreciate your interest in contributing to pyCoilGen and look forward to working with you!
 
