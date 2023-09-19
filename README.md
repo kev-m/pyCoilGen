@@ -5,11 +5,11 @@ The **pyCoilGen** project is a community-based tool for the generation for the g
 
 This Python project is a port of the MATLAB [CoilGen code](https://github.com/Philipp-MR/CoilGen) developed by Philipp Amrein. 
 
-For detailed documentation, refer to the [pyCoilGen Documentation](docs/index.md).
+For detailed documentation, refer to the [pyCoilGen Documentation](docs/source/index.md).
 
 ## Installation
 
-Refer to the [Installation Guide](docs/installation.md) for detailed instructions on how to install and set up **pyCoilGen**.
+Refer to the [Installation Guide](docs/source/installation.md) for detailed instructions on how to install and set up **pyCoilGen**.
 
 ## Examples
 
@@ -23,7 +23,7 @@ Additional cross-checking was done using [MATLAB Online](https://www.mathworks.c
 
 ## Contributing
 
-If you'd like to contribute to **pyCoilGen**, follow the guidelines outlined in the [Contributing Guide](docs/CONTRIBUTING.md).
+If you'd like to contribute to **pyCoilGen**, follow the guidelines outlined in the [Contributing Guide](docs/source/CONTRIBUTING.md).
 
 ## License
 
