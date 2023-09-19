@@ -1,4 +1,4 @@
 # Requirements only to build the documentation
 sphinx==5.3.0
 myst-parser==1.0.0
-sphinx_latest_theme
+sphinx_rtd_theme
