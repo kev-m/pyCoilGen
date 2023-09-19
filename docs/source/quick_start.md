@@ -1,4 +1,5 @@
 # Quick Start
+
 While the **pyCoilGen** application can be used as a command-line application, due to the [large number of parameters](./configuration.md), it is best used as part of a Python script. 
 
 This allows users to use the application, or previously saved data, to manipulate and/or view coil design parameters, field errors, etc.

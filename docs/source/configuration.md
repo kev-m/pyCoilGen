@@ -1,36 +1,5 @@
 # Configuration
 
-- [Configuration](#configuration)
-  - [Basic Settings](#basic-settings)
-  - [Specify Mesh Geometry](#specify-mesh-geometry)
-    - [Mesh Files](#mesh-files)
-      - [Built-in Meshes](#built-in-meshes)
-    - [Subdividing the Mesh](#subdividing-the-mesh)
-  - [Parameterise Mesh](#parameterise-mesh)
-  - [Target Field](#target-field)
-    - [Specifying the Target Field Co-ordinates Using an `.stl` Mesh](#specifying-the-target-field-co-ordinates-using-an-stl-mesh)
-    - [Specifying the Target Field Co-ordinates Using a Sphere](#specifying-the-target-field-co-ordinates-using-a-sphere)
-    - [Specifying the Gradient Field Shape Function](#specifying-the-gradient-field-shape-function)
-    - [Using a NumPy Pickle file](#using-a-numpy-pickle-file)
-  - [Discretisation and Calculation of Field Variables](#discretisation-and-calculation-of-field-variables)
-    - [Winding Coil Contribution and Target Field Sensitivity](#winding-coil-contribution-and-target-field-sensitivity)
-    - [Winding Coil Resistance](#winding-coil-resistance)
-    - [Stream Function](#stream-function)
-  - [Loading Pre-calculated Mesh and Stream Function](#loading-pre-calculated-mesh-and-stream-function)
-  - [Build Contour Lines](#build-contour-lines)
-    - [Contour Parameters](#contour-parameters)
-  - [Find Contour Topology](#find-contour-topology)
-    - [Topology Parameters](#topology-parameters)
-  - [Interconnect Contours / Build Wire Path](#interconnect-contours--build-wire-path)
-    - [Return Paths](#return-paths)
-  - [Generate Outputs](#generate-outputs)
-    - [Generate Cylindrical PCB Output](#generate-cylindrical-pcb-output)
-    - [Generate 3D Wire Path](#generate-3d-wire-path)
-  - [Evaluate Results](#evaluate-results)
-    - [Calculate Inductance](#calculate-inductance)
-    - [Evaluate Target Field Errors](#evaluate-target-field-errors)
-
-
 The behaviour of the **pyCoilGen** application is configured by numerous parameters. 
 
 **Note:** All values are specified in SI units, i.e. metre, Ampere, Tesla.

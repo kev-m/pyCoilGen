@@ -11,7 +11,7 @@ from pyCoilGen import __version__
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'pyCoilGen'
+project = 'pyCoilGen User Guide'
 copyright = '2023, Kevin Meyer, Philipp Amrein'
 author = 'Kevin Meyer, Philipp Amrein'
 version = __version__

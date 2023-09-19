@@ -1,15 +1,16 @@
 # Installation
-## pyCoilGen
 
-To install **pyCoilGen**, you can use `pip`, the Python package manager. Additionally, there are optional extras available for enhanced functionality.
+To use **pyCoilGen**, 
 
 ## Install Python
 
 **pyCoilGen** depends on Python >= 3.6. It has been tested with Python 3.7.3 and 3.9.2.
 
-Please follow the instructions for your operating system to install Python.
+Please follow the instructions for your operating system to [install Python](https://www.python.org/downloads/).
 
 ## Installing pyCoilGen
+
+To install **pyCoilGen**, you can use `pip`, the Python package manager. 
 
 ```bash
 $ pip install pyCoilGen
