@@ -33,7 +33,7 @@ $ make
 
 # Conversion Notes
 ## Indexing
-Note that Matlab uses base index of 1 for arrays, whereas Numpy uses 0. Adjust all functions that create `faces` arrays accordingly.
+Note that MATLAB uses base index of 1 for arrays, whereas NumPy uses 0. Adjust all functions that create `faces` arrays accordingly.
 
 ## Mesh Geometry
 Confirm: Are mesh normals computed according to the right-hand rule? i.e. defined using the "counter-clockwise" or "anti-clockwise"
@@ -56,7 +56,7 @@ target_points = np.vstack((target_grid_x.ravel(), target_grid_z.ravel(), target_
 ## Notes per Sub_Function
 ### calc_gradient_along_vector(field, field_coords, target_endcoding_function)
 The target_endcoding_function needs to be converted, too. The Python implementation uses `eval` 
-whereas the original MatLab uses `my_fun=str2func("@(x,y,z)"+target_endcoding_function);`.
+whereas the original MATLAB uses `my_fun=str2func("@(x,y,z)"+target_endcoding_function);`.
 
 TODO: Check caller implementations and convert appropriately.
 
