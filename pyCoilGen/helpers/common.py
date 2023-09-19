@@ -120,3 +120,11 @@ def save(output_dir: str, project_name: str, tag: str, solution) -> str:
     np_save(filename, asarray([solution], dtype=object))
 
     return filename
+
+
+def title_to_filename(title_str: str):
+    """Convert a title string into a valid filename string."""
+    result = title_str
+    for char in "\n.:\\/":
+        result = result.replace(char, '_')
+    return result

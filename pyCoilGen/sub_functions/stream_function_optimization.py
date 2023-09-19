@@ -127,6 +127,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
 
     if input_args.sf_opt_method == "tikhonov":
         # Calculate the stream function by the Tikhonov optimization approach
+        log.info("Optimising with Tikhonov regularisation.")
         tik_reg_mat = tikhonov_reg_factor * reduced_res_matrix
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- tik_reg_mat shape: %s", tik_reg_mat.shape)
@@ -138,6 +139,7 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         ) @ reduced_sensitivity_matrix.T @ target_field_single
     else:
         # For initialization, calculate the Tikhonov solution; then do an iterative optimization
+        log.info("Optimising with %s function.", input_args.sf_opt_method)
         tik_reg_mat = tikhonov_reg_factor * reduced_res_matrix
         reduced_sf = np.linalg.pinv(
             reduced_sensitivity_matrix.T

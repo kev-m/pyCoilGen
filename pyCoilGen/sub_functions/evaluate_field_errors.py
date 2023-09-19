@@ -36,7 +36,6 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
     """
     for coil_part in coil_parts:
         # Calculate the combined field of the unconnected contours
-        # Fails, wrong sign
         coil_part.field_by_loops2 = np.zeros((3, target_field.b.shape[1]))  # (3,257)
         for loop in coil_part.contour_lines:
             loop_field = biot_savart_calc_b(loop.v, target_field)
@@ -72,10 +71,8 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
 
     for pol_ind in range(len(possible_polarities)):
         for part_ind in range(len(coil_parts)):
-            # Fails
             combined_field_layout[pol_ind] += possible_polarities[pol_ind][part_ind] * \
                 coil_parts[part_ind].field_by_layout
-            # Passes
             combined_field_loops[pol_ind] += possible_polarities[pol_ind][part_ind] * \
                 coil_parts[part_ind].field_by_loops2
 

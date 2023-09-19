@@ -595,7 +595,7 @@ class CoilPart:
     sensitivity_matrix: np.ndarray = None   # (calculate_sensitivity_matrix) (3, target field, num basis)
     resistance_matrix: np.ndarray = None    # (calculate_resistance_matrix) (num_vertices, num_vertices)
     current_density: np.ndarray = None      # (stream_function_optimization) (3, n, num_vertices)
-    stream_function: np.ndarray = None      # (stream_function_optimization) (?,?)
+    stream_function: np.ndarray = None      # (stream_function_optimization) (num_vertices)
     raw: RawPart = None                     # (calc_contours_by_triangular_potential_cuts)
     contour_lines: List[ContourLine] = None  # (process_raw_loops)
     potential_level_list: np.ndarray = None  # Placeholder (calc_potential_levels) (???)

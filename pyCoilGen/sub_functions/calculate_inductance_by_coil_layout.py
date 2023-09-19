@@ -2,6 +2,7 @@
 import numpy as np
 import os
 import platform
+import random
 
 # Logging
 import logging
@@ -83,10 +84,10 @@ def calculate_inductance_by_coil_layout(solution: CoilSolution, input_args) -> C
             if fast_henry_function is not None:
                 for coil_part in coil_parts:
 
-                    script_file = create_fast_henry_file(coil_part.wire_path, conductor_width, conductor_height,
-                                                         sim_freq, material_conductivity, down_sample_factor)
+                    script_file, suffix = create_fast_henry_file(coil_part.wire_path, conductor_width, conductor_height,
+                                                                 sim_freq, material_conductivity, down_sample_factor)
 
-                    results = fast_henry_function(fasthenry_bin, script_file,
+                    results = fast_henry_function(fasthenry_bin, suffix, script_file,
                                                   conductor_height, conductor_height, sim_freq)
 
                     coil_part.coil_resistance = results.coil_resistance
@@ -121,12 +122,14 @@ def create_fast_henry_file(wire_path: Shape3D, conductor_width, conductor_height
     Returns:
         tuple: coil_resistance, coil_inductance, coil_cross_section
     """
+    # Create unique str to support parallel processing
+    unique_str = ''.join(random.choice('01234567890abcdefgh') for _ in range(5))
 
     # Extract downsampled wire_path data
     wire_path_downsampled_v = wire_path.v[:, ::down_sample_factor]
 
     # Create the ".inp" input file
-    fast_henry_file_name = 'coil_track_FH2_input.inp'
+    fast_henry_file_name = f'coil_track_FH2_input_{unique_str}.inp'
     with open(fast_henry_file_name, 'w') as fid:
         fid.write('\n\n\n.Units m\n')  # Specify the unit system
         fid.write(f".Default sigma={material_conductivity}\n\n")
@@ -158,15 +161,15 @@ def create_fast_henry_file(wire_path: Shape3D, conductor_width, conductor_height
         fid.write(f"\n\n.freq fmin={sim_freq} fmax={sim_freq} ndec=1")
         fid.write("\n\n.end")
 
-        return fast_henry_file_name
+        return fast_henry_file_name, unique_str
 
 
-def execute_fast_henry_file_script_windows(binary: str, fast_henry_file_name: str, conductor_width: float, conductor_height: float, sim_freq: float):
+def execute_fast_henry_file_script_windows(binary: str, suffix: str, fast_henry_file_name: str, conductor_width: float, conductor_height: float, sim_freq: float):
     # Create the Windows ".vbs" script file to run the ".inp" automatically
-    script_file_name = 'run_FH2.vbs'
+    script_file_name = f'run_FH2{suffix}.vbs'
     with open(script_file_name, 'w') as fid2:
         fid2.write('Set FastHenry2 = CreateObject("FastHenry2.Document")\n')
-        fid2.write(f'couldRun = FastHenry2.Run("{os.getcwd()}\\{fast_henry_file_name}")\n')
+        fid2.write(f'couldRun = FastHenry2.Run("{os.getcwd()}\\{fast_henry_file_name} -S {suffix}")\n')
         fid2.write('Do While FastHenry2.IsRunning = True\n')
         fid2.write('  Wscript.Sleep 500\n')
         fid2.write('Loop\n')
@@ -177,11 +180,11 @@ def execute_fast_henry_file_script_windows(binary: str, fast_henry_file_name: st
     # Run the script
     ret_code = os.system(f'wscript {script_file_name}')
 
+    result_file = f'Zc{suffix}.mat'
     if ret_code == 0:
         # Read the results
-        with open('Zc.mat') as fid3:
+        with open(result_file) as fid3:
             out = fid3.readlines()
-
         try:
             values = out[2].strip().split(' ')
             real_str = values[0]
@@ -196,7 +199,6 @@ def execute_fast_henry_file_script_windows(binary: str, fast_henry_file_name: st
             coil_cross_section = conductor_width * conductor_height  # in m²
             coil_inductance = im_Z / (sim_freq * 2 * np.pi)  # in Henry
             coil_resistance = real_Z  # in Ohm
-
         except Exception as e:
             log.error("Exception: %s", e)
             ret_code = -10
@@ -207,24 +209,26 @@ def execute_fast_henry_file_script_windows(binary: str, fast_henry_file_name: st
 
         # Remove the created script files
         try:
-            os.remove('Zc.mat')
-            os.remove('run_FH2.vbs')
-            os.remove('coil_track_FH2_input.inp')
+            os.remove(result_file)
+            os.remove(fast_henry_file_name)
+            os.remove(f'output{suffix}.log')
         except FileNotFoundError as e:
             log.info("Exception removing temporary files: %s", e)
+
 
     results = DataStructure(ret_code=ret_code, coil_resistance=coil_resistance, coil_inductance=coil_inductance,
                             coil_cross_section=coil_cross_section)
     return results
 
 
-def execute_fast_henry_file_script_linux(binary: str, fast_henry_file_name: str, conductor_width: float, conductor_height: float, sim_freq: float):
+def execute_fast_henry_file_script_linux(binary: str, suffix: str, fast_henry_file_name: str, conductor_width: float, conductor_height: float, sim_freq: float):
     # Run the script
-    ret_code = os.system(f'{binary} {fast_henry_file_name} > output.log')
+    ret_code = os.system(f'{binary} {fast_henry_file_name}  -S {suffix} > output{suffix}.log')
 
+    result_file = f'Zc{suffix}.mat'
     if ret_code == 0:
         # Read the results
-        with open('Zc.mat') as fid3:
+        with open(result_file) as fid3:
             out = fid3.readlines()
         try:
             values = out[2].strip().split(' ')
@@ -250,9 +254,9 @@ def execute_fast_henry_file_script_linux(binary: str, fast_henry_file_name: str,
 
         # Remove the created script files
         try:
-            os.remove('Zc.mat')
+            os.remove(result_file)
             os.remove(fast_henry_file_name)
-            os.remove('output.log')
+            os.remove(f'output{suffix}.log')
         except FileNotFoundError as e:
             log.info("Exception removing temporary files: %s", e)
 
