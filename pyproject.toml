@@ -29,16 +29,15 @@ dependencies = [
     "numpy==1.21.6",
     "scipy==1.7.3",
     "trimesh==3.21.7",
-    "pyglet<2",
-    "networkx==2.6.3",
     "sympy==1.10.1",
     "pillow<=9.5",
+    "matplotlib==3.5.3",
 ]
 dynamic = ["version", "description"]
 
 [project.urls]
 Home = "https://github.com/kev-m/pyCoilGen"
-Documentation = "https://github.com/kev-m/pyCoilGen/docs"
+Documentation = "https://pycoilgen.readthedocs.io/"
 Source = "https://github.com/kev-m/pyCoilGen"
 
 [tool.flit.module]
