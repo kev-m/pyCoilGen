@@ -1,6 +1,6 @@
 # Installation
 
-To use **pyCoilGen**, 
+To use **pyCoilGen**, it needs to installed.
 
 ## Install Python
 
@@ -10,39 +10,22 @@ Please follow the instructions for your operating system to [install Python](htt
 
 ## Installing pyCoilGen
 
+**Note:** Ensure that you have the necessary permissions to install packages on your system. Consider using a [virtual environment](https://docs.python.org/3/library/venv.html) to manage your dependencies if necessary.
+
 To install **pyCoilGen**, you can use `pip`, the Python package manager. 
 
 ```bash
-$ pip install pyCoilGen
+$ pip install pycoilgen
 ```
 
 ## Optional Extras
-There are two optional extras that can be installed.
+There is an optional data package for **pyCoilGen** that provides coil mesh surface `.stl` files, pre-calculated target fields and solutions that can also be installed using `pip`.
 
 ```bash
-$ pip install pyCoilGen[geometry,solutions]
+$ pip install pycoilgen_data 
 ```
 
-### Installing Geometry Data
-
-To install additional geometry data, use the `Geometry_Data` extra:
-
-```bash
-$ pip install pyCoilGen[Geometry_Data]
-```
-
-### Installing Pre-Optimized Solutions
-
-For pre-optimized solutions, use the `Pre_Optimized_Solutions` extra:
-
-```bash
-$ pip install pyCoilGen[Pre_Optimized_Solutions]
-```
-
-This will install the specified extras along with the main package. You can combine extras by separating them with commas in the square brackets, e.g., `pip install pyCoilGen[Geometry_Data,Pre_Optimized_Solutions]`.
-
-
-**Note:** Ensure that you have the necessary permissions to install packages on your system. Consider using a virtual environment to manage your dependencies if necessary.
+This will install the specified extras along with the main package. These files will automatically by detected by **pyCoilGen** after the **pyCoilGenData** package has been installed.
 
 
 ## SciPiy and Dependencies
