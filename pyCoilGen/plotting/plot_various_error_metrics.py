@@ -5,9 +5,10 @@ from typing import List
 import matplotlib.pyplot as plt
 
 from pyCoilGen.sub_functions.data_structures import CoilSolution, SolutionErrors, FieldErrors
+from pyCoilGen.helpers.common import title_to_filename
 
 
-def plot_various_error_metrics(coil_layouts: List[CoilSolution], single_ind_to_plot: int, plot_title: str, save_figure=False):
+def plot_various_error_metrics(coil_layouts: List[CoilSolution], single_ind_to_plot: int, plot_title: str, save_dir=None, dpi=100):
     """
     Plots various error metrics for a specific coil layout.
 
@@ -17,7 +18,8 @@ def plot_various_error_metrics(coil_layouts: List[CoilSolution], single_ind_to_p
         coil_layouts (List[CoilSolution]): List of coil solutions.
         single_ind_to_plot (int): Index of the coil layout to be plotted.
         plot_title (str): Title of the plot.
-        save_figure (bool): Whether to display the figure or save it to file. If False, will display the plot.
+        save_dir (str, optional): If specified, saves the plot to the directory, else plots it.
+        dpi (int, optional): The dots-per-inch (DPI) to use when saving the figure.
 
     Returns:
         None
@@ -73,7 +75,7 @@ def plot_various_error_metrics(coil_layouts: List[CoilSolution], single_ind_to_p
                      s=dot_size, cmap='viridis'), ax=ax, label='Error %', pad=0.10)
 
     plt.tight_layout(rect=[0, 0, 1, 0.95])
-    if save_figure:
-        plt.savefig(f'images/{plot_title}.png', dpi=75)
+    if save_dir is not None:
+        plt.savefig(f'{save_dir}/plot_errors_{title_to_filename(plot_title)}.png', dpi=dpi)
     else:
         plt.show()
