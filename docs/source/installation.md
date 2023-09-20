@@ -51,7 +51,9 @@ These files will be automatically detected by **pyCoilGen**.
 
 ### FastHenry2
 
-The `FastHenry2` application is optionally used to calculate the resistance and inductance of the coil winding. This application needs to be downloaded and installed.
+The `FastHenry2` application is used to calculate the resistance and inductance of the coil winding. This application needs to be downloaded and installed.
+
+> **Note:** If this package is not installed, then the ... is not calculated. 
 
 #### Windows
 
