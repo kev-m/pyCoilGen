@@ -8,13 +8,14 @@ import logging
 
 # Local imports
 from pyCoilGen.sub_functions.data_structures import CoilSolution, CoilPart
+from pyCoilGen.helpers.common import title_to_filename
 
 log = logging.getLogger(__name__)
 
 _default_colours = ['blue', 'green', 'red', 'purple', 'orange', 'brown', 'pink', 'gray', 'cyan', 'magenta']
 
 
-def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot: int, plot_title: str, save_figure=False, group_colours=_default_colours):
+def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot: int, plot_title: str, group_colours=_default_colours, save_dir=None, dpi=100):
     """
     Plot a single solution with all steps.
 
@@ -24,8 +25,9 @@ def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
         coil_layout (list[CoilSolution]): List of CoilSolution objects.
         single_ind_to_plot (int): Index of the solution to plot.
         plot_title (str): Title of the plot.
-        save_figure (bool, optional): Whether to save the figure as an image file (default is False).
         group_colours (list of colour strings, optional): A list of colours to use when plotting group contours.
+        save_dir (str, optional): If specified, saves the plot to the directory, else plots it.
+        dpi (int, optional): The dots-per-inch (DPI) to use when saving the figure.
 
     Returns:
         None
@@ -41,15 +43,15 @@ def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
         num_parts = len(coil_solution.coil_parts)
 
         if num_parts == 1:
-            fig, axs = plt.subplots(1, num_parts, figsize=(5, 5))
+            fig, axs = plt.subplots(1, num_parts, figsize=(6, 5))
             axs = [axs]
         else:
-            fig, axs = plt.subplots(1, num_parts, figsize=(5*num_parts, 5))
+            fig, axs = plt.subplots(1, num_parts, figsize=(6*num_parts, 5))
 
         for part_ind in range(num_parts):
             coil_part: CoilPart = coil_solution.coil_parts[part_ind]
             ax_part = axs[part_ind]
-            ax_part.set_title(f"{plot_title}: SF Part{part_ind + 1}")
+            ax_part.set_title(f"{plot_title}\nSF Part{part_ind + 1}")
 
             # Plot the ungrouped and unconnected contour lines with the potential value
             pcolormesh = ax_part.tripcolor(
@@ -70,7 +72,7 @@ def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
                         loop.uv[0],
                         loop.uv[1],
                         '-o',
-                        linewidth=2,
+                        linewidth=1,
                         markersize=0.5,
                         color=group_colours[group_index % len(group_colours)]  # Cycle through the default colours
                     )
@@ -95,7 +97,7 @@ def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
         for part_ind in range(num_parts):
             coil_part = coil_solution.coil_parts[part_ind]
             ax_part = axs[part_ind]
-            ax_part.set_title(f"{plot_title}: SF Part{part_ind + 1}", interpreter='none')
+            ax_part.set_title(f"{plot_title}\nSF Part{part_ind + 1}", interpreter='none')
 
             pcolormesh = ax_part.tripcolor(
                 coil_solution.coil_parts[part_ind].coil_mesh.uv[:, 0],
@@ -123,7 +125,7 @@ def plot_2D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
             ax_part.set_facecolor('white')
 
     plt.tight_layout()
-    if save_figure:
-        plt.savefig(f'images/{plot_title}.png', dpi=75)
+    if save_dir is not None:
+        plt.savefig(f'{save_dir}/plot_{title_to_filename(plot_title)}.png', dpi=dpi)
     else:
         plt.show()

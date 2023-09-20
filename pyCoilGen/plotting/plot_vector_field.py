@@ -4,9 +4,10 @@ from typing import List
 import matplotlib.pyplot as plt
 
 from pyCoilGen.sub_functions.data_structures import CoilSolution, SolutionErrors, FieldErrors, TargetField
+from pyCoilGen.helpers.common import title_to_filename
 
 
-def plot_vector_field(coords: np.ndarray, field: np.ndarray, magic=[0, 1, 2], plot_title='Vector Field ', save_figure=False):
+def plot_vector_field(coords: np.ndarray, field: np.ndarray, magic=[0, 1, 2], plot_title='Vector Field ', save_dir=None, dpi=100):
     """
     Generate a contour plot of the field vectors in a plane.
 
@@ -14,8 +15,9 @@ def plot_vector_field(coords: np.ndarray, field: np.ndarray, magic=[0, 1, 2], pl
         coords (np.ndarray): The field co-ordinates (3,n)
         field (np.ndarray): The field vector (3,n)
         magic (ints): The indices of the 3 axes.
-        plot_title (str): Label to use for plotting.
-        save_figure(bool, optional): Whether to save the figure as an image file or to plot it.
+        plot_title (str): Label to use for plotting. If it ends with a 'space', the plane will by added automatically.
+        save_dir (str, optional): If specified, saves the plot to the directory, else plots it.
+        dpi (int, optional): The dots-per-inch (DPI) to use when saving the figure.
 
     Returns:
         None
@@ -52,13 +54,13 @@ def plot_vector_field(coords: np.ndarray, field: np.ndarray, magic=[0, 1, 2], pl
     plt.ylabel(axis_chars[1])
 
     # Save the figure if specified
-    if save_figure:
-        plt.savefig(f'images/plot_{plot_title.replace(" ","_")}.png', dpi=75)
+    if save_dir is not None:
+        plt.savefig(f'{save_dir}/plot_{title_to_filename(plot_title)}.png', dpi=dpi)
     else:
         plt.show()
 
 
-def plot_vector_field_xy(coords: np.ndarray, field: np.ndarray, plot_title='Vector Field XY', save_figure=False):
+def plot_vector_field_xy(coords: np.ndarray, field: np.ndarray, plot_title='Vector Field XY', save_dir=None, dpi=100):
     """
     Generate a contour plot of the field vectors in the X-Y plane, centred on the Z-values.
 
@@ -66,15 +68,16 @@ def plot_vector_field_xy(coords: np.ndarray, field: np.ndarray, plot_title='Vect
         coords (np.ndarray): The field co-ordinates (3,n)
         field (np.ndarray): The field vector (3,n)
         plot_title (str): Label to use for plotting.
-        save_figure(bool, optional): Whether to save the figure as an image file or to plot it.
+        save_dir (str, optional): If specified, saves the plot to the directory, else plots it.
+        dpi (int, optional): The dots-per-inch (DPI) to use when saving the figure.
 
     Returns:
         None
     """
-    return plot_vector_field(coords=coords, field=field, magic=[0, 1, 2], plot_title=plot_title, save_figure=save_figure)
+    return plot_vector_field(coords=coords, field=field, magic=[0, 1, 2], plot_title=plot_title, save_dir=save_dir, dpi=dpi)
 
 
-def plot_vector_field_yz(coords: np.ndarray, field: np.ndarray, plot_title='Vector Field YZ', save_figure=False):
+def plot_vector_field_yz(coords: np.ndarray, field: np.ndarray, plot_title='Vector Field YZ', save_dir=None, dpi=100):
     """
     Generate a contour plot of the field vectors in the Y-Z plane, centred on the X-values.
 
@@ -82,15 +85,16 @@ def plot_vector_field_yz(coords: np.ndarray, field: np.ndarray, plot_title='Vect
         coords (np.ndarray): The field co-ordinates (3,n)
         field (np.ndarray): The field vector (3,n)
         plot_title (str): Label to use for plotting.
-        save_figure(bool, optional): Whether to save the figure as an image file or to plot it.
+        save_dir (str, optional): If specified, saves the plot to the directory, else plots it.
+        dpi (int, optional): The dots-per-inch (DPI) to use when saving the figure.
 
     Returns:
         None
     """
-    return plot_vector_field(coords=coords, field=field, magic=[1, 2, 0], plot_title=plot_title, save_figure=save_figure)
+    return plot_vector_field(coords=coords, field=field, magic=[1, 2, 0], plot_title=plot_title, save_dir=save_dir, dpi=dpi)
 
 
-def plot_vector_field_xz(coords: np.ndarray, field: np.ndarray, plot_title='Vector Field XZ', save_figure=False):
+def plot_vector_field_xz(coords: np.ndarray, field: np.ndarray, plot_title='Vector Field XZ', save_dir=None, dpi=100):
     """
     Generate a contour plot of the field vectors in the X-Z plane, centred on Y.
 
@@ -98,9 +102,10 @@ def plot_vector_field_xz(coords: np.ndarray, field: np.ndarray, plot_title='Vect
         coords (np.ndarray): The field co-ordinates (3,n)
         field (np.ndarray): The field vector (3,n)
         plot_title (str): Label to use for plotting.
-        save_figure(bool, optional): Whether to save the figure as an image file or to plot it.
+        save_dir (str, optional): If specified, saves the plot to the directory, else plots it.
+        dpi (int, optional): The dots-per-inch (DPI) to use when saving the figure.
 
     Returns:
         None
     """
-    return plot_vector_field(coords=coords, field=field, magic=[2, 0, 1], plot_title=plot_title, save_figure=save_figure)
+    return plot_vector_field(coords=coords, field=field, magic=[2, 0, 1], plot_title=plot_title, save_dir=save_dir, dpi=dpi)

@@ -7,8 +7,8 @@ from pyCoilGen.sub_functions.data_structures import CoilSolution
 from pyCoilGen.helpers.common import title_to_filename
 
 
-def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions_to_plot: List[int], plot_title: str, 
-                                   x_ticks:dict=None, save_figure=False):
+def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions_to_plot: List[int], plot_title: str,
+                                   x_ticks: dict = None, save_dir=None, dpi=100):
     """
     Plots error metrics for different coil solutions.
 
@@ -19,7 +19,8 @@ def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions
         solutions_to_plot (List[int]): List of indices indicating which solutions to plot.
         plot_title (str): Title of the plot.
         x_ticks (dict): A single key-values dictionary to specify custom x-ticks. The key is used to label the x-axis.
-        save_figure (bool, optional): Whether to save the figure as an image file (default is False).
+        save_dir (str, optional): If specified, saves the plot to the directory, else plots it.
+        dpi (int, optional): The dots-per-inch (DPI) to use when saving the figure.
 
     Returns:
         None
@@ -65,7 +66,7 @@ def plot_error_different_solutions(coil_solutions: List[CoilSolution], solutions
     plt.ylabel('Error Values')
     plt.title(plot_title)
     plt.grid(True)
-    if save_figure:
-        plt.savefig(f'images/{title_to_filename(plot_title)}.png', dpi=75)
+    if save_dir is not None:
+        plt.savefig(f'{save_dir}/plot_solutions_{title_to_filename(plot_title)}.png', dpi=dpi)
     else:
         plt.show()

@@ -8,13 +8,14 @@ import logging
 
 # Local imports
 from pyCoilGen.sub_functions.data_structures import CoilSolution
+from pyCoilGen.helpers.common import title_to_filename
 
 log = logging.getLogger(__name__)
 
 _default_colours = ['blue', 'green', 'red', 'purple', 'orange', 'brown', 'pink', 'gray', 'cyan', 'magenta']
 
 
-def plot_3D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot: int, plot_title: str, save_figure=False, group_colours=_default_colours):
+def plot_3D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot: int, plot_title: str, group_colours=_default_colours, save_dir=None, dpi=100):
     """
     Plot the stream function interpolated on a triangular mesh.
 
@@ -22,16 +23,17 @@ def plot_3D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
         coil_layout (list[CoilSolution]): List of CoilSolution objects.
         single_ind_to_plot (int): Index of the solution to plot.
         plot_title (str): Title of the plot.
-        save_figure (bool, optional): Whether to save the figure. Default is False.
-        group_colours (list, optional): List of colours for different groups. Default is predefined colours.
+        group_colours (list of colour strings, optional): A list of colours to use when plotting group contours.
+        save_dir (str, optional): If specified, saves the plot to the directory, else plots it.
+        dpi (int, optional): The dots-per-inch (DPI) to use when saving the figure.
 
     Returns:
         None
     """
     # Plot the stream function interpolated on triangular mesh
-    fig = plt.figure()
+    fig = plt.figure(figsize=(5, 6))
     ax = fig.add_subplot(111, projection='3d')
-    plt.title(plot_title + ": " + 'Stream function by optimization and target Bz')
+    plt.title(plot_title + '\nStream function by optimization and target Bz')
 
     for part_ind in range(len(coil_layout[single_ind_to_plot].coil_parts)):
         coil_part = coil_layout[single_ind_to_plot].coil_parts[part_ind]
@@ -51,7 +53,7 @@ def plot_3D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
         poly = Poly3DCollection(face_vertices, facecolors=face_colors, alpha=0.6)
         ax.add_collection3d(poly)
 
-        if coil_part.groups is not None: # Attribute is always present, but not always initialised
+        if coil_part.groups is not None:  # Attribute is always present, but not always initialised
             group_ind = 0
             for group in coil_part.groups:
                 group_color = group_colours[group_ind % len(group_colours)]
@@ -66,7 +68,7 @@ def plot_3D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
     plt.gca().set_box_aspect([1, 1, 1])  # Set the aspect ratio to be equal
 
     # Save the figure if specified
-    if save_figure:
-        plt.savefig(f'images/{plot_title}.png', dpi=75)
+    if save_dir is not None:
+        plt.savefig(f'{save_dir}/plot_{title_to_filename(plot_title)}.png', dpi=dpi)
     else:
         plt.show()
