@@ -102,6 +102,6 @@ def find_file(file_directory: str, file_name: str) -> str:
 def title_to_filename(title_str: str):
     """Convert a title string into a valid filename string."""
     result = title_str
-    for char in "\n.:\\/":
+    for char in "\n.:\\/ ":
         result = result.replace(char, '_')
     return result
