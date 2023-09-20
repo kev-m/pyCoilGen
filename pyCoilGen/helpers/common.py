@@ -1,5 +1,5 @@
-from numpy import dot, sum, ndarray, zeros, save as np_save, asarray
-from os import path, makedirs
+from numpy import sum, ndarray, zeros
+from os import path
 
 # Logging
 import logging
@@ -97,29 +97,6 @@ def find_file(file_directory: str, file_name: str) -> str:
             log.debug("Found '%s'", new_file_name)
             return new_file_name
     raise FileNotFoundError(f"Unable to find {dir_path} in local path or {__directory_list}")
-
-
-def save(output_dir: str, project_name: str, tag: str, solution) -> str:
-    """
-    Iterates through candidate paths to find a file on the file system.
-
-    Args:
-        output_dir (str): The default directory to write to.
-        project_name (str): The project name.
-        tag (str): A tag to distinguish this save from any others.
-        solution (CoilSolution): The .
-
-    Returns:
-        filename (str): The actual filename that the solution has been saved to.
-    """
-    # Create the output_dir if it does not exist
-    makedirs(output_dir, exist_ok=True)
-    filename = f'{output_dir}/{project_name}_{tag}.npy'
-    if get_level() > DEBUG_NONE:
-        log.debug("Saving solution to '%s'", filename)
-    np_save(filename, asarray([solution], dtype=object))
-
-    return filename
 
 
 def title_to_filename(title_str: str):
