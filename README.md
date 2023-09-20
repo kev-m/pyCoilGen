@@ -1,19 +1,19 @@
 # pyCoilGen
 
 The **pyCoilGen** project is a community-based tool for the generation of [gradient field coil](https://mriquestions.com/gradient-coils.html) layouts within the
-[MRI](https://en.wikipedia.org/wiki/Magnetic_resonance_imaging) and [NMR](https://en.wikipedia.org/wiki/Nuclear_magnetic_resonance) environments. . **pyCoilGen** is based on a boundary element method and generates an interconnected non-overlapping wire-tracks on 3D support structures. 
+[MRI](https://en.wikipedia.org/wiki/Magnetic_resonance_imaging) and [NMR](https://en.wikipedia.org/wiki/Nuclear_magnetic_resonance) environments. **pyCoilGen** is based on a boundary element method and generates interconnected non-overlapping wire-tracks on 3D support structures. 
 
 This Python project is a port of the MATLAB [CoilGen code](https://github.com/Philipp-MR/CoilGen) developed by Philipp Amrein. 
 
-For detailed documentation, refer to the [pyCoilGen Documentation](docs/source/index.md).
+For detailed documentation, refer to the [pyCoilGen Documentation](https://pycoilgen.readthedocs.io/).
 
 ## Installation
 
-Refer to the [Installation Guide](docs/source/installation.md) for detailed instructions on how to install and set up **pyCoilGen**.
+Refer to the [Installation Guide](https://pycoilgen.readthedocs.io/en/latest/installation.html) for detailed instructions on how to install and set up **pyCoilGen**.
 
 ## Examples
 
-The [`examples`](examples) directory contains several examples for how to use **pyCoilGen**. These examples demonstrate different scenarios and configurations for generating coil layouts.
+The [`examples`](https://github.com/kev-m/pyCoilGen/blob/master/examples) directory contains several examples for how to use **pyCoilGen**. These examples demonstrate different scenarios and configurations for generating coil layouts.
 
 ## Acknowledgements
 
@@ -23,19 +23,19 @@ Additional cross-checking was done using [MATLAB Online](https://www.mathworks.c
 
 ## Contributing
 
-If you'd like to contribute to **pyCoilGen**, follow the guidelines outlined in the [Contributing Guide](docs/source/CONTRIBUTING.md).
+If you'd like to contribute to **pyCoilGen**, follow the guidelines outlined in the [Contributing Guide](https://github.com/kev-m/pyCoilGen/blob/master/CONTRIBUTING.md).
 
 ## License
 
-See [`LICENSE.txt`](LICENSE.txt) for more information.
+See [`LICENSE.txt`](https://github.com/kev-m/pyCoilGen/blob/master/LICENSE.txt) for more information.
 
 ## Contact
 
-For inquiries and discussion, use [pyCoilGen Discussions](discussions).
+For inquiries and discussion, use [pyCoilGen Discussions](https://github.com/kev-m/pyCoilGen/discussions).
 
 ## Issues
 
-For issues related to this Python implementation, visit the [Issues](issues) page.
+For issues related to this Python implementation, visit the [Issues](https://github.com/kev-m/pyCoilGen/issues) page.
 
 ## Citation
 
