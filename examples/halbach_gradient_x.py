@@ -22,8 +22,6 @@ Demonstrate multiprocessing to generate multiple solutions in order to sweep a p
 
 Since the processing thread can terminate without notice, e.g. when out of resources, run this example multiple times
 until all solutions have been generated.
-
-
 """
 
 def project_name(param_dict, combination):
