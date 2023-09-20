@@ -17,6 +17,22 @@ The [`examples`](https://github.com/kev-m/pyCoilGen/examples) directory contains
 
 These examples demonstrate different scenarios and configurations for generating coil layouts.
 
+```{figure} figures/mesh_s2_shim_swept_3D_copper.png
+:scale: 100 %
+:align: center
+:alt: A 3D rendered view of the `.STL` swept output.
+
+A 3D rendering of the `.STL` output for the `s2_shim_coil_with_surface_openings.py` example.
+```
+```{figure} figures/plot_s2_shim_coil_2D.png
+:scale: 75 %
+:align: center
+:alt: A colour plot showing the stream function and the corresponding contour groups.
+
+A colour plot showing the 2D stream function and the corresponding contour groups. 
+This is computed by projecting the 3D coil mesh onto 2D.
+```
+
 ## Citation
 
 Use the following publication if you need to cite this work:
