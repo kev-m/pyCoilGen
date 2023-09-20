@@ -1,28 +1,32 @@
 # Overview
 
 **pyCoilGen** is a community-based tool for the generation of [gradient field coil](https://mriquestions.com/gradient-coils.html) layouts within the
-[MRI](https://en.wikipedia.org/wiki/Magnetic_resonance_imaging) and [NMR](https://en.wikipedia.org/wiki/Nuclear_magnetic_resonance) environments. . **pyCoilGen** is based on a boundary element method and generates an interconnected non-overlapping wire-tracks on 3D support structures. 
+[MRI](https://en.wikipedia.org/wiki/Magnetic_resonance_imaging) and [NMR](https://en.wikipedia.org/wiki/Nuclear_magnetic_resonance) environments. 
+
+**pyCoilGen** is based on a boundary element method and generates interconnected non-overlapping wire-tracks on 3D support structures.
+
+The source code for **pyCoilGen** is available on [GitHub](https://github.com/kev-m/pyCoilGen).
 
 ## Features
 
+With **pyCoilGen**, you can:
+
 - Specify a target field (e.g., `bz(x,y,z)=y`) and a surface mesh geometry.
-- Supports built-in surface mesh geometries or 3D meshes defined in `.stl` files.
-- Generates a coil layout in the form of a non-overlapping, interconnected wire trace to achieve the desired field, exported as an `.stl` file.
+- Use built-in surface mesh geometries or 3D meshes defined in `.stl` files.
+- Generate a coil layout in the form of a non-overlapping, interconnected wire track to achieve the desired field, exported as an `.stl` file.
 
 For a detailed description of the algorithm, refer to the research paper [CoilGen: Open-source MR coil layout generator](https://onlinelibrary.wiley.com/doi/10.1002/mrm.29294).
 
 ## Examples
 
-The [`examples`](https://github.com/kev-m/pyCoilGen/examples) directory contains several usage examples for pyCoilGen. 
-
-These examples demonstrate different scenarios and configurations for generating coil layouts.
+The [`examples`](https://github.com/kev-m/pyCoilGen/examples) directory in the GitHub repository contains several usage examples for pyCoilGen. These examples demonstrate different scenarios and configurations for generating coil layouts.
 
 ```{figure} figures/mesh_s2_shim_swept_3D_copper.png
 :scale: 100 %
 :align: center
-:alt: A 3D rendered view of the `.STL` swept output.
+:alt: A 3D rendered view of the `.stl` swept output.
 
-A 3D rendering of the `.STL` output for the `s2_shim_coil_with_surface_openings.py` example.
+A 3D rendering of the `.stl` output for the `s2_shim_coil_with_surface_openings.py` example.
 ```
 ```{figure} figures/plot_s2_shim_coil_2D.png
 :scale: 75 %
