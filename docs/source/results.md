@@ -46,5 +46,180 @@ class CoilSolution:
 
 Unless suppressed by `skip_postprocessing`, the `SolutionErrors` contains information about the solution.
 
+```python
+class SolutionErrors:
+    """Maximum and mean relative errors."""
+    field_error_vals: FieldErrors               # Detailed errors, by field
+    combined_field_layout: np.ndarray           # Resulting target field by final wire path.
+    combined_field_loops: np.ndarray            # Resulting target field by contour loops.
+    combined_field_layout_per1Amp: np.ndarray   # Resulting target field by final wire path, for 1 A current.
+    combined_field_loops_per1Amp: np.ndarray    # Resulting target field by contours loops, for 1 A current.
+    opt_current_layout: float                   # The computed current that will achieve the desired target field.
+```
+
+The `combined_field_layout` contains the magnetic field vectors due to the final coil wire path.
+
+The `combined_field_loops` contains the magnetic field vectors due to the unconnected contour loops.
 
 ### FieldErrors
+
+The `FieldErrors` structure contains the maximum and mean relative errors for the computed solution, in units of percent (%).
+
+```python
+class FieldErrors:
+    """Maximum and mean relative errors, in percent."""
+    max_rel_error_layout_vs_target: float
+    mean_rel_error_layout_vs_target: float
+
+    max_rel_error_unconnected_contours_vs_target: float
+    mean_rel_error_unconnected_contours_vs_target: float
+
+    max_rel_error_layout_vs_stream_function_field: float
+    mean_rel_error_layout_vs_stream_function_field: float
+
+    max_rel_error_unconnected_contours_vs_stream_function_field: float
+    mean_rel_error_unconnected_contours_vs_stream_function_field: float
+```
+
+The `layout` variables refer to values computed due to the final wire path.
+
+The `unconnected_contours` variables refer to values computed due to the contour loops.
+
+The `vs_target` variables refer to values computed with respect to the provided target field.
+
+The `vs_stream_function` variables refer to values computed with respect to the computed stream function.
+
+## Visualising the Results
+
+There are plotting routines in `pyCoilGen.plotting` that are useful for visualising the results.
+
+### Example Results: S2 Shim Coil
+
+```{figure} figures/mesh_s2_shim_swept_3D_copper.png
+:scale: 100 %
+:align: center
+:alt: A 3D rendered view of the `.STL` swept output.
+
+A 3D rendering of the `.STL` output for the `s2_shim_coil_with_surface_openings.py` example.
+```
+
+After running the [`s2_shim_coil_with_surface_openings.py`](https://github.com/kev-m/pyCoilGen/blob/master/examples/s2_shim_coil_with_surface_openings.py) example, the results can be saved to PNG files using the code, below.
+
+```python
+from os import makedirs
+
+import matplotlib.pyplot as plt
+from pyCoilGen.helpers.persistence import load
+import pyCoilGen.plotting as pcg_plt
+
+solution = load('debug', 's2_shim_coil', 'final')
+which = solution.input_args.project_name
+save_dir = f'{solution.input_args.output_directory}'
+makedirs(save_dir, exist_ok=True)
+
+coil_solutions = [solution]
+
+# Plot a multi-plot summary of the solution
+pcg_plt.plot_various_error_metrics(coil_solutions, 0, f'{which}', save_dir=save_dir)
+
+# Plot the 2D projection of stream function contour loops.
+pcg_plt.plot_2D_contours_with_sf(coil_solutions, 0, f'{which} 2D', save_dir=save_dir)
+pcg_plt.plot_3D_contours_with_sf(coil_solutions, 0, f'{which} 3D', save_dir=save_dir)
+
+# Plot the vector fields
+coords = solution.target_field.coords
+
+# Plot the computed target field.
+plot_title=f'{which} Target Field '
+field = solution.solution_errors.combined_field_layout
+pcg_plt.plot_vector_field_xy(coords, field, plot_title=plot_title, save_dir=save_dir)
+
+# Plot the difference between the computed target field and the input target field.
+plot_title=f'{which} Target Field Error '
+field = solution.solution_errors.combined_field_layout - solution.target_field.b
+pcg_plt.plot_vector_field_xy(coords, field, plot_title=plot_title, save_dir=save_dir)
+```
+
+#### The 2D Computed Stream Function and Contours
+
+```{figure} figures/plot_s2_shim_coil_2D.png
+:scale: 75 %
+:align: center
+:alt: A colour plot showing the stream function and the corresponding contour groups.
+
+A colour plot showing the 2D stream function and the corresponding contour groups. 
+This is computed by projecting the 3D coil mesh onto 2D.
+```
+
+This figure shows the target field stream function overlaid by the computed contours. The contour groups are shown in different colours.
+
+#### The 3D Computed Stream Function and Contours
+
+```{figure} figures/plot_s2_shim_coil_3D.png
+:scale: 100 %
+:align: center
+:alt: A 3D colour plot showing the stream function and the corresponding contour groups projected onto the coil mesh.
+
+A 3D colour plot showing the stream function and the corresponding contour groups projected onto the coil mesh.
+```
+
+This figure shows the target field stream function overlaid by the computed contours. The contour groups are shown in different colours.
+
+#### The Target Field Z-Component
+
+```{figure} figures/plot_s2_shim_coil_Target_Field_XY.png
+:scale: 75 %
+:align: center
+:alt: A colour plot showing the Z-component of the magnetic field vector in the X-Y plane.
+
+A colour plot of the Z-component of the target field vector in the X-Y plane at the mean Z-axis value.
+```
+
+This figure shows the value of the Z-component of the combined field due to the computed wire path.
+
+#### The Target Field Z-Component Difference
+
+```{figure} figures/plot_s2_shim_coil_Target_Field_Error_XY.png
+:scale: 75 %
+:align: center
+:alt: A colour plot showing the Z-component of the relative error of the computed in the X-Y plane.
+
+A colour plot of the Z-component of the relative error between the computed field and the input target field.
+```
+
+This figure shows the difference between magnetic field vector and the specified target field in the X-Y plane, computed at the mean Z-axis value.
+
+
+#### Summary of Fields and Errors
+
+```{figure} figures/plot_errors_s2_shim_coil.png
+:scale: 50 %
+:align: center
+:alt: A multi-plot showing various visual views of the S2 shim coil example.
+
+A multi-plot showing various visual views of the results for the `s2_shim_coil_with_surface_openings.py` example.
+```
+## Visualising Multiple Solutions: A Parameter Sweep
+
+The [`halbach_gradient_x.py`](https://github.com/kev-m/pyCoilGen/blob/master/examples/halbach_gradient_x.py) example uses
+multiprocessing to do a sweep through two input parameters, `tikhonov_reg_factor` and `levels`.
+
+The same example also generates plots that summarise the key error parameters.
+
+```{figure} figures/plot_solutions_Halbach_study_Tikhonov05.png
+:scale: 75 %
+:align: center
+:alt: A graph plot showing the error metrics of error versus levels of the parameter sweep.
+
+A graph plot showing the error metrics of the parameter sweep. This plot shows the effect of `level` on the error values, for `tikhonov_reg_factor` equal to 5.
+```
+
+```{figure} figures/plot_solutions_Halbach_study_Tikhonov10.png
+:scale: 75 %
+:align: center
+:alt: A graph plot showing the error metrics of error versus levels of the parameter sweep.
+
+A graph plot showing the error metrics of the parameter sweep. This plot shows the effect of `level` on the error values, for `tikhonov_reg_factor` equal to 10.
+```
+
+As can be seen in these two plots, there is a sweet spot at `tikhonov_reg_factor=5` and `levels=17`.
