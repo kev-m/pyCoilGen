@@ -1,6 +1,6 @@
 # Interpreting the Results
 
-In solving for coil paths, the `pyCoilGen` application also generates various output files.
+In solving for coil paths, `pyCoilGen` also generates various output files.
 
 If the `debug` input parameter is larger than 0, it produces some output images.
 
@@ -10,7 +10,7 @@ Unless suppressed by `skip_postprocessing`, it computes `SolutionErrors`.
 
 ## Intermediate Images
 
-If the `debug` input parameter is larger than 0, the application produces four images with a filename derived from the `project_name`.
+If the `debug` input parameter is larger than 0, the application produces four images with a filename derived from the project name as defined in `project_name`.
 
 For example:
 
@@ -21,7 +21,7 @@ For example:
 
 ## Output Meshes
 
-Unless suppressed by `save_stl_flag`, the application generates two 3D `.stl` mesh files per detected coil part with a filename derived from the `project_name`.
+Unless suppressed by `save_stl_flag`, the application generates two 3D `.stl` mesh files per detected coil part with a filename derived from the project name as defined in  `project_name`.
 
 For example:
 
@@ -30,7 +30,7 @@ For example:
 
 ## CoilSolution
 
-The `CoilSolution` is a data structure that contains all data loaded and processed by the application.
+The `CoilSolution` class is a data structure that contains all data loaded and processed by the application.
 
 ```python
 class CoilSolution:
@@ -44,7 +44,7 @@ class CoilSolution:
 
 ## SolutionErrors
 
-Unless suppressed by `skip_postprocessing`, the `SolutionErrors` contains information about the solution.
+Unless suppressed by `skip_postprocessing`, the `SolutionErrors` class contains information about the solution.
 
 ```python
 class SolutionErrors:
@@ -63,7 +63,7 @@ The `combined_field_loops` contains the magnetic field vectors due to the unconn
 
 ### FieldErrors
 
-The `FieldErrors` structure contains the maximum and mean relative errors for the computed solution, in units of percent (%).
+The `FieldErrors` structure contains the maximum and mean relative errors for the computed solution, as percentages.
 
 ```python
 class FieldErrors:
@@ -98,12 +98,12 @@ There are plotting routines in `pyCoilGen.plotting` that are useful for visualis
 ```{figure} figures/mesh_s2_shim_swept_3D_copper.png
 :scale: 100 %
 :align: center
-:alt: A 3D rendered view of the `.STL` swept output.
+:alt: A 3D rendered view of the `.stl` swept output.
 
-A 3D rendering of the `.STL` output for the `s2_shim_coil_with_surface_openings.py` example.
+A 3D rendering of the `.stl` output for the `s2_shim_coil_with_surface_openings.py` example.
 ```
 
-After running the [`s2_shim_coil_with_surface_openings.py`](https://github.com/kev-m/pyCoilGen/blob/master/examples/s2_shim_coil_with_surface_openings.py) example, the results can be saved to PNG files using the code, below.
+After running the [`s2_shim_coil_with_surface_openings.py`](https://github.com/kev-m/pyCoilGen/blob/master/examples/s2_shim_coil_with_surface_openings.py) example, the results can be saved to PNG files using the code below.
 
 ```python
 from os import makedirs
@@ -140,7 +140,7 @@ field = solution.solution_errors.combined_field_layout - solution.target_field.b
 pcg_plt.plot_vector_field_xy(coords, field, plot_title=plot_title, save_dir=save_dir)
 ```
 
-#### The 2D Computed Stream Function and Contours
+#### 2D Computed Stream Function and Contours
 
 ```{figure} figures/plot_s2_shim_coil_2D.png
 :scale: 75 %
@@ -151,7 +151,7 @@ A colour plot showing the 2D stream function and the corresponding contour group
 This is computed by projecting the 3D coil mesh onto 2D.
 ```
 
-This figure shows the target field stream function overlaid by the computed contours. The contour groups are shown in different colours.
+This figure shows the target field stream function overlaid with the computed contours. The contour groups are shown in different colours.
 
 #### The 3D Computed Stream Function and Contours
 
@@ -187,7 +187,7 @@ This figure shows the value of the Z-component of the combined field due to the 
 A colour plot of the Z-component of the relative error between the computed field and the input target field.
 ```
 
-This figure shows the difference between magnetic field vector and the specified target field in the X-Y plane, computed at the mean Z-axis value.
+This figure shows the difference between the magnetic field vector and the specified target field in the X-Y plane, computed at the mean Z-axis value.
 
 
 #### Summary of Fields and Errors
@@ -197,14 +197,14 @@ This figure shows the difference between magnetic field vector and the specified
 :align: center
 :alt: A multi-plot showing various visual views of the S2 shim coil example.
 
-A multi-plot showing various visual views of the results for the `s2_shim_coil_with_surface_openings.py` example.
+A multi-plot showing various views of the results for the `s2_shim_coil_with_surface_openings.py` example.
 ```
 ## Visualising Multiple Solutions: A Parameter Sweep
 
 The [`halbach_gradient_x.py`](https://github.com/kev-m/pyCoilGen/blob/master/examples/halbach_gradient_x.py) example uses
 multiprocessing to do a sweep through two input parameters, `tikhonov_reg_factor` and `levels`.
 
-The same example also generates plots that summarise the key error parameters.
+This example also generates plots that summarise the key error parameters.
 
 ```{figure} figures/plot_solutions_Halbach_study_Tikhonov05.png
 :scale: 75 %
