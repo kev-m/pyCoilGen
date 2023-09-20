@@ -23,7 +23,7 @@ from .sub_functions.data_structures import Mesh, DataStructure, CoilSolution, Op
 from .helpers.timing import Timing
 
 # For saving Pickle files
-from .helpers.common import save
+from .helpers.persistence import save
 
 # From original project
 from .sub_functions.read_mesh import read_mesh
