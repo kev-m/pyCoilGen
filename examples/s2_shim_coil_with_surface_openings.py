@@ -43,17 +43,15 @@ if __name__ == '__main__':
         'iteration_num_mesh_refinement': 0,  # the number of refinements for the mesh;
         'set_roi_into_mesh_center': True,
         'skip_normal_shift': False,
-        'force_cut_selection': ['high' 'high' 'high' 'high' 'low' 'low' 'low' 'low'],
+        'force_cut_selection': ['high', 'high', 'high', 'high', 'low', 'low', 'low', 'low'],
         'level_set_method': 'primary',  # Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
-        'interconnection_method': 'regular',
         'skip_postprocessing': False,
         'skip_inductance_calculation': False,
         'conductor_thickness': 0.01,
-        'smooth_flag': False,
         'tikhonov_reg_factor': 10,  # Tikhonov regularization factor for the SF optimization
 
 
-        'output_directory': 'images',
+        'output_directory': 'images', # [Current directory]
         'project_name': 's2_shim_coil',
         'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug',

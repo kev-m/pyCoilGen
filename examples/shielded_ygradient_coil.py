@@ -44,12 +44,11 @@ if __name__ == '__main__':
         'force_cut_selection': ['high'],
         # Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
         'level_set_method': 'primary',
-        'interconnection_method': 'regular',
         'skip_postprocessing': False,
         'skip_inductance_calculation': False,
         'tikhonov_reg_factor': 10,           # Tikhonov regularization factor for the SF optimization
 
-        'output_directory': 'images',
+        'output_directory': 'images',        # [Current directory]
         'project_name': 'shielded_ygradient_coil',
         'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug',

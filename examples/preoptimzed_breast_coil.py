@@ -49,7 +49,6 @@ if __name__ == '__main__':
         'normal_shift_length': 0.01,  # the length for which overlapping return paths will be shifted along the surface normals; in meter
         'force_cut_selection': ['high'],
         'level_set_method': 'primary',  # Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
-        'interconnection_method': 'regular',
         'skip_postprocessing': False,
         'cross_sectional_points': cross_section,
         'skip_sweep': False,
@@ -58,7 +57,7 @@ if __name__ == '__main__':
         'project_name': 'Preoptimzed_Breast_Coil',
         'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug',
-        'output_directory': 'images',
+        'output_directory': 'images', # [Current directory]
         'debug': DEBUG_BASIC,
     }
 
