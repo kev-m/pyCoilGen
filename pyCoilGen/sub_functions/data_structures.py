@@ -105,7 +105,7 @@ class Mesh:
 
         Returns:
             Mesh: An instance of Mesh representing the loaded mesh.
-        
+
         Raises:
             FileNotFoundError if the file is not found.
         """
@@ -600,7 +600,8 @@ class CoilPart:
     contour_lines: List[ContourLine] = None  # (process_raw_loops)
     potential_level_list: np.ndarray = None  # Placeholder (calc_potential_levels) (???)
     contour_step: float = None              # Placeholder (calc_potential_levels) (???)
-    field_by_loops: np.ndarray = None       # Placeholder (evaluate_loop_significance in process_raw_loops and evaluate_field_errors) (3,num_vertices,num contours)
+    # Placeholder (evaluate_loop_significance in process_raw_loops and evaluate_field_errors) (3,num_vertices,num contours)
+    field_by_loops: np.ndarray = None
     combined_loop_field: np.ndarray = None  # Placeholder (evaluate_loop_significance in process_raw_loops) (3,m)
     loop_significance: np.ndarray = None    # Per contour line (evaluate_loop_significance in process_raw_loops) (n)
     combined_loop_length: float = 0.0       # Length of contour lines (process_raw_loops)
@@ -644,6 +645,8 @@ class TargetField:
 @dataclass
 class FieldErrors:
     """
+    Maximum and mean relative errors, in percent.
+
     Used by evaluate_field_errors.py
     """
     max_rel_error_layout_vs_target: float = None
@@ -662,14 +665,16 @@ class FieldErrors:
 @dataclass
 class SolutionErrors:
     """
+    Computed target fields for the solution.
+
     Used by evaluate_field_errors.py
     """
-    field_error_vals: FieldErrors = None
-    combined_field_layout: np.ndarray = None
-    combined_field_loops: np.ndarray = None
-    combined_field_layout_per1Amp: float = None
-    combined_field_loops_per1Amp: float = None
-    opt_current_layout: float = None
+    field_error_vals: FieldErrors = None               # Detailed errors, by field
+    combined_field_layout: np.ndarray = None           # Resulting target field by final wire path.
+    combined_field_loops: np.ndarray = None            # Resulting target field by contour loops.
+    combined_field_layout_per1Amp: np.ndarray = None   # Resulting target field by final wire path, for 1 A current.
+    combined_field_loops_per1Amp: np.ndarray = None    # Resulting target field by contours loops, for 1 A current.
+    opt_current_layout: float = None                   # The current that will achieve the desired target field.
 
 
 # Used in calculate_gradient
@@ -678,12 +683,12 @@ class LayoutGradient:
     """
     Used by calculate_gradient.py
     """
-    dBxdxyz: np.ndarray = None                      # in [mT/m/A]
-    dBydxyz: np.ndarray = None                      # in [mT/m/A]
-    dBzdxyz: np.ndarray = None                      # in [mT/m/A]
-    gradient_in_target_direction: np.ndarray = None # in [mT/m/A]
-    mean_gradient_in_target_direction: float = None # in [mT/m/A]
-    std_gradient_in_target_direction: float = None  # in [mT/m/A]
+    dBxdxyz: np.ndarray = None                          # in [mT/m/A]
+    dBydxyz: np.ndarray = None                          # in [mT/m/A]
+    dBzdxyz: np.ndarray = None                          # in [mT/m/A]
+    gradient_in_target_direction: np.ndarray = None     # in [mT/m/A]
+    mean_gradient_in_target_direction: float = None     # in [mT/m/A]
+    std_gradient_in_target_direction: float = None      # in [mT/m/A]
 
 
 @dataclass
