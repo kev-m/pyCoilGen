@@ -2,6 +2,7 @@
 import itertools
 import numpy as np
 import multiprocessing
+from os import makedirs
 
 # Logging
 import logging
@@ -80,7 +81,7 @@ if __name__ == '__main__':
         'skip_inductance_calculation': False,
         'save_stl_flag': True,
 
-        'output_directory': 'images',
+        'output_directory': 'images', # [Current directory]
         'project_name': 'halbach_gradient_x',
         'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug/halbach',
@@ -89,15 +90,16 @@ if __name__ == '__main__':
 
     # Define the parameter ranges
     sweep_params = {
-        'tikhonov_reg_factor': [5, 6, 8, 10],  # tikhonov regularization factor for the SF optimization
+        'tikhonov_reg_factor': [3, 4, 5, 6, 8, 10],  # tikhonov regularization factor for the SF optimization
         # the number of potential steps that determines the later number of windings (Stream function discretization)
-        'levels': [10, 15, 20, 25, 30]
+        'levels': [15, 16, 17, 18, 19]
     }
 
     # Generate all combinations of parameters
     parameter_combinations = itertools.product(*sweep_params.values())
 
     # Check if outputs already exist, try and load all combinations:
+    # Might need to repeat this multiple times in case one process terminates unexpectedly.
     missing = []
     results = []
     for combination in parameter_combinations:
@@ -118,9 +120,11 @@ if __name__ == '__main__':
             results = pool.map(process_combination, missing)
     else:
         # results now contains the results of each call to solve
+        image_dir = 'images/halbach'
+        makedirs(image_dir, exist_ok=True)
         # Plot figures of all levels per tikhonov_reg_factor (i.e. the tikhonov_reg_factor is fixed in each figure)
         for index, tk in enumerate(sweep_params['tikhonov_reg_factor']):
             title = f'Halbach study\n(Tikhonov {tk})'
             base = len(sweep_params['levels'])*index
             to_plot = [base+i for i in range(len(sweep_params['levels']))]
-            plot_error_different_solutions(results, to_plot, title, x_ticks={'levels': sweep_params['levels']}, save_figure=True)
+            plot_error_different_solutions(results, to_plot, title, x_ticks={'levels': sweep_params['levels']}, save_dir=image_dir)
