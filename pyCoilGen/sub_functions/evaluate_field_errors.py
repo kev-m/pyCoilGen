@@ -126,32 +126,23 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
 
     # Calculate relative errors
     field_error_vals = FieldErrors()
-    # Pass
     field_error_vals.max_rel_error_layout_vs_target = np.max(
         np.abs((layout_z - target_z) / np.max(np.abs(target_z)))) * 100
-    # Pass
     field_error_vals.mean_rel_error_layout_vs_target = np.mean(
         np.abs((layout_z - target_z) / np.max(np.abs(target_z)))) * 100
 
-    # Pass
     field_error_vals.max_rel_error_unconnected_contours_vs_target = np.max(
         np.abs((loop_z - target_z) / np.max(np.abs(target_z)))) * 100
-    # Pass
     field_error_vals.mean_rel_error_unconnected_contours_vs_target = np.mean(
         np.abs((loop_z - target_z) / np.max(np.abs(target_z)))) * 100
 
-    # Fail
     field_error_vals.max_rel_error_layout_vs_stream_function_field = np.max(
-        # ValueError: operands could not be broadcast together with shapes (3734,) (3,)
         np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
-    # Fail
     field_error_vals.mean_rel_error_layout_vs_stream_function_field = np.mean(
         np.abs((layout_z - sf_z) / np.max(np.abs(sf_z)))) * 100
 
-    # Pass
     field_error_vals.max_rel_error_unconnected_contours_vs_stream_function_field = np.max(
         np.abs((loop_z - sf_z) / np.max(np.abs(sf_z)))) * 100
-    # Pass
     field_error_vals.mean_rel_error_unconnected_contours_vs_stream_function_field = np.mean(
         np.abs((loop_z - sf_z) / np.max(np.abs(sf_z)))) * 100
 
