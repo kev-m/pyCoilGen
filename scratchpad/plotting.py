@@ -52,8 +52,8 @@ arg_dict = {
 # solution = load('debug', 'biplanar_xgradient', 'final')
 # solution = load('debug', 'Preoptimzed_SVD_Coil', 'final')
 # solution = load('debug', 'Preoptimzed_Breast_Coil', 'final')
-solution = load('debug', 's2_shim_coil', 'final')
-# solution = load('debug', 'shielded_ygradient_coil', 'final')
+# solution = load('debug', 's2_shim_coil', 'final')
+solution = load('debug', 'shielded_ygradient_coil', 'final')
 # print(solution.input_args)
 which = solution.input_args.project_name
 save_dir = f'{solution.input_args.output_directory}'
