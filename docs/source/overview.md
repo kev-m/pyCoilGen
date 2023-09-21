@@ -7,6 +7,21 @@
 
 The source code for **pyCoilGen** is available on [GitHub](https://github.com/kev-m/pyCoilGen).
 
+```{figure} figures/mesh_shielded_ygradient_swept_3D_copper.png
+:scale: 50 %
+:align: center
+:alt: A 3D rendered view of the `.stl` swept output.
+
+A 3D rendering of the `.stl` output for the `shielded_ygradient_coil.py` example.
+```
+```{figure} figures/plot_shielded_ygradient_coil_2D.png
+:scale: 50 %
+:align: center
+:alt: A colour plot showing the stream function and the corresponding contour groups.
+
+A colour plot showing the 2D stream function and the corresponding contour groups for the `shielded_ygradient_coil.py` example. 
+```
+
 ## Features
 
 With **pyCoilGen**, you can:
@@ -19,23 +34,7 @@ For a detailed description of the algorithm, refer to the research paper [CoilGe
 
 ## Examples
 
-The [`examples`](https://github.com/kev-m/pyCoilGen/examples) directory in the GitHub repository contains several usage examples for pyCoilGen. These examples demonstrate different scenarios and configurations for generating coil layouts.
-
-```{figure} figures/mesh_s2_shim_swept_3D_copper.png
-:scale: 100 %
-:align: center
-:alt: A 3D rendered view of the `.stl` swept output.
-
-A 3D rendering of the `.stl` output for the `s2_shim_coil_with_surface_openings.py` example.
-```
-```{figure} figures/plot_s2_shim_coil_2D.png
-:scale: 75 %
-:align: center
-:alt: A colour plot showing the stream function and the corresponding contour groups.
-
-A colour plot showing the 2D stream function and the corresponding contour groups. 
-This is computed by projecting the 3D coil mesh onto 2D.
-```
+The [`examples`](https://github.com/kev-m/pyCoilGen/blob/master/examples) directory in the GitHub repository contains several usage examples for pyCoilGen. These examples demonstrate different scenarios and configurations for generating coil layouts.
 
 ## Citation
 
