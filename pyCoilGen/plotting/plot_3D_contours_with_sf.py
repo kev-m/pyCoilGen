@@ -35,6 +35,15 @@ def plot_3D_contours_with_sf(coil_layout: List[CoilSolution], single_ind_to_plot
     ax = fig.add_subplot(111, projection='3d')
     plt.title(plot_title + '\nStream function by optimization and target Bz')
 
+    # Set axis limits
+    combined_mesh = coil_layout[single_ind_to_plot].combined_mesh.vertices
+    min_values = np.min(combined_mesh, axis=0)
+    max_values = np.max(combined_mesh, axis=0)
+    
+    ax.set_xlim(min_values[0], max_values[0])
+    ax.set_ylim(min_values[1], max_values[1])
+    ax.set_zlim(min_values[2], max_values[2])
+
     for part_ind in range(len(coil_layout[single_ind_to_plot].coil_parts)):
         coil_part = coil_layout[single_ind_to_plot].coil_parts[part_ind]
         normed_sf = coil_part.stream_function - np.min(coil_part.stream_function)
