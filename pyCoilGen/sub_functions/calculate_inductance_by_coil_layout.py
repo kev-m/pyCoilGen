@@ -211,7 +211,7 @@ def execute_fast_henry_file_script_windows(binary: str, suffix: str, fast_henry_
         try:
             os.remove(result_file)
             os.remove(fast_henry_file_name)
-            os.remove(f'output{suffix}.log')
+            os.remove(script_file_name)
         except FileNotFoundError as e:
             log.info("Exception removing temporary files: %s", e)
 
