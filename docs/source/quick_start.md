@@ -27,7 +27,7 @@ arg_dict = {
     'pot_offset_factor': 0.25,      # [0.5] a potential offset value for the minimal and maximal contour potential
     'interconnection_cut_width': 0.025,  # [0.01] the width for the interconnections are interconnected; in meter
     # the length for which overlapping return paths will be shifted along the surface normals; in meter
-    'normal_shift_length': 0.005,   # [0.001]
+    'normal_shift_length': 0.01,    # [0.001]
     'make_cylindrical_pcb': True,   # [False]
 
     'output_directory': 'images',   # [Current directory]
@@ -37,12 +37,13 @@ arg_dict = {
 solution = pyCoilGen(log, arg_dict)         # Calculate the solution
 ```
 
-```{figure} figures/plot_errors_example_ygradient.png.png
+A quick and simple way to view the generated `.stl` mesh is to use a [free online STL viewer](https://www.viewstl.com/).
+```{figure} figures/mesh_example_gradient_3D.png
 :scale: 100 %
 :align: center
-:alt: A 3D rendered view of the `.STL` swept output.
+:alt: A 3D rendered view of the `.stl` swept output.
 
-A 3D rendering of the `.STL` output for the `example_ygradient.py` code snippet.
+A 3D rendering of the `.stl` output for the `example_ygradient` code snippet.
 ```
 
 
@@ -73,26 +74,27 @@ pcg_plt.plot_3D_contours_with_sf(coil_solutions, 0, f'{which} 3D', save_dir=save
 ```
 
 This creates 3 figures in the `images` directory:
-```{figure} figures/plot_errors_example_ygradient.png.png
-:scale: 100 %
+```{figure} figures/plot_errors_example_ygradient.png
+:scale: 50 %
 :align: center
 :alt: A plot of the various parameters for the example_ygradient.py code snippet.
 
 A plot of the various parameters for the `example_ygradient` code snippet.
 ```
-```{figure} figures/plot_example_ygradient_2D.png.png
-:scale: 100 %
-:align: center
-:alt: A plot of the 2D stream function and computed contours for the example_ygradient.py code snippet.
 
-A plot of the various parameters for the `example_ygradient` code snippet.
+```{figure} figures/plot_example_ygradient_2D.png
+:scale: 75 %
+:align: center
+:alt: A 2D plot of the stream function and computed contours for the example_ygradient.py code snippet.
+
+A 2D plot of the stream function and computed contours for the `example_ygradient` code snippet.
 ```
-```{figure} figures/plot_example_ygradient_3D.png.png
+```{figure} figures/plot_example_ygradient_3D.png
 :scale: 100 %
 :align: center
 :alt: A 3D plot of the stream function and computed contours example_ygradient code snippet.
 
-:alt: A 3D plot of the stream function and computed contours for the `example_ygradient` code snippet.
+A 3D plot of the stream function and computed contours for the `example_ygradient` code snippet.
 ```
 
 
