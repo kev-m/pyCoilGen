@@ -24,9 +24,9 @@ The [`examples`](https://github.com/kev-m/pyCoilGen/examples) directory in the G
 ```{figure} figures/mesh_s2_shim_swept_3D_copper.png
 :scale: 100 %
 :align: center
-:alt: A 3D rendered view of the `.stl` swept output.
+:alt: A 3D rendered view of the `.STL` swept output.
 
-A 3D rendering of the `.stl` output for the `s2_shim_coil_with_surface_openings.py` example.
+A 3D rendering of the `.STL` output for the `s2_shim_coil_with_surface_openings.py` example.
 ```
 ```{figure} figures/plot_s2_shim_coil_2D.png
 :scale: 75 %

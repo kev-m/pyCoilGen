@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+import platform
 
 # local imports
 from .constants import DEBUG_BASIC, DEBUG_VERBOSE
@@ -299,8 +300,13 @@ def parse_input(parse_cli=True):
     # Add the parameters for the generation of the (default) biplanar mesh
     parser.add_argument('--persistence_dir', type=str, default='debug', help=f"Directory to write persistence data")
 
-    # Add a parameter for the location of the FastHenry2 executable
-    parser.add_argument('--fasthenry_bin', type=str, default='/usr/bin/fasthenry',
+    # Add a parameter for the location of the FastHenry2 executable, platform aware
+    os_system = platform.system()
+    if os_system == "Windows":
+        fast_henry_path = 'C:\\Program Files (x86)\\FastFieldSolvers\\FastHenry2\\FastHenry2.exe'
+    else: # Assume Linux or equivalent
+        fast_henry_function = '/usr/bin/fasthenry'
+    parser.add_argument('--fasthenry_bin', type=str, default=fast_henry_path,
                         help=f"Location of the FastHenry2 binary")
 
     # Parse the input arguments

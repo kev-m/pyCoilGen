@@ -20,3 +20,4 @@ pyCoilGen User Guide
    quick_start.md
    configuration.md
    results.md
+   glossary.md

@@ -435,11 +435,14 @@ Cross-section width of the conductor (for the inductance calculation) in metres.
 
 Cross-section height of the conductor (for the inductance calculation) in metres.
 
-- `fasthenry_bin` (Type: str, Default: '/usr/bin/fasthenry')
+- `fasthenry_bin` (Type: str, Default: OS dependent)
 
-The location of the `FastHenry2` binary. 
+Specify the location of the FastHenry2 binary.
 
-In Windows, the default installation location is `'C:\Program Files (x86)\FastFieldSolvers\FastHenry2\FastHenry2.exe'`.
+The default directory is determined by the host operating system. 
+
+On Microsoft Windows, the default installation location is `'C:\Program Files (x86)\FastFieldSolvers\FastHenry2\FastHenry2.exe'`, 
+otherwise, it is set to `'/usr/bin/fasthenry'`.
 
 ### Evaluate Target Field Errors
 
