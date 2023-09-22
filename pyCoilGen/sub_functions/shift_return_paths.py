@@ -6,6 +6,7 @@ import logging
 
 # Local imports
 from .data_structures import CoilPart, Mesh
+from .smooth_track_by_folding import smooth_track_by_folding
 
 log = logging.getLogger(__name__)
 
@@ -154,25 +155,6 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
 
     return coil_parts
 
-
-def smooth_track_by_folding(points, smooth_factor):
-    """
-    Smooths track points using a folding approach.
-
-    Args:
-        points (np.ndarray): Track points in UV space.
-        smooth_factor (float): Smoothing factor.
-
-    Returns:
-        np.ndarray: Smoothed track points in UV space.
-    """
-    smoothed_points = np.copy(points)
-    num_points = points.shape[1]
-
-    for i in range(1, num_points - 1):
-        smoothed_points[:, i] = (smooth_factor * points[:, i - 1] + (1 - smooth_factor) * points[:, i]) / 2
-
-    return smoothed_points
 
 
 def InterX(L1, *varargin, m_debug=None):
