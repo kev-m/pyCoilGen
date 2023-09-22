@@ -174,6 +174,21 @@ def dump_biot_savart_data_m():
         for index, vector in enumerate(target_result):
             my_file.write(f'{vector[0]},{vector[1]},{vector[2]}\n')
 
+def convert_target_field():
+    data_name = 'intraoral_dental_target_field'
+    mat_data = load_matlab(f'../CoilGen/target_fields/{data_name}')
+    data = mat_data['straight_grid_out']
+    coords = data.coords # 3,30248
+    lin_x = data.lin_x # 30248
+    lin_y = data.lin_y # 30248
+    lin_z = data.lin_z # 30248
+    phi = data.phi
+    r = data.r
+    z_pot = data.z_pot
+
+    b_field = {'coords': coords, 'lin_x' : lin_x, 'lin_y': lin_y, 'lin_z': lin_z, 'phi': phi, 'r' : r, 'z_pot' : z_pot}
+    np.save(f'data/pyCoilGenData/target_fields/{data_name}.npy', [b_field])
+
 
 if __name__ == '__main__':
     # Set up logging
@@ -181,7 +196,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     # logging.basicConfig(level=logging.INFO)
 
-    preoptimzed_breast_coil()
-    preoptimzed_SVD_coil()
+    # preoptimzed_breast_coil()
+    # preoptimzed_SVD_coil()
     # dump_biot_savart_data_p()
     # dump_biot_savart_data_m()
+    convert_target_field()

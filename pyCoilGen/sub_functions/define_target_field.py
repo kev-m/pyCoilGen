@@ -7,6 +7,7 @@ from sympy import symbols, diff, lambdify
 import logging
 
 # Local imports
+from pyCoilGen.helpers.common import find_file
 from .data_structures import TargetField
 from .constants import *
 
@@ -49,15 +50,13 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
     # Define the target field
     if input_args.target_field_definition_file != 'none':
         # Load target field definition file
-        target_field_definition_file = os.path.join("target_fields", input_args.target_field_definition_file)
-        loaded_target_field = np.load(target_field_definition_file)
-        struct_name = list(loaded_target_field.keys())[0]
-        loaded_target_field = loaded_target_field[struct_name]
+        target_field_definition_file = find_file('target_fields', input_args.target_field_definition_file)
+        [loaded_target_field] = np.load(target_field_definition_file, allow_pickle=True)
 
         if input_args.target_field_definition_field_name in loaded_target_field:
             loaded_field = loaded_target_field[input_args.target_field_definition_field_name]
 
-            if loaded_field.shape[0] == 1:
+            if len(loaded_field.shape) == 1:
                 target_field_out.b = np.vstack((np.zeros_like(loaded_field), np.zeros_like(loaded_field), loaded_field))
             else:
                 target_field_out.b = loaded_field

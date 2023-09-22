@@ -305,7 +305,7 @@ def parse_input(parse_cli=True):
     if os_system == "Windows":
         fast_henry_path = 'C:\\Program Files (x86)\\FastFieldSolvers\\FastHenry2\\FastHenry2.exe'
     else: # Assume Linux or equivalent
-        fast_henry_function = '/usr/bin/fasthenry'
+        fast_henry_path = '/usr/bin/fasthenry'
     parser.add_argument('--fasthenry_bin', type=str, default=fast_henry_path,
                         help=f"Location of the FastHenry2 binary")
 

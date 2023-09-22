@@ -57,7 +57,8 @@ def read_mesh(input_args):
         # No external mesh is specified by stl file; create default biplanar mesh
         mesh_data = build_biplanar_mesh(*input_args.biplanar_mesh_parameter_list)
         coil_mesh = create_unique_noded_mesh(mesh_data)
-
+    else:
+        raise ValueError("No mesh specified! Unable to continue.")
     """
     elif input.coil_mesh_file == 'create double cone mesh':
         # No external mesh is specified by stl file; create default double cone mesh
@@ -69,7 +70,6 @@ def read_mesh(input_args):
         mesh_data = build_circular_mesh(*input.circular_mesh_parameter_list)
         coil_mesh = create_unique_noded_mesh(mesh_data)
     """
-
     # Read the target mesh surface
     if input_args.target_mesh_file != 'none':
         target_mesh = Mesh.load_from_file(input_args.geometry_source_path,  input_args.target_mesh_file)
