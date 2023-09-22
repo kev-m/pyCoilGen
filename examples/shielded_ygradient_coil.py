@@ -50,7 +50,6 @@ if __name__ == '__main__':
 
         'output_directory': 'images',        # [Current directory]
         'project_name': 'shielded_ygradient_coil',
-        'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug',
         'debug': DEBUG_BASIC,
     }

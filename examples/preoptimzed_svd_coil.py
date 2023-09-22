@@ -48,7 +48,6 @@ if __name__ == '__main__':
         'skip_inductance_calculation': False,
 
         'project_name': 'Preoptimzed_SVD_Coil',
-        'fasthenry_bin': '../FastHenry2/bin/fasthenry',
         'persistence_dir': 'debug',
         'output_directory': 'images', # [Current directory]
         'debug': DEBUG_BASIC,
