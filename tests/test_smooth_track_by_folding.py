@@ -36,7 +36,7 @@ def generate_triangular_waveform(cycles, magnitude, wavelength):
     return np.array([x_values, y_values])
 
 
-def test_remove_points_from_loop():
+def test_smooth_track_by_folding():
     input_data = generate_triangular_waveform(2, 1.0, 10)
     smoothing_length = 2
     ##########################################################
@@ -50,3 +50,4 @@ def test_remove_points_from_loop():
     assert output_data[0, 1] == input_data[0, 1]
     assert output_data[1, 1] == input_data[1, 1]
 
+test_smooth_track_by_folding()
