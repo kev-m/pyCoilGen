@@ -1,4 +1,3 @@
-
 import logging
 
 from pyCoilGen.sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
@@ -68,7 +67,6 @@ if __name__ == "__main__":
 
         "output_directory": "images",
         "project_name": 'biplanar_xgradient',
-        "fasthenry_bin": '../FastHenry2/bin/fasthenry',
         "persistence_dir": 'debug',
         "debug": DEBUG_BASIC,
     }  # INFO:pyCoilGen.helpers.timing:Total elapsed time: 12.071821 seconds
@@ -131,7 +129,6 @@ if __name__ == "__main__":
         "output_directory": "images",
         "project_name": 'ygradient_coil',
         "persistence_dir": 'debug',
-        "fasthenry_bin": '../FastHenry2/bin/fasthenry',
     }  # INFO:pyCoilGen.helpers.timing:Total elapsed time: 9.396004 seconds
 
     solution1 = pyCoilGen(log, arg_dict1)
