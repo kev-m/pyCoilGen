@@ -44,6 +44,11 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
     Returns:
         target_field_out (TargetField): Target field information (3 x m).
         is_suppressed_point (ndarray): Array indicating whether a point is suppressed or not (m).
+
+    Raises:
+        FileNotFoundError if the file target_field_definition_field_name can not be found.
+        KeyError if the field target_field_definition_field_name can not be found in the loaded data.
+        ValueError if the shape of the data in the target field file is inconsistent.
     """
     target_field_out = TargetField()
 
@@ -53,21 +58,29 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
         target_field_definition_file = find_file('target_fields', input_args.target_field_definition_file)
         [loaded_target_field] = np.load(target_field_definition_file, allow_pickle=True)
 
-        if input_args.target_field_definition_field_name in loaded_target_field:
-            loaded_field = loaded_target_field[input_args.target_field_definition_field_name]
+        target_field_def = input_args.target_field_definition_field_name
+
+        if target_field_def in loaded_target_field:
+            loaded_field = loaded_target_field[target_field_def]
+
+            target_field_out.coords = loaded_target_field['coords']
 
             if len(loaded_field.shape) == 1:
+                if loaded_field.shape[0] != target_field_out.coords.shape[1]:
+                    raise ValueError("Target field '%s' length (%s) does not match 'coords' shape (%s)",
+                                     target_field_def, loaded_field.shape, target_field_out.coords.shape)
                 target_field_out.b = np.vstack((np.zeros_like(loaded_field), np.zeros_like(loaded_field), loaded_field))
             else:
+                if loaded_field.shape != target_field_out.coords.shape:
+                    raise ValueError("Target field '%s' shape (%s) does not match 'coords' shape (%s)",
+                                     target_field_def, loaded_field.shape, target_field_out.coords.shape)
                 target_field_out.b = loaded_field
 
             is_suppressed_point = np.zeros(target_field_out.b.shape[1])
-            target_field_out.coords = loaded_target_field['coords']
             target_field_out.weights = np.ones_like(target_field_out.b)
             target_field_out.target_field_group_inds = np.ones(target_field_out.b.shape[1])
         else:
-            raise ValueError(
-                f"The target field with name '{input_args.target_field_definition_file}' does not exist in the provided file.")
+            raise KeyError(f"The target field with name '{target_field_def}' does not exist in the provided file.")
 
     else:
         if target_mesh is not None:  # Create evenly distributed points within the surface of the "target mesh"
