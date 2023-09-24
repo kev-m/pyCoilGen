@@ -20,7 +20,7 @@ from .helpers.visualisation import visualize_vertex_connections, visualize_compa
 from .helpers.timing import Timing
 
 # For saving Pickle files
-from .helpers.persistence import save
+from .helpers.persistence import save, save_preoptimised_data
 
 # From original project
 from .sub_functions.read_mesh import read_mesh
@@ -206,9 +206,13 @@ def pyCoilGen(log, input_args=None):
             solution.sf_b_field = sf_b_field
             runpoint_tag = '08'
 
+            if input_args.save_sf_data == True:
+                print('Persist pre-optimised data:')
+                save_preoptimised_data(solution)
+
         else:
-            # Load the preoptimized data
-            print('Load preoptimized data:')
+            # Load the preoptimised data
+            print('Load pre-optimised data:')
             timer.start()
             solution = load_preoptimized_data(input_args)
             timer.stop()
@@ -349,6 +353,10 @@ def pyCoilGen(log, input_args=None):
             coil_parts, input_args, solution.target_field, solution.sf_b_field)
         timer.stop()
         solution.solution_errors = solution_errors
+        log.info("Layout error: Mean: %f, Max: %f",
+                 solution_errors.field_error_vals.mean_rel_error_layout_vs_target,
+                 solution_errors.field_error_vals.max_rel_error_layout_vs_target
+                 )
         runpoint_tag = '21'
 
         # Calculate the gradient

@@ -1,11 +1,11 @@
-from numpy import save as np_save, load as np_load, asarray
+from numpy import save as np_save, load as np_load, asarray, concatenate
 from os import path, makedirs
 
 # Logging
 import logging
 
 from pyCoilGen.sub_functions.constants import get_level, DEBUG_NONE
-from pyCoilGen.sub_functions.data_structures import CoilSolution
+from pyCoilGen.sub_functions.data_structures import CoilSolution, DataStructure
 
 log = logging.getLogger(__name__)
 
@@ -54,3 +54,38 @@ def load(output_dir: str, project_name: str, tag: str) -> CoilSolution:
     [solution] = np_load(filename, allow_pickle=True)
 
     return solution
+
+def save_preoptimised_data(solution: CoilSolution) -> None:
+    """
+    Writes out the combined coil mesh, stream function and target field data for re-use.
+
+    Load the data with the `--sf_source_file` parameter.
+
+    Depends on the following properties of the CoilSolution:
+        - target_field.coords, target_field.b
+        - coil_parts[n].stream_function
+        - combined_mesh.vertices, combined_mesh.faces
+        - input_args.persistence_dir, input_args.project_name
+    
+    Args:
+        solution (CoilSolution): The solution data.
+
+    Returns:
+        None
+    """
+    # Extract the TargetField coords and b-field in Python (m,3) format
+    target_field = DataStructure(coords=solution.target_field.coords.T, b=solution.target_field.b.T)
+
+    # Create the stream_function from the coil_parts
+    stream_function = solution.coil_parts[0].stream_function
+    for i in range(1,len(solution.coil_parts)):
+        stream_function = concatenate((stream_function, solution.coil_parts[i].stream_function))
+
+    # Extract the vertices and faces of the combined mesh in (m,3) format
+    combined_mesh = DataStructure(vertices=solution.combined_mesh.vertices, faces=solution.combined_mesh.faces)
+
+    # Create the carrier data structure
+    data = DataStructure(coil_mesh=combined_mesh, target_field=target_field, stream_function=stream_function)
+
+    input_args = solution.input_args
+    np_save(f'{path.join(input_args.persistence_dir, input_args.project_name)}.npy', [data], allow_pickle=True)
