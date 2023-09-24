@@ -189,6 +189,14 @@ def convert_target_field():
     b_field = {'coords': coords, 'lin_x' : lin_x, 'lin_y': lin_y, 'lin_z': lin_z, 'phi': phi, 'r' : r, 'z_pot' : z_pot}
     np.save(f'data/pyCoilGenData/target_fields/{data_name}.npy', [b_field])
 
+def save_bfield_file(filename: str, coords: np.ndarray, vector_field: np.ndarray):
+    data = {
+      'coords': coords,       # Assuming that coords is a (3,m) array of float.
+      'b_field': vector_field # Assuming that vector_field is either an (m,) or (3,m) array of float.
+      } 
+    np.save(f'target_fields/{filename}.npy', [data], allow_pickle=True)
+
+
 
 if __name__ == '__main__':
     # Set up logging
@@ -200,4 +208,8 @@ if __name__ == '__main__':
     # preoptimzed_SVD_coil()
     # dump_biot_savart_data_p()
     # dump_biot_savart_data_m()
-    convert_target_field()
+    # convert_target_field()
+
+    coords = np.ones((3,10), dtype=float)
+    values = np.ones((10), dtype=float)
+    save_bfield_file('ones', coords=coords, vector_field=values)
