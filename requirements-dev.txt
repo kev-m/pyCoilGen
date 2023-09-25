@@ -9,3 +9,6 @@ flit==3.9.0
 
 # For mesh visualisation (optional)
 pyglet<2
+
+# For ChangeLog generation
+auto-changelog

@@ -85,13 +85,121 @@ $ cd FastHenry2/src
 $ make
 ```
 
-## Packaging and Publishing
+## Commit Messages
+
+In order to support ChangeLog generation, this project uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
+This means that there must be at least one commit message for any change worth announcing.
+
+The commit messages are of the form:
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Message Structure
+The commit contains the following structural elements, to communicate intent to users:
+ 1. `fix:`: a commit of the type `fix:` patches a bug in the codebase (this correlates with `PATCH` in Semantic Versioning).
+ 2. `feat:`: a commit of the type `feat:` introduces a new feature to the codebase (this correlates with `MINOR` in Semantic Versioning).
+ 3. `BREAKING CHANGE`: a commit that has a footer `BREAKING CHANGE:`, or appends a `!` after the type/scope, introduces a breaking API change (correlating with 
+ 4. `MAJOR` in Semantic Versioning). A BREAKING CHANGE can be part of commits of any type.
+ 5. Other types are typically one of `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, etc.
+ 6. footers other than `BREAKING CHANGE: <description>` may be provided and follow a convention similar to git trailer format.
+
+### Examples
+Commit message with description and breaking change footer
+```
+feat: allow provided config object to extend other configs
+
+BREAKING CHANGE: `extends` key in config file is now used for extending other config files
+```
+
+Commit message with ! to draw attention to breaking change
+```
+feat!: send an email to the customer when a product is shipped
+```
+
+Commit message with scope and ! to draw attention to breaking change
+```
+feat(api)!: send an email to the customer when a product is shipped
+```
+
+Commit message with both ! and BREAKING CHANGE footer
+```
+chore!: drop support for Node 6
+
+BREAKING CHANGE: use JavaScript features not available in Node 6.
+```
+
+Commit message with no body
+```
+docs: correct spelling of CHANGELOG
+```
+
+Commit message with scope
+```
+feat(lang): add Polish language
+```
+
+Commit message with multi-paragraph body and multiple footers
+```
+fix: prevent racing of requests
+
+Introduce a request id and a reference to latest request. Dismiss
+incoming responses other than from latest request.
+
+Remove timeouts which were used to mitigate the racing issue but are
+obsolete now.
+
+Reviewed-by: Z
+Refs: #123
+```
+
+## Project Release Procedure
+
+The basic project release procedure consists of:
+- Running the unit tests.
+- Checking the documentation
+- Create a tag and update the change log
+- Build and Publish the project
+
+### Check the Unit Tests
+
+Run the unit tests from the project top level directory:
+```bash
+pytest
+```
+
+### Check the Documentation
+
+Build and check the documentation:
+```bash
+cd docs
+make clean html
+```
+
+Load the `docs/build/html/index.html`.
+
+### Update the ChangeLog
+
+**pyCoilGen** uses `auto-changelog` to parse git commit messages and generate the `CHANGELOG.md`.
+
+```bash
+auto-changelog
+git add CHANGELOG.md
+git commit -m "Updating CHANGELOG"
+```
+
+### Building the Package
 
 The sources are published as two packages using `flit` to build and publish the artifacts.
 
 The project details are defined in the `pyproject.toml` files. The version and description are defined in the top-level `__init__.py` file for each package.
 
-This package uses [semantic versioning](https://semver.org/).
+This project uses [semantic versioning](https://semver.org/).
 
 Build and publish the main artifact (temporary: to the `testpypi` server):
 
