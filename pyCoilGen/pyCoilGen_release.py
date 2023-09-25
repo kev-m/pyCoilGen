@@ -206,7 +206,7 @@ def pyCoilGen(log, input_args=None):
             solution.sf_b_field = sf_b_field
             runpoint_tag = '08'
 
-            if input_args.save_sf_data == True:
+            if input_args.sf_dest_file != 'none':
                 print('Persist pre-optimised data:')
                 save_preoptimised_data(solution)
 
