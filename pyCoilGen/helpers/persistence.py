@@ -96,6 +96,7 @@ def save_preoptimised_data(solution: CoilSolution, default_dir = 'Pre_Optimized_
         if '/' in target_file or '\\' in target_file:
             filename = f'{target_file}.npy'
         else:
+            makedirs(default_dir, exist_ok=True)
             filename = f'{path.join(default_dir, target_file)}.npy'
         log.info("Writing pre-optimised data to '%s'", filename)
         np_save(filename, [data], allow_pickle=True)
