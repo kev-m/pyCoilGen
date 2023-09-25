@@ -1,4 +1,6 @@
+#system imports
 import numpy as np
+from os import makedirs, path
 
 # Test support
 from pyCoilGen.sub_functions.data_structures import DataStructure, Mesh, CoilPart
@@ -20,11 +22,10 @@ def test_save_preoptimised_data():
     #    - target_field.coords, target_field.b
     #    - coil_parts[n].stream_function
     #    - combined_mesh.vertices, combined_mesh.faces
-    #    - input_args.coords, target_field.b
-    #    - input_args.persistence_dir, input_args.project_name
+    #    - input_args.sf_dest_file
 
     fake_target_field = DataStructure(coords=np.ones((10, 3)), b=np.ones((10, 3)))
-    fake_input_args = DataStructure(persistence_dir='debug', project_name='test_save_preoptimised_data')
+    fake_input_args = DataStructure(sf_dest_file='test_save_preoptimised_data')
     fake_solution = DataStructure(combined_mesh=combined_mesh, target_field=fake_target_field,
                                   coil_parts=parts, input_args=fake_input_args)
 
@@ -34,11 +35,13 @@ def test_save_preoptimised_data():
 
     ##################################################
     # Function under test
-    save_preoptimised_data(fake_solution)
+    filename1 = save_preoptimised_data(fake_solution, 'debug') # Save to default directory
     ##################################################
 
+    assert 'debug' in filename1
+
     # Simplify test, use load_preoptimized_data to cross check
-    crosscheck_input_args = DataStructure(sf_source_file='test_save_preoptimised_data.npy', 
+    crosscheck_input_args = DataStructure(sf_source_file=fake_input_args.sf_dest_file, 
                                           surface_is_cylinder_flag=True, circular_diameter_factor=1.0, debug=0)
     solution = load_preoptimized_data(crosscheck_input_args, 'debug')
 
@@ -61,7 +64,24 @@ def test_save_preoptimised_data():
     assert compare(fake_target_field.coords, target_field.coords)
     assert compare(fake_target_field.b, target_field.b)
 
+    # Test case 2: Writing to user-specified directory
+    save_dir = path.join('debug', 'test')
+    makedirs(save_dir, exist_ok=True)
+    fake_solution.input_args.sf_dest_file=path.join(save_dir, 'test_save_preoptimised_data')
 
+    ##################################################
+    # Function under test
+    filename2 = save_preoptimised_data(fake_solution) # Override default directory
+    ##################################################
+    assert 'Pre_Optimized_Solutions' not in filename2 
+    assert path.exists(filename2)
+    assert filename2.startswith(save_dir)
+
+    crosscheck_input_args.sf_source_file = fake_solution.input_args.sf_dest_file
+    ##################################################
+    # Function under test
+    solution2 = load_preoptimized_data(crosscheck_input_args) # Override default directory
+    ##################################################
 
 
 if __name__ == "__main__":
