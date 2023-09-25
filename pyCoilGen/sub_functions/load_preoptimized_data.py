@@ -3,6 +3,8 @@ import numpy as np
 from typing import List
 import logging
 
+from os import path
+
 
 # Local imports
 from .constants import *
@@ -48,10 +50,15 @@ def load_preoptimized_data(input_args, default_dir = 'Pre_Optimized_Solutions') 
         coilSolution (CoilSolution): Pre-optimised coil solution containing mesh and stream function information.
     """
     # Load pre-optimised data
-    load_path = find_file(default_dir, input_args.sf_source_file)
+    source_file = f'{input_args.sf_source_file}.npy'
+    if '/' in source_file or '\\' in source_file:
+        filename = source_file
+    else:
+        filename = find_file(default_dir, source_file)
 
     # Load data from load_path
-    loaded_data = np.load(load_path, allow_pickle=True)[0]
+    log.info("Loading pre-optimised data from '%s'", filename)
+    loaded_data = np.load(filename, allow_pickle=True)[0]
 
     # Extract loaded data
     coil_mesh = loaded_data.coil_mesh
