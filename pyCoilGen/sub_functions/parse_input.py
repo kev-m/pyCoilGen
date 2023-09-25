@@ -91,6 +91,11 @@ def parse_input(parse_cli=True):
     # parser.add_argument('--minimize_options', nargs='+', type=float, default=[
     #                    500, 10**10, 1.0e-10, 1.0e-10, 1.0e-10], help="Parameters for the iterative optimization with 'minimize'")
 
+    # Specify whether to save the pre-optimised stream function for later re-use
+    parser.add_argument('--sf_dest_file', type=str, default='none',
+                        help="File where to save the optimized stream function, for  re-use with 'sf_source_file'.")
+
+
     # Add the number of potential levels
     parser.add_argument('--levels', type=int, default=10,
                         help="Number of potential levels")

@@ -23,7 +23,7 @@ from .sub_functions.data_structures import Mesh, DataStructure, CoilSolution, Op
 from .helpers.timing import Timing
 
 # For saving Pickle files
-from .helpers.persistence import save
+from .helpers.persistence import save, save_preoptimised_data
 
 # From original project
 from .sub_functions.read_mesh import read_mesh
@@ -468,6 +468,11 @@ def pyCoilGen(log, input=None):
         solution.sf_b_field = sf_b_field
         save(persistence_dir, project_name, '08', solution)
 
+        if input_args.sf_dest_file != 'none':
+            print('Persist pre-optimised data:')
+            save_preoptimised_data(solution)
+
+
         #####################################################
         # DEVELOPMENT: Remove this
         # DEBUG
@@ -502,7 +507,6 @@ def pyCoilGen(log, input=None):
         #####################################################
 
     else:
-        # Load the preoptimized data
         # Load the preoptimized data
         print('Load preoptimized data:')
         timer.start()

@@ -215,6 +215,41 @@ If used, the target field file is loaded from the `target_fields` directory.
 
 The field name of the target field definition within the NumPy pickle file.
 
+#### Target Field File Structure
+
+The target field NumPy pickle file consists of a single array containing a dictionary with at least two key-value
+pairs: `coords` and another key-value pair.
+
+The `coords` key-value pair must be a 3 by M array which specifies the of x,y and z-coordinates of each target field
+point.
+
+The other key-value pair, which provides the magnetic field component, is specified with the `target_field_definition_field_name`
+property. The value may either by a single array of the same length (M) as `coords`, or a 3 by M array.
+
+If the value is a 1-D array, then it is interpreted to be the z-component of the target field and will be used to
+construct the required 3-D array by setting the x- and y-components to zero.
+
+The following code snippet shows how to create the file from existing data.
+
+```python
+def save_bfield_file(filename: str, coords: np.ndarray, vector_field: np.ndarray):
+    data = {
+      'coords': coords,       # Assuming that coords is a (3,m) array of float.
+      'b_field': vector_field # Assuming that vector_field is either an (m,) or (3,m) array of float.
+      } 
+    np.save(f'target_fields/{filename}.npy', [data], allow_pickle=True)
+```
+
+The data would be loaded by using:
+```python
+  parameters = {
+      ...
+      'target_field_definition_file': f'{filename}.npy',  # Target field file name
+      'target_field_definition_field_name': 'b_field',    # Target field key name
+      ...
+  }
+  solution = pyCoilGen(log, parameters)
+```
 ## Discretisation and Calculation of Field Variables
 
 ### Winding Coil Contribution and Target Field Sensitivity
@@ -268,13 +303,39 @@ Additional method options, specific to the method.
 Please refer to the [`scipy.optimize.minimize` API documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html)
 for more information on optimization-related parameters.
 
-## Loading Pre-calculated Mesh and Stream Function
+## Pre-calculated Mesh and Stream Function
+
+The stream function optimisation is a time-consuming process and dependent only on the input coil surfaces, target volume and optimisation
+parameters, above.
+
+Users wishing to explore coil designs can save the optimised data once, then re-load it while changing the remaining
+parameters, below.
+
+### Save
+
+The combined mesh and stream function can be persisted for subsequent re-use.
+
+- `sf_dest_file` (**Type:** `str`, **Default:** `'none'`)
+
+The filename (without extension) where to write the optimised stream function and other data to storage. 
+
+The file will be written to the `Pre_Optimized_Solutions` directory unless the filename contains any path delimiters
+(`/` or `\`). If the filename contains path delimiters, then the path is used as-provided. It is the user's 
+responsibility to ensure that the path already exists.
+
+**NOTE:** If they are both specified, `sf_source_file` takes precedence over `sf_dest_file`.
+
+### Load
 
 A pre-existing mesh and optimised stream function solution can be loaded from persistence.
 
 - `sf_source_file` (**Type:** `str`, **Default:** `'none'`)
 
-The filename of the NumPy pickle file of the already optimized stream function. The file is loaded from the `Pre_Optimized_Solutions` directory.
+The filename (without extension) of the file of the already optimized stream function. 
+
+The file is loaded from the `Pre_Optimized_Solutions` directory unless the filename contains any path delimiters
+(`/` or `\`). The **pyCoilGen_Data** directory is automatically included, if installed. If the filename contains path
+delimiters, then the path is used as-provided. 
 
 
 ## Build Contour Lines
@@ -404,7 +465,8 @@ The calculated 3D surface is stored in `layout_surface_mesh` property.
 
 This parameter describes the 2D profile of the conductor surface. 
 
-The default values of `[0,0]` instructs the application to generate a 10-sided circular profile with a radius  determined by the `conductor_thickness` parameter.
+The default values of `[0,0]` instructs the application to generate a 10-sided circular profile with a radius
+specified by the `conductor_thickness` parameter.
 
 A custom shape defined by specifying the x/y co-ordinates in metres in a 2xm array of the form `[[x0, x1, x2, x3, ...], [y0, y1, y2, y3, ...]]`.
 
