@@ -1,2 +1,3 @@
 """Magnetic Field Coil Generator for Python."""
-__version__ = "0.0.7"
+# Semantic Versioning according to https://peps.python.org/pep-0440/
+__version__ = "1.0rc1"
