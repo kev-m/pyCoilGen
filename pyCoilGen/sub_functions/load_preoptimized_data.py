@@ -21,7 +21,7 @@ from pyCoilGen.helpers.common import find_file
 # Logging
 log = logging.getLogger(__name__)
 
-def load_preoptimized_data(input_args) -> CoilSolution:
+def load_preoptimized_data(input_args, default_dir = 'Pre_Optimized_Solutions') -> CoilSolution:
     """
     Load pre-calculated data from a previous run.
 
@@ -42,12 +42,13 @@ def load_preoptimized_data(input_args) -> CoilSolution:
 
     Args:
         input_args (any): Input arguments for loading pre-optimised data.
+        default_dir (str, optional): Default directory to search first. Defaults to 'Pre_Optimized_Solutions'
 
     Returns:
         coilSolution (CoilSolution): Pre-optimised coil solution containing mesh and stream function information.
     """
     # Load pre-optimised data
-    load_path = find_file('Pre_Optimized_Solutions', input_args.sf_source_file)
+    load_path = find_file(default_dir, input_args.sf_source_file)
 
     # Load data from load_path
     loaded_data = np.load(load_path, allow_pickle=True)[0]
