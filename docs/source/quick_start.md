@@ -1,13 +1,33 @@
 # Quick Start
 
-While the **pyCoilGen** application can be used as a command-line application, due to the [large number of parameters](./configuration.md) to be configured, it is best used as part of a Python script. 
-
-This allows users to use `pyCoilGen`, or previously saved data, to manipulate and/or view coil design parameters, field errors, etc.
+This chapter describes how to get started with using `pyCoilGen`.
 
 ## Calling the Application
 
-The following code snippet shows an example of a basic Python script that creates a dictionary of parameters that is then passed to the `pyCoilGen` function to determine the solution.
+`pyCoilGen` has a command line interface and a Python API.
 
+### Command Line Interface
+
+To call `pyCoilGen` from the command line: 
+
+```
+
+```
+
+For example:
+
+
+```
+
+```
+
+You can access the help with `-h`. All parameters are also described in detail in the [Configuration](./configuration.md) chapter. 
+
+### Python API
+
+`pyCoilGen` also has a Python API. You can define the values for parameters in a dictionary that is then passed to the `pyCoilGen` function to determine the solution. All parameters are described in detail in the [Configuration](./configuration.md) chapter. 
+
+The following code snippet shows an example of a basic Python script:
 
 ```python
 import logging 
