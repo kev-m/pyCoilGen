@@ -34,7 +34,7 @@ For a detailed description of the algorithm, refer to the research paper [CoilGe
 
 ## Examples
 
-The [`examples`](https://github.com/kev-m/pyCoilGen/blob/master/examples) directory in the GitHub repository contains several usage examples for pyCoilGen. These examples demonstrate different scenarios and configurations for generating coil layouts.
+The [`examples`](https://github.com/kev-m/pyCoilGen/blob/master/examples) directory in the GitHub repository contains several usage examples for **pyCoilGen**. These examples demonstrate different scenarios and configurations for generating coil layouts.
 
 ## Citation
 
