@@ -323,6 +323,7 @@ The file will be written to the `Pre_Optimized_Solutions` directory unless the f
 (`/` or `\`). If the filename contains path delimiters, then the path is used as-provided. It is the user's 
 responsibility to ensure that the path already exists.
 
+**NOTE:** If they are both specified, `sf_source_file` takes precedence over `sf_dest_file`.
 
 ### Load
 
