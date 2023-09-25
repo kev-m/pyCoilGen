@@ -1,10 +1,12 @@
 import numpy as np
 
 # Test support
-from pyCoilGen.sub_functions.data_structures import DataStructure, Mesh
+from pyCoilGen.sub_functions.data_structures import DataStructure, Mesh, CoilPart
 from pyCoilGen.sub_functions.build_biplanar_mesh import build_biplanar_mesh
 from pyCoilGen.sub_functions.parameterize_mesh import parameterize_mesh
 from pyCoilGen.sub_functions.split_disconnected_mesh import split_disconnected_mesh
+from pyCoilGen.sub_functions.load_preoptimized_data import load_preoptimized_data
+from pyCoilGen.helpers.visualisation import compare
 
 # Code under test
 from pyCoilGen.helpers.persistence import save_preoptimised_data
@@ -28,12 +30,38 @@ def test_save_preoptimised_data():
 
     # Fake up a stream function
     for coil_part in parts:
-        coil_part.stream_function = np.ones((25))
+        coil_part.stream_function = np.ones((len(coil_part.coil_mesh.get_vertices())))
 
     ##################################################
     # Function under test
     save_preoptimised_data(fake_solution)
     ##################################################
+
+    # Simplify test, use load_preoptimized_data to cross check
+    crosscheck_input_args = DataStructure(sf_source_file='test_save_preoptimised_data.npy', 
+                                          surface_is_cylinder_flag=True, circular_diameter_factor=1.0, debug=0)
+    solution = load_preoptimized_data(crosscheck_input_args, 'debug')
+
+    assert len(solution.coil_parts) == len(parts)
+    assert compare(solution.combined_mesh.vertices, combined_mesh.vertices)
+    # assert compare(solution.combined_mesh.faces, combined_mesh.faces) # Faces are in a different order
+    for index, coil_part in enumerate(solution.coil_parts):
+        t_part : CoilPart = parts[index]
+        t_mesh : Mesh = t_part.coil_mesh
+
+        # Verify the Mesh
+        assert compare(t_mesh.get_vertices(), coil_part.coil_mesh.get_vertices())
+        assert compare(t_mesh.get_faces(), coil_part.coil_mesh.get_faces())
+
+        # Verify the stream_function
+        assert compare(t_part.stream_function, coil_part.stream_function)
+
+    # Verify the target_field (coords, b)
+    target_field = solution.target_field
+    assert compare(fake_target_field.coords, target_field.coords)
+    assert compare(fake_target_field.b, target_field.b)
+
+
 
 
 if __name__ == "__main__":
