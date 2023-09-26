@@ -429,9 +429,11 @@ These parameters affect the generation of the return paths (Figure 4(c)).
 
 ## Generate Outputs
 
+The primary purpose of `pyCoilGen` is to calculate the wire path of the coil that produces the desired target field.
+
 ### Generate Cylindrical PCB Output
 
-The application can optionally generate a PCB wire path that is suitable for wrapping around a cylinder.
+`pyCoilGen` can optionally generate a PCB wire path that is suitable for wrapping around a cylinder.
 
 - `make_cylindrical_pcb` (Type: `bool`, Default: `False`)
 
@@ -477,11 +479,15 @@ The application can optionally generate a 3D `.stl` trace by sweeping out a cond
 
 ## Evaluate Results
 
+Once `pyCoilGen` has calculated the wire path, it can also calculate some related values.
+
 ### Calculate Inductance
+
+`pyCoilGen` uses [FastHenry2](https://www.fastfieldsolvers.com/software.htm) to calculate the inductance and resistance of the wire path.
 
 - `skip_inductance_calculation` (Type: `bool`, Default: `False`)
 
-  If True, skips calculating the resistance and inductance of the coil solution using [FastHenry2](https://www.fastfieldsolvers.com/software.htm).
+  If True, skips calculating the resistance and inductance of the coil solution.
 
 - `conductor_cross_section_width` (Type: `float`, Default: `0.002`)
 
@@ -497,7 +503,8 @@ The application can optionally generate a 3D `.stl` trace by sweeping out a cond
 
   The default directory is determined by the host operating system. 
 
-  On Microsoft Windows, the default installation location is `'C:\Program Files (x86)\FastFieldSolvers\FastHenry2\FastHenry2.exe'`, otherwise, it is set to `'/usr/bin/fasthenry'`.
+  On Microsoft Windows, the default installation location is `'C:\Program Files (x86)\FastFieldSolvers\FastHenry2\FastHenry2.exe'`,
+  otherwise, it is set to `'/usr/bin/fasthenry'`.
 
 ### Evaluate Target Field Errors
 
@@ -505,12 +512,9 @@ The application can optionally generate a 3D `.stl` trace by sweeping out a cond
 
   If True, skips calculating the field errors during post-processing.
 
-
-
 <!--
 
 Unused parameters
-
 
 `min_point_loop_number` (Type: `int`, Default: `20`)
   Minimal required number of points of a single loop; otherwise loops will be removed.

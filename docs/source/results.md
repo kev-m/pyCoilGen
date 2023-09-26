@@ -20,7 +20,8 @@ For example, for a `project_name` of `ygradient_cylinder`, the intermediate imag
 
 ## Output Meshes
 
-If `save_stl_flag` is True, `pyCoilGen` generates two 3D `.stl` mesh files per detected coil part with a filename derived from the project name as defined in  `project_name`.
+If `save_stl_flag` is True, `pyCoilGen` generates two 3D `.stl` mesh files per detected coil part with a filename derived
+from the project name as defined in  `project_name`.
 
 For example, for a `project_name` of `ygradient_cylinder`, the `.stl` files are:
 
@@ -29,7 +30,8 @@ For example, for a `project_name` of `ygradient_cylinder`, the `.stl` files are:
 
 ## CoilSolution
 
-The `CoilSolution` class is a data structure that contains all data loaded and processed by `pyCoilGen`. You can use this information to [...].
+The `CoilSolution` class is a data structure that contains all data loaded and processed by `pyCoilGen`. You can use 
+this information to perform further analysis, especially of the `solution_errors`.
 
 ```python
 class CoilSolution:
@@ -43,7 +45,9 @@ class CoilSolution:
 
 ## SolutionErrors
 
-Unless `skip_postprocessing` is set to True, the `SolutionErrors` class contains information about the solution. You can use this information to [...].
+Unless `skip_postprocessing` is set to True, the `SolutionErrors` class contains information about the solution. You
+can use this information to evaluate the computed target field produced by the calculated coil wire path. This
+information is used by the plotting examples, below.
 
 ```python
 class SolutionErrors:

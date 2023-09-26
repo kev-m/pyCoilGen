@@ -59,6 +59,9 @@ Source = "https://github.com/kev-m/pyCoilGen"
 Changelog = "https://github.com/kev-m/pyCoilGen/blob/master/CHANGELOG.md"
 Contributing = "https://github.com/kev-m/pyCoilGen/blob/master/CONTRIBUTING.md"
 
+[project.scripts]
+pyCoilGen = "pyCoilGen:__main__.main"
+
 [tool.flit.module]
 name = "pyCoilGen"
 
