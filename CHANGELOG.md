@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.10 (2023-09-26)
+
+#### Docs
+
+* Fixing URL in pyproject.toml
+
+Full set of changes: [`0.0.9...0.0.10`](https://github.com/kev-m/pyCoilGen/compare/0.0.9...0.0.10)
+
 ## 0.0.9 (2023-09-26)
 
 #### Docs
