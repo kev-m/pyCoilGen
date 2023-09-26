@@ -8,17 +8,16 @@ This chapter describes how to get started with using `pyCoilGen`.
 
 ### Command Line Interface
 
-To call `pyCoilGen` from the command line: 
+To call `pyCoilGen` from the command line, provide the [required parameters](./configuration.md) preceded with `--`:
 
-```
-
+```bash
+pyCoilGen --parameter1 value1 --parameter2 value2 ....
 ```
 
 For example:
 
-
-```
-
+```bash
+pyCoilGen --coil_mesh_file cylinder_radius500mm_length1500mm.stl --field_shape_function 'y'
 ```
 
 You can access the help with `-h`. All parameters are also described in detail in the [Configuration](./configuration.md) chapter. 
