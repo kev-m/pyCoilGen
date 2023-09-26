@@ -30,11 +30,11 @@ pcg_plt.plot_3D_contours_with_sf(coil_solutions, 0, f'{which} 3D', save_dir=save
 coords = solution.target_field.coords
 
 # Plot the computed target field.
-plot_title=f'{which} Target Field '
+plot_title = f'{which} Target Field '
 field = solution.solution_errors.combined_field_layout
 pcg_plt.plot_vector_field_xy(coords, field, plot_title=plot_title, save_dir=save_dir)
 
 # Plot the difference between the computed target field and the input target field.
-plot_title=f'{which} Target Field Error '
+plot_title = f'{which} Target Field Error '
 field = solution.solution_errors.combined_field_layout - solution.target_field.b
 pcg_plt.plot_vector_field_xy(coords, field, plot_title=plot_title, save_dir=save_dir)

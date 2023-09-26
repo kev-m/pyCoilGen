@@ -156,7 +156,6 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
     return coil_parts
 
 
-
 def InterX(L1, *varargin, m_debug=None):
     if len(varargin) == 0:
         L2 = L1

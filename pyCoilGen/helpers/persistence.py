@@ -55,7 +55,8 @@ def load(output_dir: str, project_name: str, tag: str) -> CoilSolution:
 
     return solution
 
-def save_preoptimised_data(solution: CoilSolution, default_dir = 'Pre_Optimized_Solutions') -> str:
+
+def save_preoptimised_data(solution: CoilSolution, default_dir='Pre_Optimized_Solutions') -> str:
     """
     Writes out the combined coil mesh, stream function and target field data for re-use.
 
@@ -66,7 +67,7 @@ def save_preoptimised_data(solution: CoilSolution, default_dir = 'Pre_Optimized_
         - coil_parts[n].stream_function
         - combined_mesh.vertices, combined_mesh.faces
         - input_args.sf_dest_file
-    
+
     Args:
         solution (CoilSolution): The solution data.
         default_dir (str, optional): Default directory to search first. Defaults to 'Pre_Optimized_Solutions'
@@ -83,7 +84,7 @@ def save_preoptimised_data(solution: CoilSolution, default_dir = 'Pre_Optimized_
 
         # Create the stream_function from the coil_parts
         stream_function = solution.coil_parts[0].stream_function
-        for i in range(1,len(solution.coil_parts)):
+        for i in range(1, len(solution.coil_parts)):
             stream_function = concatenate((stream_function, solution.coil_parts[i].stream_function))
 
         # Extract the vertices and faces of the combined mesh in (m,3) format

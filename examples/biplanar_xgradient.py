@@ -42,7 +42,7 @@ if __name__ == '__main__':
         'skip_inductance_calculation': False,
         'tikhonov_reg_factor': 10,  # Tikhonov regularization factor for the SF optimization
 
-        'output_directory': 'images', # [Current directory]
+        'output_directory': 'images',  # [Current directory]
         'project_name': 'biplanar_xgradient',
         'persistence_dir': 'debug',
         'debug': DEBUG_BASIC,

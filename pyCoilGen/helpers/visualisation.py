@@ -12,26 +12,28 @@ def get_linenumber():
     cf = currentframe()
     return cf.f_back.f_lineno
 
+
 def passify_matlab(matlab_thing, magic=0):
     """
     Some MATLAB items are arrays when the have more than 1 element, else are scalars.
 
     This functions ensures that these scalars are converted into arrays.
     """
-    if magic==1:
+    if magic == 1:
         if matlab_thing.shape == (2,):
-            result = np.asarray([[matlab_thing[0]],[matlab_thing[1]]])
+            result = np.asarray([[matlab_thing[0]], [matlab_thing[1]]])
             return result
         else:
             return matlab_thing
     # Magic 2: Turn the matlab_thing array into a 1,n array
-    if magic==2:
+    if magic == 2:
         m_array = np.empty((1), dtype=object)
         m_array[0] = matlab_thing
         return m_array
     if isinstance(matlab_thing, np.ndarray):
         return matlab_thing
     return np.asarray([matlab_thing])
+
 
 def _compare_list(index, instance1, instance2, double_tolerance=1e-10, equal_nan=True):
     """
@@ -64,7 +66,7 @@ def _compare_list(index, instance1, instance2, double_tolerance=1e-10, equal_nan
 
                     if np.allclose(instance1[index], instance2[index], atol=double_tolerance) == False:
                         log.error(" Not the same value at index [%d]: %s is not %s",
-                                    index, instance1[index], instance2[index])
+                                  index, instance1[index], instance2[index])
                         return False
         except IndexError:
             return instance2.shape[0] == 0
@@ -125,7 +127,7 @@ def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True, fail_r
             for index in range(len(instance1)):
                 if instance1[index] != instance2[index]:
                     log.error(" Not the same value at index [%d]: %s is not %s",
-                                index, instance1[index], instance2[index])
+                              index, instance1[index], instance2[index])
                     return fail_result
         return True
 
@@ -138,7 +140,7 @@ def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True, fail_r
             for index in range(len(instance1)):
                 if instance1[index] != instance2[index]:
                     log.error(" Not the same value at index [%d]: %s is not %s",
-                                index, instance1[index], instance2[index])
+                              index, instance1[index], instance2[index])
                     return False
         return True
 
@@ -150,7 +152,7 @@ def compare(instance1, instance2, double_tolerance=1e-10, equal_nan=True, fail_r
         for index in range(len(instance1)):
             if _compare_list(index, instance1[index], instance2[index]) == False:
                 log.error(" Not the same value at index [%d]: %s is not %s",
-                            index, instance1[index], instance2[index])
+                          index, instance1[index], instance2[index])
                 return fail_result
         return True
 
@@ -192,7 +194,6 @@ def compare_contains(array1, array2, double_tolerance=1e-10, strict=True, equal_
             log.error("Can not find value %s in %s", item1, array2)
             return False
         return True
-
 
     if not type(array1) == type(array2):
         log.error(" Not the same type: %s is not %s", type(array1), type(array2))
@@ -628,6 +629,7 @@ def visualize_faces(tri_vertices2d, image_x_size, image_path, centres=None):
 
     # Save the image
     image.save(image_path)
+
 
 def project_vertex_onto_plane(vertex, pov):
     # Extract the coordinates of the vertex and POV

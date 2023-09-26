@@ -146,4 +146,3 @@ def refine_mesh_delegated(coil_parts, input_args):
                 coil_parts[part_ind].coil_mesh.refine(inplace=True)
 
     return coil_parts
-

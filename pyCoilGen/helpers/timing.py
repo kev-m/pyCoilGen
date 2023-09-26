@@ -3,13 +3,14 @@ import time
 
 log = logging.getLogger(__name__)
 
+
 class Timing:
     def __init__(self):
         self.start_times = []
-    
+
     def start(self):
         self.start_times.append(time.time())
-    
+
     def stop(self):
         if self.start_times:
             elapsed_time = time.time() - self.start_times.pop()
@@ -19,6 +20,7 @@ class Timing:
                 log.debug(f"Elapsed time: {elapsed_time:.6f} seconds")
         else:
             log.warning("No active timer to stop.")
+
 
 # Usage example
 if __name__ == "__main__":
