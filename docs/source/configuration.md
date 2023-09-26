@@ -483,7 +483,7 @@ Once `pyCoilGen` has calculated the wire path, it can also calculate some relate
 
 ### Calculate Inductance
 
-The application uses [FastHenry2](https://www.fastfieldsolvers.com/software.htm) to calculate the inductance and resistance of the wire path.
+`pyCoilGen` uses [FastHenry2](https://www.fastfieldsolvers.com/software.htm) to calculate the inductance and resistance of the wire path.
 
 - `skip_inductance_calculation` (Type: `bool`, Default: `False`)
 
