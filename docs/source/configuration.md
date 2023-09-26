@@ -479,7 +479,7 @@ The application can optionally generate a 3D `.stl` trace by sweeping out a cond
 
 ## Evaluate Results
 
-Once the application has calculated the wire path, it can also calculate some related values.
+Once `pyCoilGen` has calculated the wire path, it can also calculate some related values.
 
 ### Calculate Inductance
 
