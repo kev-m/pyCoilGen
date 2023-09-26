@@ -213,12 +213,12 @@ This project uses [semantic versioning](https://semver.org/).
 Build and publish the main artifact:
 ```bash
 $ flit build
-$ flit publish pypi
+$ flit publish
 ```
 
 Build and publish the data artifact if it has changed:
 ```bash
 $ cd data
 $ flit build
-$ flit publish pypi
+$ flit publish
 ```
