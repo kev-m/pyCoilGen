@@ -8,14 +8,13 @@ In solving for coil paths, `pyCoilGen` generates the following output files:
 
 ## Intermediate Images
 
-If `debug` has a value greater than 0, `pyCoilGen` produces four PNG images with a filename derived from the project name as defined in `project_name`:
+If `debug` has a value greater than 0, `pyCoilGen` produces three PNG images with a filename derived from the project name as defined in `project_name`:
 
 For example, for a `project_name` of `ygradient_cylinder`, the intermediate image files are:
 
  - `10_ygradient_cylinder_0_5_contours_0_p.png`: Shows the initial, open, contours paths.
  - `14_ygradient_cylinder_0_5_contour_centres_0_p.png`: Shows the closed contours with their contour group centres.
  - `16_ygradient_cylinder_0_5_wire_path2_uv_0_p.png`: Shows the fully joined wire path.
- - [Add the fourth file]
 
 
 ## Output Meshes
