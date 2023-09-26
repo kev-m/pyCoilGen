@@ -429,11 +429,11 @@ These parameters affect the generation of the return paths (Figure 4(c)).
 
 ## Generate Outputs
 
-The primary purpose of the application is to calculate the wire path of the coil that produces the desired target field.
+The primary purpose of `pyCoilGen` is to calculate the wire path of the coil that produces the desired target field.
 
 ### Generate Cylindrical PCB Output
 
-The application can optionally generate a PCB wire path that is suitable for wrapping around a cylinder.
+`pyCoilGen` can optionally generate a PCB wire path that is suitable for wrapping around a cylinder.
 
 - `make_cylindrical_pcb` (Type: `bool`, Default: `False`)
 
@@ -479,11 +479,11 @@ The application can optionally generate a 3D `.stl` trace by sweeping out a cond
 
 ## Evaluate Results
 
-Once the application has calculated the wire path, it can also calculate some related values.
+Once `pyCoilGen` has calculated the wire path, it can also calculate some related values.
 
 ### Calculate Inductance
 
-The application uses [FastHenry2](https://www.fastfieldsolvers.com/software.htm) to calculate the inductance and resistance of the wire path.
+`pyCoilGen` uses [FastHenry2](https://www.fastfieldsolvers.com/software.htm) to calculate the inductance and resistance of the wire path.
 
 - `skip_inductance_calculation` (Type: `bool`, Default: `False`)
 
