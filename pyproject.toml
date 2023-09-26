@@ -76,3 +76,7 @@ exclude = [
     "data",
     "pyCoilGen/pyCoilGen_develop.py",
 ]
+
+[tool.autopep8]
+max_line_length = 120
+aggressive = 0

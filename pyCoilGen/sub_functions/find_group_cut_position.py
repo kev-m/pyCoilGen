@@ -36,7 +36,7 @@ def find_group_cut_position(loop_group: TopoGroup, group_center: np.ndarray, mes
     # Test if loop normal and b_0_direction are not independent enough
     if np.linalg.norm(np.cross(b_0_direction / np.linalg.norm(b_0_direction), loop_normal)) < 0.01:
         if cut_plane_definition == 'nearest':
-            min_ind = np.argmin(np.linalg.norm(loop_group.loops[0].v - group_center.reshape(3,1), axis=0))
+            min_ind = np.argmin(np.linalg.norm(loop_group.loops[0].v - group_center.reshape(3, 1), axis=0))
             alternative_cut_direction = loop_group.loops[0].v[:, min_ind] - group_center
             alternative_cut_direction = alternative_cut_direction / np.linalg.norm(alternative_cut_direction)
             cut_plane_direction = np.cross(alternative_cut_direction, loop_normal)

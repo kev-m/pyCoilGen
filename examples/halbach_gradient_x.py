@@ -24,6 +24,7 @@ Since the processing thread can terminate without notice, e.g. when out of resou
 until all solutions have been generated.
 """
 
+
 def project_name(param_dict, combination):
     """Compute a project name based on the swept parameters"""
     # Create unique project name out of swept parameters
@@ -79,7 +80,7 @@ if __name__ == '__main__':
         'skip_inductance_calculation': False,
         'save_stl_flag': True,
 
-        'output_directory': 'images', # [Current directory]
+        'output_directory': 'images',  # [Current directory]
         'project_name': 'halbach_gradient_x',
         'persistence_dir': 'debug/halbach',
         'debug': DEBUG_BASIC,
@@ -124,4 +125,5 @@ if __name__ == '__main__':
             title = f'Halbach study\n(Tikhonov {tk})'
             base = len(sweep_params['levels'])*index
             to_plot = [base+i for i in range(len(sweep_params['levels']))]
-            plot_error_different_solutions(results, to_plot, title, x_ticks={'levels': sweep_params['levels']}, save_dir=image_dir)
+            plot_error_different_solutions(results, to_plot, title, x_ticks={
+                                           'levels': sweep_params['levels']}, save_dir=image_dir)

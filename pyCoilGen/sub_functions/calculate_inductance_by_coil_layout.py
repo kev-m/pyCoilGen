@@ -215,7 +215,6 @@ def execute_fast_henry_file_script_windows(binary: str, suffix: str, fast_henry_
         except FileNotFoundError as e:
             log.info("Exception removing temporary files: %s", e)
 
-
     results = DataStructure(ret_code=ret_code, coil_resistance=coil_resistance, coil_inductance=coil_inductance,
                             coil_cross_section=coil_cross_section)
     return results

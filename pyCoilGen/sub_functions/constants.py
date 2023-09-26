@@ -9,5 +9,6 @@ _shared_data = {'CURRENT_LEVEL': DEBUG_NONE}
 def set_level(level):
     _shared_data['CURRENT_LEVEL'] = level
 
+
 def get_level():
     return _shared_data['CURRENT_LEVEL']

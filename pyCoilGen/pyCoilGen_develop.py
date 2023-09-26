@@ -90,7 +90,6 @@ def pyCoilGen(log, input=None):
     makedirs(persistence_dir, exist_ok=True)
     makedirs(image_dir, exist_ok=True)
 
-
     ######################################################################################
     # DEVELOPMENT: Remove this
     compare_mesh_shape = True
@@ -187,12 +186,14 @@ def pyCoilGen(log, input=None):
             for part_index in range(len(coil_parts)):
                 coil_mesh = coil_parts[part_index].coil_mesh
                 m_c_part = m_c_parts[part_index]
-                p2d = visualize_projected_vertices(coil_mesh.v, 800, f'{image_dir}/02_{input_args.project_name}_coil_mesh{part_index}_v_p.png')
+                p2d = visualize_projected_vertices(
+                    coil_mesh.v, 800, f'{image_dir}/02_{input_args.project_name}_coil_mesh{part_index}_v_p.png')
                 m2d = visualize_projected_vertices(m_c_part.coil_mesh.v, 800,
                                                    f'{image_dir}/02_coil_mesh{part_index}_v_m.png')
 
                 # Plot the two UV and see the difference
-                visualize_compare_vertices(p2d, m2d, 800, f'{image_dir}/02_{input_args.project_name}_coil_mesh{part_index}_v2d_diff.png')
+                visualize_compare_vertices(
+                    p2d, m2d, 800, f'{image_dir}/02_{input_args.project_name}_coil_mesh{part_index}_v2d_diff.png')
                 visualize_compare_vertices(coil_mesh.uv, m_c_part.coil_mesh.uv.T, 800,
                                            f'{image_dir}/02_{input_args.project_name}_coil_mesh{part_index}_uv_diff.png')
 
@@ -472,7 +473,6 @@ def pyCoilGen(log, input=None):
             print('Persist pre-optimised data:')
             save_preoptimised_data(solution)
 
-
         #####################################################
         # DEVELOPMENT: Remove this
         # DEBUG
@@ -663,7 +663,8 @@ def pyCoilGen(log, input=None):
                                            f'{image_dir}/11_{input_args.project_name}_combined_loop_field_{part_index}_m.png')
 
         # Plot the two fields and see the difference
-        visualize_compare_vertices(p2d, m2d, 800, f'{image_dir}/11_{input_args.project_name}_combined_loop_field_{part_index}_diff.png')
+        visualize_compare_vertices(
+            p2d, m2d, 800, f'{image_dir}/11_{input_args.project_name}_combined_loop_field_{part_index}_diff.png')
 
         if get_level() >= DEBUG_VERBOSE:
             visualize_compare_contours(
@@ -869,14 +870,14 @@ def pyCoilGen(log, input=None):
 
             if get_level() >= DEBUG_BASIC:
                 visualize_compare_contours(coil_mesh.uv, 800, f'{image_dir}/14_{input_args.project_name}_contour_centres_{part_index}_p.png',
-                                        coil_part.contour_lines, c_group_centers.uv)
+                                           coil_part.contour_lines, c_group_centers.uv)
                 visualize_compare_contours(coil_mesh.uv, 800, f'{image_dir}/14_{input_args.project_name}_contour_centres_{part_index}_m.png',
-                                        m_c_part.contour_lines, m_group_centers.uv)
+                                           m_c_part.contour_lines, m_group_centers.uv)
 
             # Pass (alternate sorting in topological_loop_grouping)
-            ##### TODO: Fix! assert compare(c_group_centers.uv, m_group_centers.uv, double_tolerance=0.004)
+            # TODO: Fix! assert compare(c_group_centers.uv, m_group_centers.uv, double_tolerance=0.004)
             # Pass (alternate sorting in topological_loop_grouping)
-            ##### TODO: Fix! assert compare(c_group_centers.v, m_group_centers.v, double_tolerance=0.004)
+            # TODO: Fix! assert compare(c_group_centers.v, m_group_centers.v, double_tolerance=0.004)
 
         # Manual conclusion: Not identical, but close. Different paths, different group layouts.
 
@@ -964,8 +965,10 @@ def pyCoilGen(log, input=None):
             c_wire_path = p_coil_part.wire_path
             m_wire_path = m_c_part.wire_path1
             if get_level() >= DEBUG_BASIC:
-                visualize_vertex_connections(c_wire_path.uv.T, 800, f'{image_dir}/16_{input_args.project_name}_wire_path_uv_{part_index}_p.png')
-                visualize_vertex_connections(m_wire_path.uv.T, 800, f'{image_dir}/16_{input_args.project_name}_wire_path_uv_{part_index}_m.png')
+                visualize_vertex_connections(
+                    c_wire_path.uv.T, 800, f'{image_dir}/16_{input_args.project_name}_wire_path_uv_{part_index}_p.png')
+                visualize_vertex_connections(
+                    m_wire_path.uv.T, 800, f'{image_dir}/16_{input_args.project_name}_wire_path_uv_{part_index}_m.png')
 
             if use_matlab_data:
                 assert (compare(c_wire_path.uv, m_wire_path.uv))    # Fail: (2, 1540) is not (2, 1539)
@@ -990,8 +993,10 @@ def pyCoilGen(log, input=None):
             c_wire_path = c_part.wire_path
             m_wire_path = m_c_part.wire_path
 
-            visualize_vertex_connections(c_wire_path.uv.T, 800, f'{image_dir}/17_{input_args.project_name}_wire_path2_uv_{index1}_p.png')
-            visualize_vertex_connections(m_wire_path.uv.T, 800, f'{image_dir}/17_{input_args.project_name}_wire_path2_uv_{index1}_m.png')
+            visualize_vertex_connections(
+                c_wire_path.uv.T, 800, f'{image_dir}/17_{input_args.project_name}_wire_path2_uv_{index1}_p.png')
+            visualize_vertex_connections(
+                m_wire_path.uv.T, 800, f'{image_dir}/17_{input_args.project_name}_wire_path2_uv_{index1}_m.png')
 
             if use_matlab_data:
                 visualize_compare_vertices(c_wire_path.uv.T, m_wire_path.uv.T, 800,
@@ -1066,17 +1071,17 @@ def pyCoilGen(log, input=None):
         coil_parts = create_sweep_along_surface(coil_parts, input_args)
         save(persistence_dir, project_name, '19', solution)
 
-
     # Calculate the inductance by coil layout
     print('Calculate the inductance by coil layout:')
-    # coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance 
+    # coil_inductance, radial_lumped_inductance, axial_lumped_inductance, radial_sc_inductance, axial_sc_inductance
     solution = calculate_inductance_by_coil_layout(solution, input_args)
     save(persistence_dir, project_name, '20', solution)
 
     # Evaluate the field errors
     print('Evaluate the field errors:')
     timer.start()
-    coil_parts, solution_errors = evaluate_field_errors(coil_parts, input_args, solution.target_field, solution.sf_b_field)
+    coil_parts, solution_errors = evaluate_field_errors(
+        coil_parts, input_args, solution.target_field, solution.sf_b_field)
     timer.stop()
     solution.solution_errors = solution_errors
     save(persistence_dir, project_name, '21', solution)
@@ -1104,55 +1109,55 @@ if __name__ == "__main__":
     # Examples/biplanar_xgradient.m
     # Examples/biplanar_xgradient.m
     arg_dict1 = {
-        #"b_0_direction": [0, 0, 1],
-        #"biplanar_mesh_parameter_list": [0.25, 0.25, 20, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
-        #"circular_diameter_factor": 1.0,  # was circular_diameter_factor_cylinder_parameterization
-        #"circular_mesh_parameter_list": [0.25, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        # "b_0_direction": [0, 0, 1],
+        # "biplanar_mesh_parameter_list": [0.25, 0.25, 20, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
+        # "circular_diameter_factor": 1.0,  # was circular_diameter_factor_cylinder_parameterization
+        # "circular_mesh_parameter_list": [0.25, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         "coil_mesh_file": "bi_planer_rectangles_width_1000mm_distance_500mm.stl",
-        #"conductor_cross_section_height": 0.002,
-        #"conductor_cross_section_width": 0.002,
-        #"conductor_thickness": 0.005,
-        #"cross_sectional_points": [0, 0],
-        #"cylinder_mesh_parameter_list": [0.4, 0.1125, 50, 50, 0.0, 1.0, 0.0, 0.0],
+        # "conductor_cross_section_height": 0.002,
+        # "conductor_cross_section_width": 0.002,
+        # "conductor_thickness": 0.005,
+        # "cross_sectional_points": [0, 0],
+        # "cylinder_mesh_parameter_list": [0.4, 0.1125, 50, 50, 0.0, 1.0, 0.0, 0.0],
         "field_shape_function": "x",
         "force_cut_selection": ['high'],
-        #"gauss_order": 2,
+        # "gauss_order": 2,
         "interconnection_cut_width": 0.05,
         "iteration_num_mesh_refinement": 0,  # MATLAB 1 is default, but 0 is faster
         "level_set_method": "primary",
         "levels": 14,
-        #"make_cylindrical_pcb": False,
-        #"min_loop_significance": 1,
+        # "make_cylindrical_pcb": False,
+        # "min_loop_significance": 1,
         "normal_shift_length": 0.01,
-        #"normal_shift_smooth_factors": [2, 3, 2],
-        #"pcb_interconnection_method": "spiral_in_out",
-        #"pcb_spiral_end_shift_factor": 10,
-        #"planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        #"plot_flag": True,
+        # "normal_shift_smooth_factors": [2, 3, 2],
+        # "pcb_interconnection_method": "spiral_in_out",
+        # "pcb_spiral_end_shift_factor": 10,
+        # "planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        # "plot_flag": True,
         "pot_offset_factor": 0.25,
-        #"save_stl_flag": True,
+        # "save_stl_flag": True,
         "secondary_target_mesh_file": "none",
         "secondary_target_weight": 0.5,
         "set_roi_into_mesh_center": True,
-        "sf_opt_method": "tikhonov", # "tikhonov"
+        "sf_opt_method": "tikhonov",  # "tikhonov"
         # "minimize_method": "SLSQP", # Only used when 'sf_opt_method' is not tikhonov
         # "minimize_method_parameters" : "{'tol':1.e-6}",
         # "minimize_method_options" : "{'disp': True, 'maxiter' : 1000}",
         "sf_source_file": "none",
-        #"skip_calculation_min_winding_distance": True,  # Default: 1
+        # "skip_calculation_min_winding_distance": True,  # Default: 1
         "skip_inductance_calculation": False,
-        #"skip_normal_shift": False,
+        # "skip_normal_shift": False,
         "skip_postprocessing": False,
-        #"skip_sweep": False,
-        #"smooth_factor": 1,
-        #"specific_conductivity_conductor": 1.8e-8,
+        # "skip_sweep": False,
+        # "smooth_factor": 1,
+        # "specific_conductivity_conductor": 1.8e-8,
         "surface_is_cylinder_flag": True,
-        #"target_field_definition_field_name": "none",
-        #"target_field_definition_file": "none",
-        #"target_gradient_strength": 1,
+        # "target_field_definition_field_name": "none",
+        # "target_field_definition_file": "none",
+        # "target_gradient_strength": 1,
         "target_mesh_file": "none",
         "target_region_radius": 0.1,    # GitHub
-        "target_region_resolution": 5, # MATLAB 10 is the default but 5 is faster
+        "target_region_resolution": 5,  # MATLAB 10 is the default but 5 is faster
         "tikhonov_reg_factor": 10,
         "use_only_target_mesh_verts": False,
 
@@ -1183,7 +1188,7 @@ if __name__ == "__main__":
         "level_set_method": "primary",
         "levels": 20,
         "make_cylindrical_pcb": True,
-        "min_loop_significance": 1, # Was 0.1, a bug?
+        "min_loop_significance": 1,  # Was 0.1, a bug?
         "normal_shift_length": 0.025,
         "normal_shift_smooth_factors": [2, 3, 2],
         "pcb_interconnection_method": "spiral_in_out",

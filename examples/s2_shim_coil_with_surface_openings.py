@@ -51,7 +51,7 @@ if __name__ == '__main__':
         'tikhonov_reg_factor': 10,  # Tikhonov regularization factor for the SF optimization
 
 
-        'output_directory': 'images', # [Current directory]
+        'output_directory': 'images',  # [Current directory]
         'project_name': 's2_shim_coil',
         'persistence_dir': 'debug',
         'debug': DEBUG_BASIC,

@@ -23,7 +23,8 @@ from pyCoilGen.helpers.common import find_file
 # Logging
 log = logging.getLogger(__name__)
 
-def load_preoptimized_data(input_args, default_dir = 'Pre_Optimized_Solutions') -> CoilSolution:
+
+def load_preoptimized_data(input_args, default_dir='Pre_Optimized_Solutions') -> CoilSolution:
     """
     Load pre-calculated data from a previous run.
 

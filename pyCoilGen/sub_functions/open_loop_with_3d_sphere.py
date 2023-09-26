@@ -23,13 +23,13 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
     Returns:
         opened_loop (Shape3D), uv_cut (np.ndarray), cut_points (Shape3D): The opened loop, 2D contour of the cut shape, and cut points.
     """
-    curve_points = curve_points_in.copy() # Copy so that edits of curve_points do not affect source curve_points_in
+    curve_points = curve_points_in.copy()  # Copy so that edits of curve_points do not affect source curve_points_in
 
     # Remove doubled points from the curve
     diff_array = curve_points.v[:, 1:] - curve_points.v[:, :-1]
     # Wrap the diff, like MATLAB does
     wrapped = curve_points.v[:, 0] - curve_points.v[:, -1]
-    wrapped_array = [[wrapped[0]],[wrapped[1]],[wrapped[2]]] # MATLAB shape
+    wrapped_array = [[wrapped[0]], [wrapped[1]], [wrapped[2]]]  # MATLAB shape
     diff_array = np.hstack((diff_array, wrapped_array))
     diff_array_norm = np.linalg.norm(diff_array, axis=0)
     indices_to_delete = np.where(abs(diff_array_norm) < 1e-10)
@@ -95,7 +95,7 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
         shift_ind = np.min(np.where(inside_sphere_ind_unique == True)) * (-1)
 
         cut_points = Shape3D(v=curve_points.v[:, first_sphere_penetration_locations] + sphere_crossing_vecs.v * ((repeated_radii - first_distances) / (second_distances - first_distances)),
-                            uv=curve_points.uv[:, first_sphere_penetration_locations] + sphere_crossing_vecs.uv * ((repeated_radii - first_distances) / (second_distances - first_distances)))
+                             uv=curve_points.uv[:, first_sphere_penetration_locations] + sphere_crossing_vecs.uv * ((repeated_radii - first_distances) / (second_distances - first_distances)))
 
         curve_points.v = np.roll(curve_points.v, shift_ind, axis=1)
         curve_points.uv = np.roll(curve_points.uv, shift_ind, axis=1)
@@ -108,9 +108,9 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
         # Build the "opened" loop with the cut_points as open ends
         # Remove curve points which are still inside the sphere
         finished_loop_case1 = Shape3D(v=np.hstack((cut_points.v[:, [0]], curve_points.v, cut_points.v[:, [-1]])),
-                                    uv=np.hstack((cut_points.uv[:, [0]], curve_points.uv, cut_points.uv[:, [-1]])))
+                                      uv=np.hstack((cut_points.uv[:, [0]], curve_points.uv, cut_points.uv[:, [-1]])))
         finished_loop_case2 = Shape3D(v=np.hstack((cut_points.v[:, [-1]], curve_points.v, cut_points.v[:, [0]])),
-                                    uv=np.hstack((cut_points.uv[:, [-1]], curve_points.uv, cut_points.uv[:, [0]])))
+                                      uv=np.hstack((cut_points.uv[:, [-1]], curve_points.uv, cut_points.uv[:, [0]])))
 
         mean_dist_1 = np.sum(np.linalg.norm(finished_loop_case1.v[:, 1:] - finished_loop_case1.v[:, :-1], axis=0))
         mean_dist_2 = np.sum(np.linalg.norm(finished_loop_case2.v[:, 1:] - finished_loop_case2.v[:, :-1], axis=0))
@@ -123,7 +123,7 @@ def open_loop_with_3d_sphere(curve_points_in: Shape3D, sphere_center: np.ndarray
         log.debug(" Caught ValueError exception, setting cut_points to empty")
         opened_loop = Shape3D(v=curve_points.v, uv=curve_points.uv)
         cut_points = Shape3D(uv=np.array([]), v=np.array([]))
-    
+
     # Generate the 2d contour of the cut shape for later plotting
     radius_2d = np.linalg.norm(opened_loop.uv[:, [0]] - opened_loop.uv[:, [-1]]) / 2
     sin_cos_arr = np.array([

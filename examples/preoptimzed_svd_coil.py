@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
         'project_name': 'Preoptimzed_SVD_Coil',
         'persistence_dir': 'debug',
-        'output_directory': 'images', # [Current directory]
+        'output_directory': 'images',  # [Current directory]
         'debug': DEBUG_BASIC,
     }
 

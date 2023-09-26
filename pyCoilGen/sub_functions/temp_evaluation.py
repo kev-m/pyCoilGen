@@ -10,7 +10,8 @@ from .data_structures import CoilSolution
 
 log = logging.getLogger(__name__)
 
-def temp_evaluation(coil_solution : CoilSolution, input, target_field):
+
+def temp_evaluation(coil_solution: CoilSolution, input, target_field):
     """
     Evaluates whether pre-calculated values can be used from previous calculations.
 

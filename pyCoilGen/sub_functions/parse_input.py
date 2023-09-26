@@ -12,7 +12,7 @@ def parse_input(parse_cli=True):
 
     Args:
         parse_cli (bool): Whether to parse the command-line or not. Default: True
-    
+
     Returns:
         input (argparse.Namespace): Parsed input arguments.
     """
@@ -49,7 +49,7 @@ def parse_input(parse_cli=True):
                         default='none', help="File of the secondary target mesh")
 
     # Add the secondary target weight
-    parser.add_argument('--secondary_target_weight', type=float, default=1, 
+    parser.add_argument('--secondary_target_weight', type=float, default=1,
                         help="Weight for the secondary target points")
 
     # Add flag to use only target mesh vertices as target coordinates
@@ -94,7 +94,6 @@ def parse_input(parse_cli=True):
     # Specify whether to save the pre-optimised stream function for later re-use
     parser.add_argument('--sf_dest_file', type=str, default='none',
                         help="File where to save the optimized stream function, for  re-use with 'sf_source_file'.")
-
 
     # Add the number of potential levels
     parser.add_argument('--levels', type=int, default=10,
@@ -166,15 +165,15 @@ def parse_input(parse_cli=True):
                         help="Number of refinement iterations of the mesh together with the stream function")
 
     # Add the direction (vector) along which the interconnections will be aligned
-    parser.add_argument('--b_0_direction', nargs='+', type=float, default=[0, 0, 1], 
+    parser.add_argument('--b_0_direction', nargs='+', type=float, default=[0, 0, 1],
                         help="Direction (vector) along which the interconnections will be aligned")
 
     # Add the directory of the .stl geometry files
-    parser.add_argument('--geometry_source_path', type=str, default='Geometry_Data', 
+    parser.add_argument('--geometry_source_path', type=str, default='Geometry_Data',
                         help="Directory of the .stl geometry files")
 
     # Add the output directory
-    parser.add_argument('--output_directory', type=str, default=str(Path.cwd()), 
+    parser.add_argument('--output_directory', type=str, default=str(Path.cwd()),
                         help="Output directory")
 
     # Add the smoothing parameter
@@ -309,7 +308,7 @@ def parse_input(parse_cli=True):
     os_system = platform.system()
     if os_system == "Windows":
         fast_henry_path = 'C:\\Program Files (x86)\\FastFieldSolvers\\FastHenry2\\FastHenry2.exe'
-    else: # Assume Linux or equivalent
+    else:  # Assume Linux or equivalent
         fast_henry_path = '/usr/bin/fasthenry'
     parser.add_argument('--fasthenry_bin', type=str, default=fast_henry_path,
                         help=f"Location of the FastHenry2 binary")

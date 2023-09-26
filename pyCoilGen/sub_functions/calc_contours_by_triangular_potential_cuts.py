@@ -13,6 +13,7 @@ from .data_structures import ContourLine, UnarrangedLoop, UnarrangedLoopContaine
 
 log = logging.getLogger(__name__)
 
+
 def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
     """
     Center the stream function potential around zero and add zeros around the periphery.
@@ -56,7 +57,6 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # Returns the edges that are shared by the adjacent faces (index into vertices array).
         edge_nodes = mesh.face_adjacency_edges
         num_edges = edge_nodes.shape[0]
-
 
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- edge_faces shape: %s, max(%d)", edge_faces.shape, np.max(edge_faces))  # 696,2: Max: 263
@@ -133,9 +133,10 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # Start of Part 2
         # NOTE: The 'raw' RawPart does not need to be part of a CoilPart.
         #       Consider renaming 'part.raw' to 'raw_part' and removing 'raw' from the CoilPart structure.
-        # Create the unsorted points structure        
+        # Create the unsorted points structure
         part.raw = RawPart()
-        empty_potential_groups = [len(potential_sorted_cut_points[i]) == 0 for i in range(len(potential_sorted_cut_points))]
+        empty_potential_groups = [len(potential_sorted_cut_points[i]) ==
+                                  0 for i in range(len(potential_sorted_cut_points))]
         num_false = len(empty_potential_groups) - sum(empty_potential_groups)
         part.raw.unsorted_points = [UnsortedPoints() for _ in range(num_false)]
         part.raw.unarranged_loops = [UnarrangedLoopContainer(loop=[]) for _ in range(num_false)]
@@ -272,7 +273,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     # Test the chirality of the segment on the potential gradient on that segment
                     segment_vec = potential_loop_item.uv[test_edge + 1] - potential_loop_item.uv[test_edge]
 
-                    cross_vec = np.cross([segment_vec[0], segment_vec[1], 0], 
+                    cross_vec = np.cross([segment_vec[0], segment_vec[1], 0],
                                          [pot_gradient_vec[0], pot_gradient_vec[1], 0])
 
                     potential_loop_item.current_orientation = int(np.sign(cross_vec[2]))
@@ -281,7 +282,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                         potential_loop_item.uv = np.flipud(potential_loop_item.uv)
                         potential_loop_item.edge_inds = np.flipud(potential_loop_item.edge_inds)
                 else:
-                    #raise ValueError('Some loops are too small and contain only 2 points, therefore ill-defined')
+                    # raise ValueError('Some loops are too small and contain only 2 points, therefore ill-defined')
                     log.error('Some loops are too small and contain only 2 points, therefore ill-defined')
         # End of Part 3
 
@@ -297,16 +298,16 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                 uv = raw_part.unarranged_loops[pot_ind].loop[loop_ind].uv
                 contour_line.uv = uv.T
 
-                potential = raw_part.unsorted_points[pot_ind].potential                
+                potential = raw_part.unsorted_points[pot_ind].potential
                 contour_line.potential = potential
-                
+
                 uv_center = np.mean(contour_line.uv, axis=1)
                 uv_to_center_vecs = contour_line.uv[:, :-1] - uv_center[:, np.newaxis]
                 uv_to_center_vecs = np.vstack((uv_to_center_vecs, np.zeros(uv_to_center_vecs.shape[1])))
                 uv_vecs = contour_line.uv[:, 1:] - contour_line.uv[:, :-1]
                 uv_vecs = np.vstack((uv_vecs, np.zeros(uv_vecs.shape[1])))
-                rot_vecs = np.cross(uv_to_center_vecs.T, uv_vecs.T) # Transpose
-                track_orientation = int(np.sign(np.sum(rot_vecs[:,2]))) # Swap, because vector is transposed               
+                rot_vecs = np.cross(uv_to_center_vecs.T, uv_vecs.T)  # Transpose
+                track_orientation = int(np.sign(np.sum(rot_vecs[:, 2])))  # Swap, because vector is transposed
                 contour_line.current_orientation = track_orientation
 
                 contour_index += 1
@@ -314,4 +315,3 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # End of Part 4
 
     return coil_parts
-

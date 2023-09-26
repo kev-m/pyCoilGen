@@ -8,13 +8,16 @@ import numpy as np
 # Logging
 import logging
 
+
 def load_matlab(filename):
     mat = scipy.io.loadmat(filename+'.mat')
     return mat
 
+
 def save_numpy(filename, data):
     result = np.save(filename+'.npy', data)
     return result
+
 
 if __name__ == "__main__":
     # Set up logging
@@ -22,9 +25,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     # logging.basicConfig(level=logging.INFO)
 
-    #mat = load_matlab('../CoilGen/target_fields/intraoral_dental_target_field')
-    #log.debug(" Loaded: %s", mat)
-    #result = save_numpy('target_fields/intraoral_dental_target_field', mat)
+    # mat = load_matlab('../CoilGen/target_fields/intraoral_dental_target_field')
+    # log.debug(" Loaded: %s", mat)
+    # result = save_numpy('target_fields/intraoral_dental_target_field', mat)
 
     mat = load_matlab('debug/result_y_gradient')
     log.debug(" Loaded: %s", mat)
