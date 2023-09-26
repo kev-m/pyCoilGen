@@ -429,7 +429,7 @@ These parameters affect the generation of the return paths (Figure 4(c)).
 
 ## Generate Outputs
 
-The primary purpose of the application is to calculate the wire path of the coil that produces the desired target field.
+The primary purpose of `pyCoilGen` is to calculate the wire path of the coil that produces the desired target field.
 
 ### Generate Cylindrical PCB Output
 
