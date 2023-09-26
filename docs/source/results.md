@@ -1,36 +1,35 @@
 # Interpreting the Results
 
-In solving for coil paths, `pyCoilGen` also generates various output files.
+In solving for coil paths, `pyCoilGen` generates the following output files:
 
-If the `debug` input parameter is larger than 0, it produces some output images.
-
-Unless suppressed by `save_stl_flag`, it generates 3D ``.stl`` mesh files.
-
-Unless suppressed by `skip_postprocessing`, it computes `SolutionErrors`.
+- If `debug` is greater than 0, it produces some intermediate images.
+- If `save_stl_flag` is True, it generates 3D `.stl` mesh files. By default, `save_stl_flag` is True. 
+- If `skip_postprocessing` is True, it skips computation of `SolutionErrors`. By default, `skip_postprocessing` is False. 
 
 ## Intermediate Images
 
-If the `debug` input parameter is larger than 0, the application produces four images with a filename derived from the project name as defined in `project_name`.
+If `debug` has a value greater than 0, `pyCoilGen` produces four PNG images with a filename derived from the project name as defined in `project_name`:
 
-For example:
+For example, for a `project_name` of `ygradient_cylinder`, the intermediate image files are:
 
  - `10_ygradient_cylinder_0_5_contours_0_p.png`: Shows the initial, open, contours paths.
  - `14_ygradient_cylinder_0_5_contour_centres_0_p.png`: Shows the closed contours with their contour group centres.
  - `16_ygradient_cylinder_0_5_wire_path2_uv_0_p.png`: Shows the fully joined wire path.
+ - [Add the fourth file]
 
 
 ## Output Meshes
 
-Unless suppressed by `save_stl_flag`, the application generates two 3D `.stl` mesh files per detected coil part with a filename derived from the project name as defined in  `project_name`.
+If `save_stl_flag` is True, `pyCoilGen` generates two 3D `.stl` mesh files per detected coil part with a filename derived from the project name as defined in  `project_name`.
 
-For example:
+For example, for a `project_name` of `ygradient_cylinder`, the `.stl` files are:
 
  - `ygradient_cylinder_surface_part0_y.stl` : Shows the winding coil surface for the first coil part.
  - `ygradient_cylinder_swept_layout_part0_y.stl` : Shows the 3D swept mesh of the winding coil conductor for the first coil part.
 
 ## CoilSolution
 
-The `CoilSolution` class is a data structure that contains all data loaded and processed by the application.
+The `CoilSolution` class is a data structure that contains all data loaded and processed by `pyCoilGen`. You can use this information to [...].
 
 ```python
 class CoilSolution:
@@ -44,7 +43,7 @@ class CoilSolution:
 
 ## SolutionErrors
 
-Unless suppressed by `skip_postprocessing`, the `SolutionErrors` class contains information about the solution.
+Unless `skip_postprocessing` is set to True, the `SolutionErrors` class contains information about the solution. You can use this information to [...].
 
 ```python
 class SolutionErrors:
@@ -57,9 +56,9 @@ class SolutionErrors:
     opt_current_layout: float                   # The computed current that will achieve the desired target field.
 ```
 
-The `combined_field_layout` contains the magnetic field vectors due to the final coil wire path.
+`combined_field_layout` contains the magnetic field vectors due to the final coil wire path.
 
-The `combined_field_loops` contains the magnetic field vectors due to the unconnected contour loops.
+`combined_field_loops` contains the magnetic field vectors due to the unconnected contour loops.
 
 ### FieldErrors
 
@@ -81,13 +80,13 @@ class FieldErrors:
     mean_rel_error_unconnected_contours_vs_stream_function_field: float
 ```
 
-The `layout` variables refer to values computed due to the final wire path.
+The `layout` variables contain values computed due to the final wire path.
 
-The `unconnected_contours` variables refer to values computed due to the contour loops.
+The `unconnected_contours` variables contain values computed due to the contour loops.
 
-The `vs_target` variables refer to values computed with respect to the provided target field.
+The `vs_target` variables contain values computed with respect to the provided target field.
 
-The `vs_stream_function` variables refer to values computed with respect to the computed stream function.
+The `vs_stream_function` variables contain values computed with respect to the computed stream function.
 
 ## Visualising the Results
 
@@ -209,17 +208,17 @@ This example also generates plots that summarise the key error parameters.
 ```{figure} figures/plot_solutions_Halbach_study_Tikhonov05.png
 :scale: 75 %
 :align: center
-:alt: A graph plot showing the error metrics of error versus levels of the parameter sweep.
+:alt: A plot of showing the error metrics of error versus levels of the parameter sweep.
 
-A graph plot showing the error metrics of the parameter sweep. This plot shows the effect of `level` on the error values, for `tikhonov_reg_factor` equal to 5.
+A plot showing the error metrics of the parameter sweep. This plot shows the effect of `level` on the error values, for `tikhonov_reg_factor` equal to 5.
 ```
 
 ```{figure} figures/plot_solutions_Halbach_study_Tikhonov10.png
 :scale: 75 %
 :align: center
-:alt: A graph plot showing the error metrics of error versus levels of the parameter sweep.
+:alt: A plot showing the error metrics of error versus levels of the parameter sweep.
 
-A graph plot showing the error metrics of the parameter sweep. This plot shows the effect of `level` on the error values, for `tikhonov_reg_factor` equal to 10.
+A plot showing the error metrics of the parameter sweep. This plot shows the effect of `level` on the error values, for `tikhonov_reg_factor` equal to 10.
 ```
 
 As can be seen in these two plots, there is a sweet spot at `tikhonov_reg_factor=5` and `levels=17`.
