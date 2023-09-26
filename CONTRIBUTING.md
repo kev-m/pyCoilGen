@@ -183,6 +183,14 @@ make clean html
 
 Load the `docs/build/html/index.html`.
 
+### Create a Tag
+
+**pyCoilGen** uses semantic versioning. Update the version number in (pyCoilGen/__init__.py)[pyCoilGen/__init__.py] according to changes since the previous tag.
+Create a tag with only the current number, e.g. `0.0.9`.
+```bash
+git tag 0.0.9
+```
+
 ### Update the ChangeLog
 
 **pyCoilGen** uses `auto-changelog` to parse git commit messages and generate the `CHANGELOG.md`.
@@ -191,6 +199,7 @@ Load the `docs/build/html/index.html`.
 auto-changelog
 git add CHANGELOG.md
 git commit -m "Updating CHANGELOG"
+git push --tags
 ```
 
 ### Building the Package
@@ -201,17 +210,15 @@ The project details are defined in the `pyproject.toml` files. The version and d
 
 This project uses [semantic versioning](https://semver.org/).
 
-Build and publish the main artifact (temporary: to the `testpypi` server):
-
+Build and publish the main artifact:
 ```bash
 $ flit build
-$ flit publish --repository testpypi
+$ flit publish pypi
 ```
 
-Build and publish the data artifact (temporary: to the `testpypi` server):
-
+Build and publish the data artifact if it has changed:
 ```bash
 $ cd data
 $ flit build
-$ flit publish --repository testpypi
+$ flit publish pypi
 ```
