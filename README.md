@@ -5,6 +5,8 @@
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/kev-m/pyCoilGen?sort=semver)](https://github.com/kev-m/pyCoilGen/releases)
 [![Code style: autopep8](https://img.shields.io/badge/code%20style-autopep8-000000.svg)](https://pypi.org/project/autopep8/)
 
+![pyCoilGen logo](https://github.com/kev-m/pyCoilGen/blob/master/docs/source/figures/Logo_small.png)
+
 The **pyCoilGen** project is a community-based tool for the generation of [gradient field coil](https://mriquestions.com/gradient-coils.html) layouts within the
 [MRI](https://en.wikipedia.org/wiki/Magnetic_resonance_imaging) and [NMR](https://en.wikipedia.org/wiki/Nuclear_magnetic_resonance) environments. **pyCoilGen** is based on a boundary element method and generates interconnected non-overlapping wire-tracks on 3D support structures. 
 

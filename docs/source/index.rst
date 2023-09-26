@@ -22,6 +22,9 @@ pyCoilGen User Guide
    :target: https://pypi.org/project/autopep8/
    :alt: Code style - Black
 
+.. image:: figures/Logo_small.png
+  :alt: pyCoilGen logo, a cylinder lying on its side with a complex wire wrapped around it. The word pyCoilGen written underneath.
+
 .. toctree::
    :maxdepth: 2
    :numbered: 4
