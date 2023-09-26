@@ -433,7 +433,7 @@ The primary purpose of `pyCoilGen` is to calculate the wire path of the coil tha
 
 ### Generate Cylindrical PCB Output
 
-The application can optionally generate a PCB wire path that is suitable for wrapping around a cylinder.
+`pyCoilGen` can optionally generate a PCB wire path that is suitable for wrapping around a cylinder.
 
 - `make_cylindrical_pcb` (Type: `bool`, Default: `False`)
 
