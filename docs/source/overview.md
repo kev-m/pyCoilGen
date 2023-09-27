@@ -1,7 +1,9 @@
 # Overview
 
-**pyCoilGen** is a community-based tool for the generation of [gradient field coil](https://mriquestions.com/gradient-coils.html) layouts within the
-[MRI](https://en.wikipedia.org/wiki/Magnetic_resonance_imaging) and [NMR](https://en.wikipedia.org/wiki/Nuclear_magnetic_resonance) environments. 
+**pyCoilGen** is an open source tool for generating coil winding layouts, such as
+[gradient field coils](https://mriquestions.com/gradient-coils.html), within the
+[MRI](https://en.wikipedia.org/wiki/Magnetic_resonance_imaging) and
+[NMR](https://en.wikipedia.org/wiki/Nuclear_magnetic_resonance) environments.
 
 **pyCoilGen** is based on a boundary element method and generates interconnected non-overlapping wire-tracks on 3D support structures.
 
