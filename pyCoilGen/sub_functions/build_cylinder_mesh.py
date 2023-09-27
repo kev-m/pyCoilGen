@@ -42,8 +42,7 @@ def build_cylinder_mesh(
     x_positions = x_positions[:-1]  # Remove repetition at the end
     y_positions = y_positions[:-1]  # Remove repetition at the end
     z_positions = np.linspace(-cylinder_height / 2, cylinder_height / 2,
-                              num_longitudinal_divisions+2)
-    z_positions = z_positions[:-1]  # Remove repetition at the end
+                              num_longitudinal_divisions+1)
 
     # Create the mesh vertices
     vertices_x = np.tile(x_positions, num_longitudinal_divisions+1)
