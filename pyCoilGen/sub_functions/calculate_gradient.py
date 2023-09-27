@@ -35,7 +35,7 @@ def calculate_gradient(coil_parts: List[CoilPart], input_args, target_field: Tar
     )
 
     for coil_part in coil_parts:
-        if hasattr(coil_part, 'wire_path'):
+        if coil_part.wire_path is not None:
             DBxdxyz, DBydxyz, DBzdxyz = direct_biot_savart_gradient_calc_3(
                 coil_part.wire_path.v.T, target_field_coords_T)
         else:
