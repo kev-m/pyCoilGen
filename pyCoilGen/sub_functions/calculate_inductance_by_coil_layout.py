@@ -44,18 +44,16 @@ def calculate_inductance_by_coil_layout(solution: CoilSolution, input_args) -> C
     Returns:
         CoilSolution: A data structure containing inductance and other related values.
     """
-
-    coil_parts = solution.coil_parts
-    for coil_part in coil_parts:
-        # Calculate the length of the coil
-        wire_path = coil_part.wire_path
-        coil_part.coil_length = np.sum(np.linalg.norm(wire_path.v[:, 1:] - wire_path.v[:, :-1], axis=0))
-
     skip_inductance_calculation = input_args.skip_inductance_calculation
-
-    down_sample_factor = 10
-
+    coil_parts = solution.coil_parts
     if not skip_inductance_calculation:
+        for coil_part in coil_parts:
+            # Calculate the length of the coil
+            wire_path = coil_part.wire_path
+            coil_part.coil_length = np.sum(np.linalg.norm(wire_path.v[:, 1:] - wire_path.v[:, :-1], axis=0))
+
+        down_sample_factor = 10
+
         conductor_width = input_args.conductor_cross_section_width
         conductor_height = input_args.conductor_cross_section_height
         fasthenry_bin = input_args.fasthenry_bin
