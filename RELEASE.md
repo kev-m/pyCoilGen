@@ -24,7 +24,7 @@ Load the `docs/build/html/index.html`.
 
 ## Create a Tag
 
-**pyCoilGen** uses semantic versioning. Update the version number in (pyCoilGen/__init__.py)[pyCoilGen/__init__.py] according to changes since the previous tag.
+**pyCoilGen** uses semantic versioning. Update the version number in [pyCoilGen/__init__.py](pyCoilGen/__init__.py) according to changes since the previous tag.
 
 Create a tag with only the current number, e.g. `0.0.9`.
 ```bash
