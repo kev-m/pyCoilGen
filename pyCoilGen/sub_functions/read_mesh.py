@@ -5,11 +5,7 @@ import os
 import logging
 
 # Local imports
-from .build_cylinder_mesh import build_cylinder_mesh
-# from build_double_cone_mesh import build_double_cone_mesh
-from .build_planar_mesh import build_planar_mesh
-# from build_circular_mesh import build_circular_mesh
-from .build_biplanar_mesh import build_biplanar_mesh
+from pyCoilGen.mesh_factory import load_plugins as load_mesh_factory_plugins
 
 from .data_structures import DataStructure, Mesh
 
@@ -34,6 +30,7 @@ def read_mesh(input_args):
     # Read the input mesh
     log.debug("Loading mesh: %s", input_args.coil_mesh_file)
 
+    # Preserve legacy behaviour
     if input_args.coil_mesh_file.endswith('.stl'):
         log.debug("Loading STL")
         # Load the stl file; read the coil mesh surface
@@ -43,33 +40,21 @@ def read_mesh(input_args):
         log.warning(" Loaded mesh from STL. Assuming shape representative normal is [0,0,1]!")
         coil_mesh.normal_rep = np.array([0.0, 0.0, 1.0])
 
-    elif input_args.coil_mesh_file == 'create cylinder mesh':
-        # No external mesh is specified by stl file; create default cylindrical mesh
-        mesh_data = build_cylinder_mesh(*input_args.cylinder_mesh_parameter_list)
-        coil_mesh = create_unique_noded_mesh(mesh_data)
-
-    elif input_args.coil_mesh_file == 'create planar mesh':
-        # No external mesh is specified by stl file; create default planar mesh
-        mesh_data = build_planar_mesh(*input_args.planar_mesh_parameter_list)
-        coil_mesh = create_unique_noded_mesh(mesh_data)
-
-    elif input_args.coil_mesh_file == 'create bi-planar mesh':
-        # No external mesh is specified by stl file; create default biplanar mesh
-        mesh_data = build_biplanar_mesh(*input_args.biplanar_mesh_parameter_list)
-        coil_mesh = create_unique_noded_mesh(mesh_data)
     else:
-        raise ValueError("No mesh specified! Unable to continue.")
-    """
-    elif input.coil_mesh_file == 'create double cone mesh':
-        # No external mesh is specified by stl file; create default double cone mesh
-        mesh_data = build_double_cone_mesh(*input.double_cone_mesh_parameter_list)
-        coil_mesh = create_unique_noded_mesh(mesh_data)
+        plugin_name = input_args.coil_mesh_file.replace(' ', '_').replace('-','_')
+        plugins = load_mesh_factory_plugins()
 
-    elif input.coil_mesh_file == 'create circular mesh':
-        # No external mesh is specified by stl file; create default circular mesh
-        mesh_data = build_circular_mesh(*input.circular_mesh_parameter_list)
-        coil_mesh = create_unique_noded_mesh(mesh_data)
-    """
+        found = False
+        for plugin in plugins:
+            mesh_creation_function = getattr(plugin, plugin_name, None)
+            if mesh_creation_function:
+                coil_mesh = mesh_creation_function(input_args)
+                found = True
+                break
+
+        if found == False:
+            raise ValueError(f"No mesh creation method found for {input_args.coil_mesh_file}")
+
     # Read the target mesh surface
     if input_args.target_mesh_file != 'none':
         target_mesh = Mesh.load_from_file(input_args.geometry_source_path,  input_args.target_mesh_file)
