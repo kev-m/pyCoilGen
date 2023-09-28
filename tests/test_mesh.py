@@ -68,7 +68,7 @@ def test_get_face_index2():
         assert face_index == indices[index]
 
 def test_uv_to_xyz_planar():
-    from pyCoilGen.sub_functions.build_planar_mesh import build_planar_mesh
+    from pyCoilGen.mesh_factory.build_planar_mesh import build_planar_mesh
     val = build_planar_mesh(0.30, 0.60, 3, 3, 0, 0, 1, 0, 0, 0, 1.0)
     points_2d_in = np.array([[-0.15, -0.14], [-0.29, -0.10], [-0.19, +0.056]]).T  # Faces: 0, 1, 2
 

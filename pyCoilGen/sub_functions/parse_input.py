@@ -4,7 +4,7 @@ import platform
 
 # local imports
 from .constants import DEBUG_BASIC, DEBUG_VERBOSE
-
+from pyCoilGen.mesh_factory import load_plugins as load_mesh_factory_plugins
 
 def parse_input(parse_cli=True):
     """
@@ -20,13 +20,14 @@ def parse_input(parse_cli=True):
     # Create argument parser
     parser = argparse.ArgumentParser()
 
-    # Add the mesh file that represents the boundary of the target geometry
-    parser.add_argument('--temp', type=str, default=None,
-                        help="Mesh file representing the boundary of the target geometry")
+    # Version 0.x.x uses 'coil_mesh_file' to specify the primary mesh or a mesh builder.
+    parser.add_argument('--coil_mesh_file', type=str, default='none', 
+                        help="File of the coil mesh or a mesh builder instruction")
 
-    # Add the coil mesh file
-    parser.add_argument('--coil_mesh_file', type=str,
-                        default='none', help="File of the coil mesh")
+    # Add the coil mesh factory parameters
+    plugins = load_mesh_factory_plugins()
+    for plugin in plugins:
+        plugin.register_args(parser)    
 
     # Add the field shape function
     parser.add_argument('--field_shape_function', type=str,
@@ -272,14 +273,6 @@ def parse_input(parse_cli=True):
     parser.add_argument('--cross_sectional_points', nargs='+', type=float, default=[
                         0, 0], help="2D edge points for direct definition of the cross section of the conductor (build circular cut shapes)")
 
-    # Add the parameters for the generation of the (default) cylindrical mesh
-    parser.add_argument('--cylinder_mesh_parameter_list', nargs='+', type=float, default=[
-                        0.8, 0.3, 20, 20, 1, 0, 0, 0], help="Parameters for the generation of the (default) cylindrical mesh")
-
-    # Add the parameters for the generation of the (default) planar mesh
-    parser.add_argument('--planar_mesh_parameter_list', nargs='+', type=float, default=[
-                        0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0], help="Parameters for the generation of the (default) planar mesh")
-
     """ Currently not implemented
     # Add the parameters for the generation of a double cone ("diabolo") shaped mesh
     parser.add_argument('--double_cone_mesh_parameter_list', nargs='+', type=float, default=[
@@ -289,10 +282,6 @@ def parse_input(parse_cli=True):
     parser.add_argument('--circular_mesh_parameter_list', nargs='+', type=float, default=[
                         0.25, 20, 1, 0, 0, 0, 0, 0, 0], help="Parameters for the generation of the (default) circular mesh")
     """
-
-    # Add the parameters for the generation of the (default) biplanar mesh
-    parser.add_argument('--biplanar_mesh_parameter_list', nargs='+', type=float, default=[
-                        0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2], help="Parameters for the generation of the (default) biplanar mesh")
 
     # Add the parameters for the generation of the (default) biplanar mesh
     parser.add_argument('--debug', type=int, default=0,

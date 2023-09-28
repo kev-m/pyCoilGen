@@ -4,8 +4,9 @@ import numpy as np
 import logging
 
 # Local imports
-from .calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
-from .data_structures import DataStructure
+from pyCoilGen.sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
+from pyCoilGen.sub_functions.data_structures import DataStructure
+from pyCoilGen.sub_functions.read_mesh import create_unique_noded_mesh
 
 log = logging.getLogger(__name__)
 
@@ -77,3 +78,26 @@ def build_cylinder_mesh(
     cylinder_mesh = DataStructure(vertices=vertices, faces=faces, normal=normal)
 
     return cylinder_mesh
+
+def create_cylinder_mesh(input_args):
+    """Template function to create a cylinder mesh.
+    
+    Used when 'input_args.coil_mesh_file' is 'create cylinder mesh'.
+    """
+    log.debug("Creating cylinder mesh with '%s'", input_args.cylinder_mesh_parameter_list)
+    mesh_data = build_cylinder_mesh(*input_args.cylinder_mesh_parameter_list)
+    coil_mesh = create_unique_noded_mesh(mesh_data)
+    return coil_mesh
+
+
+def register_args(parser):
+    """Template function to register arguments specific to planar mesh creation.
+
+    Args:
+        parser (argparse.ArgumentParser): The parser to which arguments will be added.
+    """
+    # Add the parameters for the generation of the (default) planar mesh
+    # Add the parameters for the generation of the (default) cylindrical mesh
+    parser.add_argument('--cylinder_mesh_parameter_list', nargs='+', type=float, 
+                        default=[0.8, 0.3, 20, 20, 1, 0, 0, 0], 
+                        help="Parameters for the generation of the (default) cylindrical mesh")
