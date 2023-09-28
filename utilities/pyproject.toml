@@ -46,7 +46,7 @@ Changelog = "https://github.com/kev-m/pyCoilGen/blob/master/utilities/CHANGELOG.
 Contributing = "https://github.com/kev-m/pyCoilGen/blob/master/CONTRIBUTING.md"
 
 [project.scripts]
-stl_asc2bin = "pyCoilGenUtils:stl_asc2bin"
+stl_asc2bin = "pyCoilGenUtils:stl_asc2bin.main"
 
 [tool.flit.module]
 name = "pyCoilGenUtils"
