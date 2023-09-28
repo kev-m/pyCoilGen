@@ -39,7 +39,7 @@ dynamic = ["version", "description"]
 [project.urls]
 Home = "https://github.com/kev-m/pyCoilGen"
 Documentation = "https://pycoilgen.readthedocs.io/"
-Source = "https://github.com/kev-m/pyCoilGen"
+Source = "https://github.com/kev-m/pyCoilGen/tree/master/utilities"
 "Code of Conduct" = "https://github.com/me/spam/blob/master/CODE_OF_CONDUCT.md"
 "Bug tracker" = "https://github.com/kev-m/pyCoilGen/issues"
 Changelog = "https://github.com/kev-m/pyCoilGen/blob/master/utilities/CHANGELOG.md"
