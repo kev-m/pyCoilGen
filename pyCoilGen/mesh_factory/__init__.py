@@ -22,7 +22,7 @@ def load_plugins():
     # Load all .py files in the mesh_factory directory
     for file_name in os.listdir(os.path.dirname(__file__)):
         if file_name.endswith(".py") and file_name != "__init__.py":
-            module_name = f"mesh_factory.{file_name[:-3]}"
+            module_name = f"pyCoilGen.mesh_factory.{file_name[:-3]}"
             module = importlib.import_module(module_name)
             plugins.append(module)
 

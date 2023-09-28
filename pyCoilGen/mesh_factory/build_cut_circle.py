@@ -23,3 +23,11 @@ def build_cut_circle(center_point, cut_width):
     cut_circle = opening_circle * (cut_width / 2) + np.tile(center_point, (circular_resolution, 1))
 
     return cut_circle
+
+def register_args(parser):
+    """Register arguments specific to this mesh.
+
+    Args:
+        parser (argparse.ArgumentParser): The parser to which arguments will be added.
+    """
+    pass

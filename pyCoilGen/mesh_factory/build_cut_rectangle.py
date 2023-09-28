@@ -36,3 +36,11 @@ def build_cut_rectangle(loop, center_point, segment_ind, cut_width, cut_height_r
                               center_point + longitudinal_vector/2 + orthogonal_vector/2])
 
     return cut_rectangle
+
+def register_args(parser):
+    """Register arguments specific to this mesh.
+
+    Args:
+        parser (argparse.ArgumentParser): The parser to which arguments will be added.
+    """
+    pass
