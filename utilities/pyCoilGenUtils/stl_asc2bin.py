@@ -36,13 +36,19 @@ def read_ascii_stl(file_path):
         tuple: Tuple containing a list of normals and a list of vertices.
     """
     with open(file_path, 'r') as f:
-        lines = f.readlines()
+        lines = [line.strip() for line in f.readlines()]  # Remove leading/trailing whitespace
+        lines = [line for line in lines if line]  # Remove empty lines
+
+        assert "solid" in lines[0], "Invalid header: 'solid ....' not found!"  # Check for valid format
+
         offset = 1
         num_entries = (len(lines) - 2) / 7
-        assert num_entries == int(num_entries)
+        print("Reading ", num_entries, "faces from ASCII file.")
+        assert num_entries == int(num_entries), "Invalid number of lines in the file."  # Check for valid structure
         num_entries = int(num_entries)
         vertices = [None] * num_entries
         normals = [None] * num_entries
+
         for i in range(num_entries):
             normal = list(map(float, lines[offset + i * 7 + 0].split()[2:]))
             normals[i] = normal
@@ -50,10 +56,12 @@ def read_ascii_stl(file_path):
             vertex2 = list(map(float, lines[offset + i * 7 + 3].split()[1:]))
             vertex3 = list(map(float, lines[offset + i * 7 + 4].split()[1:]))
             vertices[i] = [vertex1, vertex2, vertex3]
+
     return normals, vertices
 
 
 def write_binary_stl(file_path, normals, vertices):
+    print("Writing binary file.")
     with open(file_path, 'wb') as f:
         f.write(b'\x00' * 80)  # Write 80 bytes header
         f.write(struct.pack('<I', len(vertices)))  # Write the number of triangles
@@ -62,6 +70,7 @@ def write_binary_stl(file_path, normals, vertices):
             for vertex in vertices[i]:
                 f.write(struct.pack('<3f', *vertex))        # Write the vertex
             f.write(b'\x00\x00')                            # Write two bytes for attribute byte count (set to 0)
+    print("Done!")
 
 
 def convert_ascii_to_binary(input_file, output_file):
@@ -75,8 +84,7 @@ def convert_ascii_to_binary(input_file, output_file):
     normals, vertices = read_ascii_stl(input_file)
     write_binary_stl(output_file, normals, vertices)
 
-
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description='Convert ASCII STL to Binary STL')
     parser.add_argument('input_file', type=str, help='Path to the input ASCII STL file')
     parser.add_argument('output_file', type=str, help='Path for the output binary STL file')
@@ -84,6 +92,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     convert_ascii_to_binary(args.input_file, args.output_file)
 
-    # Example usage
-    # convert_ascii_to_binary('../pyCoilGen_Testing/asc_Preoptimzed_SVD_Coil_swept_part1_none.stl',
-    #                    'images/bin_Preoptimzed_SVD_Coil_swept_part1_none.stl')
+if __name__ == '__main__':
+    main()
