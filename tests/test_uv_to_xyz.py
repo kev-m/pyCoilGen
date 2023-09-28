@@ -5,7 +5,7 @@ import numpy as np
 import json
 
 # Test support
-from pyCoilGen.sub_functions.build_planar_mesh import build_planar_mesh
+from pyCoilGen.mesh_factory.build_planar_mesh import build_planar_mesh
 from pyCoilGen.sub_functions.data_structures import Mesh
 # Code under test
 from pyCoilGen.sub_functions.uv_to_xyz import uv_to_xyz_obsolete, which_face, get_target_triangle_obsolete, pointLocation, point_inside_triangle

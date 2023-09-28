@@ -4,7 +4,7 @@ from os import makedirs, path
 
 # Test support
 from pyCoilGen.sub_functions.data_structures import DataStructure, Mesh, CoilPart
-from pyCoilGen.sub_functions.build_biplanar_mesh import build_biplanar_mesh
+from pyCoilGen.mesh_factory.build_biplanar_mesh import build_biplanar_mesh
 from pyCoilGen.sub_functions.parameterize_mesh import parameterize_mesh
 from pyCoilGen.sub_functions.split_disconnected_mesh import split_disconnected_mesh
 from pyCoilGen.sub_functions.load_preoptimized_data import load_preoptimized_data
