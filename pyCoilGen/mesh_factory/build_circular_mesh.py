@@ -3,7 +3,7 @@ import numpy as np
 import logging
 
 # Local imports
-from pyCoilGen.sub_functions.data_structures import DataStructure
+from pyCoilGen.sub_functions.data_structures import DataStructure, Mesh
 from pyCoilGen.sub_functions.read_mesh import create_unique_noded_mesh
 from pyCoilGen.helpers.triangulation import Triangulate
 from pyCoilGen.sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
@@ -55,41 +55,59 @@ def build_circular_mesh(radius: float, num_radial_divisions: int,
     rotation_vector = np.array([rotation_vector_x, rotation_vector_y, rotation_vector_z])
     center_position = np.array([center_position_x, center_position_y, center_position_z])
 
-    # Generate mesh vertices
+    # Generate x and y positions
     x_positions = np.linspace(-radius, radius, num_radial_divisions+1)
-    x, y = np.meshgrid(x_positions, x_positions)
-    z = np.zeros_like(x)
-    vertices = np.vstack((y.flatten(), x.flatten(), z.flatten())).T
+    y_positions = np.linspace(-radius, radius, num_radial_divisions+1)
 
-    # Generate Delaunay triangles
-    tri = Triangulate(vertices[:, :2])
+    # Create x and y grids
+    x, y = np.meshgrid(x_positions, y_positions)
 
-    # Create mesh faces
-    faces_1 = np.asarray(tri.get_triangles())
-    faces_2 = faces_1[:, [1, 0, 2]]
+    # Define the vertex positions
+    vertices = np.vstack((y.ravel(), x.ravel(), np.zeros_like(x.ravel())))
 
-    # Combine faces
-    faces = np.vstack((faces_1, faces_2))
+    # Define the mesh triangles
+    tri_1_vert_inds_1 = (np.tile(np.arange(num_radial_divisions), num_radial_divisions) +
+                         np.repeat(np.arange(num_radial_divisions), num_radial_divisions) * (num_radial_divisions + 1))
+    tri_1_vert_inds_2 = tri_1_vert_inds_1 + 1
+    tri_1_vert_inds_3 = tri_1_vert_inds_2 + num_radial_divisions + 1
+    tri_2_vert_inds_1 = tri_1_vert_inds_1
+    tri_2_vert_inds_2 = tri_1_vert_inds_3
+    tri_2_vert_inds_3 = tri_1_vert_inds_3 - 1
+
+    faces_1 = np.column_stack((tri_1_vert_inds_1, tri_1_vert_inds_2, tri_1_vert_inds_3))
+    faces_2 = np.column_stack((tri_2_vert_inds_1, tri_2_vert_inds_2, tri_2_vert_inds_3))
+
+    circular_mesh_faces = np.vstack((faces_1, faces_2))
+    circular_mesh_vertices = vertices.T
 
     # Create circular mesh
-    circular_mesh = DataStructure(faces=faces,vertices=vertices)
+    circular_mesh = DataStructure(faces=circular_mesh_faces, vertices=circular_mesh_vertices)
 
     # Delete vertices outside the circular boundary
-    vert_distances = np.linalg.norm(circular_mesh.vertices[:, :2], axis=1)
-    vertices_to_delete = np.where(vert_distances > radius * 0.99)[0]
-    circular_mesh.vertices = np.delete(circular_mesh.vertices, vertices_to_delete, axis=0)
+    vert_distances = np.linalg.norm(circular_mesh.vertices, axis=1)
+    vertices_to_delete = np.where(vert_distances > radius * 0.99)[0][::-1]
 
-    # Update faces after deletion
-    for delete_ind in sorted(vertices_to_delete, reverse=True):
+    for delete_ind in vertices_to_delete:
+        circular_mesh.vertices = np.delete(circular_mesh.vertices, delete_ind, axis=0)
+
+        # Remove faces related to the deleted vertex and update the index list
+        faces_to_delete = np.any(circular_mesh.faces == delete_ind, axis=1)
+        circular_mesh.faces = circular_mesh.faces[~faces_to_delete]
+
+        # Update face indices
         circular_mesh.faces[circular_mesh.faces > delete_ind] -= 1
-    circular_mesh.faces = circular_mesh.faces.reshape(-1, 3)
+
+
 
     # Morph boundary verts for proper circular shape
-    boundary_verts = np.unique(np.concatenate(
-        (circular_mesh.faces[:, 0], circular_mesh.faces[:, 1], circular_mesh.faces[:, 2])))
-    for vert_ind in boundary_verts:
+    mesh = Mesh(vertices=circular_mesh.vertices, faces=circular_mesh.faces)
+    boundary_verts = mesh.boundary_indices()
+    for vert_ind in boundary_verts[0]:
         vert_radius = np.linalg.norm(circular_mesh.vertices[vert_ind, :2])
         circular_mesh.vertices[vert_ind, :] *= radius / vert_radius
+
+    # HACK
+    mesh.display()
 
     # Adjust mesh with desired translation and rotation
     rotation_matrix = calc_3d_rotation_matrix_by_vector(rotation_vector, rotation_angle)

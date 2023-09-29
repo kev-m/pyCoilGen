@@ -7,29 +7,28 @@ from pyCoilGen.mesh_factory.build_circular_mesh import build_circular_mesh
 
 def test_build_circular_mesh_basic():
     parameters = {
-            'radius' : 1.0,
-            'num_radial_divisions' : 10,
-            'rotation_vector_x' : 0.0,
-            'rotation_vector_y' : 0.0,
-            'rotation_vector_z' : 1.0,
-            'rotation_angle' : 0.0,
-            'center_position_x' : 0.0,
-            'center_position_y' : 0.0,
-            'center_position_z' : 0.0
-        }
-
+        'radius': 1.0,
+        'num_radial_divisions': 10,
+        'rotation_vector_x': 0.0,
+        'rotation_vector_y': 0.0,
+        'rotation_vector_z': 1.0,
+        'rotation_angle': 0.0,
+        'center_position_x': 0.0,
+        'center_position_y': 0.0,
+        'center_position_z': 0.0
+    }
 
     mesh = build_circular_mesh(**parameters)
 
     # Min x is -0.5 radius
-    assert np.min(mesh.vertices[:, 0]) == -parameters['radius']/2.0
+    assert np.min(mesh.vertices[:, 0]) == -parameters['radius']
     # Max x is 0.5 radius
-    assert np.max(mesh.vertices[:, 0]) == parameters['radius']/2.0
+    assert np.max(mesh.vertices[:, 0]) == parameters['radius']
 
     # Min y is -0.5 radius
-    assert np.min(mesh.vertices[:, 1]) == -parameters['radius']/2.0
+    assert np.min(mesh.vertices[:, 1]) == -parameters['radius']
     # Max y is 0.5 radius
-    assert np.max(mesh.vertices[:, 1]) == parameters['radius']/2.0
+    assert np.max(mesh.vertices[:, 1]) == parameters['radius']
 
     # Min z is 0
     assert np.min(mesh.vertices[:, 2]) == parameters['center_position_z']
@@ -52,19 +51,19 @@ def test_build_planar_mesh_rotate_Z():
     center_position_z = 0
 
     mesh = build_circular_mesh(radius, num_radial_divisions,
-                        rotation_vector_x, rotation_vector_y, rotation_vector_z,
-                        rotation_angle,
-                        center_position_x, center_position_y, center_position_z)
+                               rotation_vector_x, rotation_vector_y, rotation_vector_z,
+                               rotation_angle,
+                               center_position_x, center_position_y, center_position_z)
 
     # Min x is -0.5 height
-    assert np.min(mesh.vertices[:, 0]) == -radius/2.0
+    assert np.min(mesh.vertices[:, 0]) == -radius
     # Max x is 0.5 height
-    assert np.max(mesh.vertices[:, 0]) == radius/2.0
+    assert np.max(mesh.vertices[:, 0]) == radius
 
     # Min y is -0.5 height
-    assert np.min(mesh.vertices[:, 1]) == -radius/2.0
+    assert np.min(mesh.vertices[:, 1]) == -radius
     # Max y is 0.5 height
-    assert np.max(mesh.vertices[:, 1]) == radius/2.0
+    assert np.max(mesh.vertices[:, 1]) == radius
 
     # Min z is 0
     assert np.min(mesh.vertices[:, 2]) == 0.0
@@ -84,9 +83,9 @@ def test_build_planar_mesh_rotate_Y():
     center_position_z = 0
 
     mesh = build_circular_mesh(radius, num_radial_divisions,
-                        rotation_vector_x, rotation_vector_y, rotation_vector_z,
-                        rotation_angle,
-                        center_position_x, center_position_y, center_position_z)
+                               rotation_vector_x, rotation_vector_y, rotation_vector_z,
+                               rotation_angle,
+                               center_position_x, center_position_y, center_position_z)
 
     # Min x is close to 0
     assert np.min(mesh.vertices[:, 0]) >= -0.001
@@ -94,14 +93,14 @@ def test_build_planar_mesh_rotate_Y():
     assert np.max(mesh.vertices[:, 0]) <= 0.001
 
     # Min y is -0.5 width
-    assert np.min(mesh.vertices[:, 1]) == -radius/2.0
+    assert np.min(mesh.vertices[:, 1]) == -radius
     # Max y is 0.5 width
-    assert np.max(mesh.vertices[:, 1]) == radius/2.0
+    assert np.max(mesh.vertices[:, 1]) == radius
 
     # Min z is -0.5 width
-    assert np.min(mesh.vertices[:, 2]) == -radius/2.0
+    assert np.min(mesh.vertices[:, 2]) == -radius
     # Max z is 0.5 width
-    assert np.max(mesh.vertices[:, 2]) == radius/2.0
+    assert np.max(mesh.vertices[:, 2]) == radius
 
 
 def test_build_planar_mesh_rotate_X():
@@ -116,14 +115,14 @@ def test_build_planar_mesh_rotate_X():
     center_position_z = 0
 
     mesh = build_circular_mesh(radius, num_radial_divisions,
-                        rotation_vector_x, rotation_vector_y, rotation_vector_z,
-                        rotation_angle,
-                        center_position_x, center_position_y, center_position_z)
+                               rotation_vector_x, rotation_vector_y, rotation_vector_z,
+                               rotation_angle,
+                               center_position_x, center_position_y, center_position_z)
 
     # Min x is -0.5 width
-    assert np.min(mesh.vertices[:, 0]) == -radius/2.0
+    assert np.min(mesh.vertices[:, 0]) == -radius
     # Max y is 0.5 width
-    assert np.max(mesh.vertices[:, 0]) == radius/2.0
+    assert np.max(mesh.vertices[:, 0]) == radius
 
     # Min y is close to 0
     assert np.min(mesh.vertices[:, 1]) >= -0.001
@@ -131,9 +130,9 @@ def test_build_planar_mesh_rotate_X():
     assert np.max(mesh.vertices[:, 1]) <= 0.001
 
     # Min z is -0.5 width
-    assert np.min(mesh.vertices[:, 2]) == -radius/2.0
+    assert np.min(mesh.vertices[:, 2]) == -radius
     # Max z is 0.5 width
-    assert np.max(mesh.vertices[:, 2]) == radius/2.0
+    assert np.max(mesh.vertices[:, 2]) == radius
 
 
 def test_build_planar_mesh_translate():
@@ -148,19 +147,19 @@ def test_build_planar_mesh_translate():
     center_position_z = 0.3
 
     mesh = build_circular_mesh(radius, num_radial_divisions,
-                        rotation_vector_x, rotation_vector_y, rotation_vector_z,
-                        rotation_angle,
-                        center_position_x, center_position_y, center_position_z)
+                               rotation_vector_x, rotation_vector_y, rotation_vector_z,
+                               rotation_angle,
+                               center_position_x, center_position_y, center_position_z)
 
     # Min x is -0.5 height + x offset
-    assert np.min(mesh.vertices[:, 0]) == -radius/2.0 + center_position_x
+    assert np.min(mesh.vertices[:, 0]) == -radius + center_position_x
     # Max x is 0.5 height + x offset
-    assert np.max(mesh.vertices[:, 0]) == radius/2.0 + center_position_x
+    assert np.max(mesh.vertices[:, 0]) == radius + center_position_x
 
     # Min y is -0.5 height + y offset
-    assert np.min(mesh.vertices[:, 1]) == -radius/2.0 + center_position_y
+    assert np.min(mesh.vertices[:, 1]) == -radius + center_position_y
     # Max y is 0.5 height + y offset
-    assert np.max(mesh.vertices[:, 1]) == radius/2.0 + center_position_y
+    assert np.max(mesh.vertices[:, 1]) == radius + center_position_y
 
     # Min z is 0 + z offset
     assert np.min(mesh.vertices[:, 2]) == 0.0 + center_position_z
