@@ -81,7 +81,8 @@ def build_circular_mesh(radius: float, num_radial_divisions: int,
     circular_mesh_vertices = vertices.T
 
     # Create circular mesh
-    circular_mesh = DataStructure(faces=circular_mesh_faces, vertices=circular_mesh_vertices)
+    normal_rep = np.array([0.0, 0.0, 1.0])
+    circular_mesh = DataStructure(faces=circular_mesh_faces, vertices=circular_mesh_vertices, normal=normal_rep)
 
     # Delete vertices outside the circular boundary
     vert_distances = np.linalg.norm(circular_mesh.vertices, axis=1)
@@ -106,8 +107,8 @@ def build_circular_mesh(radius: float, num_radial_divisions: int,
 
     # Adjust mesh with desired translation and rotation
     rotation_matrix = calc_3d_rotation_matrix_by_vector(rotation_vector, rotation_angle)
-    circular_mesh.vertices = np.dot(rotation_matrix, circular_mesh.vertices.T).T + center_position
-
+    circular_mesh.vertices = np.dot(circular_mesh.vertices, rotation_matrix) + center_position
+    
     return circular_mesh
 
 
@@ -116,7 +117,7 @@ def create_circular_mesh(input_args):
 
     Used when 'input_args.coil_mesh_file' is 'create circular mesh'.
     """
-    log.debug("Creating cylinder mesh with '%s'", input_args.circular_mesh_parameter_list)
+    log.debug("Creating circular mesh with '%s'", input_args.circular_mesh_parameter_list)
     mesh_data = build_circular_mesh(*input_args.circular_mesh_parameter_list)
     coil_mesh = create_unique_noded_mesh(mesh_data)
     return coil_mesh
@@ -130,5 +131,26 @@ def register_args(parser):
     """
     # Add the parameters for the generation of the (default) planar mesh
     parser.add_argument('--circular_mesh_parameter_list', nargs='+', type=float,
-                        default=[0.25, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0,],
+                        default=[0.25, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,],
                         help="Parameters for the generation of the (default) planar mesh")
+
+
+
+if __name__ == "__main__":
+    radius = 0.5
+    num_radial_divisions = 20
+    rotation_vector_x = 0.0
+    rotation_vector_y = 0.0
+    rotation_vector_z = 1.0
+    rotation_angle = 0.0
+    center_position_x = 0.0
+    center_position_y = 0.0
+    center_position_z = 0.0
+
+    circular_mesh = build_circular_mesh(radius, num_radial_divisions,
+                               rotation_vector_x, rotation_vector_y, rotation_vector_z,
+                               rotation_angle,
+                               center_position_x, center_position_y, center_position_z)
+
+    mesh = Mesh(vertices=circular_mesh.vertices, faces=circular_mesh.faces)
+    mesh.display()
