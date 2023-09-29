@@ -74,8 +74,8 @@ def build_circular_mesh(radius: float, num_radial_divisions: int,
     tri_2_vert_inds_2 = tri_1_vert_inds_3
     tri_2_vert_inds_3 = tri_1_vert_inds_3 - 1
 
-    faces_1 = np.column_stack((tri_1_vert_inds_1, tri_1_vert_inds_2, tri_1_vert_inds_3))
-    faces_2 = np.column_stack((tri_2_vert_inds_1, tri_2_vert_inds_2, tri_2_vert_inds_3))
+    faces_1 = np.column_stack((tri_1_vert_inds_1, tri_1_vert_inds_3, tri_1_vert_inds_2))
+    faces_2 = np.column_stack((tri_2_vert_inds_1, tri_2_vert_inds_3, tri_2_vert_inds_2))
 
     circular_mesh_faces = np.vstack((faces_1, faces_2))
     circular_mesh_vertices = vertices.T
@@ -97,17 +97,12 @@ def build_circular_mesh(radius: float, num_radial_divisions: int,
         # Update face indices
         circular_mesh.faces[circular_mesh.faces > delete_ind] -= 1
 
-
-
     # Morph boundary verts for proper circular shape
     mesh = Mesh(vertices=circular_mesh.vertices, faces=circular_mesh.faces)
     boundary_verts = mesh.boundary_indices()
     for vert_ind in boundary_verts[0]:
         vert_radius = np.linalg.norm(circular_mesh.vertices[vert_ind, :2])
         circular_mesh.vertices[vert_ind, :] *= radius / vert_radius
-
-    # HACK
-    mesh.display()
 
     # Adjust mesh with desired translation and rotation
     rotation_matrix = calc_3d_rotation_matrix_by_vector(rotation_vector, rotation_angle)
