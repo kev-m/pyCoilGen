@@ -42,6 +42,23 @@ def create_stl_mesh(input_args):
     coil_mesh.normal_rep = np.array([0.0, 0.0, 1.0])
     return coil_mesh
 
+def get_name():
+    """
+    Template function to retrieve the plugin builder name.
+    
+    Returns:
+        builder_name (str): The builder name, given to 'coil_mesh'.
+    """
+    return 'create stl mesh'
+
+def get_parameters()->list: 
+    """
+    Template function to retrieve the supported parameters and default values as strings.
+    
+    Returns:
+        list of tuples of parameter name and default value: The additional parameters provided by this builder
+    """
+    return [('stl_mesh_filename', 'None'), ('noting', 'none')]
 
 def register_args(parser):
     """Register arguments specific to STL mesh creation.
@@ -52,6 +69,10 @@ def register_args(parser):
     Args:
         parser (argparse.ArgumentParser): The parser to which arguments will be added.
     """
+    # Add legacy parameter
+    # Version 0.x.x uses 'coil_mesh_file' to specify the primary mesh or a mesh builder.
+    parser.add_argument('--coil_mesh_file', type=str, default='none',
+                        help="File of the coil mesh or a mesh builder instruction")
     # Add arguments specific to STL mesh creation
-    # parser.add_argument('--stl_mesh_filename', type=str, default='none', help="File of the primary coil mesh")
-    pass
+    parser.add_argument('--stl_mesh_filename', type=str, default='none',
+                        help="File of the mesh. Supports STL, GLB, PLY, 3MF, XAML, etc.")

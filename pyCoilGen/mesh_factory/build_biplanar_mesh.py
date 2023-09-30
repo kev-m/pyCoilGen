@@ -99,13 +99,36 @@ def translate_and_shift(vertices,
 
 def create_bi_planar_mesh(input_args):
     """Template function to create a bi-planar mesh.
-    
+
     Used when 'input_args.coil_mesh_file' is 'create bi-planar mesh'.
     """
     log.debug("Creating bi-planar mesh with '%s'", input_args.biplanar_mesh_parameter_list)
     mesh_data = build_biplanar_mesh(*input_args.planar_mesh_parameter_list)
     coil_mesh = create_unique_noded_mesh(mesh_data)
     return coil_mesh
+
+
+__default_value__ = [0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2]
+
+
+def get_name():
+    """
+    Template function to retrieve the plugin builder name.
+
+    Returns:
+        builder_name (str): The builder name, given to 'coil_mesh'.
+    """
+    return 'create bi-planar mesh'
+
+
+def get_parameters() -> list:
+    """
+    Template function to retrieve the supported parameters and default values as strings.
+
+    Returns:
+        list of tuples of parameter name and default value: The additional parameters provided by this builder
+    """
+    return [('biplanar_mesh_parameter_list', str(__default_value__))]
 
 
 def register_args(parser):
@@ -115,7 +138,6 @@ def register_args(parser):
         parser (argparse.ArgumentParser): The parser to which arguments will be added.
     """
     # Add the parameters for the generation of the (default) biplanar mesh
-    parser.add_argument('--biplanar_mesh_parameter_list', nargs='+', type=float, 
-                        default=[0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2], 
+    parser.add_argument('--biplanar_mesh_parameter_list', nargs='+', type=float,
+                        default=__default_value__,
                         help="Parameters for the generation of the (default) biplanar mesh")
-

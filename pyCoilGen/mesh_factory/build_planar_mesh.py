@@ -170,15 +170,39 @@ def calculate_rotation_matrix(rotation_vector_x, rotation_vector_y, rotation_vec
 
     return rotation_matrix
 
+
 def create_planar_mesh(input_args):
     """Template function to create a planar mesh.
-    
+
     Used when 'input_args.coil_mesh_file' is 'create planar mesh'.
     """
     log.debug("Creating cylinder mesh with '%s'", input_args.planar_mesh_parameter_list)
     mesh_data = build_planar_mesh(*input_args.planar_mesh_parameter_list)
     coil_mesh = create_unique_noded_mesh(mesh_data)
     return coil_mesh
+
+
+__default_value__ = [0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0]
+
+
+def get_name():
+    """
+    Template function to retrieve the plugin builder name.
+
+    Returns:
+        builder_name (str): The builder name, given to 'coil_mesh'.
+    """
+    return 'create planar mesh'
+
+
+def get_parameters() -> list:
+    """
+    Template function to retrieve the supported parameters and default values as strings.
+
+    Returns:
+        list of tuples of parameter name and default value: The additional parameters provided by this builder
+    """
+    return [('planar_mesh_parameter_list', str(__default_value__))]
 
 
 def register_args(parser):
@@ -188,6 +212,6 @@ def register_args(parser):
         parser (argparse.ArgumentParser): The parser to which arguments will be added.
     """
     # Add the parameters for the generation of the (default) planar mesh
-    parser.add_argument('--planar_mesh_parameter_list', nargs='+', type=float, 
-                        default=[0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0], 
+    parser.add_argument('--planar_mesh_parameter_list', nargs='+', type=float,
+                        default=__default_value__,
                         help="Parameters for the generation of the (default) planar mesh")
