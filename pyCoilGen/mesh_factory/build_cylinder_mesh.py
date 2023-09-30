@@ -7,6 +7,7 @@ import logging
 from pyCoilGen.sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
 from pyCoilGen.sub_functions.data_structures import DataStructure
 from pyCoilGen.sub_functions.read_mesh import create_unique_noded_mesh
+from pyCoilGen.helpers.common import int_or_float
 
 log = logging.getLogger(__name__)
 
@@ -122,6 +123,6 @@ def register_args(parser):
     """
     # Add the parameters for the generation of the (default) planar mesh
     # Add the parameters for the generation of the (default) cylindrical mesh
-    parser.add_argument('--cylinder_mesh_parameter_list', nargs='+', type=float,
+    parser.add_argument('--cylinder_mesh_parameter_list', nargs='+', type=int_or_float,
                         default=__default_value__,
                         help="Parameters for the generation of the (default) cylindrical mesh")
