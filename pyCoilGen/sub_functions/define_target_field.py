@@ -109,12 +109,12 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
                 target_points = np.vstack((target_grid_x.ravel(), target_grid_y.ravel(), target_grid_z.ravel()))
 
                 # Remove points not inside the target surface
-                in_indices = target_mesh.get_trimesh_obj().contains(target_points.T)
+                in_indices = target_mesh.contains(target_points.T)
                 target_points = target_points[:, in_indices]
-                target_points = np.hstack((target_mesh.get_vertices().T, target_points)
-                                          )  # Add surface vertices from target mesh
+                # Add surface vertices from target mesh
+                target_points3 = np.hstack((target_mesh.get_vertices().T, target_points))  
             else:
-                target_points = target_mesh.get_vertices().T
+                target_points3 = target_mesh.get_vertices().T
         else:  # Define target point coordinates as points inside a sphere of a given radius
             num_points_per_dim = input_args.target_region_resolution
             target_x_coords = np.linspace(-2, 2, 4*(num_points_per_dim-1)+1) * input_args.target_region_radius
