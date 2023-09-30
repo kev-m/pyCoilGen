@@ -24,6 +24,10 @@ def parse_input(parse_cli=True):
     # Version 0.x.x uses 'coil_mesh_file' to specify the primary mesh or a mesh builder.
     parser.add_argument('--coil_mesh', type=str, default='none',
                         help="Specify the coil mesh builder. Set to 'help' for a list of available builders.")
+    parser.add_argument('--target_mesh', type=str, default='none',
+                        help="Specify the target mesh builder. Set to 'help' for a list of available builders.")
+    parser.add_argument('--shield_mesh', type=str, default='none',
+                        help="Specify the shield mesh builder. Set to 'help' for a list of available builders.")
 
     # Add the coil mesh factory parameters
     plugins = load_mesh_factory_plugins()
