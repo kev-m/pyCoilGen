@@ -111,6 +111,11 @@ def pyCoilGen(log, input_args=None):
             print('Load geometry:')
             coil_mesh, target_mesh, secondary_target_mesh = read_mesh(input_args)  # 01
 
+            if coil_mesh is None:
+                log.info("No coil mesh, exiting.")
+                timer.stop()
+                return None
+
             if get_level() >= DEBUG_VERBOSE:
                 log.debug(" -- vertices shape: %s", coil_mesh.get_vertices().shape)  # (264,3)
                 log.debug(" -- faces shape: %s", coil_mesh.get_faces().shape)  # (480,3)
