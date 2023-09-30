@@ -378,6 +378,17 @@ class Mesh:
 
         return points_out_3d.T, points_out_2d.T  # Return as MATLAB shape
 
+    def contains(self, vertices:np.ndarray):
+        """
+        Fetch the indices of the points inside the mesh.
+
+        Args:
+            points(ndarray): The array of vertices (n,3)
+        
+        Returns:
+            list(int): The indices of the vertices that are inside the mesh.
+        """
+        return self.trimesh_obj.contains(vertices)
 
 # Helper functions
 def append_uv(uv_container, uv_value):
