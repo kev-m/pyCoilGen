@@ -35,10 +35,16 @@ def create_stl_mesh(input_args):
         ... )
         >>> coil_mesh = create_stl_mesh(input_args)
     """
-    log.debug("Loading STL")
+    # Support both stl_mesh_filename and coil_mesh_file
+    mesh_file = input_args.stl_mesh_filename
+    if mesh_file == 'none':
+        mesh_file = input_args.coil_mesh_file
+        if mesh_file == 'none':
+            return None
+    log.debug("Loading STL from %s", mesh_file)
     # Load the stl file; read the coil mesh surface
-    coil_mesh = Mesh.load_from_file(input_args.geometry_source_path, input_args.coil_mesh_file)
-    log.info(" Loaded mesh from %s/%s.", input_args.geometry_source_path, input_args.coil_mesh_file)
+    coil_mesh = Mesh.load_from_file(input_args.geometry_source_path, mesh_file)
+    log.info(" Loaded mesh from %s/%s.", input_args.geometry_source_path, mesh_file)
     coil_mesh.normal_rep = np.array([0.0, 0.0, 1.0])
     return coil_mesh
 
@@ -58,7 +64,7 @@ def get_parameters()->list:
     Returns:
         list of tuples of parameter name and default value: The additional parameters provided by this builder
     """
-    return [('stl_mesh_filename', 'None'), ('noting', 'none')]
+    return [('stl_mesh_filename', 'none'), ('noting', 'none')]
 
 def register_args(parser):
     """Register arguments specific to STL mesh creation.
@@ -69,10 +75,10 @@ def register_args(parser):
     Args:
         parser (argparse.ArgumentParser): The parser to which arguments will be added.
     """
+    # Add arguments specific to STL mesh creation
+    parser.add_argument('--stl_mesh_filename', type=str, default='none',
+                        help="File of the mesh. Supports STL, GLB, PLY, 3MF, XAML, etc.")
     # Add legacy parameter
     # Version 0.x.x uses 'coil_mesh_file' to specify the primary mesh or a mesh builder.
     parser.add_argument('--coil_mesh_file', type=str, default='none',
                         help="File of the coil mesh or a mesh builder instruction")
-    # Add arguments specific to STL mesh creation
-    parser.add_argument('--stl_mesh_filename', type=str, default='none',
-                        help="File of the mesh. Supports STL, GLB, PLY, 3MF, XAML, etc.")
