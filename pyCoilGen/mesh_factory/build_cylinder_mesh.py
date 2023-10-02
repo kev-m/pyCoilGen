@@ -121,7 +121,6 @@ def register_args(parser):
     Args:
         parser (argparse.ArgumentParser): The parser to which arguments will be added.
     """
-    # Add the parameters for the generation of the (default) planar mesh
     # Add the parameters for the generation of the (default) cylindrical mesh
     parser.add_argument('--cylinder_mesh_parameter_list', nargs='+', type=int_or_float,
                         default=__default_value__,

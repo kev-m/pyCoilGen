@@ -13,6 +13,15 @@ def load_plugins():
     mesh_factory directory (excluding this file), treating them as plugins.
     It returns a list of imported modules.
 
+    Every plugin must be a module that exposes the following functions:
+
+    - get_name()-> str       : Return the name of the mesh builder instruction.
+    - get_parameters()->list : Return a list of tuples of the parameter names and default values.
+    - register_args(parser)  : Called to register any required parameters with ArgParse.
+
+    In addition, it must also provide a creator function that matches the value returned by `get_name()`, e.g.:
+    - create_planar_mesh(input_args: argparse.Namespace) : Mesh or DataStructure(vertices, faces, normal)
+
     Returns:
         list: A list of imported plugin modules.
 
