@@ -7,6 +7,7 @@ from pyCoilGen.sub_functions.data_structures import DataStructure, Mesh
 from pyCoilGen.sub_functions.read_mesh import create_unique_noded_mesh
 from pyCoilGen.helpers.triangulation import Triangulate
 from pyCoilGen.sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
+from pyCoilGen.helpers.common import int_or_float
 
 log = logging.getLogger(__name__)
 
@@ -108,7 +109,7 @@ def build_circular_mesh(radius: float, num_radial_divisions: int,
     # Adjust mesh with desired translation and rotation
     rotation_matrix = calc_3d_rotation_matrix_by_vector(rotation_vector, rotation_angle)
     circular_mesh.vertices = np.dot(circular_mesh.vertices, rotation_matrix) + center_position
-    
+
     return circular_mesh
 
 
@@ -123,6 +124,29 @@ def create_circular_mesh(input_args):
     return coil_mesh
 
 
+__default_value__ = [0.25, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,]
+
+
+def get_name():
+    """
+    Template function to retrieve the plugin builder name.
+
+    Returns:
+        builder_name (str): The builder name, given to 'coil_mesh'.
+    """
+    return 'create circular mesh'
+
+
+def get_parameters() -> list:
+    """
+    Template function to retrieve the supported parameters and default values as strings.
+
+    Returns:
+        list of tuples of parameter name and default value: The additional parameters provided by this builder
+    """
+    return [('circular_mesh_parameter_list', str(__default_value__))]
+
+
 def register_args(parser):
     """Template function to register arguments specific to planar mesh creation.
 
@@ -130,10 +154,9 @@ def register_args(parser):
         parser (argparse.ArgumentParser): The parser to which arguments will be added.
     """
     # Add the parameters for the generation of the (default) planar mesh
-    parser.add_argument('--circular_mesh_parameter_list', nargs='+', type=float,
-                        default=[0.25, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,],
+    parser.add_argument('--circular_mesh_parameter_list', nargs='+', type=int_or_float,
+                        default=__default_value__,
                         help="Parameters for the generation of the (default) planar mesh")
-
 
 
 if __name__ == "__main__":
@@ -148,9 +171,9 @@ if __name__ == "__main__":
     center_position_z = 0.0
 
     circular_mesh = build_circular_mesh(radius, num_radial_divisions,
-                               rotation_vector_x, rotation_vector_y, rotation_vector_z,
-                               rotation_angle,
-                               center_position_x, center_position_y, center_position_z)
+                                        rotation_vector_x, rotation_vector_y, rotation_vector_z,
+                                        rotation_angle,
+                                        center_position_x, center_position_y, center_position_z)
 
     mesh = Mesh(vertices=circular_mesh.vertices, faces=circular_mesh.faces)
     mesh.display()

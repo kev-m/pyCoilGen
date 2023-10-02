@@ -7,6 +7,7 @@ import logging
 from pyCoilGen.sub_functions.calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
 from pyCoilGen.sub_functions.data_structures import DataStructure
 from pyCoilGen.sub_functions.read_mesh import create_unique_noded_mesh
+from pyCoilGen.helpers.common import int_or_float
 
 log = logging.getLogger(__name__)
 
@@ -79,15 +80,39 @@ def build_cylinder_mesh(
 
     return cylinder_mesh
 
+
 def create_cylinder_mesh(input_args):
     """Template function to create a cylinder mesh.
-    
+
     Used when 'input_args.coil_mesh_file' is 'create cylinder mesh'.
     """
     log.debug("Creating cylinder mesh with '%s'", input_args.cylinder_mesh_parameter_list)
     mesh_data = build_cylinder_mesh(*input_args.cylinder_mesh_parameter_list)
     coil_mesh = create_unique_noded_mesh(mesh_data)
     return coil_mesh
+
+
+__default_value__ = [0.8, 0.3, 20, 20, 1, 0, 0, 0]
+
+
+def get_name():
+    """
+    Template function to retrieve the plugin builder name.
+
+    Returns:
+        builder_name (str): The builder name, given to 'coil_mesh'.
+    """
+    return 'create cylinder mesh'
+
+
+def get_parameters() -> list:
+    """
+    Template function to retrieve the supported parameters and default values as strings.
+
+    Returns:
+        list of tuples of parameter name and default value: The additional parameters provided by this builder
+    """
+    return [('cylinder_mesh_parameter_list', str(__default_value__))]
 
 
 def register_args(parser):
@@ -98,6 +123,6 @@ def register_args(parser):
     """
     # Add the parameters for the generation of the (default) planar mesh
     # Add the parameters for the generation of the (default) cylindrical mesh
-    parser.add_argument('--cylinder_mesh_parameter_list', nargs='+', type=float, 
-                        default=[0.8, 0.3, 20, 20, 1, 0, 0, 0], 
+    parser.add_argument('--cylinder_mesh_parameter_list', nargs='+', type=int_or_float,
+                        default=__default_value__,
                         help="Parameters for the generation of the (default) cylindrical mesh")

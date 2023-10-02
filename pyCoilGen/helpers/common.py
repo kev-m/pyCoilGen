@@ -105,3 +105,11 @@ def title_to_filename(title_str: str):
     for char in "\n.:\\/ ":
         result = result.replace(char, '_')
     return result
+
+
+def int_or_float(value):
+    """Return a value as integer if possible, else float."""
+    try:
+        return int(value)
+    except ValueError:
+        return float(value)

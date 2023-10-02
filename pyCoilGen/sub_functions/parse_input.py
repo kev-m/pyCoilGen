@@ -6,6 +6,7 @@ import platform
 from .constants import DEBUG_BASIC, DEBUG_VERBOSE
 from pyCoilGen.mesh_factory import load_plugins as load_mesh_factory_plugins
 
+
 def parse_input(parse_cli=True):
     """
     Parse the input arguments using argparse.
@@ -21,13 +22,19 @@ def parse_input(parse_cli=True):
     parser = argparse.ArgumentParser()
 
     # Version 0.x.x uses 'coil_mesh_file' to specify the primary mesh or a mesh builder.
-    parser.add_argument('--coil_mesh_file', type=str, default='none', 
-                        help="File of the coil mesh or a mesh builder instruction")
+    parser.add_argument('--coil_mesh', type=str, default='none',
+                        help="Specify the coil mesh builder. Set to 'help' for a list of available builders.")
+    parser.add_argument('--target_mesh', type=str, default='none',
+                        help="Specify the target mesh builder. Set to 'help' for a list of available builders.")
+    parser.add_argument('--shield_mesh', type=str, default='none',
+                        help="Specify the shield mesh builder. Set to 'help' for a list of available builders.")
 
     # Add the coil mesh factory parameters
     plugins = load_mesh_factory_plugins()
     for plugin in plugins:
-        plugin.register_args(parser)    
+        register_function = getattr(plugin, 'register_args', None)
+        if register_function:
+            register_function(parser)
 
     # Add the field shape function
     parser.add_argument('--field_shape_function', type=str,
