@@ -37,23 +37,33 @@ This chapter describes the `pyCoilGen` confiuration parameters.
 
   The directory where `.stl` geometry files are located.
 
-## Mesh Geometry
+## Mesh Creation
 
-The coil mesh geometry must be specified. It can either be loaded from a pre-optimised NumPy pickle file or specified in parts.
+The coil, target and, optionally, shield mesh geometry must be specified. They can either be loaded from a 
+pre-optimised file or specified individually.
 
-### Mesh Files
+The coil mesh defines the surface upon which the coil winding path must be computed. It must always be specified. 
 
-- `coil_mesh_file` (Type: `str`, Default: `'none'`)
+The target field is a vector field of co-ordinates and magnitudes. It may either be specified by loading an existing
+target field, which provides both the co-ordinates and the magnitudes at each co-ordinate, or by separately specifying
+the co-ordinates and a gradient field equation.
 
-  The definition of the winding coil surface. 
+The shield mesh is an optional mesh which defines an additional surface where the magnetic field must be suppressed.
 
-  Either specify the filename of an `.stl` file to be loaded from `geometry_source_path`, or use one of the built-in mesh specifications. When using a built-in mesh specification, the mesh parameters must also be specified.
+### Mesh Creation Instructions
 
-#### Built-in Meshes
+Any mesh surface can be specified using the installed mesh builders. 
 
-The winding coil surface can be specified using a subset of built-in types. 
+To use one of the builders, set the appropriate mesh constructor parameter to one of the following instructions. The
+mesh parameters are then specified using a second parameter.
 
-To use one of the built-in types, set `coil_mesh_file` to one of the following special names. The mesh parameters are then specified using a second parameter. 
+The full list of available mesh constructors can be retrieved from the command-line using the special `help` instruction:
+```bash
+pyCoilGen --coil_mesh help
+```
+
+**NOTE:** Take care to avoid using the same creation instruction for the different components as only one mesh
+parameter list can be provided for each instruction.
 
 - `create cylinder mesh`
 
@@ -103,6 +113,27 @@ To use one of the built-in types, set `coil_mesh_file` to one of the following s
         plane_distance (`float`): Distance between the two planes.
 
 
+- `create circular mesh`
+  Create a circular mesh according to `circular_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]`)
+
+        radius (`float`): Radius of the mesh.
+        num_radial_divisions (`int`): Number of divisions in the radial direction.
+        rotation_vector_x (`float`): X component of the rotation vector.
+        rotation_vector_y (`float`): Y component of the rotation vector.
+        rotation_vector_z (`float`): Z component of the rotation vector.
+        rotation_angle (`float`): Rotation angle in radians.
+        center_position_x (`float`): X component of the center position.
+        center_position_y (`float`): Y component of the center position.
+        center_position_z (`float`): Z component of the center position.
+
+
+- `create stl mesh`
+  Create the mesh from the file specified with `stl_mesh_filename` (Type: `str`, Default: `none`)
+
+  Numerous file types are supported: STL, GLB, PLY, 3MF, XAML, etc. The mesh is loaded from the `geometry_source_path`
+  unless the `stl_mesh_filename` contains a path separator (`\` or `/`), in which case the file is loaded from that
+  path. Relative paths are loaded with respect to the current directory.
+
 <!-- Unused parameters
 `double_cone_mesh_parameter_list` (Type: `list of float`, Default: `[0.8, 0.3, 0.3, 0.1, 20, 20, 1, 0, 0, 0]`)
   Parameters for the generation of a double cone ('diabolo') shaped mesh.
@@ -111,7 +142,19 @@ To use one of the built-in types, set `coil_mesh_file` to one of the following s
   Parameters for the generation of the (default) circular mesh.
 -->
 
-### Subdividing the Mesh
+### Coil Meshes
+
+The coil surface mesh can be specified using either `coil_mesh` or (deprecated, but still supported) `coil_mesh_file`.
+The value of the parameter can be one of the supported creation instructions and the corresponding instruction's parameter.
+
+- `coil_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
+
+  The definition of the winding coil surface. 
+
+  Either specify the filename of an `.stl` file to be loaded from `geometry_source_path`, or use one of the built-in mesh specifications. When using a built-in mesh specification, the mesh parameters must also be specified.
+
+
+#### Subdividing the Mesh
 
 Once the mesh has been loaded, the mesh resolution can be increased using subdivision.
 
@@ -120,7 +163,7 @@ Once the mesh has been loaded, the mesh resolution can be increased using subdiv
   The number of refinement iterations of the mesh. At each iteration, every mesh face is subdivided into four faces.
 
 
-## Parameterise Mesh
+#### Parameterise Mesh
 
 The 3D coil winding surface needs to be projected onto a 2D plane in order to perform further processing.
 
@@ -134,31 +177,30 @@ If the cylindrical projection is inappropriate then an iterative mesh parameteri
 
   Circular diameter factor for projecting the 3D coil mesh to 2D.
 
-## Target Field
+### Target Field
 
-The purpose of `pyCoilGen` is to generate coils that produce a desired target field. This target field could be a gradient field or a generic target field.
+The purpose of `pyCoilGen` is to generate coils that produce a desired target field. This target field could be a
+gradient field or a generic target field.
 
-The target field can be either defined by a volume generated by a mesh loaded from an `.stl` file, as a sphere of a defined radius or loaded from a NumPy pickle file.
+The target vector field can either be specified using a mesh or a sphere to define the co-ordinates and the 
+`field_shape_function` to define the magnitudes, or loaded from a NumPy pickle file. The NumPy pickle file takes
+precedence, if specified.
 
 A gradient field is specified by using a field shape function.
 
-### Specifying the Target Field Co-ordinates Using an `.stl` Mesh
+
+#### Specifying the Target Field Co-ordinates Using a Mesh
 
 The mesh defines the boundary of the target field and these parameters fine-tune the target field point selection.
 
-- `target_mesh_file` (Type: `str`, Default: `'none'`)
+- `target_mesh` (Type: `str`, Default: `'none'`)
 
-  The mesh used to define the target field. 
+  Specify the mesh [creation instruction](#mesh-creation-instructions) to create the target field co-ordinates. The
+  corresponding creation instruction parameter must also be provided.
 
-If no file is specified, a spherical geometry is generated as a target volume, centred at the co-ordinates origin.
+- `target_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
 
-- `secondary_target_mesh_file` (Type: `str`, Default: `'none'`)
-
-  File of the secondary target mesh, for example for suppressed outer regions in active shields.
-
-- `secondary_target_weight` (Type: `float`, Default: `1`)
-
-  Weight for the secondary target points.
+  The mesh used to define the target field.
 
 - `use_only_target_mesh_verts` (Type: `bool`, Default: `False`)
 
@@ -170,23 +212,24 @@ If no file is specified, a spherical geometry is generated as a target volume, c
 
   Only used if `use_only_target_mesh_verts` is `False`.
 
-### Specifying the Target Field Co-ordinates Using a Sphere
-When both `target_field_definition_file` and `target_field_definition_file` are `'none'` then the target field co-ordinates are specified using a spherical volume.
+#### Specifying the Target Field Co-ordinates Using a Sphere
+
+When target mesh is not specified, then the target field co-ordinates are created using a spherical volume, centred at the
+co-ordinates origin.
 
 - `target_region_radius` (Type: `float`, Default: `0.15`)
 
   The radius of the spherical target field. 
 
-  The target field co-ordinates are then created by sub-dividing the radius using  `target_region_resolution`, which defines how many co-ordinates to create along each axis.
+  The target field co-ordinates are then created by sub-dividing the radius using  `target_region_resolution`, which
+  defines how many co-ordinates to create along each axis.
 
 - `set_roi_into_mesh_center` (Type: `bool`, Default: `False`)
 
-  This flag is used to set the ROI into the geometric center of the mesh. 
+  This flag is used to set the ROI into the geometric center of the coil mesh(es). If set, the centre of the target
+  sphere is moved to the mean of the coil mesh vertices.
 
-  If set, the centre of the target sphere is moved to the mean of the target field vertices.
-
-
-### Specifying the Gradient Field Shape Function
+#### Specifying the Gradient Field Shape Function
 
 Once the target field co-ordinates have been specified, then gradient field vectors can be calculated.
 
@@ -199,7 +242,9 @@ Once the target field co-ordinates have been specified, then gradient field vect
 
   The gradient field strength in mT/m/A.
 
-### Using a NumPy Pickle file
+#### Using a NumPy Pickle file
+
+A NumPy Pickle file can be used to provide a custom vector field consisting of both co-ordinates and field magnitude.
   
 - `target_field_definition_file` (Type: `str`, Default: `'none'`)
 
@@ -213,7 +258,7 @@ Once the target field co-ordinates have been specified, then gradient field vect
 
   The field name of the target field definition within the NumPy pickle file.
 
-#### Target Field File Structure
+##### Target Field File Structure
 
 The target field NumPy pickle file consists of a single array containing a dictionary with at least two key-value
 pairs: `coords` and another key-value pair.
@@ -248,6 +293,25 @@ The data would be loaded by using:
   }
   solution = pyCoilGen(log, parameters)
 ```
+
+### Shield Mesh
+
+The optional shield mesh specifies where the magnetic field must be zero, for example for suppressed outer regions in
+active shields.
+
+- `shield_mesh` (Type: `str`, Default: `'none'`)
+
+  Specify the mesh [creation instruction](#mesh-creation-instructions) to create the shield mesh co-ordinates. The 
+  corresponding creation instruction parameter must also be provided.
+
+- `secondary_target_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
+
+  File of the secondary target mesh.
+
+- `secondary_target_weight` (Type: `float`, Default: `1`)
+
+  Weight for the secondary target points.
+
 ## Discretisation and Calculation of Field Variables
 
 ### Winding Coil Contribution and Target Field Sensitivity
