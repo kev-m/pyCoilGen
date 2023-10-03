@@ -540,7 +540,7 @@ The primary purpose of `pyCoilGen` is to calculate the wire path of the coil tha
 
 ### Generate 3D Wire Path
 
-The application can optionally generate a 3D `.stl` trace by sweeping out a conductor profile along the computed wire path.
+The application can optionally generate a 3D representation of the coil by sweeping out a conductor profile along the computed wire path.
 
 - `skip_sweep` (Type: `bool`, Default: `False`)
 
@@ -556,17 +556,6 @@ The application can optionally generate a 3D `.stl` trace by sweeping out a cond
   specified by the `conductor_thickness` parameter.
 
   A custom shape defined by specifying the x/y co-ordinates in metres in a 2xm array of the form `[[x0, x1, x2, x3, ...], [y0, y1, y2, y3, ...]]`.
-
-
-- `save_stl_flag` (Type: `bool`, Default: `True`)
-
-  If True, saves the swept conductor profile to an `.stl` file.
-
-  If `skip_sweep` is False and `save_stl_flag` is True, the generated result is saved in the output_directory, with a name corresponding 
-  to `{project_name}_surface_part{part_ind}_{field_shape_function}.stl`, where `part_ind` is the zero-based index of the winding coil mesh parts.
-
-  The `field_shape_function` is stripped of any `*`, `^`, and `,` symbols.
-
 
 ## Evaluate Results
 
@@ -631,3 +620,58 @@ Unused parameters
   Track width factor for PCB layout.
 
 -->
+
+## Export Data
+
+Data from the computed coil solution can be exported, for example to export the swept conductor path to a CAD file.
+
+- `save_stl_flag` (Type: `bool`, Default: `True`)
+
+  If True, uses the provided CAD exporter to export data once the processing has completed.
+
+### Data Exporters 
+
+The full list of available exporters can be retrieved from the command-line using the `help` option to the exporter, for example:
+```bash
+pyCoilGen --exporter help
+```
+
+To use one of the exporters, set the `exporter` parameter to one of the available exporters and define the exporter parameters. 
+
+The CAD exporter is enabled by default to export the coil surface and conductor mesh to a `PLY` file, using the following parameters:
+
+```python
+arg_dict = {
+    ...
+    'exporter': 'export CAD file',
+    'CAD_filename': '{project}_{mesh}_{part_index}_{field_function}.ply',
+    ...
+}
+
+solution = pyCoilGen(log, arg_dict)
+```
+
+The supported exporters are:
+
+- `export CAD file`
+
+  Export the surface and coil conductor meshes to the file name specified by `CAD_filename` (Type: `str`, Default: `'{project}_{mesh}_{part_index}_{field_function}.ply'`)
+
+  The following substitutions are available and will be replaced with the corresponding content:
+
+    - `{output_dir}` : Replaced with `output_directory`.
+    - `{project}`: Replaced with `project_name`.
+    - `{field_function}`: Replaced with `field_shape_function`, stripped of any `*`, `^`, `\` and `/` symbols.
+    - `{part_index}`: Replaced with the current, zero-based, coil index.
+    - `{mesh}`: Replaced with `wire` or `surface` for each of the wire path or coil surfaces.
+
+    If `{mesh}` is not present, only the swept wire path will be exported.
+
+  The following file types (file extensions) are supported:
+  - STL: [Stereolithography](https://en.wikipedia.org/wiki/STL_(file_format))
+  - GLB: [Graphics Library Transmission Format](https://en.wikipedia.org/wiki/GlTF#GLB)
+  - PLY: [Polygon](https://en.wikipedia.org/wiki/PLY_(file_format))
+  - 3MF: [3D Manufacturing Format](https://en.wikipedia.org/wiki/3D_Manufacturing_Format)
+  - OBJ: [Wavefront .obj](https://en.wikipedia.org/wiki/Wavefront_.obj_file)
+  - DAE: [COLLADA digital asset exchange](https://en.wikipedia.org/wiki/COLLADA)
+  - OFF: [ASCII Object File Format](https://en.wikipedia.org/wiki/OFF_(file_format))
