@@ -5,6 +5,7 @@ import platform
 # local imports
 from .constants import DEBUG_BASIC, DEBUG_VERBOSE
 from pyCoilGen.mesh_factory import load_mesh_factory_plugins
+from pyCoilGen.export_factory import load_exporter_plugins
 
 
 def parse_input(parse_cli=True):
@@ -283,6 +284,13 @@ def parse_input(parse_cli=True):
     # Add flag to save swept .stl
     parser.add_argument('--exporter', type=str, default='export STL file',
                         help="Specify a data exporter. Set to 'help' for a list of available exporters.")
+
+    # Add the exporter parameters
+    exporter_plugins = load_exporter_plugins()
+    for plugin in exporter_plugins:
+        register_function = getattr(plugin, 'register_args', None)
+        if register_function:
+            register_function(parser)
 
 
     """ Currently not implemented
