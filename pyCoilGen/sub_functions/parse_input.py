@@ -188,15 +188,11 @@ def parse_input(parse_cli=True):
     parser.add_argument('--smooth_factor', type=int,
                         default=1, help="Smoothing parameter if tracks should be smoothed (i.e. when > 1).")
 
-    # Add flag to save swept .stl
-    parser.add_argument('--save_stl_flag', type=bool, default=True,
-                        help="Flag to save swept .stl")
-
+    """ Unused
     # Add flag to plot results
     parser.add_argument('--plot_flag', type=bool, default=True,
                         help="Flag to plot results")
 
-    """ Unused
     # Add interconnection_method: Regular or spiral in/out
     parser.add_argument('--interconnection_method', type=str, default='regular',
                         help="Interconnection method: 'regular' or 'spiral' in/out")
@@ -279,6 +275,15 @@ def parse_input(parse_cli=True):
     # Add the 2D edge points for direct definition of the cross section of the conductor (build circular cut shapes)
     parser.add_argument('--cross_sectional_points', nargs='+', type=float, default=[
                         0, 0], help="2D edge points for direct definition of the cross section of the conductor (build circular cut shapes)")
+
+    # Add flag to save swept .stl
+    parser.add_argument('--save_stl_flag', type=bool, default=True,
+                        help="Flag to save swept .stl (deprecated)")
+
+    # Add flag to save swept .stl
+    parser.add_argument('--exporter', type=str, default='export STL file',
+                        help="Specify a data exporter. Set to 'help' for a list of available exporters.")
+
 
     """ Currently not implemented
     # Add the parameters for the generation of a double cone ("diabolo") shaped mesh
