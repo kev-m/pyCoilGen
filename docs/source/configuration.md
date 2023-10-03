@@ -638,7 +638,7 @@ pyCoilGen --exporter help
 
 To use one of the exporters, set the `exporter` parameter to one of the available exporters and define the exporter parameters. 
 
-The CAD exporter is enabled by default to export the coil surface and conductor mesh to a `PLY` file, using the following parameters:
+The CAD exporter is enabled by default to export the coil surface and conductor mesh to a PLY file, using the following parameters:
 
 ```python
 arg_dict = {
