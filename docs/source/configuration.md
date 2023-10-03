@@ -540,7 +540,7 @@ The primary purpose of `pyCoilGen` is to calculate the wire path of the coil tha
 
 ### Generate 3D Wire Path
 
-The application can optionally generate a 3D representation of the coil by sweeping out a conductor profile along the computed wire path.
+`pyCoilGen` can optionally generate a 3D representation of the coil by sweeping out a conductor profile along the computed wire path.
 
 - `skip_sweep` (Type: `bool`, Default: `False`)
 
@@ -655,7 +655,7 @@ The supported exporters are:
 
 - `export CAD file`
 
-  Export the surface and coil conductor meshes to the file name specified by `CAD_filename` (Type: `str`, Default: `'{project}_{mesh}_{part_index}_{field_function}.ply'`)
+  Export the surface and coil conductor meshes to the file specified by `CAD_filename` (Type: `str`, Default: `'{project}_{mesh}_{part_index}_{field_function}.ply'`)
 
   The following substitutions are available and will be replaced with the corresponding content:
 
@@ -667,7 +667,7 @@ The supported exporters are:
 
     If `{mesh}` is not present, only the swept wire path will be exported.
 
-  The following file types (file extensions) are supported:
+  The following file types are supported:
   - STL: [Stereolithography](https://en.wikipedia.org/wiki/STL_(file_format))
   - GLB: [Graphics Library Transmission Format](https://en.wikipedia.org/wiki/GlTF#GLB)
   - PLY: [Polygon](https://en.wikipedia.org/wiki/PLY_(file_format))
