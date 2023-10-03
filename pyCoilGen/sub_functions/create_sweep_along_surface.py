@@ -44,11 +44,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
     """
 
     if not input_args.skip_sweep:
-
-        save_mesh = input_args.save_stl_flag
-        output_directory = input_args.output_directory
         conductor_conductivity = input_args.specific_conductivity_conductor
-
         for part_ind in range(len(coil_parts)):
             coil_part = coil_parts[part_ind]
             coil_mesh = coil_part.coil_mesh
@@ -275,18 +271,6 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
 
             swept_faces = np.vstack((swept_surface_triangles, final_triangles))
             layout_surface_mesh = Mesh(vertices=swept_surface_vertices, faces=swept_faces)
-
-            # Save the mesh as an .stl file
-            if save_mesh:
-                project = input_args.project_name
-                filename = input_args.field_shape_function.replace('*', '').replace('^', '').replace(',', '')
-                stl_file_path_layout = path.join(
-                    output_directory, f"{project}_swept_layout_part{part_ind}_{filename}.stl")
-                stl_file_path_surface = path.join(output_directory, f"{project}_surface_part{part_ind}_{filename}.stl")
-
-                # layout_surface_mesh.cleanup()
-                layout_surface_mesh.export(stl_file_path_layout)
-                coil_mesh.export(stl_file_path_surface)
 
             # Assign outputs
             coil_part.layout_surface_mesh = layout_surface_mesh

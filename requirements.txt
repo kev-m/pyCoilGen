@@ -6,7 +6,7 @@ numpy==1.21.6
 scipy==1.7.3
 
 # For Mesh support
-trimesh==3.21.7
+trimesh==3.23.5
 # Missing Trimesh dependency
 networkx==2.6.3
 

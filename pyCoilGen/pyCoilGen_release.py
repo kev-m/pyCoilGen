@@ -52,6 +52,7 @@ from .sub_functions.calculate_inductance_by_coil_layout import calculate_inducta
 from .sub_functions.load_preoptimized_data import load_preoptimized_data
 from .sub_functions.evaluate_field_errors import evaluate_field_errors
 from .sub_functions.calculate_gradient import calculate_gradient
+from .sub_functions.export_data import export_data, check_exporter_help
 
 # Set up logging
 log = logging.getLogger(__name__)
@@ -100,8 +101,12 @@ def pyCoilGen(log, input_args=None):
     if get_level() >= DEBUG_VERBOSE:
         log.debug('Parse inputs: %s', input_args)
 
+
     solution = CoilSolution()
     solution.input_args = input_args
+
+    if check_exporter_help(input_args):
+        return solution
 
     try:
         runpoint_tag = 'test'
@@ -371,6 +376,13 @@ def pyCoilGen(log, input_args=None):
         timer.stop()
         solution.coil_gradient = coil_gradient
         runpoint_tag = '22'
+
+        # Export data
+        print('Exporting data:')
+        timer.start()
+        export_data(solution)
+        timer.stop()
+        runpoint_tag = '23'
 
         # Finally, save the completed solution.
         runpoint_tag = 'final'
