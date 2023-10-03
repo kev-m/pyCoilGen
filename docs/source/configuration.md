@@ -41,26 +41,29 @@ This chapter describes the `pyCoilGen` confiuration parameters.
 
 There are three mesh geometries: coil, target and shield.  
 
-* The [coil mesh](TODO) defines the surface upon which the coil winding path must be computed. This geometry is required.  
+* The [coil mesh](#coil-meshes) defines the surface upon which the coil winding path must be computed. This geometry is required.  
 
-* The [target field](TODO) is a vector field of co-ordinates and magnitudes. This geometry is required. It may either be specified by loading an existing
+* The [target field](#target-field) is a vector field of co-ordinates and magnitudes. This geometry is required. It may either be specified by loading an existing
 target field, which provides both the co-ordinates and the magnitudes at each co-ordinate, or by separately specifying
 the co-ordinates and a gradient field equation.
 
 * The [shield mesh](#shield-mesh) is an optional geomerty which defines an additional surface where the magnetic field must be suppressed.
 
-These mesh geometries can either be loaded from a [pre-optimised file](TODO) or specified individually using [mesh creation builders](TODO).
+These mesh geometries can either be loaded from a [pre-optimised file](#pre-calculated-mesh-and-stream-function) or specified individually using [mesh creation builders](#mesh-creation-builders).
 
 ### Coil Meshes
 
-The coil surface mesh can be specified using either `coil_mesh` or (deprecated, but still supported) `coil_mesh_file`.
-The value of the parameter can be one of the supported creation instructions and the corresponding instruction's parameter.
+The purpose of `pyCoilGen` is to generate a coil wire path on a coil mesh surface or surfaces to produce a desired target field.
 
-- `coil_mesh` (TODO)
+The coil mesh surface can be specified using a coil mesh builder and a corresponding builder configuration parameter.
+
+- `coil_mesh` (Type: `str`, Default: `'none'`)
+
+  Define the coil surface for the wire path.
+
+  Specify the [mesh builder](#mesh-creation-instructions) to create the coil mesh surface(s). The corresponding creation builder parameter must also be provided.
 
 - `coil_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
-
-  The definition of the winding coil surface. 
 
   Either specify the filename of an `.stl` file to be loaded from `geometry_source_path`, or use one of the built-in mesh specifications. When using a built-in mesh specification, the mesh parameters must also be specified.
 
@@ -111,7 +114,7 @@ The mesh defines the boundary of the target field and these parameters fine-tune
 
 - `target_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
 
-  The mesh used to define the target field.
+  Specify the STL mesh file to define the target field.
 
 - `use_only_target_mesh_verts` (Type: `bool`, Default: `False`)
 
@@ -232,10 +235,20 @@ The full list of available mesh builders can be retrieved from the command-line 
 pyCoilGen --coil_mesh help
 ```
 
-To use one of the builders, set the appropriate mesh geometry parameter (`coil_mesh`, `(TODO)`, `(TODO)`) to one of the available builders and define the builder parameters. For example, to set (TODO):
+To use one of the builders, set the appropriate mesh geometry parameter (`coil_mesh`, `target_mesh`, `shield_mesh`) to one of the available builders and define the builder parameters. For example, to set the coil mesh to a cylinder and a planar target region:
 
-```python (TODO)
-pyCoilGen --coil_mesh 
+```python
+arg_dict = {
+    ...
+    'coil_mesh': 'create cylinder mesh',
+    'cylinder_mesh_parameter_list': [0.8, 0.154, 30, 30, 0, 0, 1, 0],
+    ...
+    'target_mesh': 'create planar mesh',
+    'planar_mesh_parameter_list': [0.2, 0.2, 20, 20, 1, 0, 0, 0, 0, 0, 0],
+    ...
+}
+
+solution = pyCoilGen(log, arg_dict)
 ```
 
 **NOTE:** You cannot use the same builder for the different mesh geometries as only one builder parameter can be passed to `pyCoilGen`.
@@ -318,7 +331,6 @@ The mesh builders are:
 `circular_mesh_parameter_list` (Type: `list of float`, Default: `[0.25, 20, 1, 0, 0, 0, 0, 0, 0]`)
   Parameters for the generation of the (default) circular mesh.
 -->
-
 
 
 ## Discretisation and Calculation of Field Variables
