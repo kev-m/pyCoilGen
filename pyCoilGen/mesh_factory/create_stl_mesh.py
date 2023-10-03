@@ -64,7 +64,7 @@ def get_parameters()->list:
     Returns:
         list of tuples of parameter name and default value: The additional parameters provided by this builder
     """
-    return [('stl_mesh_filename', 'none'), ('noting', 'none')]
+    return [('stl_mesh_filename', 'none')]
 
 def register_args(parser):
     """Register arguments specific to STL mesh creation.
