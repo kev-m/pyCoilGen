@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.0 (2023-10-03)
+
+#### New Features
+
+* (exporter): Extending the list of supported export types.
+* (meshes): Using the mesh factory for coil, target and shield meshes.
+* (meshes): Adding 'create circular mesh' to the mesh factory.
+* (meshes): Using auto-discovery to discover mesh builders. ([#55](https://github.com/kev-m/pyCoilGen/issues/55))
+#### Fixes
+
+* Bugfix with trying to access invalid function.
+* (meshes): Using stl_mesh_filename and coil_mesh_file.
+* (meshes): Supporting int and float parameters.
+
+Full set of changes: [`0.0.11...0.1.0`](https://github.com/kev-m/pyCoilGen/compare/0.0.11...0.1.0)
+
 ## 0.0.11 (2023-09-28)
 
 #### Fixes
