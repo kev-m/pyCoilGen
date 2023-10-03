@@ -61,11 +61,11 @@ The coil mesh surface can be specified using a coil mesh builder and a correspon
 
   Define the coil surface for the wire path.
 
-  Specify the [mesh builder](#mesh-creation-instructions) to create the coil mesh surface(s). The corresponding creation builder parameter must also be provided.
+  Specify the [mesh builder](#mesh-creation-builders) to create the coil mesh surface(s). The corresponding creation builder parameter must also be provided.
 
 - `coil_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
 
-  Either specify the filename of an `.stl` file to be loaded from `geometry_source_path`, or use one of the built-in mesh specifications. When using a built-in mesh specification, the mesh parameters must also be specified.
+  Either specify the filename of an `.stl` file to be loaded from `geometry_source_path`, or use one of the [mesh creation builders](#mesh-creation-builders) with the builder's corresponding parameters.
 
 
 #### Subdividing the Mesh
@@ -109,8 +109,7 @@ The mesh defines the boundary of the target field and these parameters fine-tune
 
 - `target_mesh` (Type: `str`, Default: `'none'`)
 
-  Specify the mesh [creation instruction](#mesh-creation-instructions) to create the target field co-ordinates. The
-  corresponding creation instruction parameter must also be provided.
+  Specify the mesh [creation instruction](#mesh-creation-builders) to create the target field co-ordinates. The corresponding builder creation parameter must also be provided.
 
 - `target_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
 
@@ -215,8 +214,7 @@ active shields.
 
 - `shield_mesh` (Type: `str`, Default: `'none'`)
 
-  Specify the mesh [creation instruction](#mesh-creation-instructions) to create the shield mesh co-ordinates. The 
-  corresponding creation instruction parameter must also be provided.
+  Specify the mesh [creation instruction](#mesh-creation-builders) to create the shield mesh co-ordinates. The corresponding builder parameter must also be provided.
 
 - `secondary_target_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
 
@@ -320,8 +318,16 @@ The mesh builders are:
 - `create stl mesh`
   Create the mesh from the file specified with `stl_mesh_filename` (Type: `str`, Default: `none`)
 
-  Numerous file types are supported: STL, GLB, PLY, 3MF, XAML, etc. The mesh is loaded from the `geometry_source_path`
-  unless the `stl_mesh_filename` contains a path separator (`\` or `/`), in which case the file is loaded from that
+  The following file types (file extensions) are supported:
+  - STL: [Stereolithography](https://en.wikipedia.org/wiki/STL_(file_format))
+  - GLB: [Graphics Library Transmission Format](https://en.wikipedia.org/wiki/GlTF#GLB)
+  - PLY: [Polygon](https://en.wikipedia.org/wiki/PLY_(file_format))
+  - 3MF: [3D Manufacturing Format](https://en.wikipedia.org/wiki/3D_Manufacturing_Format)
+  - OBJ: [Wavefront .obj](https://en.wikipedia.org/wiki/Wavefront_.obj_file)
+  - DAE: [COLLADA digital asset exchange](https://en.wikipedia.org/wiki/COLLADA)
+  - OFF: [ASCII Object File Format](https://en.wikipedia.org/wiki/OFF_(file_format))
+  
+  The mesh is loaded from the `geometry_source_path` unless the `stl_mesh_filename` contains a path separator (`\` or `/`), in which case the file is loaded from that
   path. Relative paths are loaded with respect to the current directory.
 
 <!-- Unused parameters
