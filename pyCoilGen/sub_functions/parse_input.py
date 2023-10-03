@@ -282,7 +282,7 @@ def parse_input(parse_cli=True):
                         help="Flag to save swept .stl (deprecated)")
 
     # Add flag to save swept .stl
-    parser.add_argument('--exporter', type=str, default='export STL file',
+    parser.add_argument('--exporter', type=str, default='export CAD file',
                         help="Specify a data exporter. Set to 'help' for a list of available exporters.")
 
     # Add the exporter parameters

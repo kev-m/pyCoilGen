@@ -96,7 +96,7 @@ def export_CAD_file(solution: CoilSolution):
 
     if save_mesh:
         # Plugin parameters
-        export_filename = input_args.CAD_export_filename
+        export_filename = input_args.CAD_filename
 
         # Iterate over coil parts and export the mesh/meshes
         for index, coil_part in enumerate(solution.coil_parts):
