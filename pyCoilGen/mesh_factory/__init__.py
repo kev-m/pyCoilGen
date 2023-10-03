@@ -6,7 +6,7 @@ This module provides functions to dynamically load plugins for mesh creation.
 import os
 import importlib
 
-def load_plugins():
+def load_mesh_factory_plugins():
     """Load all available mesh creation plugins.
 
     This function dynamically discovers and imports all Python files in the 

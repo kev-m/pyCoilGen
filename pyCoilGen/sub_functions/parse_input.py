@@ -4,7 +4,7 @@ import platform
 
 # local imports
 from .constants import DEBUG_BASIC, DEBUG_VERBOSE
-from pyCoilGen.mesh_factory import load_plugins as load_mesh_factory_plugins
+from pyCoilGen.mesh_factory import load_mesh_factory_plugins
 
 
 def parse_input(parse_cli=True):
