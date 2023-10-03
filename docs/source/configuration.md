@@ -37,81 +37,38 @@ This chapter describes the `pyCoilGen` confiuration parameters.
 
   The directory where `.stl` geometry files are located.
 
-## Mesh Geometry
+## Mesh Creation
 
-The coil mesh geometry must be specified. It can either be loaded from a pre-optimised NumPy pickle file or specified in parts.
+There are three mesh geometries: coil, target and shield.  
 
-### Mesh Files
+* The [coil mesh](#coil-meshes) defines the surface upon which the coil winding path must be computed. This geometry is required.  
 
-- `coil_mesh_file` (Type: `str`, Default: `'none'`)
+* The [target field](#target-field) is a vector field of co-ordinates and magnitudes. This geometry is required. It may either be specified by loading an existing
+target field, which provides both the co-ordinates and the magnitudes at each co-ordinate, or by separately specifying
+the co-ordinates and a gradient field equation.
 
-  The definition of the winding coil surface. 
+* The [shield mesh](#shield-mesh) is an optional geomerty which defines an additional surface where the magnetic field must be suppressed.
+
+These mesh geometries can either be loaded from a [pre-optimised file](#pre-calculated-mesh-and-stream-function) or specified individually using [mesh creation builders](#mesh-creation-builders).
+
+### Coil Meshes
+
+The purpose of `pyCoilGen` is to generate a coil wire path on a coil mesh surface or surfaces to produce a desired target field.
+
+The coil mesh surface can be specified using a coil mesh builder and a corresponding builder configuration parameter.
+
+- `coil_mesh` (Type: `str`, Default: `'none'`)
+
+  Define the coil surface for the wire path.
+
+  Specify the [mesh builder](#mesh-creation-instructions) to create the coil mesh surface(s). The corresponding creation builder parameter must also be provided.
+
+- `coil_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
 
   Either specify the filename of an `.stl` file to be loaded from `geometry_source_path`, or use one of the built-in mesh specifications. When using a built-in mesh specification, the mesh parameters must also be specified.
 
-#### Built-in Meshes
 
-The winding coil surface can be specified using a subset of built-in types. 
-
-To use one of the built-in types, set `coil_mesh_file` to one of the following special names. The mesh parameters are then specified using a second parameter. 
-
-- `create cylinder mesh`
-
-  Create a cylindrical mesh according to `cylinder_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.8, 0.3, 20, 20, 1, 0, 0, 0]`)
-
-        cylinder_height (`float`): Height of the cylinder.
-        cylinder_radius (`float`): Radius of the cylinder.
-        num_circular_divisions (`int`): Number of circular divisions.
-        num_longitudinal_divisions (`int`): Number of longitudinal divisions.
-        rotation_vector_x (`float`): X-component of the rotation vector.
-        rotation_vector_y (`float`): Y-component of the rotation vector.
-        rotation_vector_z (`float`): Z-component of the rotation vector.
-        rotation_angle (`float`): Rotation angle.
-
-
-- `create planar mesh` 
-
-  Create a planar mesh according to `planar_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0]`)
-
-        planar_height (`float`): Height of the planar mesh.
-        planar_width (`float`): Width of the planar mesh.
-        num_lateral_divisions (`int`): Number of divisions in the lateral direction.
-        num_longitudinal_divisions (`int`): Number of divisions in the longitudinal direction.
-        rotation_vector_x (`float`): X component of the rotation vector.
-        rotation_vector_y (`float`): Y component of the rotation vector.
-        rotation_vector_z (`float`): Z component of the rotation vector.
-        rotation_angle (`float`): Rotation angle in radians.
-        center_position_x (`float`): X component of the center position.
-        center_position_y (`float`): Y component of the center position.
-        center_position_z (`float`): Z component of the center position.
-
-
-- `create bi-planar mesh`
-
-  Create a bi-planar mesh according to `biplanar_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2]`)
-
-        planar_height (`float`): Height of the planar mesh.
-        planar_width (`float`): Width of the planar mesh.
-        num_lateral_divisions (`int`): Number of divisions in the lateral direction.
-        num_longitudinal_divisions (`int`): Number of divisions in the longitudinal direction.
-        target_normal_x (`float`): X-component of the target normal vector.
-        target_normal_y (`float`): Y-component of the target normal vector.
-        target_normal_z (`float`): Z-component of the target normal vector.
-        center_position_x (`float`): X-coordinate of the center position.
-        center_position_y (`float`): Y-coordinate of the center position.
-        center_position_z (`float`): Z-coordinate of the center position.
-        plane_distance (`float`): Distance between the two planes.
-
-
-<!-- Unused parameters
-`double_cone_mesh_parameter_list` (Type: `list of float`, Default: `[0.8, 0.3, 0.3, 0.1, 20, 20, 1, 0, 0, 0]`)
-  Parameters for the generation of a double cone ('diabolo') shaped mesh.
-
-`circular_mesh_parameter_list` (Type: `list of float`, Default: `[0.25, 20, 1, 0, 0, 0, 0, 0, 0]`)
-  Parameters for the generation of the (default) circular mesh.
--->
-
-### Subdividing the Mesh
+#### Subdividing the Mesh
 
 Once the mesh has been loaded, the mesh resolution can be increased using subdivision.
 
@@ -120,7 +77,7 @@ Once the mesh has been loaded, the mesh resolution can be increased using subdiv
   The number of refinement iterations of the mesh. At each iteration, every mesh face is subdivided into four faces.
 
 
-## Parameterise Mesh
+#### Parameterise Mesh
 
 The 3D coil winding surface needs to be projected onto a 2D plane in order to perform further processing.
 
@@ -134,31 +91,30 @@ If the cylindrical projection is inappropriate then an iterative mesh parameteri
 
   Circular diameter factor for projecting the 3D coil mesh to 2D.
 
-## Target Field
+### Target Field
 
-The purpose of `pyCoilGen` is to generate coils that produce a desired target field. This target field could be a gradient field or a generic target field.
+The purpose of `pyCoilGen` is to generate coils that produce a desired target field. This target field could be a
+gradient field or a generic target field.
 
-The target field can be either defined by a volume generated by a mesh loaded from an `.stl` file, as a sphere of a defined radius or loaded from a NumPy pickle file.
+The target vector field can either be specified using a mesh or a sphere to define the co-ordinates and the 
+`field_shape_function` to define the magnitudes, or loaded from a NumPy pickle file. The NumPy pickle file takes
+precedence, if specified.
 
 A gradient field is specified by using a field shape function.
 
-### Specifying the Target Field Co-ordinates Using an `.stl` Mesh
+
+#### Specifying the Target Field Co-ordinates Using a Mesh
 
 The mesh defines the boundary of the target field and these parameters fine-tune the target field point selection.
 
-- `target_mesh_file` (Type: `str`, Default: `'none'`)
+- `target_mesh` (Type: `str`, Default: `'none'`)
 
-  The mesh used to define the target field. 
+  Specify the mesh [creation instruction](#mesh-creation-instructions) to create the target field co-ordinates. The
+  corresponding creation instruction parameter must also be provided.
 
-If no file is specified, a spherical geometry is generated as a target volume, centred at the co-ordinates origin.
+- `target_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
 
-- `secondary_target_mesh_file` (Type: `str`, Default: `'none'`)
-
-  File of the secondary target mesh, for example for suppressed outer regions in active shields.
-
-- `secondary_target_weight` (Type: `float`, Default: `1`)
-
-  Weight for the secondary target points.
+  Specify the STL mesh file to define the target field.
 
 - `use_only_target_mesh_verts` (Type: `bool`, Default: `False`)
 
@@ -170,23 +126,24 @@ If no file is specified, a spherical geometry is generated as a target volume, c
 
   Only used if `use_only_target_mesh_verts` is `False`.
 
-### Specifying the Target Field Co-ordinates Using a Sphere
-When both `target_field_definition_file` and `target_field_definition_file` are `'none'` then the target field co-ordinates are specified using a spherical volume.
+#### Specifying the Target Field Co-ordinates Using a Sphere
+
+When target mesh is not specified, then the target field co-ordinates are created using a spherical volume, centred at the
+co-ordinates origin.
 
 - `target_region_radius` (Type: `float`, Default: `0.15`)
 
   The radius of the spherical target field. 
 
-  The target field co-ordinates are then created by sub-dividing the radius using  `target_region_resolution`, which defines how many co-ordinates to create along each axis.
+  The target field co-ordinates are then created by sub-dividing the radius using  `target_region_resolution`, which
+  defines how many co-ordinates to create along each axis.
 
 - `set_roi_into_mesh_center` (Type: `bool`, Default: `False`)
 
-  This flag is used to set the ROI into the geometric center of the mesh. 
+  This flag is used to set the ROI into the geometric center of the coil mesh(es). If set, the centre of the target
+  sphere is moved to the mean of the coil mesh vertices.
 
-  If set, the centre of the target sphere is moved to the mean of the target field vertices.
-
-
-### Specifying the Gradient Field Shape Function
+#### Specifying the Gradient Field Shape Function
 
 Once the target field co-ordinates have been specified, then gradient field vectors can be calculated.
 
@@ -199,7 +156,9 @@ Once the target field co-ordinates have been specified, then gradient field vect
 
   The gradient field strength in mT/m/A.
 
-### Using a NumPy Pickle file
+#### Using a NumPy Pickle file
+
+A NumPy Pickle file can be used to provide a custom vector field consisting of both co-ordinates and field magnitude.
   
 - `target_field_definition_file` (Type: `str`, Default: `'none'`)
 
@@ -213,7 +172,7 @@ Once the target field co-ordinates have been specified, then gradient field vect
 
   The field name of the target field definition within the NumPy pickle file.
 
-#### Target Field File Structure
+##### Target Field File Structure
 
 The target field NumPy pickle file consists of a single array containing a dictionary with at least two key-value
 pairs: `coords` and another key-value pair.
@@ -248,6 +207,132 @@ The data would be loaded by using:
   }
   solution = pyCoilGen(log, parameters)
 ```
+
+### Shield Mesh
+
+The optional shield mesh specifies where the magnetic field must be zero, for example for suppressed outer regions in
+active shields.
+
+- `shield_mesh` (Type: `str`, Default: `'none'`)
+
+  Specify the mesh [creation instruction](#mesh-creation-instructions) to create the shield mesh co-ordinates. The 
+  corresponding creation instruction parameter must also be provided.
+
+- `secondary_target_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
+
+  File of the secondary target mesh.
+
+- `secondary_target_weight` (Type: `float`, Default: `1`)
+
+  Weight for the secondary target points.
+
+### Mesh Creation Builders
+
+Any mesh geometry can be specified using the installed mesh builders. 
+
+The full list of available mesh builders can be retrieved from the command-line using the `help` option to the mesh constructor parameter, for example:
+```bash
+pyCoilGen --coil_mesh help
+```
+
+To use one of the builders, set the appropriate mesh geometry parameter (`coil_mesh`, `target_mesh`, `shield_mesh`) to one of the available builders and define the builder parameters. For example, to set the coil mesh to a cylinder and a planar target region:
+
+```python
+arg_dict = {
+    ...
+    'coil_mesh': 'create cylinder mesh',
+    'cylinder_mesh_parameter_list': [0.8, 0.154, 30, 30, 0, 0, 1, 0],
+    ...
+    'target_mesh': 'create planar mesh',
+    'planar_mesh_parameter_list': [0.2, 0.2, 20, 20, 1, 0, 0, 0, 0, 0, 0],
+    ...
+}
+
+solution = pyCoilGen(log, arg_dict)
+```
+
+**NOTE:** You cannot use the same builder for the different mesh geometries as only one builder parameter can be passed to `pyCoilGen`.
+
+The mesh builders are:
+
+- `create cylinder mesh`
+
+  Create a cylindrical mesh defined by `cylinder_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.8, 0.3, 20, 20, 1, 0, 0, 0]`)
+
+        cylinder_height (`float`): Height of the cylinder.
+        cylinder_radius (`float`): Radius of the cylinder.
+        num_circular_divisions (`int`): Number of circular divisions.
+        num_longitudinal_divisions (`int`): Number of longitudinal divisions.
+        rotation_vector_x (`float`): X-component of the rotation vector.
+        rotation_vector_y (`float`): Y-component of the rotation vector.
+        rotation_vector_z (`float`): Z-component of the rotation vector.
+        rotation_angle (`float`): Rotation angle.
+
+
+- `create planar mesh` 
+
+  Create a planar mesh defined by `planar_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0]`)
+
+        planar_height (`float`): Height of the planar mesh.
+        planar_width (`float`): Width of the planar mesh.
+        num_lateral_divisions (`int`): Number of divisions in the lateral direction.
+        num_longitudinal_divisions (`int`): Number of divisions in the longitudinal direction.
+        rotation_vector_x (`float`): X component of the rotation vector.
+        rotation_vector_y (`float`): Y component of the rotation vector.
+        rotation_vector_z (`float`): Z component of the rotation vector.
+        rotation_angle (`float`): Rotation angle in radians.
+        center_position_x (`float`): X component of the center position.
+        center_position_y (`float`): Y component of the center position.
+        center_position_z (`float`): Z component of the center position.
+
+
+- `create bi-planar mesh`
+
+  Create a bi-planar mesh defined by `biplanar_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2]`)
+
+        planar_height (`float`): Height of the planar mesh.
+        planar_width (`float`): Width of the planar mesh.
+        num_lateral_divisions (`int`): Number of divisions in the lateral direction.
+        num_longitudinal_divisions (`int`): Number of divisions in the longitudinal direction.
+        target_normal_x (`float`): X-component of the target normal vector.
+        target_normal_y (`float`): Y-component of the target normal vector.
+        target_normal_z (`float`): Z-component of the target normal vector.
+        center_position_x (`float`): X-coordinate of the center position.
+        center_position_y (`float`): Y-coordinate of the center position.
+        center_position_z (`float`): Z-coordinate of the center position.
+        plane_distance (`float`): Distance between the two planes.
+
+
+- `create circular mesh`
+  Create a circular mesh defined by `circular_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]`)
+
+        radius (`float`): Radius of the mesh.
+        num_radial_divisions (`int`): Number of divisions in the radial direction.
+        rotation_vector_x (`float`): X component of the rotation vector.
+        rotation_vector_y (`float`): Y component of the rotation vector.
+        rotation_vector_z (`float`): Z component of the rotation vector.
+        rotation_angle (`float`): Rotation angle in radians.
+        center_position_x (`float`): X component of the center position.
+        center_position_y (`float`): Y component of the center position.
+        center_position_z (`float`): Z component of the center position.
+
+
+- `create stl mesh`
+  Create the mesh from the file specified with `stl_mesh_filename` (Type: `str`, Default: `none`)
+
+  Numerous file types are supported: STL, GLB, PLY, 3MF, XAML, etc. The mesh is loaded from the `geometry_source_path`
+  unless the `stl_mesh_filename` contains a path separator (`\` or `/`), in which case the file is loaded from that
+  path. Relative paths are loaded with respect to the current directory.
+
+<!-- Unused parameters
+`double_cone_mesh_parameter_list` (Type: `list of float`, Default: `[0.8, 0.3, 0.3, 0.1, 20, 20, 1, 0, 0, 0]`)
+  Parameters for the generation of a double cone ('diabolo') shaped mesh.
+
+`circular_mesh_parameter_list` (Type: `list of float`, Default: `[0.25, 20, 1, 0, 0, 0, 0, 0, 0]`)
+  Parameters for the generation of the (default) circular mesh.
+-->
+
+
 ## Discretisation and Calculation of Field Variables
 
 ### Winding Coil Contribution and Target Field Sensitivity

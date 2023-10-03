@@ -6,7 +6,7 @@ import os
 import logging
 
 # Local imports
-from pyCoilGen.mesh_factory import load_plugins as load_mesh_factory_plugins
+from pyCoilGen.mesh_factory import load_mesh_factory_plugins
 
 from .data_structures import DataStructure, Mesh
 
