@@ -95,7 +95,6 @@ def export_CAD_file(solution: CoilSolution):
     save_mesh = input_args.save_stl_flag
 
     if save_mesh:
-
         # Plugin parameters
         export_filename = input_args.CAD_export_filename
 
@@ -118,16 +117,6 @@ def get_parameters() -> list:
     """
     Template function to retrieve the supported parameters and default values as strings.
 
-    The following substitutions are available and will be replaced with the corresponding content:
-
-    - `{output_dir}` : Replaced with `input_args.output_directory`.
-    - `{project}`: Replaced with `input_args.project_name`.
-    - `{field_function}`: Replaced with a cleaned up version of `input_args.field_shape_function`.
-    - `{part_index}`: Replaced with the current, zero-based, coil index.
-    - `{mesh}`: Replaced with `wire` or `surface` for each of the wire path or coil surface.
-
-    If `{mesh}` is not present, only the swept wire path will be exported.
-
     Returns:
         list of tuples of parameter name and default value: The additional parameters provided by this builder
     """
@@ -140,8 +129,18 @@ def register_args(parser):
     This function adds command-line arguments to the provided parser that are
     specific to STL mesh creation.
 
+    The following substitutions are available and will be replaced with the corresponding content:
+
+    - `{output_dir}` : Replaced with `input_args.output_directory`.
+    - `{project}`: Replaced with `input_args.project_name`.
+    - `{field_function}`: Replaced with a cleaned up version of `input_args.field_shape_function`.
+    - `{part_index}`: Replaced with the current, zero-based, coil index.
+    - `{mesh}`: Replaced with `wire` or `surface` for each of the wire path or coil surface.
+
+    If `{mesh}` is not present, only the swept wire path will be exported.   
+
     Args:
         parser (argparse.ArgumentParser): The parser to which arguments will be added.
     """
-    parser.add_argument('--CAD_filename', type=str, default='none',
+    parser.add_argument('--CAD_filename', type=str, default='{project}_{mesh}_{part_index}_{field_function}.ply',
                         help="The filename to export to.")
