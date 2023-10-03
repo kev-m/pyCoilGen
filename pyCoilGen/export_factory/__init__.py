@@ -6,7 +6,10 @@ This module provides functions to dynamically load plugins for exporting pyCoilG
 import os
 import importlib
 
-def load_export_plugins():
+__exporter_plugins__ = []
+
+
+def load_exporter_plugins():
     """Load all available export plugins.
 
     This function dynamically discovers and imports all Python files in the 
@@ -21,18 +24,17 @@ def load_export_plugins():
 
     In addition, it must also provide an export function that matches the value returned by `get_name()`, e.g.:
     - export_stl_mesh(solution)
-    
+
     Returns:
         list: A list of imported plugin modules.
 
     """
-    plugins = []
+    if len(__exporter_plugins__) == 0:
+        # Load all .py files in the export_factory directory
+        for file_name in os.listdir(os.path.dirname(__file__)):
+            if file_name.endswith(".py") and file_name != "__init__.py":
+                module_name = f"pyCoilGen.export_factory.{file_name[:-3]}"
+                module = importlib.import_module(module_name)
+                __exporter_plugins__.append(module)
 
-    # Load all .py files in the export_factory directory
-    for file_name in os.listdir(os.path.dirname(__file__)):
-        if file_name.endswith(".py") and file_name != "__init__.py":
-            module_name = f"pyCoilGen.export_factory.{file_name[:-3]}"
-            module = importlib.import_module(module_name)
-            plugins.append(module)
-
-    return plugins
+    return __exporter_plugins__
