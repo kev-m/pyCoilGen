@@ -39,113 +39,24 @@ This chapter describes the `pyCoilGen` confiuration parameters.
 
 ## Mesh Creation
 
-The coil, target and, optionally, shield mesh geometry must be specified. They can either be loaded from a 
-pre-optimised file or specified individually.
+There are three mesh geometries: coil, target and shield.  
 
-The coil mesh defines the surface upon which the coil winding path must be computed. It must always be specified. 
+* The [coil mesh](TODO) defines the surface upon which the coil winding path must be computed. This geometry is required.  
 
-The target field is a vector field of co-ordinates and magnitudes. It may either be specified by loading an existing
+* The [target field](TODO) is a vector field of co-ordinates and magnitudes. This geometry is required. It may either be specified by loading an existing
 target field, which provides both the co-ordinates and the magnitudes at each co-ordinate, or by separately specifying
 the co-ordinates and a gradient field equation.
 
-The shield mesh is an optional mesh which defines an additional surface where the magnetic field must be suppressed.
+* The [shield mesh](#shield-mesh) is an optional geomerty which defines an additional surface where the magnetic field must be suppressed.
 
-### Mesh Creation Instructions
-
-Any mesh surface can be specified using the installed mesh builders. 
-
-To use one of the builders, set the appropriate mesh constructor parameter to one of the following instructions. The
-mesh parameters are then specified using a second parameter.
-
-The full list of available mesh constructors can be retrieved from the command-line using the special `help` instruction:
-```bash
-pyCoilGen --coil_mesh help
-```
-
-**NOTE:** Take care to avoid using the same creation instruction for the different components as only one mesh
-parameter list can be provided for each instruction.
-
-- `create cylinder mesh`
-
-  Create a cylindrical mesh according to `cylinder_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.8, 0.3, 20, 20, 1, 0, 0, 0]`)
-
-        cylinder_height (`float`): Height of the cylinder.
-        cylinder_radius (`float`): Radius of the cylinder.
-        num_circular_divisions (`int`): Number of circular divisions.
-        num_longitudinal_divisions (`int`): Number of longitudinal divisions.
-        rotation_vector_x (`float`): X-component of the rotation vector.
-        rotation_vector_y (`float`): Y-component of the rotation vector.
-        rotation_vector_z (`float`): Z-component of the rotation vector.
-        rotation_angle (`float`): Rotation angle.
-
-
-- `create planar mesh` 
-
-  Create a planar mesh according to `planar_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0]`)
-
-        planar_height (`float`): Height of the planar mesh.
-        planar_width (`float`): Width of the planar mesh.
-        num_lateral_divisions (`int`): Number of divisions in the lateral direction.
-        num_longitudinal_divisions (`int`): Number of divisions in the longitudinal direction.
-        rotation_vector_x (`float`): X component of the rotation vector.
-        rotation_vector_y (`float`): Y component of the rotation vector.
-        rotation_vector_z (`float`): Z component of the rotation vector.
-        rotation_angle (`float`): Rotation angle in radians.
-        center_position_x (`float`): X component of the center position.
-        center_position_y (`float`): Y component of the center position.
-        center_position_z (`float`): Z component of the center position.
-
-
-- `create bi-planar mesh`
-
-  Create a bi-planar mesh according to `biplanar_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2]`)
-
-        planar_height (`float`): Height of the planar mesh.
-        planar_width (`float`): Width of the planar mesh.
-        num_lateral_divisions (`int`): Number of divisions in the lateral direction.
-        num_longitudinal_divisions (`int`): Number of divisions in the longitudinal direction.
-        target_normal_x (`float`): X-component of the target normal vector.
-        target_normal_y (`float`): Y-component of the target normal vector.
-        target_normal_z (`float`): Z-component of the target normal vector.
-        center_position_x (`float`): X-coordinate of the center position.
-        center_position_y (`float`): Y-coordinate of the center position.
-        center_position_z (`float`): Z-coordinate of the center position.
-        plane_distance (`float`): Distance between the two planes.
-
-
-- `create circular mesh`
-  Create a circular mesh according to `circular_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]`)
-
-        radius (`float`): Radius of the mesh.
-        num_radial_divisions (`int`): Number of divisions in the radial direction.
-        rotation_vector_x (`float`): X component of the rotation vector.
-        rotation_vector_y (`float`): Y component of the rotation vector.
-        rotation_vector_z (`float`): Z component of the rotation vector.
-        rotation_angle (`float`): Rotation angle in radians.
-        center_position_x (`float`): X component of the center position.
-        center_position_y (`float`): Y component of the center position.
-        center_position_z (`float`): Z component of the center position.
-
-
-- `create stl mesh`
-  Create the mesh from the file specified with `stl_mesh_filename` (Type: `str`, Default: `none`)
-
-  Numerous file types are supported: STL, GLB, PLY, 3MF, XAML, etc. The mesh is loaded from the `geometry_source_path`
-  unless the `stl_mesh_filename` contains a path separator (`\` or `/`), in which case the file is loaded from that
-  path. Relative paths are loaded with respect to the current directory.
-
-<!-- Unused parameters
-`double_cone_mesh_parameter_list` (Type: `list of float`, Default: `[0.8, 0.3, 0.3, 0.1, 20, 20, 1, 0, 0, 0]`)
-  Parameters for the generation of a double cone ('diabolo') shaped mesh.
-
-`circular_mesh_parameter_list` (Type: `list of float`, Default: `[0.25, 20, 1, 0, 0, 0, 0, 0, 0]`)
-  Parameters for the generation of the (default) circular mesh.
--->
+These mesh geometries can either be loaded from a [pre-optimised file](TODO) or specified individually using [mesh creation builders](TODO).
 
 ### Coil Meshes
 
 The coil surface mesh can be specified using either `coil_mesh` or (deprecated, but still supported) `coil_mesh_file`.
 The value of the parameter can be one of the supported creation instructions and the corresponding instruction's parameter.
+
+- `coil_mesh` (TODO)
 
 - `coil_mesh_file` (Type: `str`, Default: `'none'`) (*deprecated*)
 
@@ -311,6 +222,104 @@ active shields.
 - `secondary_target_weight` (Type: `float`, Default: `1`)
 
   Weight for the secondary target points.
+
+### Mesh Creation Builders
+
+Any mesh geometry can be specified using the installed mesh builders. 
+
+The full list of available mesh builders can be retrieved from the command-line using the `help` option to the mesh constructor parameter, for example:
+```bash
+pyCoilGen --coil_mesh help
+```
+
+To use one of the builders, set the appropriate mesh geometry parameter (`coil_mesh`, `(TODO)`, `(TODO)`) to one of the available builders and define the builder parameters. For example, to set (TODO):
+
+```python (TODO)
+pyCoilGen --coil_mesh 
+```
+
+**NOTE:** You cannot use the same builder for the different mesh geometries as only one builder parameter can be passed to `pyCoilGen`.
+
+The mesh builders are:
+
+- `create cylinder mesh`
+
+  Create a cylindrical mesh defined by `cylinder_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.8, 0.3, 20, 20, 1, 0, 0, 0]`)
+
+        cylinder_height (`float`): Height of the cylinder.
+        cylinder_radius (`float`): Radius of the cylinder.
+        num_circular_divisions (`int`): Number of circular divisions.
+        num_longitudinal_divisions (`int`): Number of longitudinal divisions.
+        rotation_vector_x (`float`): X-component of the rotation vector.
+        rotation_vector_y (`float`): Y-component of the rotation vector.
+        rotation_vector_z (`float`): Z-component of the rotation vector.
+        rotation_angle (`float`): Rotation angle.
+
+
+- `create planar mesh` 
+
+  Create a planar mesh defined by `planar_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0]`)
+
+        planar_height (`float`): Height of the planar mesh.
+        planar_width (`float`): Width of the planar mesh.
+        num_lateral_divisions (`int`): Number of divisions in the lateral direction.
+        num_longitudinal_divisions (`int`): Number of divisions in the longitudinal direction.
+        rotation_vector_x (`float`): X component of the rotation vector.
+        rotation_vector_y (`float`): Y component of the rotation vector.
+        rotation_vector_z (`float`): Z component of the rotation vector.
+        rotation_angle (`float`): Rotation angle in radians.
+        center_position_x (`float`): X component of the center position.
+        center_position_y (`float`): Y component of the center position.
+        center_position_z (`float`): Z component of the center position.
+
+
+- `create bi-planar mesh`
+
+  Create a bi-planar mesh defined by `biplanar_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 0.25, 20, 20, 1, 0, 0, 0, 0, 0, 0.2]`)
+
+        planar_height (`float`): Height of the planar mesh.
+        planar_width (`float`): Width of the planar mesh.
+        num_lateral_divisions (`int`): Number of divisions in the lateral direction.
+        num_longitudinal_divisions (`int`): Number of divisions in the longitudinal direction.
+        target_normal_x (`float`): X-component of the target normal vector.
+        target_normal_y (`float`): Y-component of the target normal vector.
+        target_normal_z (`float`): Z-component of the target normal vector.
+        center_position_x (`float`): X-coordinate of the center position.
+        center_position_y (`float`): Y-coordinate of the center position.
+        center_position_z (`float`): Z-coordinate of the center position.
+        plane_distance (`float`): Distance between the two planes.
+
+
+- `create circular mesh`
+  Create a circular mesh defined by `circular_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]`)
+
+        radius (`float`): Radius of the mesh.
+        num_radial_divisions (`int`): Number of divisions in the radial direction.
+        rotation_vector_x (`float`): X component of the rotation vector.
+        rotation_vector_y (`float`): Y component of the rotation vector.
+        rotation_vector_z (`float`): Z component of the rotation vector.
+        rotation_angle (`float`): Rotation angle in radians.
+        center_position_x (`float`): X component of the center position.
+        center_position_y (`float`): Y component of the center position.
+        center_position_z (`float`): Z component of the center position.
+
+
+- `create stl mesh`
+  Create the mesh from the file specified with `stl_mesh_filename` (Type: `str`, Default: `none`)
+
+  Numerous file types are supported: STL, GLB, PLY, 3MF, XAML, etc. The mesh is loaded from the `geometry_source_path`
+  unless the `stl_mesh_filename` contains a path separator (`\` or `/`), in which case the file is loaded from that
+  path. Relative paths are loaded with respect to the current directory.
+
+<!-- Unused parameters
+`double_cone_mesh_parameter_list` (Type: `list of float`, Default: `[0.8, 0.3, 0.3, 0.1, 20, 20, 1, 0, 0, 0]`)
+  Parameters for the generation of a double cone ('diabolo') shaped mesh.
+
+`circular_mesh_parameter_list` (Type: `list of float`, Default: `[0.25, 20, 1, 0, 0, 0, 0, 0, 0]`)
+  Parameters for the generation of the (default) circular mesh.
+-->
+
+
 
 ## Discretisation and Calculation of Field Variables
 
