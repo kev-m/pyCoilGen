@@ -266,6 +266,13 @@ The mesh builders are:
         rotation_vector_z (`float`): Z-component of the rotation vector.
         rotation_angle (`float`): Rotation angle.
 
+```{figure} figures/builder_cylindrical_mesh.png
+:scale: 50 %
+:align: center
+:alt: A 3D rendered view of the default cylindrical mesh.
+
+A 3D rendered view of the default cylindrical mesh.
+```
 
 - `create planar mesh` 
 
@@ -282,6 +289,14 @@ The mesh builders are:
         center_position_x (`float`): X component of the center position.
         center_position_y (`float`): Y component of the center position.
         center_position_z (`float`): Z component of the center position.
+
+```{figure} figures/builder_planar_mesh.png
+:scale: 50 %
+:align: center
+:alt: A 3D rendered view of the default planar mesh.
+
+A 3D rendered view of the default planar mesh.
+```
 
 
 - `create bi-planar mesh`
@@ -300,8 +315,16 @@ The mesh builders are:
         center_position_z (`float`): Z-coordinate of the center position.
         plane_distance (`float`): Distance between the two planes.
 
+```{figure} figures/builder_biplanar_mesh.png
+:scale: 50 %
+:align: center
+:alt: A 3D rendered view of the default bi-planar mesh.
+
+A 3D rendered view of the default bi-planar mesh.
+```
 
 - `create circular mesh`
+
   Create a circular mesh defined by `circular_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.25, 20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]`)
 
         radius (`float`): Radius of the mesh.
@@ -314,8 +337,16 @@ The mesh builders are:
         center_position_y (`float`): Y component of the center position.
         center_position_z (`float`): Z component of the center position.
 
+```{figure} figures/builder_circular_mesh.png
+:scale: 50 %
+:align: center
+:alt: A 3D rendered view of the default circular mesh.
+
+A 3D rendered view of the default circular mesh.
+```
 
 - `create stl mesh`
+
   Create the mesh from the file specified with `stl_mesh_filename` (Type: `str`, Default: `none`)
 
   The following file types (file extensions) are supported:
