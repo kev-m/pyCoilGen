@@ -29,7 +29,6 @@ Load the `docs/build/html/index.html`.
 Create a tag with only the current number, e.g. `0.0.9`.
 ```bash
 git tag 0.0.9
-git push --tags
 ```
 
 ## Update the ChangeLog
@@ -41,6 +40,7 @@ auto-changelog
 git add CHANGELOG.md
 git commit -m "Updating CHANGELOG"
 git push
+git push --tags
 ```
 
 ## Building the Package
@@ -65,5 +65,12 @@ $ flit publish
 ```
 ## Make a GitHub Release
 
-Go to the GitHub project administration page and publish a release using the tag created, above.
+Go to the GitHub project administration page and [publish a release](https://github.com/kev-m/pyCoilGen/releases/new) using the tag created, above.
 
+Update the `release` branch:
+```bash
+git branch -D release
+git checkout -b release
+git push --set-upstream origin release
+git checkout master
+```
