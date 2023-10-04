@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1 (2023-10-04)
+
+#### Fixes
+
+* (meshes): Fix bi-planar mesh so that the normals point outwards.
+
+Full set of changes: [`0.1.0...0.1.1`](https://github.com/kev-m/pyCoilGen/compare/0.1.0...0.1.1)
+
 ## 0.1.0 (2023-10-03)
 
 #### New Features
