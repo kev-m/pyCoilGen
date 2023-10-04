@@ -49,7 +49,7 @@ def simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_l
         planar_width (float): Width of the planar mesh.
         num_lateral_divisions (int): Number of divisions in the lateral direction.
         num_longitudinal_divisions (int): Number of divisions in the longitudinal direction.
-        normal_winding_dir (bool): Normal winding direction is clockwise. Set to False to reverse the direction.
+        normal_winding_dir (bool): Normal winding direction is anti-clockwise. Set to False to reverse the direction.
 
     Returns:
         tuple: Tuple containing the vertices and faces of the planar mesh.
