@@ -655,7 +655,7 @@ The supported exporters are:
 
 - `export CAD file`
 
-  Export the surface and coil conductor meshes to the file specified by `CAD_filename` (Type: `str`, Default: `'{project}_{mesh}_{part_index}_{field_function}.ply'`)
+  Export the surface and coil conductor meshes to the file specified by `CAD_filename` (Type: `str`, Default: `'{project}_{mesh}_{part_index}_{field_function}.stl'`)
 
   The following substitutions are available and will be replaced with the corresponding content:
 

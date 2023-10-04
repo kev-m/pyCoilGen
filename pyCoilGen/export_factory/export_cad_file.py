@@ -120,7 +120,7 @@ def get_parameters() -> list:
     Returns:
         list of tuples of parameter name and default value: The additional parameters provided by this builder
     """
-    return [('CAD_filename', '{project}_{mesh}_{part_index}_{field_function}.ply')]
+    return [('CAD_filename', '{project}_{mesh}_{part_index}_{field_function}.stl')]
 
 
 def register_args(parser):
@@ -142,5 +142,5 @@ def register_args(parser):
     Args:
         parser (argparse.ArgumentParser): The parser to which arguments will be added.
     """
-    parser.add_argument('--CAD_filename', type=str, default='{project}_{mesh}_{part_index}_{field_function}.ply',
+    parser.add_argument('--CAD_filename', type=str, default='{project}_{mesh}_{part_index}_{field_function}.stl',
                         help="The filename to export to.")
