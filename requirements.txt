@@ -1,18 +1,18 @@
-numpy==1.21.6
+numpy==1.*
 
 # Note: Also need BLAS and gfortran to install scipy
 # sudo apt-get install libopenblas-dev
 # sudo apt install gfortran
-scipy==1.7.3
+scipy==1.*
 
 # For Mesh support
-trimesh==3.23.5
+trimesh==3.*
 # Missing Trimesh dependency
-networkx==2.6.3
+networkx==2.*
 
 # For target field calculations
-sympy==1.10.1
+sympy==1.*
 
 # For visualisation of matrices
 pillow<=9.5
-matplotlib==3.5.3
+matplotlib==3.*

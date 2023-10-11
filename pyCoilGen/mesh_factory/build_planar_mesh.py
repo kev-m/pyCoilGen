@@ -40,7 +40,7 @@ def build_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_lo
     return DataStructure(vertices=vertices, faces=faces, normal=normal_rep)
 
 
-def simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions):
+def simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions, normal_winding_direction=True):
     """
     Generate a planar mesh with specified dimensions and parameters.
 
@@ -49,6 +49,7 @@ def simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_l
         planar_width (float): Width of the planar mesh.
         num_lateral_divisions (int): Number of divisions in the lateral direction.
         num_longitudinal_divisions (int): Number of divisions in the longitudinal direction.
+        normal_winding_dir (bool): Normal winding direction is anti-clockwise. Set to False to reverse the direction.
 
     Returns:
         tuple: Tuple containing the vertices and faces of the planar mesh.
@@ -86,12 +87,16 @@ def simple_planar_mesh(planar_height, planar_width, num_lateral_divisions, num_l
             v4 = v1 + 1
 
             # Create the two triangles for each face
-            # faces.append([v1, v2, v3])
-            faces[index] = np.array([v1, v2, v3])
-            index += 1
-            # faces.append([v1, v3, v4])
-            faces[index] = np.array([v1, v3, v4])
-            index += 1
+            if normal_winding_direction:
+                faces[index] = np.array([v1, v2, v3])
+                index += 1
+                faces[index] = np.array([v1, v3, v4])
+                index += 1
+            else:
+                faces[index] = np.array([v1, v3, v2])
+                index += 1
+                faces[index] = np.array([v1, v4, v3])
+                index += 1
 
     # return np.array(vertices), np.array(faces)
     return vertices, faces

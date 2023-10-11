@@ -39,6 +39,7 @@ def topological_loop_grouping(coil_parts: List[CoilPart]):
         num_total_loops = len(coil_part.contour_lines)
         loop_in_loop_mat = np.zeros((num_total_loops, num_total_loops), dtype=int)
 
+        # Enhancement: This can be parallelised.
         # Check for all loop enclosures of other loops
         for loop_to_test in range(num_total_loops):
             for loop_num in range(num_total_loops):

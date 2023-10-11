@@ -40,19 +40,24 @@ def build_biplanar_mesh(planar_height, planar_width,
         biplanar_mesh (dict): Dictionary containing the mesh faces and vertices.
     """
 
-    simple_vertices1, faces1 = simple_planar_mesh(
-        planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions)
+    simple_vertices1, faces1 = simple_planar_mesh(planar_height, planar_width, 
+                                                  num_lateral_divisions, num_longitudinal_divisions,
+                                                  False)
+    # Shift the vertices up
+    simple_vertices1 -= np.array([0.0, 0.0, plane_distance/2.0])
+
     if get_level() > DEBUG_BASIC:
         log.debug(" simple_vertices1 shape: %s", simple_vertices1.shape)
-    # Shift the vertices up
-    simple_vertices1 += np.array([0.0, 0.0, plane_distance/2.0])
 
-    simple_vertices2, faces2 = simple_planar_mesh(
-        planar_height, planar_width, num_lateral_divisions, num_longitudinal_divisions)
+    simple_vertices2, faces2 = simple_planar_mesh(planar_height, planar_width, 
+                                                  num_lateral_divisions, num_longitudinal_divisions,
+                                                  True)
+    # Shift the vertices down
+    simple_vertices2 += np.array([0.0, 0.0, plane_distance/2.0])
+
     if get_level() > DEBUG_BASIC:
         log.debug(" simple_vertices2 shape: %s", simple_vertices2.shape)
-    # Shift the vertices down
-    simple_vertices2 -= np.array([0.0, 0.0, plane_distance/2.0])
+
 
     # Combine the vertex arrays
     simple_vertices = np.append(simple_vertices1, simple_vertices2, axis=0)
@@ -80,6 +85,10 @@ def translate_and_shift(vertices,
         rot_vec = np.cross(old_normal, target_normal) / np.linalg.norm(np.cross(old_normal, target_normal))
         rot_angle = np.arcsin(np.linalg.norm(np.cross(old_normal, target_normal)) /
                               (np.linalg.norm(old_normal) * np.linalg.norm(target_normal)))
+    elif np.allclose(target_normal, np.array([0.0, 0.0, -1.0])):
+        # Special case: invert the mesh
+        rot_vec = np.array([0, 0, 1])
+        rot_angle = np.pi
     else:
         rot_vec = np.array([0, 0, 1])
         rot_angle = 0
@@ -89,8 +98,8 @@ def translate_and_shift(vertices,
     rot_vertices = np.dot(vertices, rot_mat)
 
     # Calculate representative normal
-    normal = np.array([0.0, 0.0, 1.0])
-    normal_rep = np.dot(normal, rot_mat)
+    # normal = np.array([0.0, 0.0, 1.0])
+    normal_rep = target_normal # np.dot(normal, rot_mat)
 
     # Shift
     shifted_vertices = rot_vertices + np.array([center_position_x, center_position_y, center_position_z])
