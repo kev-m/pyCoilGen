@@ -47,7 +47,8 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
         for coil_part in coil_parts:
             for index, contour in enumerate(coil_part.contour_lines):
                 smoothed = smooth_track_by_folding(contour.uv, input_args.smooth_factor)
-                log.debug(" smoothed difference: %f", np.sum(np.abs(contour.uv - smoothed)))
+                if get_level() > DEBUG_BASIC:
+                    log.debug(" smoothed difference: %f", np.sum(np.abs(contour.uv - smoothed)))
                 contour.uv = smoothed
 
     # Generate the curved coordinates
@@ -108,6 +109,7 @@ def evaluate_loop_significance(coil_parts: List[CoilPart], target_field: TargetF
         field_shape = target_field.coords.shape
         coil_part.field_by_loops = np.empty((field_shape[0], field_shape[1], num_contours), dtype=float)
 
+        # Enhancement: This can be parallelised.
         for i, loop in enumerate(coil_part.contour_lines):
             coil_part.field_by_loops[:, :, i] = biot_savart_calc_b(loop.v, target_field) * coil_part.contour_step
             combined_loop_field += coil_part.field_by_loops[:, :, i]
