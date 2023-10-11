@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3 (2023-10-11)
+
+#### Fixes
+
+* Implemented bugfix from CoilGen
+
+Full set of changes: [`0.1.2...0.1.3`](https://github.com/kev-m/pyCoilGen/compare/0.1.2...0.1.3)
+
 ## 0.1.2 (2023-10-09)
 
 #### Fixes
