@@ -81,16 +81,38 @@ def find_group_cut_position(loop_group: TopoGroup, group_center: np.ndarray, mes
                 cut_point_uv = point_a_uv + (point_b_uv - point_a_uv) * cut_point_ratio
                 cut_position.cut_point.add_uv(cut_point_uv)
 
-        # NOTE: cut_point has shape (3,) not (1,3), i.e. Python not MATLAB convention
+        # NOTE: cut_position.cut_point.v has shape (n,3) i.e. Python not MATLAB convention
 
-        # Delete repeating degenerate cut points
-        arr_abs = np.abs(np.diff(cut_position.cut_point.uv, axis=1))  # Python convention
-        repeat_inds = np.where(arr_abs < 1e-10)[0]
-        is_repeating_cutpoint = np.any(repeat_inds)
-        if is_repeating_cutpoint:
-            cut_position.cut_point.v = np.delete(cut_position.cut_point.v, np.where(repeat_inds), axis=1)
-            cut_position.cut_point.uv = np.delete(cut_position.cut_point.uv, np.where(repeat_inds), axis=1)
-            cut_position.cut_point.segment_ind = np.delete(cut_position.cut_point.segment_ind, np.where(repeat_inds))
+        try:
+            # Delete repeating degenerate cut points
+            arr_abs = np.abs(np.diff(cut_position.cut_point.uv, axis=1))  # Python convention
+            repeat_inds = np.where(arr_abs < 1e-10)[0]
+            is_repeating_cutpoint = np.any(repeat_inds)
+            if is_repeating_cutpoint:
+                cut_position.cut_point.v = np.delete(cut_position.cut_point.v, np.where(repeat_inds), axis=1)
+                cut_position.cut_point.uv = np.delete(cut_position.cut_point.uv, np.where(repeat_inds), axis=1)
+                cut_position.cut_point.segment_ind = np.delete(
+                    cut_position.cut_point.segment_ind, np.where(repeat_inds))
+        except ValueError as e:
+            log.debug("Exception: %s", e)
+
+        # https://github.com/kev-m/pyCoilGen/issues/60
+        # Take care of the exception that the cut plane has no intersection with the loop
+        if cut_position.cut_point.v is None:
+            max_ind = np.argmax(np.dot(loop_group.loops[loop_ind].v.T, cut_plane_direction))
+            min_ind = np.argmin(np.dot(loop_group.loops[loop_ind].v.T, cut_plane_direction))
+
+            # To get (n,3)
+            cut_position.cut_point.v = np.vstack(
+                (loop_group.loops[loop_ind].v[:, min_ind], loop_group.loops[loop_ind].v[:, max_ind]))
+            # To get (n,2)
+            cut_position.cut_point.uv = np.vstack(
+                (loop_group.loops[loop_ind].uv[:, min_ind], loop_group.loops[loop_ind].uv[:, max_ind]))
+
+            if max_ind != loop_group.loops[loop_ind].v.shape[1] - 1:
+                cut_position.cut_point.segment_ind = [min_ind, max_ind - 1]
+            else:
+                cut_position.cut_point.segment_ind = [min_ind, max_ind]
 
         # Separated into higher and lower cut points:
         # First: use the 2D representation of the loop
