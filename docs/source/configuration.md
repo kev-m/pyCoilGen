@@ -522,6 +522,13 @@ Connect the groups and shift the return paths over the surface.
 
   The array must either contain a single entry, which is used for all cut points, or match the number of topological groups, which is displayed by `pyCoilGen` during processing.
 
+- `cut_plane_definition` (Type: `str`, Default: `'nearest'`)
+  
+  The orientation of the cut plane used to join neighbouring contours is in the direction of the closest contour point to the group centre, by default.
+  Can be one of `nearest` or `B0`.
+
+  This parameter allows to specify that the orientation should instead be in the `B0` direction instead. 
+
 - `b_0_direction` (Type: `float array`, Default: `[0, 0, 1]`)
 
   Direction (vector) along which the interconnections will be aligned.
