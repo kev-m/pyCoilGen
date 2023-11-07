@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0 (2023-11-07)
+
+#### New Features
+
+* (topology): Expose cut_plane_definition to CLI.
+#### Fixes
+
+* (postprocessing): Do not calculate inductance if skip_postprocessing is True.
+
+Full set of changes: [`0.1.3...0.2.0`](https://github.com/kev-m/pyCoilGen/compare/0.1.3...0.2.0)
+
 ## 0.1.3 (2023-10-11)
 
 #### Fixes
