@@ -243,6 +243,10 @@ def parse_input(parse_cli=True):
     parser.add_argument('--force_cut_selection', nargs='+',
                         default=[], help="Force cut selection")
 
+    # Cut-plane selection
+    parser.add_argument('--cut_plane_definition', type=str, default='nearest',
+                        help="Select cut-plane orientation: Towards the 'nearest' loop or aligned with 'B0'")
+
     # Add the Gauss integration order
     parser.add_argument('--gauss_order', type=int, default=2,
                         help="Gauss integration order")
