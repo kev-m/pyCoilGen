@@ -43,7 +43,7 @@ def interconnect_within_groups(coil_parts: List[CoilPart], input_args):
         List[CoilPart]: The updated list of CoilPart structures with interconnected loops and cutshapes.
     """
 
-    cut_plane_definition = 'nearest'  # nearest or B0
+    cut_plane_definition = input_args.cut_plane_definition  # 'nearest'  # nearest or B0
     # cut_height_ratio = 1 / 2  # the ratio of height to width of the individual cut_shapes
 
     for part_ind in range(len(coil_parts)):
