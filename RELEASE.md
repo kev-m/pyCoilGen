@@ -69,8 +69,7 @@ Go to the GitHub project administration page and [publish a release](https://git
 
 Update the `release` branch:
 ```bash
-git branch -D release
-git checkout -b release
-git push --set-upstream origin release
-git checkout master
+git checkout release
+git rebase master
+git push
 ```
