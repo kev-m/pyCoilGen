@@ -1,67 +1,74 @@
 # System imports
 import sys
-from pathlib import Path
-import numpy as np
-
-# Trimesh
-import trimesh
 
 # Logging
 import logging
 
 # Local imports
-# Add the sub_functions directory to the Python module search path
-sub_functions_path = Path(__file__).resolve().parent / '../sub_functions'
-sys.path.append(str(sub_functions_path))
+from pyCoilGen.pyCoilGen_release import pyCoilGen
+from pyCoilGen.sub_functions.constants import DEBUG_BASIC, DEBUG_VERBOSE
 
-from read_mesh import read_mesh, stlread_local, create_unique_noded_mesh
-from parse_input import parse_input
-
-# Import the required modules from sub_functions directory
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Set up logging
     log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
     # logging.basicConfig(level=logging.INFO)
 
-    # attach to logger so trimesh messages will be printed to console
-    trimesh.util.attach_to_log()
+    arg_dict1 = {
+        'field_shape_function': 'x**2 + y**2',  # definition of the target field
+        'coil_mesh_file': 'bi_planer_rectangles_width_1000mm_distance_500mm.stl',
+        'target_region_radius': 0.1,  # in meter
+        # 'target_region_resolution': 10,  # MATLAB 10 is the default
+        'use_only_target_mesh_verts': False,
+        'sf_source_file': 'none',
+        # the number of potential steps that determines the later number of windings (Stream function discretization)
+        'levels': 30,
+        # a potential offset value for the minimal and maximal contour potential ; must be between 0 and 1
+        'pot_offset_factor': 0.25,
+        'surface_is_cylinder_flag': True,
+        # the width for the interconnections are interconnected; in meter
+        'interconnection_cut_width': 0.05,
+        # the length for which overlapping return paths will be shifted along the surface normals; in meter
+        'normal_shift_length': 0.01,
+        # 'iteration_num_mesh_refinement': 1,  # the number of refinements for the mesh;
+        'set_roi_into_mesh_center': True,
+        'force_cut_selection': ['high'],
+        # Specify one of the three ways the level sets are calculated: "primary","combined", or "independent"
+        'level_set_method': 'primary',
+        'skip_postprocessing': False,
+        'skip_inductance_calculation': False,
+        'tikhonov_reg_factor': 10,  # Tikhonov regularization factor for the SF optimization
 
-    """
-    # Use high-level function
-    arg_list = ['--coil_mesh_file', 'dental_gradient_ccs_single_low.stl'] # IndexError: index 114 is out of bounds for axis 1 with size 114
-    input_parser, input_args = parse_input(arg_list)
-    coil_mesh, target_mesh, shielded_mesh = read_mesh(input_args)
-    """
-    # Use low level function
-    coil_mesh = stlread_local(
-        'Geometry_Data/dental_gradient_ccs_single_low.stl')
-    coil_mesh = create_unique_noded_mesh(coil_mesh)
-    # coil_mesh.vertices = coil_mesh.vertices.T
-    # coil_mesh.faces = coil_mesh.faces.T
+        'sf_dest_file': 'images/loop_opening_exc/solution',  # Save pre-optimised solution
 
-    # log.debug(" coil_mesh: Vertices: %s", coil_mesh.vertices)
-    # log.debug(" coil_mesh: Faces: %s", coil_mesh.faces)
+        'output_directory': 'images/loop_opening_exc',  # [Current directory]
+        'project_name': 'loop_opening_exception',
+        'persistence_dir': 'debug',
+        'debug': DEBUG_BASIC,
+    }
 
-    # DEBUG   (checking2.py: 44)  shape vertices: (114, 3)
-    log.debug(" shape vertices: %s", coil_mesh.get_vertices().shape)
-    # DEBUG:__main__: shape faces: (182, 3)
-    log.debug(" shape faces: %s", coil_mesh.get_faces().shape)
-    log.debug(" faces min: %d, max: %s", np.min(
-        coil_mesh.get_faces()), np.max(coil_mesh.get_faces()))
+    arg_dict = {
+        'field_shape_function': 'x',  # definition of the target field ['x']
+        'coil_mesh': 'create bi-planar mesh',
+        'biplanar_mesh_parameter_list': [1, 1, 30, 30, 0, 1, 0, 0, 0, 0, 0.5],
+        'min_loop_significance': 3,  # [1] Remove loops if they contribute less than 3% to the target field.
+        'target_region_radius': 0.125,  # [0.15] in meter
+        'pot_offset_factor': 0.25,  # [0.5] a potential offset value for the minimal and maximal contour potential
+        'interconnection_cut_width': 0.005,  # [0.01] the width for the interconnections are interconnected; in meter
+        # the length for which overlapping return paths will be shifted along the surface normals; in meter
+        'surface_is_cylinder_flag': True,
+        'normal_shift_length': 0.01,  # [0.001]
+        'make_cylindrical_pcb': False,  # [False]
+        'save_stl_flag': True,
+        'smooth_factor': 1,
 
-    # mesh = trimesh.load('Geometry_Data/dental_gradient_ccs_single_low.stl')
-    #  <trimesh.Trimesh(vertices.shape=(114, 3), faces.shape=(182, 3))>
-    # log.debug(" coil_mesh: %s", mesh)
+        # 'tikhonov_reg_factor': 1000,  # Tikhonov regularization factor for the SF optimization
+        # 'cut_plane_definition' : 'B0',
+        'skip_postprocessing' : True,
 
-    # Access implementation
-    mesh = coil_mesh.trimesh_obj
-
-    # is the current mesh watertight?
-    log.debug("mesh.is_watertight: %s", mesh.is_watertight)
-
-    # what's the euler number for the mesh?
-    log.debug("mesh.euler_number: %s", mesh.euler_number)
-
-    mesh.show()
+        'output_directory': 'images/loop_opening_exc',  # [Current directory]
+        'project_name': 'loop_opening_exception',
+        'persistence_dir': 'debug',
+        'debug': DEBUG_BASIC,
+    }
+    result = pyCoilGen(log, arg_dict)
