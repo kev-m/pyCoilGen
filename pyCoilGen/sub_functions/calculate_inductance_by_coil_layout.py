@@ -45,8 +45,9 @@ def calculate_inductance_by_coil_layout(solution: CoilSolution, input_args) -> C
         CoilSolution: A data structure containing inductance and other related values.
     """
     skip_inductance_calculation = input_args.skip_inductance_calculation
+    skip_post_processing = input_args.skip_postprocessing
     coil_parts = solution.coil_parts
-    if not skip_inductance_calculation:
+    if not skip_inductance_calculation and not skip_post_processing:
         for coil_part in coil_parts:
             # Calculate the length of the coil
             wire_path = coil_part.wire_path
