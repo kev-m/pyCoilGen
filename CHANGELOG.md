@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1 (2024-03-18)
+
+#### Fixes
+
+* Fix runtime error due to numpy deprecation. ([#69](https://github.com/kev-m/pyCoilGen/issues/69))
+* Fix runtime errors due to deprecated np.warnings
+
+Full set of changes: [`0.2.0...0.2.1`](https://github.com/kev-m/pyCoilGen/compare/0.2.0...0.2.1)
+
 ## 0.2.0 (2023-11-07)
 
 #### New Features
