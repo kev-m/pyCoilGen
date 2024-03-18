@@ -5,6 +5,7 @@ import trimesh  # For face and vertex adjacency
 
 # Logging
 import logging
+import warnings
 
 # Local imports
 from .data_structures import CoilPart
@@ -100,7 +101,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         edge_potential_span = edge_node_potentials[:, 1] - edge_node_potentials[:, 0]
         edge_potential_span = np.tile(edge_potential_span[:, np.newaxis], (1, num_potentials))
 
-        np.warnings.filterwarnings('ignore')
+        warnings.filterwarnings('ignore')
 
         pot_dist_to_step = rep_contour_level_list - np.tile(edge_node_potentials[:, 0][:, np.newaxis],
                                                             (1, num_potentials))
@@ -118,7 +119,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         v_cut_point = potential_cut_criteria * (
             first_edge_node_v + v_component_edge_vectors * cut_point_distance_to_edge_node_1 / edge_lengths)
 
-        np.warnings.filterwarnings('default')
+        warnings.filterwarnings('default')
 
         # Create cell by sorting the cut points to the corresponding potential levels
         potential_sorted_cut_points = np.zeros((num_potentials), dtype=object)  # 20 x M x 3
