@@ -2,10 +2,10 @@ import numpy as np
 from typing import List
 from dataclasses import dataclass
 import trimesh  # For face and vertex adjacency
+import warnings
 
 # Logging
 import logging
-import warnings
 
 # Local imports
 from .data_structures import CoilPart
