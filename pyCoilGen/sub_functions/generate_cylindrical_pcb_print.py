@@ -1,5 +1,6 @@
 import numpy as np
 from typing import List
+import warnings
 
 from .data_structures import CoilPart, PCBTrack, PCBLayer, GroupLayout, PCBPart, Polygon
 from .calc_3d_rotation_matrix_by_vector import calc_3d_rotation_matrix_by_vector
@@ -217,7 +218,7 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                             )
                             pcb_parts[point_ind] = pcb_part
 
-                        np.warnings.filterwarnings('ignore')
+                        warnings.filterwarnings('ignore')
 
                         for wrap_ind in range(len(pcb_parts)):
                             intersection_cut = find_segment_intersections(pcb_parts[wrap_ind].uv, cut_rectangle)
@@ -240,7 +241,7 @@ def generate_cylindrical_pcb_print(coil_parts: List[CoilPart], input_args):
                                         wire_part_points[:, cut_segment_ind+1:-1]
                                     ))
 
-                        np.warnings.filterwarnings('default')
+                        warnings.filterwarnings('default')
 
                         for wrap_ind in range(1, len(pcb_parts)):
                             if pcb_parts[wrap_ind - 1].uv[0, -1] > 0:
