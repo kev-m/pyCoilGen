@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.2 (2024-06-24)
+
+#### Fixes
+
+* fixes the bug reported in issue [#70](https://github.com/kev-m/pyCoilGen/issues/70) ([#71](https://github.com/kev-m/pyCoilGen/issues/71))
+
+Full set of changes: [`0.2.1...0.2.2`](https://github.com/kev-m/pyCoilGen/compare/0.2.1...0.2.2)
+
 ## 0.2.1 (2024-03-18)
 
 #### Fixes
