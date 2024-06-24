@@ -113,7 +113,7 @@ def create_bi_planar_mesh(input_args):
     Used when 'input_args.coil_mesh_file' is 'create bi-planar mesh'.
     """
     log.debug("Creating bi-planar mesh with '%s'", input_args.biplanar_mesh_parameter_list)
-    mesh_data = build_biplanar_mesh(*input_args.planar_mesh_parameter_list)
+    mesh_data = build_biplanar_mesh(*input_args.biplanar_mesh_parameter_list)
     coil_mesh = create_unique_noded_mesh(mesh_data)
     return coil_mesh
 
