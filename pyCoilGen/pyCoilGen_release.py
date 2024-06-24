@@ -153,6 +153,13 @@ def pyCoilGen(log, input_args=None):
             timer.stop()
             runpoint_tag = '02'
 
+            if get_level() >= DEBUG_VERBOSE:
+                # Export data
+                print('Exporting initial data:')
+                timer.start()
+                export_data(solution)
+                timer.stop()
+
             # Define the target field
             print('Define the target field:')
             timer.start()
