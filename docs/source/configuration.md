@@ -47,7 +47,7 @@ There are three mesh geometries: coil, target and shield.
 target field, which provides both the co-ordinates and the magnitudes at each co-ordinate, or by separately specifying
 the co-ordinates and a gradient field equation.
 
-* The [shield mesh](#shield-mesh) is an optional geomerty which defines an additional surface where the magnetic field must be suppressed.
+* The [shield mesh](#shield-mesh) is an optional geometry which defines an additional surface where the magnetic field must be suppressed.
 
 These mesh geometries can either be loaded from a [pre-optimised file](#pre-calculated-mesh-and-stream-function) or specified individually using [mesh creation builders](#mesh-creation-builders).
 
@@ -350,7 +350,7 @@ A 3D rendered view of the default circular mesh.
   Create the mesh from the file specified with `stl_mesh_filename` (Type: `str`, Default: `none`)
 
   The following file types (file extensions) are supported:
-  - STL: [Stereolithography](https://en.wikipedia.org/wiki/STL_(file_format))
+  - STL: [Stereolithography](https://en.wikipedia.org/wiki/STL_(file_format)) **NB:** pyCoilGen assumes that STL values are in metres.
   - GLB: [Graphics Library Transmission Format](https://en.wikipedia.org/wiki/GlTF#GLB)
   - PLY: [Polygon](https://en.wikipedia.org/wiki/PLY_(file_format))
   - 3MF: [3D Manufacturing Format](https://en.wikipedia.org/wiki/3D_Manufacturing_Format)
@@ -360,6 +360,8 @@ A 3D rendered view of the default circular mesh.
   
   The mesh is loaded from the `geometry_source_path` unless the `stl_mesh_filename` contains a path separator (`\` or `/`), in which case the file is loaded from that
   path. Relative paths are loaded with respect to the current directory.
+
+  **NB:** Ensure that all mesh dimensions are in metre units.
 
 <!-- Unused parameters
 `double_cone_mesh_parameter_list` (Type: `list of float`, Default: `[0.8, 0.3, 0.3, 0.1, 20, 20, 1, 0, 0, 0]`)
