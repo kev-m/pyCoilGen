@@ -4,15 +4,12 @@ import numpy as np
 from typing import List
 
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 from pyCoilGen.sub_functions.data_structures import CoilSolution, SolutionErrors
 from pyCoilGen.helpers.common import title_to_filename
 
 # Configure logging
 log = logging.getLogger(__name__)
-
-_default_colours = ['blue', 'green', 'red', 'purple', 'orange', 'brown', 'pink', 'gray', 'cyan', 'magenta']
 
 def plot_contours_with_field(coil_layout: List[CoilSolution], single_ind_to_plot: int, plot_title: str, save_dir=None, dpi=100):
     """
@@ -22,7 +19,6 @@ def plot_contours_with_field(coil_layout: List[CoilSolution], single_ind_to_plot
         coil_layout (List[CoilSolution]): List of CoilSolution objects.
         single_ind_to_plot (int): Index of the solution to plot.
         plot_title (str): Title of the plot.
-        group_colours (list of str, optional): Colours for different contour groups.
         save_dir (str, optional): Directory to save the plot. If None, the plot is only displayed.
         dpi (int, optional): Resolution of the saved plot.
 
