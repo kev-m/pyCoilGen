@@ -14,9 +14,9 @@ log = logging.getLogger(__name__)
 
 _default_colours = ['blue', 'green', 'red', 'purple', 'orange', 'brown', 'pink', 'gray', 'cyan', 'magenta']
 
-def plot_contours_with_field(coil_layout: List[CoilSolution], single_ind_to_plot: int, plot_title: str, group_colours=_default_colours, save_dir=None, dpi=100):
+def plot_contours_with_field(coil_layout: List[CoilSolution], single_ind_to_plot: int, plot_title: str, save_dir=None, dpi=100):
     """
-    Plot the stream function contours and the calculated field overlayed in a single 3D plot.
+    Plot the stream function contours, the calculated field, and the sweep path in a single 3D plot.
 
     Args:
         coil_layout (List[CoilSolution]): List of CoilSolution objects.
@@ -52,29 +52,17 @@ def plot_contours_with_field(coil_layout: List[CoilSolution], single_ind_to_plot
 
     # Plot the contours from the stream function
     for part_ind, coil_part in enumerate(coil_solution.coil_parts):
-        normed_sf = coil_part.stream_function - np.min(coil_part.stream_function)
-        normed_sf /= np.max(normed_sf)
-
-        # Create vertices and faces for Poly3DCollection
-        vertices = coil_part.coil_mesh.v
-        faces = coil_part.coil_mesh.f  # Faces as indices
-        face_vertices = vertices[faces]
-
-        # Calculate face colors based on normalized stream function
-        sf_face_colours = [np.mean(normed_sf[face]) for face in faces]
-        face_colors = plt.cm.viridis(sf_face_colours)
-
-        # Plot contour loops if groups are present
-        if coil_part.groups is not None:
-            for group_ind, group in enumerate(coil_part.groups):
-                group_color = group_colours[group_ind % len(group_colours)]
-                for contour in group.loops:
-                    ax.plot(contour.v[0, :], contour.v[1, :], contour.v[2, :], color=group_color, linewidth=2)
+        
+        # Plot the sweep path (wire_path.v) for the current coil part
+        if coil_part.wire_path is not None and hasattr(coil_part.wire_path, 'v'):
+            wire_path_v = coil_part.wire_path.v  # Extract the sweep path
+            ax.plot(wire_path_v[0, :], wire_path_v[1, :], wire_path_v[2, :],color='blue')
 
     # Customize plot appearance
     ax.set_xlabel('X [m]')
     ax.set_ylabel('Y [m]')
     ax.set_zlabel('Z [m]')
+    ax.legend(loc='upper right')
 
     # Set equal aspect ratio
     combined_mesh = coil_solution.combined_mesh.vertices
@@ -83,7 +71,8 @@ def plot_contours_with_field(coil_layout: List[CoilSolution], single_ind_to_plot
     ax.set_xlim(min_values[0], max_values[0])
     ax.set_ylim(min_values[1], max_values[1])
     ax.set_zlim(min_values[2], max_values[2])
-    plt.gca().set_box_aspect([1, 1, 1])  # Set the aspect ratio to be equal
+
+    plt.gca().set_box_aspect(max_values-min_values)  # Set the aspect ratio to be equal
     plt.tight_layout()
 
     # Save the plot if save_dir is provided
@@ -93,3 +82,6 @@ def plot_contours_with_field(coil_layout: List[CoilSolution], single_ind_to_plot
 
     # Display the plot
     plt.show()
+
+
+
