@@ -610,6 +610,17 @@ The primary purpose of `pyCoilGen` is to calculate the wire path of the coil tha
 
   A custom shape defined by specifying the x/y co-ordinates in metres in a 2xm array of the form `[[x0, x1, x2, x3, ...], [y0, y1, y2, y3, ...]]`.
 
+  **NB:** The co-ordinates of the 2xm array should trace a 'clockwise' path about the origin to ensure
+  that the normals are outward in the resulting 3D surface:
+  ```python
+    arg_dict = {
+      ...
+          'cross_sectional_points': np.array([np.sin(np.linspace(0, 2 * np.pi, 10)),
+                                            np.cos(np.linspace(0, 2 * np.pi, 10))]) * 0.01,
+      ...
+    }
+  ```
+
 ## Evaluate Results
 
 Once `pyCoilGen` has calculated the wire path, it can also calculate some related values.
