@@ -51,6 +51,19 @@ the co-ordinates and a gradient field equation.
 
 These mesh geometries can either be loaded from a [pre-optimised file](#pre-calculated-mesh-and-stream-function) or specified individually using [mesh creation builders](#mesh-creation-builders).
 
+### Mesh Geometry
+
+All figures in this document are rendered with the X-, Y-, and Z-axes as shown below:
+
+```{figure} figures/3D_axes.png
+:scale: 50 %
+:align: center
+:alt: A 3D rendered view of the axis geometry.
+
+A 3D rendered view of the axis geometry.
+```
+
+
 ### Coil Meshes
 
 The purpose of `pyCoilGen` is to generate a coil wire path on a coil mesh surface or surfaces to produce a desired target field.
