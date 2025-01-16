@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.3 (2025-01-16)
+
+#### Fixes
+
+* (docs): Improving documentation
+* (docs): Adding additional text to the documentation to improve chances of outward normals in rendered wirepath, as reported in issue [#75](https://github.com/kev-m/pyCoilGen/issues/75)
+
+Full set of changes: [`0.2.2...0.2.3`](https://github.com/kev-m/pyCoilGen/compare/0.2.2...0.2.3)
+
 ## 0.2.2 (2024-06-24)
 
 #### Fixes
