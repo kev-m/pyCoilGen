@@ -42,33 +42,10 @@ git commit -m "Updating CHANGELOG"
 git push
 git push --tags
 ```
-## Make a GitHub Release
 
-The main project source is published to PyPi using a GitHub workflow.
+## Building the Package
 
-Go to the GitHub project administration page and [publish a release](https://github.com/kev-m/pyCoilGen/releases/new) using the tag created, above.
-
-This will trigger a workflow to publish the project on PyPi.
-
-Update the `release` branch:
-```bash
-git checkout release
-git rebase master
-git push
-```
-
-## Manually Publishing the Data Package
-
-The data package has to be manually published, if the data artifact has changed:
-```bash
-$ cd data
-$ flit build
-$ flit publish
-```
-
-## Manually Publishing the Main Package
-
-If the GitHub workflow fails, the sources can be manually published using `flit` to build and publish the artifacts.
+The sources are published as two packages using `flit` to build and publish the artifacts.
 
 The project details are defined in the `pyproject.toml` files. The version and description are defined in the top-level `__init__.py` file for each package.
 
@@ -78,4 +55,21 @@ Build and publish the main artifact:
 ```bash
 $ flit build
 $ flit publish
+```
+
+Build and publish the data artifact if it has changed:
+```bash
+$ cd data
+$ flit build
+$ flit publish
+```
+## Make a GitHub Release
+
+Go to the GitHub project administration page and [publish a release](https://github.com/kev-m/pyCoilGen/releases/new) using the tag created, above.
+
+Update the `release` branch:
+```bash
+git checkout release
+git rebase master
+git push
 ```
