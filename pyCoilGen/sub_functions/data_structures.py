@@ -682,9 +682,9 @@ class SolutionErrors:
     Used by evaluate_field_errors.py
     """
     field_error_vals: FieldErrors = None               # Detailed errors, by field
-    combined_field_layout: np.ndarray = None           # Resulting target field by final wire path.
+    combined_field_layout: np.ndarray = None           # (3, vertices) Resulting target field by final wire path.
     combined_field_loops: np.ndarray = None            # Resulting target field by contour loops.
-    combined_field_layout_per1Amp: np.ndarray = None   # Resulting target field by final wire path, for 1 A current.
+    combined_field_layout_per1Amp: np.ndarray = None   # (3, vertices) Resulting target field by final wire path, for 1 A current.
     combined_field_loops_per1Amp: np.ndarray = None    # Resulting target field by contours loops, for 1 A current.
     opt_current_layout: float = None                   # The current that will achieve the desired target field.
     # # Added by BugFix 4d4c632
