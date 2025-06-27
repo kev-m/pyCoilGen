@@ -31,12 +31,12 @@ def plot_various_error_metrics(coil_layouts: List[CoilSolution], single_ind_to_p
 
     # # Modified by BugFix 4d4c632
     # # layout_c = errors.combined_field_layout[2]              # field_by_layout (3,257)
-    layout_c = errors.field_layout_per1Amp[2]*1000.         # field_by_layout (3,257)
+    layout_c = errors.combined_field_layout_per1Amp[2]*1000.    # field_by_layout (3,257)
     # # sf_c = coil_solution.sf_b_field[:, 2]                   # b_field_opt_sf (257,3)
-    sf_c = coil_solution.b_field_opt_sf_1A[:, 2]*1000.      # b_field_opt_sf (257,3)
-    loops_c = errors.combined_field_loops[2]                # field_by_unconnected_loops (3,257)
+    sf_c = errors.sf_b_field_1A[:, 2]*1000.                     # b_field_opt_sf (257,3)
+    loops_c = errors.combined_field_loops[2]                    # field_by_unconnected_loops (3,257)
     # # target_c = coil_solution.target_field.b[2]              # target_field.b (3,257)
-    target_c = coil_solution.target_field_1A.b[2]*1000.     # target_field.b (3,257)
+    target_c = errors.target_field_1A.b[2]*1000.                # target_field.b (3,257)
     # # scale the target field to the 1A of SF field amplitude for better comparison
     target_c /= np.max(np.abs(target_c))*np.max(np.abs(sf_c))
 
@@ -45,15 +45,16 @@ def plot_various_error_metrics(coil_layouts: List[CoilSolution], single_ind_to_p
     pos_data = coil_solution.target_field.coords            # (3,257)
 
     # # Added by BugFix 4d4c632
+    ma_t_c = np.max(np.abs(target_c))
     # Calculate the different error metrics
-    rel_error_sf_target = abs(sf_c - target_c) / np.max(np.abs(target_c)) * \
-        100  # Relative error between target and stream function field
-    rel_error_layout_target = abs(layout_c - target_c) / np.max(np.abs(target_c)) * \
-        100  # Relative error between layout and target
+    # Relative error between target and stream function field
+    rel_error_sf_target = abs(sf_c - target_c) / ma_t_c * 100
+    # Relative error between layout and target
+    rel_error_layout_target = abs(layout_c - target_c) / ma_t_c * 100
     # Relative error between layout and stream function field
     rel_error_layout_sf = abs(layout_c - sf_c) / np.max(np.abs(sf_c)) * 100
-    rel_error_loops_target = abs(loops_c - target_c) / np.max(np.abs(target_c)) * \
-        100  # Relative error between target and unconnected contours
+    # Relative error between target and unconnected contours
+    rel_error_loops_target = abs(loops_c - target_c) / ma_t_c * 100
     # Field difference between unconnected contours and final layout
     rel_error_loops_layout = abs(loops_c - layout_c) / np.max(np.abs(layout_c)) * 100
 
