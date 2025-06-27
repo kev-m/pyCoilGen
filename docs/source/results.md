@@ -57,6 +57,8 @@ class SolutionErrors:
     combined_field_layout_per1Amp: np.ndarray   # Resulting target field by final wire path, for 1 A current.
     combined_field_loops_per1Amp: np.ndarray    # Resulting target field by contours loops, for 1 A current.
     opt_current_layout: float                   # The computed current that will achieve the desired target field.
+    sf_b_field_1A: np.ndarray                   # The stream function field for 1 A current.
+    target_field_1A: np.ndarray                 # The target field for 1 A current.
 ```
 
 `combined_field_layout` contains the magnetic field vectors due to the final coil wire path.
