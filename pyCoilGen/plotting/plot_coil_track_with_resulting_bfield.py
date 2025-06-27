@@ -120,8 +120,9 @@ def plot_coil_track_with_resulting_bfield(coil_layouts: List[CoilSolution], sing
     
     # Save the plot if save_dir is provided
     if save_dir is not None:
-        plt.savefig(f'{save_dir}/plot_coil_track_with_resulting_bfield_{title_to_filename(plot_title)}.png', dpi=dpi)
-        log.info(f'Plot saved to {save_dir}/plot_coil_track_with_resulting_bfield_{title_to_filename(plot_title)}.png')
+        fname = f'{save_dir}/plot_coil_track_with_resulting_bfield_{title_to_filename(plot_title)}.png'
+        plt.savefig(fname, dpi=dpi)
+        log.info(f'Plot saved to {fname}')
     
     # Display the plot
     plt.show()

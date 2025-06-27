@@ -687,6 +687,9 @@ class SolutionErrors:
     combined_field_layout_per1Amp: np.ndarray = None   # Resulting target field by final wire path, for 1 A current.
     combined_field_loops_per1Amp: np.ndarray = None    # Resulting target field by contours loops, for 1 A current.
     opt_current_layout: float = None                   # The current that will achieve the desired target field.
+    # # Added by BugFix 4d4c632
+    sf_b_field_1A: np.ndarray = None                   # The stream function field for 1 A current.
+    target_field_1A: np.ndarray = None                 # The target field for 1 A current.
 
 
 # Used in calculate_gradient
