@@ -53,7 +53,7 @@ def calculate_gradient(coil_parts: List[CoilPart], input_args, target_field: Tar
     norm_dir_x = my_fun(1., 0., 0.)
     norm_dir_y = my_fun(0., 1., 0.)
     norm_dir_z = my_fun(0., 0., 1.)
-    gradient_direction = np.array([norm_dir_x, norm_dir_y, norm_dir_z])
+    gradient_direction = np.array([norm_dir_x, norm_dir_y, norm_dir_z], dtype=float)
     gradient_direction /= np.linalg.norm(gradient_direction)
 
     # Project the gradient direction to the full set of cartesian gradients
