@@ -49,7 +49,7 @@ def remove_points_from_loop(loop: Shape3D, points_to_remove: np.ndarray, boundar
         full_point_inds_to_remove = np.concatenate((below_inds, identical_point_inds, abow_inds))
 
         # Use np.in1d to find the indices to keep
-        inds_to_keep = np.arange(loop.uv.shape[1])[~np.in1d(np.arange(loop.uv.shape[1]), full_point_inds_to_remove)]
+        inds_to_keep = np.arange(loop.uv.shape[1])[~np.isin(np.arange(loop.uv.shape[1]), full_point_inds_to_remove)]
 
         # Extract the loop with the remaining points
         loop_out_uv = loop.uv[:, inds_to_keep]
