@@ -29,13 +29,34 @@ def plot_various_error_metrics(coil_layouts: List[CoilSolution], single_ind_to_p
     coil_solution: CoilSolution = coil_layouts[single_ind_to_plot]
     errors: SolutionErrors = coil_solution.solution_errors
 
-    layout_c = errors.combined_field_layout[2]              # field_by_layout (3,257)
-    sf_c = coil_solution.sf_b_field[:, 2]                    # b_field_opt_sf (257,3)
-    loops_c = errors.combined_field_loops[2]                # field_by_unconnected_loops (3,257)
-    target_c = coil_solution.target_field.b[2]              # target_field.b (3,257)
+    # # Modified by BugFix 4d4c632
+    # # layout_c = errors.combined_field_layout[2]              # field_by_layout (3,257)
+    layout_c = errors.combined_field_layout_per1Amp[2]*1000.    # field_by_layout (3,257)
+    # # sf_c = coil_solution.sf_b_field[:, 2]                   # b_field_opt_sf (257,3)
+    sf_c = errors.sf_b_field_1A[:, 2]*1000.                     # b_field_opt_sf (257,3)
+    loops_c = errors.combined_field_loops[2]                    # field_by_unconnected_loops (3,257)
+    # # target_c = coil_solution.target_field.b[2]              # target_field.b (3,257)
+    target_c = errors.target_field_1A.b[2]*1000.                # target_field.b (3,257)
+    # # scale the target field to the 1A of SF field amplitude for better comparison
+    target_c /= np.max(np.abs(target_c))*np.max(np.abs(sf_c))
+
     # loops_c_1A = errors.combined_field_loops_per1Amp[2]     # field_loops_per1Amp (3,257)
     # layout_c_1A = errors.combined_field_layout_per1Amp[2]   #  field_layout_per1Amp (3,257)
     pos_data = coil_solution.target_field.coords            # (3,257)
+
+    # # Added by BugFix 4d4c632
+    ma_t_c = np.max(np.abs(target_c))
+    # Calculate the different error metrics
+    # Relative error between target and stream function field
+    rel_error_sf_target = abs(sf_c - target_c) / ma_t_c * 100
+    # Relative error between layout and target
+    rel_error_layout_target = abs(layout_c - target_c) / ma_t_c * 100
+    # Relative error between layout and stream function field
+    rel_error_layout_sf = abs(layout_c - sf_c) / np.max(np.abs(sf_c)) * 100
+    # Relative error between target and unconnected contours
+    rel_error_loops_target = abs(loops_c - target_c) / ma_t_c * 100
+    # Field difference between unconnected contours and final layout
+    rel_error_loops_layout = abs(loops_c - layout_c) / np.max(np.abs(layout_c)) * 100
 
     fig = plt.figure(figsize=(15, 15))
     fig.suptitle(plot_title, fontsize=16)
@@ -56,13 +77,19 @@ def plot_various_error_metrics(coil_layouts: List[CoilSolution], single_ind_to_p
         (ax2, sf_c, 'Bz by stream function, [mT/A]'),
         (ax3, layout_c, 'Layout Bz, [mT/A]'),
         (ax4, loops_c, 'Unconnected Contour Bz, [mT/A]'),
-        (ax5, abs(sf_c - target_c) / np.max(np.abs(target_c)) * 100, 'Relative SF error, [%]'),
-        (ax6, abs(layout_c - target_c) / np.max(np.abs(target_c)) * 100, 'Relative error\n layout vs. target, [%]'),
-        (ax7, abs(layout_c - sf_c) / np.max(np.abs(sf_c)) * 100, 'Relative error\n layout vs. sf field, [%]'),
-        (ax8, abs(loops_c - target_c) / np.max(np.abs(target_c)) *
-         100, 'Relative error\n unconnected contours vs. target, [%]'),
-        (ax9, abs(loops_c - layout_c) / np.max(np.abs(target_c)) * 100,
-         'Field difference between unconnected contours\n and final layout, [%]')
+        # # Modified by BugFix 4d4c632
+        # # (ax5, abs(sf_c - target_c) / np.max(np.abs(target_c)) * 100, 'Relative SF error, [%]'),
+        (ax5, rel_error_sf_target, 'Relative SF error, [%]'),
+        # # (ax6, abs(layout_c - target_c) / np.max(np.abs(target_c)) * 100, 'Relative error\n layout vs. target, [%]'),
+        (ax6, rel_error_layout_target, 'Relative error\n layout vs. target, [%]'),
+        # # (ax7, abs(layout_c - sf_c) / np.max(np.abs(sf_c)) * 100, 'Relative error\n layout vs. sf field, [%]'),
+        (ax7, rel_error_layout_sf, 'Relative error\n layout vs. sf field, [%]'),
+        # # (ax8, abs(loops_c - target_c) / np.max(np.abs(target_c)) *
+        # # 100, 'Relative error\n unconnected contours vs. target, [%]'),
+        (ax8, rel_error_loops_target, 'Relative error\n unconnected contours vs. target, [%]'),
+        # # (ax9, abs(loops_c - layout_c) / np.max(np.abs(target_c)) * 100,
+        # # 'Field difference between unconnected contours\n and final layout, [%]')
+        (ax9, rel_error_loops_layout, 'Field difference between unconnected contours\n and final layout, [%]')
     ]
 
     for ax, plot_color, title in plot_data:

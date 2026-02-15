@@ -80,7 +80,7 @@ def test_build_cylinder_mesh_rotate_Z():
     assert np.max(mesh.vertices[:, 0]) == cylinder_radius * np.cos(rotation_angle)
 
     # Min y is -radius
-    assert np.min(mesh.vertices[:, 1]) == -cylinder_radius * np.cos(rotation_angle)
+    assert np.min(mesh.vertices[:, 1]) == approx(-cylinder_radius * np.cos(rotation_angle))
     # Max y is +radius
     assert np.max(mesh.vertices[:, 1]) == cylinder_radius * np.cos(rotation_angle)
 

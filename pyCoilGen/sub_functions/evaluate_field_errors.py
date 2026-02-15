@@ -40,14 +40,23 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
         for loop in coil_part.contour_lines:
             loop_field = biot_savart_calc_b(loop.v, target_field)
             coil_part.field_by_loops2 += loop_field
-        coil_part.field_by_loops2 *= coil_part.contour_step
+        # # Removed by BugFix 4d4c632
+        # # coil_part.field_by_loops2 *= coil_part.contour_step
 
         # Calculate the field of connected, final layouts
         if not input_args.skip_postprocessing:
             coil_part.field_by_layout = biot_savart_calc_b(coil_part.wire_path.v, target_field)
-            coil_part.field_by_layout *= coil_part.contour_step  # scaled with the current of the discretization
+            # # Removed by BugFix 4d4c632
+            # # coil_part.field_by_layout *= coil_part.contour_step  # scaled with the current of the discretization
         else:
             coil_part.field_by_layout = coil_part.field_by_loops2
+
+    # # Added by BugFix 4d4c632
+    # %Scale the SF field to 1A
+    coil_part = coil_parts[0]  # Use the first coil part to get the contour step
+    sf_b_field_1A = sf_b_field / coil_part.contour_step
+    target_field_1A = target_field
+    target_field_1A.b = target_field_1A.b / coil_part.contour_step
 
     """
     The provided code segment initializes the fields in coil_parts, calculates the field by loops and layouts,
@@ -80,6 +89,9 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
         pol_projections_layout[pol_ind] = np.linalg.norm(combined_field_layout[pol_ind] - target_field.b)  # Fails?!?
         pol_projections_loops[pol_ind] = np.linalg.norm(combined_field_loops[pol_ind] - target_field.b)  # Passes
 
+        # # Added by BugFix 4d4c632
+        pol_projections_layout[pol_ind] = np.sum(np.linalg.norm(combined_field_layout[pol_ind] - sf_b_field_1A.T))
+        pol_projections_loops[pol_ind] = np.sum(np.linalg.norm(combined_field_loops[pol_ind] - sf_b_field_1A.T))
     """
     This code segment covers the second part of your MATLAB code, including generating possible polarities,
     combining fields with different polarities, and projecting the combined fields onto the target field. 
@@ -119,8 +131,13 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
 
     # Part 4: Calculate field errors and return results
     # Extract z-components of the fields
-    target_z = target_field.b[2, :]  # Tranpose into MATLAB shape (3,n)
-    sf_z = sf_b_field[:, 2]  # Field of stream function (Transposed, because it is Python shaped (n,3))
+
+    # # Modified by BugFix 4d4c632
+    # # target_z = target_field.b[2, :]  # Tranpose into MATLAB shape (3,n)
+    # # sf_z = sf_b_field[:, 2]  # Field of stream function (Transposed, because it is Python shaped (n,3))
+    target_z = target_field_1A.b[2, :]  # Transpose into MATLAB shape (3,n)
+    sf_z = sf_b_field_1A[:, 2]  # Field of stream function (Transposed, because it is Python shaped (n,3))
+
     layout_z = combined_field_layout[2, :]
     loop_z = combined_field_loops[2, :]
 
@@ -151,11 +168,24 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
     combined_field_loops_per1Amp = np.zeros_like(combined_field_layout)
 
     for part_ind in range(len(coil_parts)):
-        combined_field_layout_per1Amp += (coil_parts[part_ind].field_by_layout /
-                                          np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_layout][part_ind]
-        # Passes
-        combined_field_loops_per1Amp += (coil_parts[part_ind].field_by_loops2 /
-                                         np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_loops][part_ind]
+        coil_part = coil_parts[part_ind]
+        # # Modified by BugFix 4d4c632
+        # # combined_field_layout_per1Amp += (coil_parts[part_ind].field_by_layout /
+        # #                                   np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_layout][part_ind]
+        combined_field_layout_per1Amp += coil_part.field_by_layout * possible_polarities[best_dir_layout][part_ind]
+        # # # Passes
+        # # combined_field_loops_per1Amp += (coil_parts[part_ind].field_by_loops2 /
+        # #                                  np.max([coil_parts[x].contour_step for x in range(len(coil_parts))])) * possible_polarities[best_dir_loops][part_ind]
+
+        #   File "C:\Dev\CoilGen-Python\pyCoilGen\pyCoilGen_release.py", line 402, in pyCoilGen
+        #     raise e
+        #   File "C:\Dev\CoilGen-Python\pyCoilGen\pyCoilGen_release.py", line 369, in pyCoilGen
+        #     coil_parts, solution_errors = evaluate_field_errors(
+        #   File "C:\Dev\CoilGen-Python\pyCoilGen\sub_functions\evaluate_field_errors.py", line 191, in evaluate_field_errors
+        #     combined_field_loops_per1Amp += coil_parts[part_ind].field_by_loops * \
+        # ValueError: operands could not be broadcast together with shapes (3,3561) (3,3561,56) (3,3561)
+
+        combined_field_loops_per1Amp += coil_part.field_by_loops2 * possible_polarities[best_dir_loops][part_ind]
 
     # Calculate the ideal current strength for the connected layout to match the target field
     opt_current_layout = np.abs(np.mean(target_field.b[2, :] / combined_field_layout[2, :]))
@@ -167,5 +197,8 @@ def evaluate_field_errors(coil_parts: List[CoilPart], input_args: DataStructure,
     solution_errors.combined_field_layout_per1Amp = combined_field_layout_per1Amp
     solution_errors.combined_field_loops_per1Amp = combined_field_loops_per1Amp
     solution_errors.opt_current_layout = opt_current_layout
+    # # Added by BugFix 4d4c632
+    solution_errors.sf_b_field_1A = sf_b_field_1A
+    solution_errors.target_field_1A = target_field_1A
 
     return coil_parts, solution_errors
