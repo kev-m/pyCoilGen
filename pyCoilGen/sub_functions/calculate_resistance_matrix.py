@@ -93,7 +93,7 @@ def calculate_resistance_matrix(coil_parts: List[CoilPart], input_args) -> List[
                     secondary_current = basis_elements[node_ind2].current[second_node_triangle_positon]
                     resistance_sum += np.dot(primary_current, secondary_current.T) * (triangle_area)**2
 
-                resistance_matrix[node_ind1, node_ind2] = resistance_sum
+                resistance_matrix[node_ind1, node_ind2] = np.squeeze(resistance_sum)
                 if get_level() > DEBUG_VERBOSE:
                     log.debug(" resistance_matrix[%d:%d] = %s", node_ind1, node_ind2, resistance_sum)
         resistance_matrix += resistance_matrix.T

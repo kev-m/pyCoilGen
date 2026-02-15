@@ -74,8 +74,8 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
         # Take only the edge opposing nodes of these triangles
         edge_opposed_nodes = np.zeros_like(edge_nodes)
         for x_ind in range(edge_nodes.shape[0]):
-            edge_opposed_nodes[x_ind, 0] = np.setdiff1d(edge_attached_triangles[x_ind, 0], edge_nodes[x_ind])
-            edge_opposed_nodes[x_ind, 1] = np.setdiff1d(edge_attached_triangles[x_ind, 1], edge_nodes[x_ind])
+            edge_opposed_nodes[x_ind, 0] = np.squeeze(np.setdiff1d(edge_attached_triangles[x_ind, 0], edge_nodes[x_ind]))
+            edge_opposed_nodes[x_ind, 1] = np.squeeze(np.setdiff1d(edge_attached_triangles[x_ind, 1], edge_nodes[x_ind]))
 
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- edge_opposed_nodes shape: %s, max(%d)", edge_opposed_nodes.shape, np.max(edge_opposed_nodes))
