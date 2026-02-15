@@ -1,7 +1,10 @@
 # Virtual environment
 env
+.venv
+env.old
 # Environment variables file
 .env
+
 
 *.pyc
 __pycache__/
