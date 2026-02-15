@@ -22,6 +22,11 @@ make clean html
 
 Load the `docs/build/html/index.html`.
 
+## Update the Version
+
+The project version is maintained in `pyCoilGen\__init__.py`. Edit the version to match the changes, according
+to the commits, to match the semantic versioning and the generated CHANGELOG.md (see below).
+
 ## Create a Tag
 
 **pyCoilGen** uses semantic versioning. Update the version number in [pyCoilGen/__init__.py](pyCoilGen/__init__.py) according to changes since the previous tag.
