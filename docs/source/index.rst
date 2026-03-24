@@ -35,3 +35,14 @@ pyCoilGen User Guide
    configuration.md
    results.md
    glossary.md
+
+What's New
+==========
+
+This update introduces a significantly more Pythonic and modular workflow for gradient coil design and analysis:
+
+- Native Python-based STL generation
+- Automated wire path extraction
+- Integrated gradient coil simulation utilities
+- New plotting utilities
+- Modular helper functions for metrics

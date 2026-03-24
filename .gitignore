@@ -37,3 +37,52 @@ Zc*.mat
 
 ChatGPT*.html
 ChatGPT*.txt
+
+# OS-generated files
+.DS_Store
+
+# Compiled binaries and object files
+*.o
+*.a
+*.so
+*.dll
+*.exe
+*.out
+
+# Build output directories (example, adjust as needed)
+/bin/
+/build/
+/dist/
+
+# Other common temporary files
+*.tmp
+*.npy
+
+# Generated geometry
+*.stl
+*.step
+*.stp
+*.obj
+
+# PCB / fabrication outputs
+*.gbr
+*.gerber
+*.drl
+
+# Simulation / intermediate outputs
+*.vtk
+*.vtu
+*.npy
+*.npz
+
+# Plot outputs
+*.png
+*.jpg
+*.svg
+
+# Temporary / logs
+*.log
+tmp/
+output/
+build/
+dist/

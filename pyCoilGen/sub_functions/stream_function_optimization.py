@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
 import ast  # For minimization function parameter parsing
-
+from scipy.sparse.linalg import lsqr
 from typing import List
 
 # Logging
@@ -11,11 +11,16 @@ import logging
 from .data_structures import DataStructure, CoilPart
 from .constants import get_level, DEBUG_NONE, DEBUG_VERBOSE
 from pyCoilGen.helpers.common import blkdiag
+# from .get_streamfunction import solve_streamfunction_with_initial_guess
+from scipy.sparse import csr_matrix, diags
+from scipy.sparse.linalg import lsqr
+from matplotlib.tri import Triangulation
+# from scipy.sparse import csr_matrix, block_diag
 
 log = logging.getLogger(__name__)
 
 
-def stream_function_optimization(coil_parts: List[CoilPart], target_field, input_args) -> (List[CoilPart], np.ndarray, np.ndarray):
+def stream_function_optimization(coil_parts: List[CoilPart], target_field, input_args) -> tuple[List[CoilPart], np.ndarray, np.ndarray]:
     """
     Performs stream function optimization on coil parts.
 
@@ -140,13 +145,11 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
     else:
         # For initialization, calculate the Tikhonov solution; then do an iterative optimization
         log.info("Optimising with %s function.", input_args.sf_opt_method)
-        tik_reg_mat = tikhonov_reg_factor * reduced_res_matrix
-        reduced_sf = np.linalg.pinv(
-            reduced_sensitivity_matrix.T
-            @ reduced_sensitivity_matrix
-            + tik_reg_mat.T
-            @ tik_reg_mat
-        ) @ reduced_sensitivity_matrix.T @ target_field_single
+       
+        # Initial estimate using lsqr instead of pinv - 
+        A = reduced_sensitivity_matrix
+        b = target_field_single
+        reduced_sf = lsqr(A, b, atol=1e-9, btol=1e-9, iter_lim=1000)[0]
 
         # Find the constrained solution
         stream_func_max = np.max(reduced_sf) * 2
@@ -154,9 +157,27 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         ub = np.ones_like(reduced_sf) * stream_func_max
 
         def cost_function(x):
-            return np.sum(
-                (reduced_sensitivity_matrix @ x - target_field_single) ** 2
-            ) + tikhonov_reg_factor * (x.T @ reduced_res_matrix @ x)
+            # beta0 = 1e3
+            # return np.sum(
+            #     ((reduced_sensitivity_matrix @ x - target_field_single) ** 2
+            # ) + tikhonov_reg_factor * (x.T @ reduced_res_matrix @ x) + beta0 * np.mean(reduced_sensitivity_matrix @ x)** 2)
+            alpha0 = 1e2
+            beta0 = 1e2
+            beta_z = 1e2
+            B = reduced_sensitivity_matrix @ x
+            mean_field = np.mean(B)
+            data_term = np.sum((B - target_field_single) ** 2)
+            reg_term = x.T @ reduced_res_matrix @ x
+            # z_mode = z_coords / np.max(np.abs(z_coords))
+            # coeff_z = np.dot(B, z_mode) / np.dot(z_mode, z_mode)
+
+            cost = alpha0 * data_term \
+                + tikhonov_reg_factor * (reg_term) \
+                + beta0 * mean_field**2 
+            
+            print(data_term, reg_term, mean_field)
+            return cost
+
 
         # Define the bounds
         bounds = [(lb[i], ub[i]) for i in range(len(lb))]
@@ -179,18 +200,37 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
                       input_args.minimize_method, method_params, minimize_method_options)
 
         # Perform the optimization
-        result = minimize(cost_function, reduced_sf, method=input_args.minimize_method, bounds=bounds,
-                          **method_params, options=minimize_method_options)
-        log.debug("Detailed minimize result: Success: %s, message: %s", result.success, result.message)
-        if get_level() >= DEBUG_VERBOSE:
-            log.debug("Detailed minimize result: %s", result)
-        reduced_sf = result.x
+        def callback(xk):
+            if callback.count % 1 == 0:
+                log.info("Iteration %d, Cost: %.6e", callback.count, cost_function(xk))
+            callback.count += 1
+        
+        callback.count = 0
+        # result = minimize(cost_function, reduced_sf, method=input_args.minimize_method, bounds=bounds,
+        #           callback=callback, **method_params, options=minimize_method_options)
+        # log.debug("Detailed minimize result: Success: %s, message: %s", result.success, result.message)
+        
+        A = reduced_sensitivity_matrix
+        R = reduced_res_matrix
+        b = target_field_single
+
+        ATA = A.T @ A
+        ATb = A.T @ b
+
+        reduced_sf = np.linalg.solve(ATA + tikhonov_reg_factor * R, ATb)
+
+
+        
+        # if get_level() >= DEBUG_VERBOSE:
+        #     log.debug("Detailed minimize result: %s", result)
+        # reduced_sf = result.x
 
     # Reexpand the stream potential to the boundary nodes
     opt_stream_func = reexpand_stream_function_for_boundary_nodes(
         reduced_sf, boundary_nodes, is_not_boundary_node, set_zero_flag)
     combined_mesh.stream_function = opt_stream_func
 
+      
     # Calculate the magnetic field generated by the optimized stream function
     b_field_opt_sf = np.vstack(
         (
@@ -199,6 +239,24 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
             sensitivity_matrix[2] @ opt_stream_func,
         )
     ).T
+
+    # Visualize the magnetic field generated by the optimized stream function in the target region
+    if get_level() >= DEBUG_VERBOSE:
+        import matplotlib.pyplot as plt
+        coords = target_field.coords
+        x = coords[0, :]
+        y = coords[1, :]
+        z = coords[2, :]
+        b_field_opt_sf_x = b_field_opt_sf[:, 0]
+        b_field_opt_sf_y = b_field_opt_sf[:, 1]
+        b_field_opt_sf_z = b_field_opt_sf[:, 2]
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection="3d")
+        sc = ax.scatter(x, y, z, c=b_field_opt_sf_z * 1e3, cmap="jet")
+        plt.colorbar(sc, label="B-field (mT)")
+        ax.set_title("B-field generated by optimized stream function in target region")
+        plt.show()  
 
     # Separate the optimized stream function again onto the different mesh parts
     for part_ind in range(len(coil_parts)):

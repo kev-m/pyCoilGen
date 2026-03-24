@@ -189,6 +189,9 @@ def parse_input(parse_cli=True):
     parser.add_argument('--smooth_factor', type=int,
                         default=1, help="Smoothing parameter if tracks should be smoothed (i.e. when > 1).")
 
+    # Add flag for cylindrical surface
+    parser.add_argument('--target_field_weighting', type=bool, default=False,
+                        help="Increased weighting in the center of the target field region, which can lead to improved gradient efficiency at the cost of homogeneity")
     """ Unused
     # Add flag to plot results
     parser.add_argument('--plot_flag', type=bool, default=True,
@@ -316,6 +319,8 @@ def parse_input(parse_cli=True):
 
     # Add the parameters for the generation of the (default) biplanar mesh
     parser.add_argument('--persistence_dir', type=str, default='debug', help=f"Directory to write persistence data")
+
+    
 
     # Add a parameter for the location of the FastHenry2 executable, platform aware
     os_system = platform.system()
