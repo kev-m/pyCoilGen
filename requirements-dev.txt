@@ -12,3 +12,6 @@ pyglet<2
 
 # For ChangeLog generation
 auto-changelog
+
+# For the groove plate exporter (optional; its tests are skipped without it)
+manifold3d>=3.0

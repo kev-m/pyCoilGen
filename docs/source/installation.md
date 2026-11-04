@@ -11,6 +11,7 @@ To use **pyCoilGen**, you need to:
 Optionally, you can install:
 
 * the [**pyCoilGen** data package](#install-pycoilgen-data-package)
+* the [fabrication extras](#install-fabrication-extras)
 * [FastHenry2](#fasthenry2)
 
 
@@ -47,6 +48,17 @@ $ pip install pycoilgen_data
 ```
 
 These files will be automatically detected by **pyCoilGen**.
+
+
+### Install Fabrication Extras
+
+The [`export groove plate`](./configuration.md#data-exporters) exporter creates 3D-printable plates, using solid boolean operations that are provided by the optional `manifold3d` package. Install it with the `fabrication` extra:
+
+```bash
+$ pip install pycoilgen[fabrication]
+```
+
+Without it, the exporter stops with an error that names the package to install. All other features are unaffected.
 
 
 ### FastHenry2

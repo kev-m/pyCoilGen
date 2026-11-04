@@ -50,6 +50,10 @@ dependencies = [
 ]
 dynamic = ["version", "description"]
 
+[project.optional-dependencies]
+# For the groove plate exporter (3D-printable plates, using solid boolean operations)
+fabrication = ["manifold3d>=3.0"]
+
 [project.urls]
 Home = "https://github.com/kev-m/pyCoilGen"
 Documentation = "https://pycoilgen.readthedocs.io/"
