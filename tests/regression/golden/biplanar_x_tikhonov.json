@@ -1,0 +1,110 @@
+{
+ "environment": {
+  "numpy": "1.26.4",
+  "python": "3.10.9",
+  "scipy": "1.15.3",
+  "trimesh": "3.23.5"
+ },
+ "fingerprint": {
+  "coil_parts": [
+   {
+    "mesh_faces": 288,
+    "mesh_vertices": {
+     "norm": 1.93489520244494,
+     "shape": [
+      169,
+      3
+     ],
+     "sum": -16.900000000000002
+    },
+    "num_contours": 10,
+    "ohmian_resistance": 2983446188724.893,
+    "stream_function": {
+     "norm": 210450.28511509686,
+     "shape": [
+      169
+     ],
+     "sum": 5028.486505729379
+    },
+    "sweep": {
+     "faces": 6768,
+     "vertices": 3384,
+     "volume": 0.0002466023076540722,
+     "watertight": true
+    },
+    "wire_path": {
+     "length": 3.7949470435638406,
+     "norm": 2.86088695831539,
+     "shape": [
+      3,
+      376
+     ],
+     "sum": -38.42739285100738
+    }
+   },
+   {
+    "mesh_faces": 288,
+    "mesh_vertices": {
+     "norm": 1.93489520244494,
+     "shape": [
+      169,
+      3
+     ],
+     "sum": 16.900000000000002
+    },
+    "num_contours": 8,
+    "ohmian_resistance": 2762266803495.526,
+    "stream_function": {
+     "norm": 209219.60975437058,
+     "shape": [
+      169
+     ],
+     "sum": 18419.093527519726
+    },
+    "sweep": {
+     "faces": 6300,
+     "vertices": 3150,
+     "volume": 0.000230940981742232,
+     "watertight": true
+    },
+    "wire_path": {
+     "length": 3.51360660670743,
+     "norm": 2.7606440348496344,
+     "shape": [
+      3,
+      350
+     ],
+     "sum": 34.86315164467105
+    }
+   }
+  ],
+  "combined_field_layout": {
+   "norm": 6.859336711228285e-05,
+   "shape": [
+    3,
+    503
+   ],
+   "sum": -0.00011783237562274831
+  },
+  "field_errors": {
+   "max_rel_error_layout_vs_stream_function_field": 5.3121335563073,
+   "max_rel_error_layout_vs_target": 5.9966317049609215,
+   "max_rel_error_unconnected_contours_vs_stream_function_field": 6.50496675528798,
+   "max_rel_error_unconnected_contours_vs_target": 8.098040903675287,
+   "mean_rel_error_layout_vs_stream_function_field": 1.914891892506919,
+   "mean_rel_error_layout_vs_target": 1.897502904852326,
+   "mean_rel_error_unconnected_contours_vs_stream_function_field": 1.8655700187385746,
+   "mean_rel_error_unconnected_contours_vs_target": 1.9072713773069367
+  },
+  "num_coil_parts": 2,
+  "opt_current_layout": 0.887732480016321,
+  "target_field": {
+   "norm": 5.028063294043615e-05,
+   "shape": [
+    3,
+    503
+   ],
+   "sum": -1.625315497807205e-05
+  }
+ }
+}

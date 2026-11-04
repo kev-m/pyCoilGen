@@ -85,6 +85,34 @@ $ cd FastHenry2/src
 $ make
 ```
 
+## Regression Harness
+
+The unit tests check the individual functions. The regression harness, in `tests/regression`, checks the complete
+results of a small set of reference coil designs (planar, bi-planar, circular bi-planar and cylindrical surfaces, with
+both stream function solvers) against golden values, which are stored in `tests/regression/golden`. Each golden
+record is a compact fingerprint of the solution: counts, lengths, norms and sums of the mesh, stream function,
+contours, wire path, conductor sweep and field errors.
+
+Use it to find out whether a change affects the results, for example before changing an algorithm, or when upgrading
+a dependency such as `trimesh`, `numpy` or `scipy`:
+
+```bash
+$ pytest -m regression                                     # Run only the regression cases (about 30 seconds)
+$ pytest -m "not regression"                               # Run everything else
+$ python tests/regression/harness_generate.py --check      # Compare, with a summary of every difference
+```
+
+A failure lists every value that changed, with the golden and current environments (Python, `numpy`, `scipy` and
+`trimesh` versions). If a change in the results is intended, regenerate the golden values and commit them together with
+the change, so that the difference is reviewed:
+
+```bash
+$ python tests/regression/harness_generate.py              # All cases, or name the cases to regenerate
+```
+
+To add a case, add its parameters to `CASES` in `tests/regression/harness_cases.py` and generate its golden values.
+Use only the built-in mesh builders, so that no data files or optional packages are needed.
+
 ## Commit Messages
 
 In order to support ChangeLog generation, this project uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
