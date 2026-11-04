@@ -756,3 +756,36 @@ The supported exporters are:
   - OBJ: [Wavefront .obj](https://en.wikipedia.org/wiki/Wavefront_.obj_file)
   - DAE: [COLLADA digital asset exchange](https://en.wikipedia.org/wiki/COLLADA)
   - OFF: [ASCII Object File Format](https://en.wikipedia.org/wiki/OFF_(file_format))
+
+
+- `export gerber file`
+
+  Export each planar coil part to [Gerber](https://en.wikipedia.org/wiki/Gerber_format) (RS-274X) files, for PCB fabrication or CNC milling. Each file is written to `output_directory`, unless the filename contains a path separator.
+
+  - `gerber_filename` (Type: `str`, Default: `'{project}_{part_index}_{field_function}_{layer}.gbr'`)
+
+    The filename template. The substitutions are the same as for `export CAD file`, except that `{mesh}` is not available and `{layer}` is replaced with the name of the layer being written. `{layer}` must be present if more than one layer is exported.
+
+  - `gerber_layers` (Type: `list of str`, Default: `['tracks', 'complement']`)
+
+    The layers to export for each coil part:
+
+    - `tracks`: The wire path, drawn as a track with a width of `conductor_cross_section_width`.
+    - `complement`: The outline of the coil surface as solid copper, with the wire path (and any holes in the coil surface) cleared. This is the copper that remains when the wire path is cut out of a solid plate.
+
+  The files use millimetre units and the Gerber `4.6` co-ordinate format.
+
+  Only planar coil parts are supported. The wire path is projected onto the plane of the coil part, so any shift of the wire path along the surface normal (see `normal_shift_length`) is ignored. A coil part whose surface deviates from a plane by more than 10% of its extent is rejected with an error.
+
+  Each coil part is viewed from the side towards which its coil mesh face normals point. For a bi-planar coil built with `create bi-planar mesh` or `create circular bi-planar mesh`, each plate is therefore seen from the outside, and its pattern is mirrored with respect to the plate on the other side. **NB:** Check that this suits your fabrication process, e.g. which face of each plate carries the copper, before manufacturing.
+
+  ````{note}
+  Only one exporter can be selected with the `exporter` parameter. To write Gerber files in addition to the CAD files, call the exporter on the returned solution:
+
+  ```python
+  from pyCoilGen.export_factory.export_gerber_file import export_gerber_file
+
+  solution = pyCoilGen(log, arg_dict)
+  export_gerber_file(solution)
+  ```
+  ````
