@@ -10,8 +10,8 @@ from pyCoilGen.mesh_factory.build_circular_biplanar_mesh import simple_circular_
 from pyCoilGen.export_factory import load_exporter_plugins
 
 # Code under test
-from pyCoilGen.export_factory.export_gerber_file import (
-    export_gerber_file, get_viewing_basis, project_to_plane, get_part_outlines, check_planar)
+from pyCoilGen.export_factory.export_gerber_file import export_gerber_file, get_part_outlines
+from pyCoilGen.helpers.planar_layer import get_viewing_basis, project_to_plane, check_planar
 
 _COORDINATE = re.compile(r'^X(-?\d+)Y(-?\d+)(D0[123])\*$')
 
