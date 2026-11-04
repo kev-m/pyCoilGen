@@ -6,9 +6,11 @@ numpy==1.*
 scipy==1.*
 
 # For Mesh support
-trimesh==3.*
-# Missing Trimesh dependency
-networkx==2.*
+# Verified with the regression harness (tests/regression): 3.23.5 and 5.2.0 give identical results.
+# Note that trimesh 5 requires Python >= 3.10.
+trimesh>=3.23.5,<6
+# Used by trimesh, but not installed with it. Verified with the regression harness: 2.8.8 and 3.6.1 give identical results.
+networkx>=2.8,<4
 
 # For target field calculations
 sympy==1.*
