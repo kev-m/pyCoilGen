@@ -789,3 +789,23 @@ The supported exporters are:
   export_gerber_file(solution)
   ```
   ````
+
+- `export groove plate`
+
+  Export a 3D-printable plate for each planar coil part, with the wire path cut into it as a groove, into which the conductor can be laid. One STL file is written per coil part, to `output_directory`, unless the filename contains a path separator. This exporter requires the optional `manifold3d` package, see [Install Fabrication Extras](./installation.md#install-fabrication-extras).
+
+  - `groove_plate_filename` (Type: `str`, Default: `'{project}_{part_index}_{field_function}_groove_plate.stl'`)
+
+    The filename template. The substitutions are the same as for `export CAD file`, except that `{mesh}` is not available.
+
+  - `groove_plate_thickness` (Type: `float`, Default: `0.01`)
+
+    The thickness of the plate, in metres.
+
+  The plate lies behind the coil surface, as seen from the side that the coil mesh face normals point towards (the same view as for `export gerber file`). The swept conductor is subtracted from the plate, so the groove is as deep as the conductor extends below the coil surface. The shape of the groove is therefore set by the conductor cross-section parameters, `conductor_thickness` and `cross_sectional_points`.
+
+  Parts of the wire path that are shifted away from the coil surface, see `normal_shift_length`, cut a shallower groove, or none at all if the conductor does not reach below the surface. These parts then lie on top of the plate, where the return paths cross over the other windings.
+
+  Each plate is exported laid flat, with the groove facing up, ready for slicing. **NB:** Unlike the other exporters, the STL file is in **millimetres**, because slicers assume millimetres. The two plates of a bi-planar coil are therefore not in their assembled positions.
+
+  The exporter stops with an error if the coil part is not planar, if it has no swept conductor (`skip_sweep` must be `False`), if the conductor does not reach into the plate, or if the groove cuts through the plate. In the last case, increase `groove_plate_thickness` or reduce the conductor size.
