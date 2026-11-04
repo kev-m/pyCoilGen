@@ -358,6 +358,23 @@ A 3D rendered view of the default bi-planar mesh.
 A 3D rendered view of the default circular mesh.
 ```
 
+- `create circular bi-planar mesh`
+
+  Create a bi-planar mesh of two parallel circular plates, defined by `circular_biplanar_mesh_parameter_list` (Type: `list of numeric`, Default: `[0.07, 30, 90, 0, 0, 1, 0, 0, 0, 0.0735]`)
+
+        radius (`float`): Radius of the circular plates.
+        num_radial_divisions (`int`): Number of radial divisions (rings) of each plate.
+        num_angular_divisions (`int`): Number of angular divisions of each plate.
+        target_normal_x (`float`): X-component of the target normal vector.
+        target_normal_y (`float`): Y-component of the target normal vector.
+        target_normal_z (`float`): Z-component of the target normal vector.
+        center_position_x (`float`): X-coordinate of the center position.
+        center_position_y (`float`): Y-coordinate of the center position.
+        center_position_z (`float`): Z-coordinate of the center position.
+        plane_distance (`float`): Distance between the two planes.
+
+  The plates are meshed on a polar grid: a vertex at the centre, surrounded by `num_radial_divisions` concentric rings of `num_angular_divisions` equally spaced vertices. In contrast to `create bi-planar mesh`, which produces rectangular plates, and `create circular mesh`, which produces a single plate on a Cartesian grid, this gives circular plates with an evenly shaped boundary. The plates are separated along the target normal by `plane_distance`.
+
 - `create stl mesh`
 
   Create the mesh from the file specified with `stl_mesh_filename` (Type: `str`, Default: `none`)
