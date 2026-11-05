@@ -17,7 +17,7 @@ $ pip install pycoilgen==0.2.4
 | 0.0.8 to 0.1.1 | 2023-09 to 2023-10 | >= 3.6 | ==1.21.6 | ==1.7.3 | ==3.21.7 | The exact numpy and scipy versions limit these releases to the Python versions that they were built for, in practice 3.7 to 3.10. |
 | 0.1.2 and 0.1.3 | 2023-10 | >= 3.6 | 1.* | 1.* | 3.* | |
 | 0.2.0 to 0.2.4 | 2023-11 to 2026-02 | >= 3.6 | 1.* | 1.* | 3.* | numpy 1.x has no packages for Python 3.13 and later, so these releases cannot be installed there. In practice, Python 3.6 to 3.12. |
-| next release (planned **0.3.0**) | | >= 3.11 | >= 1.26, < 3 | >= 1.11, < 2 | >= 3.23.5, < 6 | Tested, see below. |
+| 0.3.0 | 2026-11 | >= 3.11 | >= 1.26, < 3 | >= 1.11, < 2 | >= 3.23.5, < 6 | Tested, see below. |
 
 Notes:
 
@@ -36,11 +36,11 @@ The regression harness compares the complete output of five reference designs wi
 | 3.11 | 2.4.6 | 1.15.3 | 3.23.5 | As above. |
 | 3.13 | 2.5.4 | 1.18.1 | 5.2.0 | As above. |
 
-Python 3.12 was not tested separately; it lies between the tested versions. The versions of networkx (2.8 and 3.6), matplotlib and trimesh (3.23.5 and 5.2.0) that were tried made no difference to the results.
+Python 3.12 was not tested separately; it lies between the tested versions. Pillow was tested with 9.5.0 (Python 3.11) and 13.0.0 (Python 3.13); versions older than 10 have no packages for Python 3.13. The versions of networkx (2.8 and 3.6), matplotlib and trimesh (3.23.5 and 5.2.0) that were tried made no difference to the results.
 
 ### Results that depend on the library versions
 
-* **The iterative solver** (`sf_opt_method='iterative'`) minimises with `scipy.optimize.minimize`. If it stops at its iteration limit, instead of converging, its result depends on the versions of numpy and scipy. The error values of such a design vary by a few percent between environments.
+* **The iterative solver** (`sf_opt_method='iterative'`) minimises with `scipy.optimize.minimize`. If it stops at its iteration limit, instead of converging, its result depends on the versions of numpy and scipy. The error values of such a design vary by a few percent between environments. The regression harness therefore compares its exact fingerprint only when numpy and scipy have the versions of the stored values, and otherwise only judges its physical quality, with a wider tolerance.
 * **Ill-conditioned designs**, for example a single planar plate far from the target region, amplify rounding differences into small differences of the error values of the unconnected contours. The wire path is not affected.
 
 Earlier results of the Tikhonov designs also differed between numpy 1 and numpy 2. That was not caused by numpy: a choice of the open end of the wire path was decided by rounding errors of about 1e-12 when several points had the same height. This is corrected in 0.3.0, which can change the start of the wire path, and with it the field error, of symmetric designs compared with 0.2.x.
