@@ -1,7 +1,7 @@
 """Regression harness: compare the results of the reference designs with their golden values.
 
-These tests run complete coil designs, which takes about a minute in total. To skip them, use
-`pytest -m "not regression"`; to run only them, use `pytest -m regression`.
+These tests run complete coil designs, which takes about a minute in total, so a plain `pytest` skips them (see
+pytest.ini). To run only them, use `pytest -m regression`; to run everything, use `pytest -m ""`.
 
 If a test fails, the message lists every value that changed. If the change is intended, regenerate the golden values:
 `python tests/regression/harness_generate.py`, and review the difference.
