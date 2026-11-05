@@ -12,6 +12,7 @@ Optionally, you can install:
 
 * the [**pyCoilGen** data package](#install-pycoilgen-data-package)
 * the [fabrication extras](#install-fabrication-extras)
+* the [verification extras](#install-verification-extras)
 * [FastHenry2](#fasthenry2)
 
 
@@ -59,6 +60,17 @@ $ pip install pycoilgen[fabrication]
 ```
 
 Without it, the exporter stops with an error that names the package to install. All other features are unaffected.
+
+
+### Install Verification Extras
+
+The [independent field verification](./results.md#independent-field-verification) uses its own Biot-Savart calculation. The optional `magpylib` package can be used to cross-check it:
+
+```bash
+$ pip install pycoilgen[verification]
+```
+
+Without it, only the `method='magpylib'` option is unavailable.
 
 
 ### FastHenry2
