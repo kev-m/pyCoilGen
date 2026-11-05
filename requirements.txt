@@ -1,9 +1,9 @@
-numpy==1.*
+numpy>=1.26,<3
 
 # Note: Also need BLAS and gfortran to install scipy
 # sudo apt-get install libopenblas-dev
 # sudo apt install gfortran
-scipy==1.*
+scipy>=1.11,<2
 
 # For Mesh support
 # Verified with the regression harness (tests/regression): 3.23.5 and 5.2.0 give identical results.

@@ -20,16 +20,13 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
 ]
 
-requires-python = ">=3.6"
+requires-python = ">=3.11"
 keywords = [
     "MRI",
     "Magnetic Resonance Imaging",
@@ -41,8 +38,8 @@ keywords = [
     "Coil",
 ]
 dependencies = [
-    "numpy==1.*",
-    "scipy==1.*",
+    "numpy>=1.26,<3",
+    "scipy>=1.11,<2",
     "trimesh>=3.23.5,<6",
     "networkx>=2.8,<4",
     "sympy==1.*",
