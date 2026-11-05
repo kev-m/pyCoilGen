@@ -6,6 +6,10 @@ Usage, from the project root:
     python tests/regression/harness_generate.py CASE [CASE...] # Regenerate only the named cases
     python tests/regression/harness_generate.py --check        # Compare the current environment, without writing
 
+With --check, the exact fingerprint is compared, and the physical quality of the final wire path (an independent
+Biot-Savart evaluation: field error, gradient efficiency, linearity, current) is judged as better, equal or worse.
+A 'worse' physical metric counts as a failure.
+
 Only regenerate the golden values when a change of the results is intended, for example after a deliberate
 improvement of an algorithm. Review the difference in the golden files, as part of the commit.
 """
@@ -23,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from harness_cases import CASES  # noqa: E402
 from harness_run import run_case, load_golden, save_golden  # noqa: E402
-from harness_fingerprint import compare_fingerprints, environment_info  # noqa: E402
+from harness_fingerprint import compare_fingerprints, compare_physical, environment_info  # noqa: E402
 
 
 def main(argv=None) -> int:
@@ -53,7 +57,7 @@ def main(argv=None) -> int:
     for name in names:
         with tempfile.TemporaryDirectory() as work_dir:
             start = time.time()
-            fingerprint = run_case(name, work_dir)
+            fingerprint, physical = run_case(name, work_dir)
             elapsed = time.time() - start
         if args.check:
             golden = load_golden(name)
@@ -65,9 +69,12 @@ def main(argv=None) -> int:
             print(f"{name}: {'OK' if not differences else f'{len(differences)} differences'} ({elapsed:.1f} s)")
             for difference in differences[:20]:
                 print(f"    {difference}")
-            failures += bool(differences)
+            verdicts = compare_physical(golden.get('physical', {}), physical)
+            for metric, (verdict, old, new) in verdicts.items():
+                print(f"    physical {metric}: {verdict} ({old:.4g} -> {new:.4g})")
+            failures += bool(differences) or any(v[0] == 'worse' for v in verdicts.values())
         else:
-            print(f"{name}: wrote {save_golden(name, fingerprint)} ({elapsed:.1f} s)")
+            print(f"{name}: wrote {save_golden(name, fingerprint, physical)} ({elapsed:.1f} s)")
     return 1 if failures else 0
 
 

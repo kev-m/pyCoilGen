@@ -169,3 +169,52 @@ def compare_fingerprints(expected: Any, actual: Any, rtol: float = 1e-6, atol: f
     elif expected != actual:
         differences.append(f"{path}: {actual!r}, expected {expected!r}")
     return differences
+
+
+# How to judge the physical quality metrics of `pyCoilGen.helpers.field_verification.verify_solution`.
+# 'lower' and 'higher' metrics are better when smaller, or larger. 'unity' is better when closer to 1.
+# Other metrics (the current, the field per Ampere) are recorded, but not judged.
+PHYSICAL_RULES = {
+    'rms_rel_error': 'lower',
+    'max_rel_error': 'lower',
+    'rms_rel_error_at_design_current': 'lower',
+    'linearity_error': 'lower',
+    'current_consistency': 'unity',
+    'efficiency': 'higher',
+}
+
+
+def compare_physical(golden: dict, actual: dict, rtol: float = 0.05, atol: float = 0.05) -> dict:
+    """
+    Judge the physical quality metrics of a run against the golden ones: better, equal or worse.
+
+    A metric is 'equal' if it is within `rtol` (relative) plus `atol` (absolute) of the golden value; otherwise it
+    is 'better' or 'worse', as defined by `PHYSICAL_RULES`. The absolute tolerance is in the unit of the metric
+    (percent for the errors), 0.01 times that for the current consistency, and not used for the efficiency.
+
+    Args:
+        golden (dict): The golden metrics.
+        actual (dict): The metrics of the current run.
+        rtol (float): The relative tolerance.
+        atol (float): The absolute tolerance.
+
+    Returns:
+        dict: For each judged metric, a tuple of the verdict (`'better'`, `'equal'`, `'worse'`), the golden and the
+            actual value.
+    """
+    verdicts = {}
+    for name, rule in PHYSICAL_RULES.items():
+        if name not in golden or name not in actual:
+            continue
+        old, new = golden[name], actual[name]
+        if rule == 'unity':
+            old, new, rule = abs(old - 1.0), abs(new - 1.0), 'lower'
+        slack = rtol * abs(old) + {'current_consistency': 0.01 * atol, 'efficiency': 0.0}.get(name, atol)
+        if abs(new - old) <= slack:
+            verdict = 'equal'
+        elif (new < old) == (rule == 'lower'):
+            verdict = 'better'
+        else:
+            verdict = 'worse'
+        verdicts[name] = (verdict, golden[name], actual[name])
+    return verdicts
