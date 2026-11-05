@@ -43,7 +43,7 @@ dependencies = [
     "trimesh>=3.23.5,<6",
     "networkx>=2.8,<4",
     "sympy==1.*",
-    "pillow<=9.5",
+    "pillow>=9.5,<14",
     "matplotlib==3.*",
 ]
 dynamic = ["version", "description"]
