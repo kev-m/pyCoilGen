@@ -419,7 +419,9 @@ The winding coil resistance affects the gradient magnetic field due to the windi
 
 - `specific_conductivity_conductor` (Type: `float`, Default: `0.018e-6`)
 
-  The conductivity of the winding coil.
+  The specific resistivity of the winding coil conductor, in Ohm·m. Despite its name, this is a resistivity, not a
+  conductivity; the default is that of copper. It is used for the wire resistance `ohmian_resistance` (R = ρ·L/A) and
+  the resistance matrix. See [Resistance units fix](bug_fixes.md) for the change in 0.3.1.
 
 - `conductor_thickness` (Type: `float`, Default: `0.005`)
 

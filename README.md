@@ -28,9 +28,13 @@ Release 0.3.0 and later require Python >= 3.11. If you are bound to an older Pyt
 |---------|--------|-------|-------|
 | 0.0.8 to 0.1.1 | 3.7 to 3.10 (declared >= 3.6) | ==1.21.6 | ==1.7.3 |
 | 0.1.2 to 0.2.4 | 3.6 to 3.12 (declared >= 3.6) | 1.* | 1.* |
-| 0.3.0 | >= 3.11, tested on 3.11 and 3.13 | >= 1.26, < 3 | >= 1.11, < 2 |
+| 0.3.0 to 0.3.1 | >= 3.11, tested on 3.11 and 3.13 | >= 1.26, < 3 | >= 1.11, < 2 |
 
 See [Compatibility](https://pycoilgen.readthedocs.io/en/latest/compatibility.html) for details, including the tested environments.
+
+## Known Issues and Bug Fixes
+
+Release 0.3.1 corrects the units of `ohmian_resistance`: it was computed as `L / (A * value)` with the copper *resistivity* (0.018e-6 Ohm·m) as `specific_conductivity_conductor`, giving about 1e12 Ohm. It is now `R = rho * L / A`. Results of 0.3.0 and earlier should be recomputed. See [Bug fixes](https://pycoilgen.readthedocs.io/en/latest/bug_fixes.html).
 
 ## Examples
 

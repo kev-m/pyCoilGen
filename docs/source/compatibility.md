@@ -17,7 +17,7 @@ $ pip install pycoilgen==0.2.4
 | 0.0.8 to 0.1.1 | 2023-09 to 2023-10 | >= 3.6 | ==1.21.6 | ==1.7.3 | ==3.21.7 | The exact numpy and scipy versions limit these releases to the Python versions that they were built for, in practice 3.7 to 3.10. |
 | 0.1.2 and 0.1.3 | 2023-10 | >= 3.6 | 1.* | 1.* | 3.* | |
 | 0.2.0 to 0.2.4 | 2023-11 to 2026-02 | >= 3.6 | 1.* | 1.* | 3.* | numpy 1.x has no packages for Python 3.13 and later, so these releases cannot be installed there. In practice, Python 3.6 to 3.12. |
-| 0.3.0 | 2026-11 | >= 3.11 | >= 1.26, < 3 | >= 1.11, < 2 | >= 4.4, < 6 | Tested, see below. |
+| 0.3.0 to 0.3.1 | 2026-11 | >= 3.11 | >= 1.26, < 3 | >= 1.11, < 2 | >= 4.4, < 6 | Tested, see below. |
 
 Notes:
 

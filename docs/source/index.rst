@@ -34,5 +34,6 @@ pyCoilGen User Guide
    compatibility.md
    quick_start.md
    configuration.md
+   bug_fixes.md
    results.md
    glossary.md
