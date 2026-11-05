@@ -54,6 +54,8 @@ dynamic = ["version", "description"]
 [project.optional-dependencies]
 # For the groove plate exporter (3D-printable plates, using solid boolean operations)
 fabrication = ["manifold3d>=3.0"]
+# For cross-checking the field verification (pyCoilGen.helpers.field_verification) with an independent package
+verification = ["magpylib>=5.0"]
 
 [project.urls]
 Home = "https://github.com/kev-m/pyCoilGen"

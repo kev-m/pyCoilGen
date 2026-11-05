@@ -93,6 +93,40 @@ The `vs_target` variables contain values computed with respect to the provided t
 
 The `vs_stream_function` variables contain values computed with respect to the computed stream function.
 
+## Independent Field Verification
+
+The field errors above are computed by the coil generation pipeline itself. `pyCoilGen.helpers.field_verification`
+provides a check that does not use the pipeline's field calculation: it evaluates the final wire path (`wire_path`) of
+every coil part with the closed form Biot-Savart field of straight wire segments, in double precision.
+
+```python
+from pyCoilGen.helpers.field_verification import verify_solution
+
+metrics = verify_solution(solution)
+print(metrics['rms_rel_error'], metrics['efficiency'])
+```
+
+The result is a dictionary with these values. The field is evaluated for the z-component, as in `FieldErrors`, at the
+current that fits the target best.
+
+| Key | Meaning |
+|-----|---------|
+| `best_current` | The wire current that fits the target best, relative to the design current (the stream function current in each contour, `contour_step`). |
+| `current_consistency` | The same as `best_current`. `1.0` means that the wire path needs exactly the current that the stream function was designed for. |
+| `operating_current` | The current in Ampere that the real wire needs: `best_current * contour_step`. |
+| `rms_rel_error`, `max_rel_error` | The error of the field at the best current, relative to the largest absolute target value [%]. |
+| `rms_rel_error_at_design_current` | The RMS error if the wire carries exactly the design current [%]. |
+| `efficiency` | The slope of the field of the wire path, fitted over the target points [T/m/A]. |
+| `target_gradient` | The slope of the target field, for comparison [T/m, per unit of design current]. |
+| `linearity_error` | The RMS deviation of the wire field from its linear fit, relative to its largest absolute value [%]. |
+| `field_per_ampere` | The RMS of the wire field at the target points [T/A]. |
+
+The package `magpylib` can be used to cross-check the reference implementation: pass `method='magpylib'`. It is an
+optional package, install it with `pip install pycoilgen[verification]`.
+
+These values are also recorded for the reference designs of the [regression harness](../../CONTRIBUTING.md), where a
+change of the code or of the Python environment is judged as better, equal or worse than before.
+
 ## Visualising the Results
 
 There are plotting routines in `pyCoilGen.plotting` that are useful for visualising the results.
