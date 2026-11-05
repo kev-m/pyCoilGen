@@ -18,7 +18,7 @@
      "sum": -13.266749999999998
     },
     "num_contours": 10,
-    "ohmian_resistance": 20169892348339.04,
+    "ohmian_resistance": 0.006535045121135172,
     "stream_function": {
      "norm": 77486.59070929735,
      "shape": [
@@ -53,7 +53,7 @@
      "sum": 13.26675
     },
     "num_contours": 11,
-    "ohmian_resistance": 23951616451613.47,
+    "ohmian_resistance": 0.0077603237302709726,
     "stream_function": {
      "norm": 77343.47242281762,
      "shape": [

@@ -271,7 +271,8 @@ def parse_input(parse_cli=True):
 
     # Add the conductor conductivity
     parser.add_argument('--specific_conductivity_conductor',
-                        type=float, default=0.018e-6, help="Conductor conductivity")
+                        type=float, default=0.018e-6,
+                        help="Specific resistivity of the conductor in Ohm*m (despite the name; default is copper)")
 
     # Add the thickness of the sheet current density within the stream function representation
     parser.add_argument('--conductor_thickness', type=float, default=0.005,
