@@ -31,6 +31,11 @@ With **pyCoilGen**, you can:
 - Specify a target field (e.g., `bz(x,y,z)=y`) and a surface mesh geometry.
 - Use built-in surface mesh geometries or 3D meshes defined in `.stl` files.
 - Generate a coil layout in the form of a non-overlapping, interconnected wire track to achieve the desired field, exported as an `.stl` file.
+- Build bi-planar and circular bi-planar support surfaces, for example for gradient coil plates.
+- Export planar coil parts for fabrication: as [Gerber](./configuration.md#data-exporters) files for PCB manufacturing,
+  or as 3D-printable plates with a groove for the wire.
+- [Verify](./results.md#independent-field-verification) the final wire path with an independent Biot-Savart
+  calculation: target field error, gradient efficiency and linearity.
 
 For a detailed description of the algorithm, refer to the research paper [CoilGen: Open-source MR coil layout generator](https://onlinelibrary.wiley.com/doi/10.1002/mrm.29294).
 
