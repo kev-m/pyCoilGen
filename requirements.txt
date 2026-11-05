@@ -12,8 +12,6 @@ scipy>=1.11,<2
 # exporter fail with numpy 2. Below 6: not tested with trimesh 6. Verified with the full test suite and the regression
 # harness (tests/regression): 4.4.0 and 5.2.0 give identical results, with numpy 1.26 and with numpy 2.
 trimesh>=4.4,<6
-# Used by trimesh, but not installed with it. Verified with the regression harness: 2.8.8 and 3.6.1 give identical results.
-networkx>=2.8,<4
 
 # For target field calculations
 sympy==1.*
