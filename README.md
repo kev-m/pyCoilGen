@@ -42,6 +42,8 @@ The porting of the code from MATLAB to Python was facilitated by [ChatGPT, May 2
 
 Additional cross-checking was done using [MATLAB Online](https://www.mathworks.com/products/matlab-online.html) provided by MathWorks.
 
+The circular bi-planar mesh builder, the Gerber and groove plate exporters and the independent field verification (release 0.3.0) are based on ideas from pull request [#82](https://github.com/kev-m/pyCoilGen/pull/82) by [Sairam Geethanath](https://github.com/sairamgeethanath), re-implemented to fit the existing pipeline.
+
 ## Contributing
 
 If you'd like to contribute to **pyCoilGen**, follow the guidelines outlined in the [Contributing Guide](https://github.com/kev-m/pyCoilGen/blob/master/CONTRIBUTING.md).
