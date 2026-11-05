@@ -36,7 +36,7 @@ The regression harness compares the complete output of five reference designs wi
 
 The oldest allowed trimesh is 4.4, the first version that works with numpy 2: with older versions, loading an `.stl` file and the groove plate exporter fail with numpy 2.0 or later (`ndarray.ptp` was removed from numpy). The stored values were produced with trimesh 3.23.5, and trimesh 4.4.0 and 5.2.0 give identical results.
 
-Python 3.12 was not tested separately; it lies between the tested versions. Pillow was tested with 9.5.0 (Python 3.11) and 13.0.0 (Python 3.13); versions older than 10 have no packages for Python 3.13. The versions of networkx (2.8 and 3.6), matplotlib and trimesh (4.4.0 and 5.2.0) that were tried made no difference to the results.
+Python 3.12 was not tested separately; it lies between the tested versions. Pillow was tested with 9.5.0 (Python 3.11) and 13.0.0 (Python 3.13); versions older than 10 have no packages for Python 3.13. The versions of matplotlib and trimesh (4.4.0 and 5.2.0) that were tried made no difference to the results. networkx is not needed: the full test suite and the regression harness pass without it, with trimesh 4.4.0 and 5.2.0.
 
 ### Results that depend on the library versions
 
@@ -51,3 +51,5 @@ Earlier results of the Tikhonov designs also differed between numpy 1 and numpy 
 |-------|---------|----------|
 | `fabrication` | manifold3d >= 3.0 | The [`export groove plate`](./configuration.md#data-exporters) exporter |
 | `verification` | magpylib >= 5.0 | Cross-checking the [field verification](./results.md#independent-field-verification) |
+
+Releases 0.3.0 and earlier of the 0.3 series also install `networkx`, which trimesh uses only for a few functions that **pyCoilGen** does not call (for example `fix_winding` and `fill_holes`). If your own code calls those, install it with `pip install networkx`.
