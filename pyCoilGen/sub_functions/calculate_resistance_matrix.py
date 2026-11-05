@@ -26,7 +26,7 @@ def calculate_resistance_matrix(coil_parts: List[CoilPart], input_args) -> List[
 
     Depends on the following input_args:
         - conductor_thickness
-        - specific_conductivity_conductor
+        - specific_resistivity_conductor
 
     Updates the following properties of a CoilPart:
         - None
@@ -41,8 +41,8 @@ def calculate_resistance_matrix(coil_parts: List[CoilPart], input_args) -> List[
     """
 
     conductor_thickness = input_args.conductor_thickness
-    specific_conductivity_copper = input_args.specific_conductivity_conductor
-    material_factor = specific_conductivity_copper / conductor_thickness
+    conductor_resistivity = input_args.specific_resistivity_conductor
+    material_factor = conductor_resistivity / conductor_thickness
 
     for part_ind in range(len(coil_parts)):
         # Setup variables

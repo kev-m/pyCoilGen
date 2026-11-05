@@ -1,4 +1,5 @@
 import argparse
+import logging
 from pathlib import Path
 import platform
 
@@ -6,6 +7,11 @@ import platform
 from .constants import DEBUG_BASIC, DEBUG_VERBOSE
 from pyCoilGen.mesh_factory import load_mesh_factory_plugins
 from pyCoilGen.export_factory import load_exporter_plugins
+
+log = logging.getLogger(__name__)
+
+# Parameters that were renamed: old name -> new name
+DEPRECATED_PARAMETERS = {'specific_conductivity_conductor': 'specific_resistivity_conductor'}
 
 
 def parse_input(parse_cli=True):
@@ -269,10 +275,13 @@ def parse_input(parse_cli=True):
     parser.add_argument('--conductor_cross_section_height', type=float, default=0.002,
                         help="Cross-section height of the conductor (for the inductance calculation) in metres")
 
-    # Add the conductor conductivity
-    parser.add_argument('--specific_conductivity_conductor',
-                        type=float, default=0.018e-6,
-                        help="Specific resistivity of the conductor in Ohm*m (despite the name; default is copper)")
+    # Add the conductor resistivity
+    parser.add_argument('--specific_resistivity_conductor', type=float, default=0.018e-6,
+                        help="Specific resistivity of the conductor in Ohm*m (default: copper)")
+
+    # Deprecated name of the conductor resistivity, which was a resistivity despite its name
+    parser.add_argument('--specific_conductivity_conductor', type=float, default=None,
+                        help="Deprecated: use --specific_resistivity_conductor")
 
     # Add the thickness of the sheet current density within the stream function representation
     parser.add_argument('--conductor_thickness', type=float, default=0.005,
@@ -333,12 +342,24 @@ def parse_input(parse_cli=True):
     else:
         input = parser.parse_args()
 
+    # Map the deprecated parameter names to the new names
+    for old_name, new_name in DEPRECATED_PARAMETERS.items():
+        old_value = getattr(input, old_name, None)
+        if old_value is not None:
+            log.warning("'%s' is deprecated, use '%s'.", old_name, new_name)
+            setattr(input, new_name, old_value)
+        if hasattr(input, old_name):
+            delattr(input, old_name)
+
     return parser, input
 
 
 def create_input(dictionary):
     parser, input = parse_input(False)
     for key, value in dictionary.items():
+        if key in DEPRECATED_PARAMETERS:
+            log.warning("'%s' is deprecated, use '%s'.", key, DEPRECATED_PARAMETERS[key])
+            key = DEPRECATED_PARAMETERS[key]
         if hasattr(input, key):
             setattr(input, key, value)
         else:

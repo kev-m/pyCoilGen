@@ -29,7 +29,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
         - skip_sweep
         - save_stl_flag
         - output_directory
-        - specific_conductivity_conductor
+        - specific_resistivity_conductor
 
     Updates the following properties of a CoilPart:
         - wire_path.uv
@@ -44,8 +44,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
     """
 
     if not input_args.skip_sweep:
-        # Despite its name, this parameter is the resistivity of the conductor in Ohm*m (copper: 0.018e-6)
-        conductor_resistivity = input_args.specific_conductivity_conductor
+        conductor_resistivity = input_args.specific_resistivity_conductor
         for part_ind in range(len(coil_parts)):
             coil_part = coil_parts[part_ind]
             coil_mesh = coil_part.coil_mesh
@@ -122,7 +121,7 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             """
             # Calculate the length of the coil
             wire_path.v_length = np.sum(np.linalg.norm(wire_path.v[:, 1:] - wire_path.v[:, :-1], axis=0))
-            # Calculate the ohmic resistance, R = rho * L / A (MATLAB divides by the resistivity: see CHANGELOG 0.3.1)
+            # Calculate the ohmic resistance, R = rho * L / A (MATLAB divides by the resistivity: see docs/source/bug_fixes.md)
             ohmian_resistance = conductor_resistivity * wire_path.v_length / cross_section_area
 
             # Calculate a radius of the conductor cross section which is later
