@@ -10,8 +10,8 @@ from typing import Optional
 
 # Local imports
 from pyCoilGen.pyCoilGen_release import pyCoilGen
-from harness_cases import CASES
-from harness_fingerprint import fingerprint_solution, environment_info
+from harness_cases import CASES, LIBRARY_SENSITIVE, FINGERPRINT_RTOL
+from harness_fingerprint import fingerprint_solution, environment_info, compare_fingerprints
 from pyCoilGen.helpers.field_verification import verify_solution
 
 GOLDEN_DIR = Path(__file__).resolve().parent / 'golden'
@@ -39,6 +39,50 @@ def run_case(name: str, work_dir) -> tuple:
     with contextlib.redirect_stdout(io.StringIO()):
         solution = pyCoilGen(logging.getLogger(f'regression.{name}'), arguments)
     return fingerprint_solution(solution), verify_solution(solution)
+
+
+def compare_case(name: str, golden: dict, fingerprint: dict, rtol: float = 1e-6) -> tuple:
+    """
+    Compare the fingerprint of a run with the golden one, applying the rules of the case.
+
+    A case in `LIBRARY_SENSITIVE` is only compared exactly if numpy and scipy have the golden versions. A case in
+    `FINGERPRINT_RTOL` uses its own relative tolerance, if that is larger than `rtol`.
+
+    Args:
+        name (str): The name of the case.
+        golden (dict): The golden record, as returned by `load_golden`.
+        fingerprint (dict): The fingerprint of the current run.
+        rtol (float): The default relative tolerance.
+
+    Returns:
+        tuple: The list of differences (list of str), and a note (str) that explains why the comparison was skipped,
+            or an empty string.
+    """
+    environment, golden_environment = environment_info(), golden['environment']
+    if name in LIBRARY_SENSITIVE and any(environment[key] != golden_environment[key] for key in ('numpy', 'scipy')):
+        return [], (f"exact comparison skipped, numpy/scipy differ from the golden {golden_environment['numpy']}/"
+                    f"{golden_environment['scipy']}: {LIBRARY_SENSITIVE[name]}")
+    return compare_fingerprints(golden['fingerprint'], fingerprint, rtol=max(rtol, FINGERPRINT_RTOL.get(name, 0))), ''
+
+
+def physical_rtol(name: str, golden: dict) -> float:
+    """
+    Choose the relative tolerance for judging the physical quality of a case.
+
+    The default is 5%. A case in `LIBRARY_SENSITIVE`, in an environment with other numpy or scipy versions than the
+    golden values, varies more, so 25% is used.
+
+    Args:
+        name (str): The name of the case.
+        golden (dict): The golden record, as returned by `load_golden`.
+
+    Returns:
+        float: The relative tolerance.
+    """
+    environment, golden_environment = environment_info(), golden['environment']
+    if name in LIBRARY_SENSITIVE and any(environment[key] != golden_environment[key] for key in ('numpy', 'scipy')):
+        return 0.25
+    return 0.05
 
 
 def golden_path(name: str) -> Path:
