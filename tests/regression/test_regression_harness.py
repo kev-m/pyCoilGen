@@ -10,7 +10,7 @@ If a test fails, the message lists every value that changed. If the change is in
 import pytest
 
 from harness_cases import CASES
-from harness_run import run_case, load_golden
+from harness_run import run_case, load_golden, compare_case, physical_rtol
 from harness_fingerprint import compare_fingerprints, compare_physical, environment_info, summarise_array
 
 import numpy as np
@@ -28,7 +28,9 @@ def test_case_matches_golden_values(name, tmp_path):
 
     fingerprint, _ = run_case(name, tmp_path)
 
-    differences = compare_fingerprints(golden['fingerprint'], fingerprint, rtol=RTOL)
+    differences, note = compare_case(name, golden, fingerprint, rtol=RTOL)
+    if note:
+        pytest.skip(note)
     assert not differences, (
         f"'{name}' differs from the golden values ({len(differences)} differences).\n"
         f"Golden environment: {golden['environment']}\nCurrent environment: {environment_info()}\n"
@@ -43,7 +45,7 @@ def test_case_physical_quality_is_not_worse(name, tmp_path):
 
     _, physical = run_case(name, tmp_path)
 
-    verdicts = compare_physical(golden['physical'], physical)
+    verdicts = compare_physical(golden['physical'], physical, rtol=physical_rtol(name, golden))
     worse = {metric: values for metric, values in verdicts.items() if values[0] == 'worse'}
     assert not worse, (f"The physical quality of '{name}' is worse than the golden values:\n"
                        f"Golden environment: {golden['environment']}\nCurrent environment: {environment_info()}\n"

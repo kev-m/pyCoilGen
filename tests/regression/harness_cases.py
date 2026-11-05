@@ -25,6 +25,19 @@ _COMMON = {
     'debug': 0,
 }
 
+# Cases whose exact fingerprint depends on the versions of numpy and scipy, not only on the code, with the reason.
+# Their exact fingerprint is only compared when numpy and scipy have the versions of the golden values. In other
+# environments, only their physical quality is judged (better, equal or worse than the golden values).
+LIBRARY_SENSITIVE: Dict[str, str] = {
+    'biplanar_x_iterative': "The iterative solver stops at its iteration limit, without converging, so its result "
+                            "depends on the numerical libraries.",
+}
+
+# Relative tolerances for the exact fingerprint of cases that amplify rounding differences. The default is 1e-6.
+FINGERPRINT_RTOL: Dict[str, float] = {
+    'planar_z_tikhonov': 5e-2,   # Ill-conditioned: the field errors of the unconnected contours vary at the 1% level
+}
+
 CASES: Dict[str, dict] = {
     # Rectangular bi-planar plates, with the default Tikhonov solver
     'biplanar_x_tikhonov': {

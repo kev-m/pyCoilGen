@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from harness_cases import CASES  # noqa: E402
-from harness_run import run_case, load_golden, save_golden  # noqa: E402
+from harness_run import run_case, load_golden, save_golden, compare_case, physical_rtol  # noqa: E402
 from harness_fingerprint import compare_fingerprints, compare_physical, environment_info  # noqa: E402
 
 
@@ -65,11 +65,13 @@ def main(argv=None) -> int:
                 print(f"{name}: no golden values ({elapsed:.1f} s)")
                 failures += 1
                 continue
-            differences = compare_fingerprints(golden['fingerprint'], fingerprint, rtol=args.rtol)
+            differences, note = compare_case(name, golden, fingerprint, rtol=args.rtol)
             print(f"{name}: {'OK' if not differences else f'{len(differences)} differences'} ({elapsed:.1f} s)")
+            if note:
+                print(f"    {note}")
             for difference in differences[:20]:
                 print(f"    {difference}")
-            verdicts = compare_physical(golden.get('physical', {}), physical)
+            verdicts = compare_physical(golden.get('physical', {}), physical, rtol=physical_rtol(name, golden))
             for metric, (verdict, old, new) in verdicts.items():
                 print(f"    physical {metric}: {verdict} ({old:.4g} -> {new:.4g})")
             failures += bool(differences) or any(v[0] == 'worse' for v in verdicts.values())
