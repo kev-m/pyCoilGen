@@ -1,0 +1,16 @@
+# ReadTheDocs build configuration, see https://docs.readthedocs.io/en/stable/config-file/v2.html
+version: 2
+
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.13"
+
+sphinx:
+  configuration: docs/source/conf.py
+
+python:
+  install:
+    # Only the documentation tools are needed: conf.py reads the version from pyCoilGen/__init__.py,
+    # which does not import the numerical packages.
+    - requirements: docs/requirements.txt
