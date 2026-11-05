@@ -124,7 +124,7 @@ current that fits the target best.
 The package `magpylib` can be used to cross-check the reference implementation: pass `method='magpylib'`. It is an
 optional package, install it with `pip install pycoilgen[verification]`.
 
-These values are also recorded for the reference designs of the [regression harness](../../CONTRIBUTING.md), where a
+These values are also recorded for the reference designs of the [regression harness](https://github.com/kev-m/pyCoilGen/blob/master/CONTRIBUTING.md), where a
 change of the code or of the Python environment is judged as better, equal or worse than before.
 
 ## Visualising the Results

@@ -12,6 +12,13 @@ Run the unit tests from the project top level directory:
 pytest
 ```
 
+Also run the regression harness in each environment that is listed in the tested environments table of
+[docs/source/compatibility.md](docs/source/compatibility.md), and update that table and the release table
+(also in the [README](README.md)) for the new version:
+```bash
+python tests/regression/harness_generate.py --check
+```
+
 ## Check the Documentation
 
 Build and check the documentation:
@@ -21,6 +28,8 @@ make clean html
 ```
 
 Load the `docs/build/html/index.html`.
+
+Note that the pinned Sphinx 5.3.0 needs Python <= 3.12 (it imports `imghdr`, which Python 3.13 removed).
 
 ## Update the Version
 
