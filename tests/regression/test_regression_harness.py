@@ -11,7 +11,7 @@ import pytest
 
 from harness_cases import CASES
 from harness_run import run_case, load_golden
-from harness_fingerprint import compare_fingerprints, environment_info, summarise_array
+from harness_fingerprint import compare_fingerprints, compare_physical, environment_info, summarise_array
 
 import numpy as np
 
@@ -26,13 +26,40 @@ def test_case_matches_golden_values(name, tmp_path):
     golden = load_golden(name)
     assert golden is not None, f"No golden values for '{name}'. Run tests/regression/harness_generate.py {name}"
 
-    fingerprint = run_case(name, tmp_path)
+    fingerprint, _ = run_case(name, tmp_path)
 
     differences = compare_fingerprints(golden['fingerprint'], fingerprint, rtol=RTOL)
     assert not differences, (
         f"'{name}' differs from the golden values ({len(differences)} differences).\n"
         f"Golden environment: {golden['environment']}\nCurrent environment: {environment_info()}\n"
         + "\n".join(differences[:30]))
+
+
+@pytest.mark.regression
+@pytest.mark.parametrize('name', list(CASES))
+def test_case_physical_quality_is_not_worse(name, tmp_path):
+    golden = load_golden(name)
+    assert golden is not None and 'physical' in golden, f"No golden values for '{name}'."
+
+    _, physical = run_case(name, tmp_path)
+
+    verdicts = compare_physical(golden['physical'], physical)
+    worse = {metric: values for metric, values in verdicts.items() if values[0] == 'worse'}
+    assert not worse, (f"The physical quality of '{name}' is worse than the golden values:\n"
+                       f"Golden environment: {golden['environment']}\nCurrent environment: {environment_info()}\n"
+                       + "\n".join(f"{m}: {v[1]:.4g} -> {v[2]:.4g}" for m, v in worse.items()))
+
+
+def test_compare_physical_judges_metrics():
+    golden = {'rms_rel_error': 2.0, 'efficiency': 1e-4, 'current_consistency': 1.02, 'best_current': 5.0}
+    same = compare_physical(golden, dict(golden))
+    assert {v[0] for v in same.values()} == {'equal'} and 'best_current' not in same
+    changed = compare_physical(golden, {'rms_rel_error': 1.0, 'efficiency': 0.8e-4, 'current_consistency': 1.2})
+    assert changed['rms_rel_error'][0] == 'better'
+    assert changed['efficiency'][0] == 'worse'
+    assert changed['current_consistency'][0] == 'worse'
+    # Small changes are within the tolerance
+    assert compare_physical({'rms_rel_error': 2.0}, {'rms_rel_error': 2.05})['rms_rel_error'][0] == 'equal'
 
 
 def test_compare_fingerprints_detects_differences():

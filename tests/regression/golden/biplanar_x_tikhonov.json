@@ -106,5 +106,17 @@
    ],
    "sum": -1.625315497807205e-05
   }
+ },
+ "physical": {
+  "best_current": 1.0384768678844727,
+  "current_consistency": 1.0384768678844727,
+  "efficiency": 9.762735270146594e-05,
+  "field_per_ampere": 2.1572698719524265e-06,
+  "linearity_error": 0.5871451806355306,
+  "max_rel_error": 4.1371039761208355,
+  "operating_current": 10223.018182357733,
+  "rms_rel_error": 1.6817108663729097,
+  "rms_rel_error_at_design_current": 2.3449733226934977,
+  "target_gradient": 0.00010158221861295432
  }
 }
