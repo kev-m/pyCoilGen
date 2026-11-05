@@ -417,11 +417,13 @@ The magnetic field contribution and the target field sensitivity is calculated a
 
 The winding coil resistance affects the gradient magnetic field due to the winding coil.
 
-- `specific_conductivity_conductor` (Type: `float`, Default: `0.018e-6`)
+- `specific_resistivity_conductor` (Type: `float`, Default: `0.018e-6`)
 
-  The specific resistivity of the winding coil conductor, in Ohm·m. Despite its name, this is a resistivity, not a
-  conductivity; the default is that of copper. It is used for the wire resistance `ohmian_resistance` (R = ρ·L/A) and
-  the resistance matrix. See [Resistance units fix](bug_fixes.md) for the change in 0.3.1.
+  The specific resistivity of the winding coil conductor, in Ohm·m; the default is that of copper. It is used for the
+  wire resistance `ohmian_resistance` (R = ρ·L/A) and the resistance matrix.
+
+  Before 0.4.0 this parameter was called `specific_conductivity_conductor`, although it was a resistivity. The old name
+  still works, with a deprecation warning. See [Known Issues and Bug Fixes](bug_fixes.md).
 
 - `conductor_thickness` (Type: `float`, Default: `0.005`)
 
