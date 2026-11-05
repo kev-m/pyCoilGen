@@ -100,7 +100,7 @@ a dependency such as `trimesh`, `numpy` or `scipy`:
 
 ```bash
 $ pytest -m regression                                     # Run only the regression cases (about 1 minute)
-$ pytest -m ""                                             # Run everything, including the regression cases
+$ pytest -m "regression or not regression"                                             # Run everything, including the regression cases
 $ pytest                                                   # The default: everything else, without the regression cases
 $ python tests/regression/harness_generate.py --check      # Compare, with a summary of every difference
 ```

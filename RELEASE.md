@@ -10,7 +10,7 @@ The basic procedure for releasing a new version of **pyCoilGen** consists of:
 Run the unit tests from the project top level directory. A plain `pytest` skips the slow regression harness
 (see [pytest.ini](pytest.ini)), so run everything explicitly, including the harness:
 ```bash
-pytest -m ""
+pytest -m "regression or not regression"
 ```
 
 Also run the regression harness in each environment that is listed in the tested environments table of
