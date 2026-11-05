@@ -1,20 +1,24 @@
+# 1.26 is the oldest version that was tested; below 3: numpy 3 has not been tested.
 numpy>=1.26,<3
 
 # Note: Also need BLAS and gfortran to install scipy
 # sudo apt-get install libopenblas-dev
 # sudo apt install gfortran
+# 1.11 is the oldest version that was tested; below 2: scipy 2 has not been tested.
 scipy>=1.11,<2
 
-# For Mesh support
-# Verified with the regression harness (tests/regression): 3.23.5 and 5.2.0 give identical results.
-# Note that trimesh 5 requires Python >= 3.10.
-trimesh>=3.23.5,<6
+# For Mesh support.
+# At least 4.4: older versions call ndarray.ptp, which numpy 2 removed, so loading an .stl file and the groove plate
+# exporter fail with numpy 2. Below 6: not tested with trimesh 6. Verified with the full test suite and the regression
+# harness (tests/regression): 4.4.0 and 5.2.0 give identical results, with numpy 1.26 and with numpy 2.
+trimesh>=4.4,<6
 # Used by trimesh, but not installed with it. Verified with the regression harness: 2.8.8 and 3.6.1 give identical results.
 networkx>=2.8,<4
 
 # For target field calculations
 sympy==1.*
 
-# For visualisation of matrices
+# For visualisation of matrices.
+# Pillow older than 10 has no packages for Python 3.13. Tested with 9.5.0 and 13.0.0.
 pillow>=9.5,<14
 matplotlib==3.*
