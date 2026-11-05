@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.3.0 (2026-11-05)
+
+#### New Features
+
+* (verification): add an independent Biot-Savart check of the wire path
+* (export): add 'export groove plate' exporter for 3D-printable plates
+* (export): add 'export gerber file' exporter for planar coil parts
+* (mesh_factory): add 'create circular bi-planar mesh' builder
+#### Fixes
+
+* (interconnect_among_groups): choose the wire's open end independent of rounding noise
+#### Refactorings
+
+* (helpers): share the planar layer projection helpers
+#### Docs
+
+* credit PR [#82](https://github.com/kev-m/CoilGen-Python/issues/82) by Sairam Geethanath for the ideas behind the 0.3.0 features
+* update the tested environments for trimesh 4.4
+* refer to release 0.3.0 by its number, and document pillow and the harness rules
+* remove the unused html_static_path setting
+* describe the new features in the overview, glossary and contributing guide
+* add the compatibility page to the index, and to the release checklist
+* add a compatibility table of releases, Python and library versions
+#### Others
+
+* (deps): require trimesh 4.4 or newer, and explain the version limits
+* (deps): allow current pillow versions
+* (docs): add a ReadTheDocs configuration
+* (docs): update Sphinx and myst-parser
+* (deps): require Python 3.11 and allow numpy 2 and newer scipy
+* (deps): declare networkx and allow trimesh 5
+* (release): bump the version to 0.3.0
+* skip the regression harness by default, and run it explicitly for a release
+* (regression): tolerate library-dependent cases outside the golden environment
+* (regression): judge the physical quality of each case, not just its fingerprint
+* (regression): add a regression harness for complete coil designs
+
+Full set of changes: [`0.2.4...0.3.0`](https://github.com/kev-m/CoilGen-Python/compare/0.2.4...0.3.0)
+
 ## 0.2.4 (2026-02-15)
 
 #### Fixes
