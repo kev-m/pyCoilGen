@@ -10,7 +10,7 @@ $ pip install pycoilgen==0.2.4
 
 ## Release Table
 
-*Declared* is what the release states in its `pyproject.toml`. *Tested* is what has been run: for the current series, the whole test suite and the [regression harness](../../CONTRIBUTING.md) were run in the environments listed below. For the older releases, only the declared values are given, since they were not retested.
+*Declared* is what the release states in its `pyproject.toml`. *Tested* is what has been run: for the current series, the whole test suite and the [regression harness](https://github.com/kev-m/pyCoilGen/blob/master/CONTRIBUTING.md) were run in the environments listed below. For the older releases, only the declared values are given, since they were not retested.
 
 | Release | Date | Python (declared) | numpy | scipy | trimesh | Remarks |
 |---------|------|-------------------|-------|-------|---------|---------|
