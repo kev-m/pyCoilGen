@@ -20,6 +20,18 @@ For detailed documentation, refer to the [pyCoilGen Documentation](https://pycoi
 
 Refer to the [Installation Guide](https://pycoilgen.readthedocs.io/en/latest/installation.html) for detailed instructions on how to install and set up **pyCoilGen**.
 
+## Compatibility
+
+The current development version requires Python >= 3.11. If you are bound to an older Python, pip installs the newest release that supports it, or name a release, for example `pip install pycoilgen==0.2.4`.
+
+| Release | Python | numpy | scipy |
+|---------|--------|-------|-------|
+| 0.0.8 to 0.1.1 | 3.7 to 3.10 (declared >= 3.6) | ==1.21.6 | ==1.7.3 |
+| 0.1.2 to 0.2.4 | 3.6 to 3.12 (declared >= 3.6) | 1.* | 1.* |
+| next release (0.3.0) | >= 3.11, tested on 3.11 and 3.13 | >= 1.26, < 3 | >= 1.11, < 2 |
+
+See [Compatibility](https://pycoilgen.readthedocs.io/en/latest/compatibility.html) for details, including the tested environments.
+
 ## Examples
 
 The [`examples`](https://github.com/kev-m/pyCoilGen/blob/master/examples) directory contains several examples for how to use **pyCoilGen**. These examples demonstrate different scenarios and configurations for generating coil layouts.

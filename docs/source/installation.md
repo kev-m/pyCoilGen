@@ -18,7 +18,7 @@ Optionally, you can install:
 
 ## Install Python
 
-**pyCoilGen** depends on Python >= 3.6. 
+**pyCoilGen** depends on Python >= 3.11. See [Compatibility](./compatibility.md) for the Python and library versions of each release, including older releases for older Python versions.
 
 Please follow the instructions for your operating system to [install Python](https://www.python.org/downloads/).
 
