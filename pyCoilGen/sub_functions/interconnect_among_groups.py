@@ -186,7 +186,11 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
         _, is_final_ind = max(arr1)
         full_track = connected_group_buff[is_final_ind]
         # Shift the open ends to the boundaries of the coil
-        min_ind = np.argmax(full_track.v[2, :])
+        # Several points are often at the highest position (symmetric designs, flat plates). Choose the first of them,
+        # so that rounding errors of 1e-12, which differ between platforms and library versions, do not decide.
+        z_values = full_track.v[2, :]
+        tolerance = 1e-9 * np.max(np.ptp(full_track.v, axis=1))
+        min_ind = np.flatnonzero(z_values >= np.max(z_values) - tolerance)[0]
         full_track.v = np.roll(full_track.v, -min_ind-1, axis=1)
         full_track.uv = np.roll(full_track.uv, -min_ind-1, axis=1)
 
