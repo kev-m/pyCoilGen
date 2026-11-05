@@ -29,8 +29,6 @@ make clean html
 
 Load the `docs/build/html/index.html`.
 
-Note that the pinned Sphinx 5.3.0 needs Python <= 3.12 (it imports `imghdr`, which Python 3.13 removed).
-
 ## Update the Version
 
 The project version is maintained in `pyCoilGen\__init__.py`. Edit the version to match the changes, according
