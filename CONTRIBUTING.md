@@ -91,16 +91,25 @@ The unit tests check the individual functions. The regression harness, in `tests
 results of a small set of reference coil designs (planar, bi-planar, circular bi-planar and cylindrical surfaces, with
 both stream function solvers) against golden values, which are stored in `tests/regression/golden`. Each golden
 record is a compact fingerprint of the solution: counts, lengths, norms and sums of the mesh, stream function,
-contours, wire path, conductor sweep and field errors.
+contours, wire path, conductor sweep and field errors. Each golden record also holds the physical quality of the
+final wire path, from an independent Biot-Savart calculation (see `pyCoilGen.helpers.field_verification`): the target
+field error, the gradient efficiency, the linearity and the current that the wire needs.
 
 Use it to find out whether a change affects the results, for example before changing an algorithm, or when upgrading
 a dependency such as `trimesh`, `numpy` or `scipy`:
 
 ```bash
-$ pytest -m regression                                     # Run only the regression cases (about 30 seconds)
+$ pytest -m regression                                     # Run only the regression cases (about 1 minute)
 $ pytest -m "not regression"                               # Run everything else
 $ python tests/regression/harness_generate.py --check      # Compare, with a summary of every difference
 ```
+
+The exact fingerprint tells you *that* something changed. The physical metrics tell you whether it got *better* or
+*worse* for the magnetics: the check prints each metric as better, equal or worse than the golden value (a metric is
+equal within 5% relative plus 0.05 percentage points), and a 'worse' metric fails. A new Python environment can
+therefore show small differences in the fingerprint and still be acceptable, if the physical quality is not worse.
+Results that depend on rounding errors, for example an unconverged iterative solver, vary between environments; the
+physical metrics make such cases easy to recognise.
 
 A failure lists every value that changed, with the golden and current environments (Python, `numpy`, `scipy` and
 `trimesh` versions). If a change in the results is intended, regenerate the golden values and commit them together with
