@@ -18,7 +18,7 @@
      "sum": -3.552713678800501e-15
     },
     "num_contours": 16,
-    "ohmian_resistance": 17854780352817.47,
+    "ohmian_resistance": 17832874191222.94,
     "stream_function": {
      "norm": 703295.4841563993,
      "shape": [
@@ -29,40 +29,40 @@
     "sweep": {
      "faces": 10152,
      "vertices": 5076,
-     "volume": 0.0014765944569189123,
+     "volume": 0.0014764404504792631,
      "watertight": true
     },
     "wire_path": {
-     "length": 22.711301504105805,
+     "length": 22.68343684092094,
      "norm": 8.843487977148802,
      "shape": [
       3,
       564
      ],
-     "sum": -2.89116553009503
+     "sum": -2.891165530095023
     }
    }
   ],
   "combined_field_layout": {
-   "norm": 2.7819367192488325e-05,
+   "norm": 2.7835022628368038e-05,
    "shape": [
     3,
     503
    ],
-   "sum": -7.956054101118394e-05
+   "sum": -8.437249318936019e-05
   },
   "field_errors": {
-   "max_rel_error_layout_vs_stream_function_field": 0.787028584577929,
-   "max_rel_error_layout_vs_target": 7.833339458539179,
+   "max_rel_error_layout_vs_stream_function_field": 1.2557476693587477,
+   "max_rel_error_layout_vs_target": 8.216752143267373,
    "max_rel_error_unconnected_contours_vs_stream_function_field": 0.7676526142751801,
    "max_rel_error_unconnected_contours_vs_target": 6.583794815390669,
-   "mean_rel_error_layout_vs_stream_function_field": 0.6114858252737935,
-   "mean_rel_error_layout_vs_target": 2.947715336991178,
+   "mean_rel_error_layout_vs_stream_function_field": 0.9756961811441306,
+   "mean_rel_error_layout_vs_target": 3.0006089622673224,
    "mean_rel_error_unconnected_contours_vs_stream_function_field": 0.2741206979591778,
    "mean_rel_error_unconnected_contours_vs_target": 2.628076167161753
   },
   "num_coil_parts": 1,
-  "opt_current_layout": 0.9220606288073825,
+  "opt_current_layout": 0.9226283945703807,
   "target_field": {
    "norm": 2.1090537009498172e-05,
    "shape": [
@@ -73,15 +73,15 @@
   }
  },
  "physical": {
-  "best_current": 1.0956206983357708,
-  "current_consistency": 1.0956206983357708,
-  "efficiency": 3.888356069767577e-05,
-  "field_per_ampere": 8.581633958570473e-07,
-  "linearity_error": 0.6368926945997914,
-  "max_rel_error": 2.7913242291919977,
-  "operating_current": 25713.170676349633,
-  "rms_rel_error": 0.8116236477266175,
-  "rms_rel_error_at_design_current": 3.9362385030993603,
+  "best_current": 1.0953935407315685,
+  "current_consistency": 1.0953935407315685,
+  "efficiency": 3.888639289268157e-05,
+  "field_per_ampere": 8.582302638433619e-07,
+  "linearity_error": 0.6344445838643614,
+  "max_rel_error": 3.11038541715017,
+  "operating_current": 25707.839504479514,
+  "rms_rel_error": 1.0783617126706082,
+  "rms_rel_error_at_design_current": 3.991240887805832,
   "target_gradient": 4.26093192522343e-05
  }
 }

@@ -18,7 +18,7 @@
      "sum": -13.266749999999998
     },
     "num_contours": 10,
-    "ohmian_resistance": 20163310307754.953,
+    "ohmian_resistance": 20169892348339.04,
     "stream_function": {
      "norm": 77486.59070929735,
      "shape": [
@@ -27,19 +27,19 @@
      "sum": 1428725.5235619235
     },
     "sweep": {
-     "faces": 12564,
-     "vertices": 6282,
-     "volume": 1.4402917134332589e-05,
+     "faces": 12582,
+     "vertices": 6291,
+     "volume": 1.4403097480389013e-05,
      "watertight": true
     },
     "wire_path": {
-     "length": 2.308297886173126,
-     "norm": 1.451694278085708,
+     "length": 2.309051400459146,
+     "norm": 1.4532113966303473,
      "shape": [
       3,
-      698
+      699
      ],
-     "sum": -25.179289822017427
+     "sum": -25.29184342824835
     }
    },
    {
@@ -53,7 +53,7 @@
      "sum": 13.26675
     },
     "num_contours": 11,
-    "ohmian_resistance": 23903174308574.906,
+    "ohmian_resistance": 23951616451613.47,
     "stream_function": {
      "norm": 77343.47242281762,
      "shape": [
@@ -64,40 +64,40 @@
     "sweep": {
      "faces": 14076,
      "vertices": 7038,
-     "volume": 1.7062514423294246e-05,
+     "volume": 1.7069229519824826e-05,
      "watertight": true
     },
     "wire_path": {
-     "length": 2.7364379124799383,
+     "length": 2.7419835741172274,
      "norm": 1.6020511561217454,
      "shape": [
       3,
       782
      ],
-     "sum": 29.437693010991545
+     "sum": 29.437693010991552
     }
    }
   ],
   "combined_field_layout": {
-   "norm": 0.0005604882369722973,
+   "norm": 0.0005613761262139517,
    "shape": [
     3,
     509
    ],
-   "sum": 0.0029127318769230064
+   "sum": 0.0029903513523390412
   },
   "field_errors": {
-   "max_rel_error_layout_vs_stream_function_field": 16.14473066926362,
-   "max_rel_error_layout_vs_target": 16.027773049630927,
+   "max_rel_error_layout_vs_stream_function_field": 16.242462003252946,
+   "max_rel_error_layout_vs_target": 16.125640694960943,
    "max_rel_error_unconnected_contours_vs_stream_function_field": 15.845317955676569,
    "max_rel_error_unconnected_contours_vs_target": 15.727942728437952,
-   "mean_rel_error_layout_vs_stream_function_field": 13.707344305012132,
-   "mean_rel_error_layout_vs_target": 13.72646313895966,
+   "mean_rel_error_layout_vs_stream_function_field": 13.883402286799551,
+   "mean_rel_error_layout_vs_target": 13.902766678630698,
    "mean_rel_error_unconnected_contours_vs_stream_function_field": 13.611430245440548,
    "mean_rel_error_unconnected_contours_vs_target": 13.630415302701335
   },
   "num_coil_parts": 2,
-  "opt_current_layout": 1.1920921822744626,
+  "opt_current_layout": 1.2056077184125653,
   "target_field": {
    "norm": 0.0004548565350132716,
    "shape": [
@@ -108,15 +108,15 @@
   }
  },
  "physical": {
-  "best_current": 0.9351901383013721,
-  "current_consistency": 0.9351901383013721,
-  "efficiency": 0.00277090852859594,
-  "field_per_ampere": 2.0542135629168643e-05,
-  "linearity_error": 0.09154329336295805,
-  "max_rel_error": 21.620560050389635,
-  "operating_current": 328.9617947862477,
-  "rms_rel_error": 13.44816101285105,
-  "rms_rel_error_at_design_current": 13.762992058115058,
+  "best_current": 0.9323273601349115,
+  "current_consistency": 0.9323273601349115,
+  "efficiency": 0.002773351322187662,
+  "field_per_ampere": 2.0582295952335735e-05,
+  "linearity_error": 0.09869651782721926,
+  "max_rel_error": 21.951519019915573,
+  "operating_current": 327.95478604530405,
+  "rms_rel_error": 13.594794780176933,
+  "rms_rel_error_at_design_current": 13.935403418850708,
   "target_gradient": 0.0028428533438329467
  }
 }
