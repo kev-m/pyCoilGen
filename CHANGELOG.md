@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.4.0 (2026-11-05)
+
+#### Fixes
+
+* (create_sweep_along_surface): compute ohmian_resistance as rho * L / A
+#### Refactorings
+
+* (parse_input): rename specific_conductivity_conductor to specific_resistivity_conductor
+#### Docs
+
+* use a pytest marker expression that survives PowerShell to run all tests
+* document the renamed specific_resistivity_conductor parameter
+* document the ohmian_resistance units fix on a bug fixes page
+#### Others
+
+* (deps): drop the networkx dependency
+
+Full set of changes: [`0.3.0...0.4.0`](https://github.com/kev-m/CoilGen-Python/compare/0.3.0...0.4.0)
+
 ## 0.3.0 (2026-11-05)
 
 #### New Features
