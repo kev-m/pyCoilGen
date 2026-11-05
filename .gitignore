@@ -35,5 +35,4 @@ Zc*.mat
 # Output files in top directory
 *.stl
 
-ChatGPT*.html
-ChatGPT*.txt
+prompts
