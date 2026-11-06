@@ -120,6 +120,13 @@ current that fits the target best.
 | `target_gradient` | The slope of the target field, for comparison [T/m, per unit of design current]. |
 | `linearity_error` | The RMS deviation of the wire field from its linear fit, relative to its largest absolute value [%]. |
 | `field_per_ampere` | The RMS of the wire field at the target points [T/A]. |
+| `gradient_max_dev`, `gradient_rms_dev` | The deviation of the gradient vector of the wire field from the desired gradient, over the target points [%, of the mean desired gradient]. The wire gradient is first scaled with the single factor that fits the desired gradient best, so only the non-uniformity in strength and direction counts. A uniform offset of the field does not contribute. |
+| `gradient_scale`, `gradient_strength` | That factor (the current that fits the gradient, relative to the design current), and the mean gradient after scaling [T/m]. |
+
+For imaging, the deviation of the gradient over space is the measure that relates to image distortion: a uniform error
+of the field shifts the image, but does not distort it. A deviation of about 5% is a typical tolerance for gradient
+coils. The gradient is calculated by central differences of the same independent field (`field_gradient`), and
+compared with the symbolic gradient of `field_shape_function`, without the suppressed points.
 
 The package `magpylib` can be used to cross-check the reference implementation: pass `method='magpylib'`. It is an
 optional package, install it with `pip install pycoilgen[verification]`.

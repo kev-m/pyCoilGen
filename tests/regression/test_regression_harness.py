@@ -9,9 +9,11 @@ If a test fails, the message lists every value that changed. If the change is in
 
 import pytest
 
-from harness_cases import CASES
+from harness_cases import CASES, GRADIENT_SPEC_PERCENT
 from harness_run import run_case, load_golden, compare_case, physical_rtol
-from harness_fingerprint import compare_fingerprints, compare_physical, environment_info, summarise_array
+from harness_fingerprint import (compare_fingerprints, compare_physical, environment_info, summarise_array,
+                                 worse_metrics, spec_margin, PRIMARY_METRICS)
+import warnings
 
 import numpy as np
 
@@ -46,10 +48,48 @@ def test_case_physical_quality_is_not_worse(name, tmp_path):
     _, physical = run_case(name, tmp_path)
 
     verdicts = compare_physical(golden['physical'], physical, rtol=physical_rtol(name, golden))
-    worse = {metric: values for metric, values in verdicts.items() if values[0] == 'worse'}
+    for metric, values in verdicts.items():
+        if metric not in PRIMARY_METRICS and values[0] == 'worse':
+            warnings.warn(f"'{name}': {metric} is worse, {values[1]:.4g} -> {values[2]:.4g} (not a primary metric)")
+    worse = worse_metrics(verdicts)
     assert not worse, (f"The physical quality of '{name}' is worse than the golden values:\n"
                        f"Golden environment: {golden['environment']}\nCurrent environment: {environment_info()}\n"
                        + "\n".join(f"{m}: {v[1]:.4g} -> {v[2]:.4g}" for m, v in worse.items()))
+
+
+@pytest.mark.regression
+@pytest.mark.parametrize('name', list(CASES))
+def test_case_stays_within_the_gradient_tolerance(name, tmp_path):
+    golden = load_golden(name)
+    assert golden is not None and 'physical' in golden, f"No golden values for '{name}'."
+
+    _, physical = run_case(name, tmp_path)
+
+    margin = spec_margin(golden['physical'], physical, GRADIENT_SPEC_PERCENT)
+    if margin is None:
+        pytest.skip(f"'{name}' was outside the {GRADIENT_SPEC_PERCENT}% gradient tolerance already")
+    assert margin >= 0, (f"'{name}' left the {GRADIENT_SPEC_PERCENT}% gradient tolerance: the maximum gradient "
+                         f"deviation is {physical['gradient_max_dev']:.3g}%, "
+                         f"it was {golden['physical']['gradient_max_dev']:.3g}%.")
+
+
+def test_gradient_deviation_decides_not_the_field_error():
+    golden = {'rms_rel_error': 2.0, 'gradient_max_dev': 2.0, 'gradient_rms_dev': 1.0, 'efficiency': 1e-4}
+    # A field offset: the field error triples, the gradient is the same. A warning at most, not worse.
+    offset = compare_physical(golden, {**golden, 'rms_rel_error': 6.0})
+    assert offset['rms_rel_error'][0] == 'worse' and worse_metrics(offset) == {}
+    # Less than half a percentage point more gradient deviation is within the tolerance, two points are not
+    assert compare_physical(golden, {**golden, 'gradient_max_dev': 2.4})['gradient_max_dev'][0] == 'equal'
+    distorted = compare_physical(golden, {**golden, 'gradient_max_dev': 4.0})
+    assert list(worse_metrics(distorted)) == ['gradient_max_dev']
+
+
+def test_spec_margin():
+    assert spec_margin({'gradient_max_dev': 2.0}, {'gradient_max_dev': 4.5}, 5.0) == pytest.approx(0.5)
+    assert spec_margin({'gradient_max_dev': 2.0}, {'gradient_max_dev': 5.5}, 5.0) < 0
+    # Already outside the tolerance, or no metric: no tolerance to keep
+    assert spec_margin({'gradient_max_dev': 15.0}, {'gradient_max_dev': 4.0}, 5.0) is None
+    assert spec_margin({}, {'gradient_max_dev': 4.0}, 5.0) is None
 
 
 def test_compare_physical_judges_metrics():

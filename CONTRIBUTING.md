@@ -107,8 +107,16 @@ $ python tests/regression/harness_generate.py --check      # Compare, with a sum
 
 The exact fingerprint tells you *that* something changed. The physical metrics tell you whether it got *better* or
 *worse* for the magnetics: the check prints each metric as better, equal or worse than the golden value (a metric is
-equal within 5% relative plus 0.05 percentage points), and a 'worse' metric fails. A new Python environment can
-therefore show small differences in the fingerprint and still be acceptable, if the physical quality is not worse.
+equal within 5% relative plus 0.05 percentage points, or 0.5 percentage points for the gradient deviations). A new
+Python environment can therefore show small differences in the fingerprint and still be acceptable, if the physical
+quality is not worse.
+
+For imaging, the deviation of the *gradient* over space distorts the image, not the offset of the field. The primary
+metrics are therefore `gradient_max_dev`, `gradient_rms_dev` and `efficiency`: if one is 'worse', the check fails. The
+errors of the field itself are still printed, but a 'worse' one is only a warning. In addition, a design whose maximum
+gradient deviation was within the tolerance of 5% (`GRADIENT_SPEC_PERCENT` in `harness_cases.py`) must stay within it;
+the check prints the margin. The small designs of the harness are mostly outside the tolerance already, and are only
+judged relative to their golden values.
 Results that depend on rounding errors, for example an unconverged iterative solver, vary between environments; the
 physical metrics make such cases easy to recognise.
 

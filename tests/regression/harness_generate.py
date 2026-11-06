@@ -25,9 +25,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from harness_cases import CASES  # noqa: E402
+from harness_cases import CASES, GRADIENT_SPEC_PERCENT  # noqa: E402
 from harness_run import run_case, load_golden, save_golden, compare_case, physical_rtol  # noqa: E402
-from harness_fingerprint import compare_fingerprints, compare_physical, environment_info  # noqa: E402
+from harness_fingerprint import (compare_fingerprints, compare_physical, environment_info, worse_metrics,  # noqa: E402
+                                 spec_margin)
 
 
 def main(argv=None) -> int:
@@ -74,7 +75,11 @@ def main(argv=None) -> int:
             verdicts = compare_physical(golden.get('physical', {}), physical, rtol=physical_rtol(name, golden))
             for metric, (verdict, old, new) in verdicts.items():
                 print(f"    physical {metric}: {verdict} ({old:.4g} -> {new:.4g})")
-            failures += bool(differences) or any(v[0] == 'worse' for v in verdicts.values())
+            margin = spec_margin(golden.get('physical', {}), physical, GRADIENT_SPEC_PERCENT)
+            if margin is not None:
+                print(f"    gradient tolerance {GRADIENT_SPEC_PERCENT}%: margin {margin:+.2f} points"
+                      f"{'' if margin >= 0 else ' (OUTSIDE)'}")
+            failures += bool(differences) or bool(worse_metrics(verdicts)) or (margin is not None and margin < 0)
         else:
             print(f"{name}: wrote {save_golden(name, fingerprint, physical)} ({elapsed:.1f} s)")
     return 1 if failures else 0
