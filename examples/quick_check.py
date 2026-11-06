@@ -97,7 +97,7 @@ if __name__ == "__main__":
         "pcb_interconnection_method": "spiral_in_out",
         "pcb_spiral_end_shift_factor": 10,
         "planar_mesh_parameter_list": [0.25, 0.25, 20.0, 20.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        "plot_flag": True,
+        # "plot_flag": True,
         "pot_offset_factor": 0.25,
         "save_stl_flag": True,
         "secondary_target_mesh_file": "none",
