@@ -338,7 +338,7 @@ def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False):
             for kk in range(len(faces)):
                 # Remembering to substract 1 from mesh.te -> faces before using...
                 f = mesh.f[faces[kk]-1, :]  # Subtracting 1 from faces before using
-                verts[kk] = f[np.logical_and(f != qi, f != qj)]
+                verts[kk] = f[np.logical_and(f != qi, f != qj)].item()  # Exactly one vertex is opposite the edge
                 vertfaces[kk] = faces[kk]-1  # Subtracting 1 from faces before using
 
             sumAB = 0.0
