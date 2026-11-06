@@ -1,21 +1,25 @@
 import numpy as np
 
-from pyCoilGen.sub_functions.data_structures import DataStructure, TargetField
+from pyCoilGen.sub_functions.data_structures import DataStructure
 # Code under test
 from pyCoilGen.sub_functions.define_target_field import symbolic_calculation_of_gradient
 
 
-def test_symbolic_calculation_of_gradient():
-    input_args = DataStructure(debug=1, field_shape_function='x + y**2')
-    target_field = np.full((3, 10), 3)
-    result = symbolic_calculation_of_gradient(input_args=input_args, target_field=target_field)
+def test_symbolic_calculation_of_gradient_is_evaluated_at_the_points():
+    input_args = DataStructure(debug=1, field_shape_function='x + y**2 + x*z')
+    rng = np.random.default_rng(0)
+    points = rng.uniform(-1, 1, (3, 10))
+    dx, dy, dz = symbolic_calculation_of_gradient(input_args=input_args, target_points=points)
 
-    # TODO: test the result
+    np.testing.assert_allclose(dx, 1 + points[2])
+    np.testing.assert_allclose(dy, 2 * points[1])
+    np.testing.assert_allclose(dz, points[0])
 
-    # Define the target field shape
-    target_points = target_field
-    def field_func(x, y, z): return eval(input_args.field_shape_function)
-    target_field3 = np.zeros_like(target_points)
-    target_field3[2, :] = field_func(target_points[0, :], target_points[1, :], target_points[2, :])
 
-    # TODO: test the result
+def test_symbolic_calculation_of_gradient_expands_constants():
+    input_args = DataStructure(debug=1, field_shape_function='x')
+    dx, dy, dz = symbolic_calculation_of_gradient(input_args=input_args, target_points=np.zeros((3, 4)))
+
+    np.testing.assert_allclose(dx, np.ones(4))
+    np.testing.assert_allclose(dy, np.zeros(4))
+    assert dz.shape == (4,)

@@ -170,8 +170,10 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
         if abs(max_field_difference) > 10**(-10):
             target_field = target_field / (max_field_difference / max_target_distance) * \
                 input_args.target_gradient_strength
+            field_scale = input_args.target_gradient_strength * max_target_distance / max_field_difference
         else:
             target_field = target_field * input_args.target_gradient_strength
+            field_scale = input_args.target_gradient_strength
 
         # Define weightings from 0 to 1 that weights the significance of target points
         target_field_weighting = np.ones(target_field.shape[1])
@@ -179,8 +181,11 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
         target_field_group_inds = np.ones(target_field.shape[1])
         target_field_group_inds[is_suppressed_point] = 2
 
-        # Calculate the gradients from the symbolic definition of the target field
-        target_dbzbx, target_dbzby, target_dbzbz = symbolic_calculation_of_gradient(input_args, target_field)
+        # Calculate the gradients from the symbolic definition of the target field, at the target points, and scale
+        # them like the target field
+        target_dbzbx, target_dbzby, target_dbzbz = symbolic_calculation_of_gradient(input_args, target_points)
+        target_dbzbx, target_dbzby, target_dbzbz = (np.asarray(gradient, dtype=float) * field_scale
+                                                    for gradient in (target_dbzbx, target_dbzby, target_dbzbz))
 
         if get_level() > DEBUG_BASIC:
             log.debug(" Final target_field:\n%s", target_field[:, :5])
@@ -194,21 +199,22 @@ def define_target_field(coil_parts, target_mesh, secondary_target_mesh, input_ar
     return target_field_out, is_suppressed_point
 
 
-def symbolic_calculation_of_gradient(input_args, target_field):
+def symbolic_calculation_of_gradient(input_args, target_points):
     """
     Calculate the gradients from the symbolic definition of the target field.
 
     Args:
         input_args (DataStructure): Input parameters.
-        target_field (ndarray): (3,m) Target field values.
+        target_points (ndarray): (3,m) Coordinates of the target points, where the gradient is evaluated.
 
     Depends on the following input_args:
         - field_shape_function
 
     Returns:
-        target_dbzbx (ndarray): Gradient in x-direction.
-        target_dbzby (ndarray): Gradient in y-direction.
-        target_dbzbz (ndarray): Gradient in z-direction.
+        target_dbzbx (ndarray): Gradient in x-direction (m), of the field function as defined, i.e. not scaled to
+            the target gradient strength.
+        target_dbzby (ndarray): Gradient in y-direction (m).
+        target_dbzbz (ndarray): Gradient in z-direction (m).
     """
     try:
 
@@ -234,24 +240,24 @@ def symbolic_calculation_of_gradient(input_args, target_field):
         dbzdz_fun = lambdify((x, y, z), dbzdz_str)
 
         # Evaluate the lambdify functions
-        target_dbzbx = dbzdx_fun(target_field[0, :], target_field[1, :], target_field[2, :])
-        target_dbzby = dbzdy_fun(target_field[0, :], target_field[1, :], target_field[2, :])
-        target_dbzbz = dbzdz_fun(target_field[0, :], target_field[1, :], target_field[2, :])
+        target_dbzbx = dbzdx_fun(target_points[0, :], target_points[1, :], target_points[2, :])
+        target_dbzby = dbzdy_fun(target_points[0, :], target_points[1, :], target_points[2, :])
+        target_dbzbz = dbzdz_fun(target_points[0, :], target_points[1, :], target_points[2, :])
 
         if is_multivalued(target_dbzbx) == False:
-            target_dbzbx = np.repeat(target_dbzbx, target_field.shape[1])
+            target_dbzbx = np.repeat(target_dbzbx, target_points.shape[1])
 
         if is_multivalued(target_dbzby) == False:
-            target_dbzby = np.repeat(target_dbzby, target_field.shape[1])
+            target_dbzby = np.repeat(target_dbzby, target_points.shape[1])
 
         if is_multivalued(target_dbzbz) == False:
-            target_dbzbz = np.repeat(target_dbzbz, target_field.shape[1])
+            target_dbzbz = np.repeat(target_dbzbz, target_points.shape[1])
 
     except Exception as e:
         log.error(' Exception: %s', e)
-        target_dbzbx = np.zeros_like(target_field[0, :])
-        target_dbzby = np.zeros_like(target_field[1, :])
-        target_dbzbz = np.zeros_like(target_field[2, :])
+        target_dbzbx = np.zeros_like(target_points[0, :])
+        target_dbzby = np.zeros_like(target_points[1, :])
+        target_dbzbz = np.zeros_like(target_points[2, :])
         log.error('Gradient Calculation from Symbolic Target failed')
 
     return target_dbzbx, target_dbzby, target_dbzbz
