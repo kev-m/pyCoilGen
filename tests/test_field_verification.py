@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 
 from pyCoilGen.helpers.field_verification import (MU_0, biot_savart_polyline, biot_savart_magpylib,
-                                                  field_of_wire_paths, fit_linear_field, verify_field)
+                                                  field_gradient, field_of_wire_paths, fit_linear_field,
+                                                  gradient_deviation, verify_field)
 
 
 def circle(radius, num=720, z=0.0):
@@ -78,3 +79,57 @@ def test_verify_field_reports_the_current_that_fits_the_target():
     assert result['rms_rel_error'] < 1e-9 and result['max_rel_error'] < 1e-9
     assert result['rms_rel_error_at_design_current'] > 1.0
     assert result['efficiency'] >= 0 and result['linearity_error'] >= 0
+
+
+def test_field_gradient_matches_analytic_gradient_of_a_loop():
+    radius, current = 0.1, 3.0
+    heights = np.array([0.0, 0.03, -0.05])
+    points = np.array([np.zeros(3), np.zeros(3), heights])
+    gradient = field_gradient([circle(radius, 1440)], points, current)
+    expected_dz = -3 * MU_0 * current * radius ** 2 * heights / (2 * (radius ** 2 + heights ** 2) ** 2.5)
+    np.testing.assert_allclose(gradient[2], expected_dz, rtol=1e-3, atol=1e-9)
+    np.testing.assert_allclose(gradient[:2], 0, atol=1e-9)
+
+
+def test_gradient_deviation_ignores_scale_but_not_distortion():
+    rng = np.random.default_rng(5)
+    target = np.tile(np.array([[0.0], [0.0], [2.0]]), (1, 20))
+    assert gradient_deviation(0.5 * target, target)['gradient_max_dev'] < 1e-9
+    assert gradient_deviation(0.5 * target, target)['gradient_scale'] == pytest.approx(2.0)
+    distorted = target * (1 + 0.1 * rng.uniform(-1, 1, 20))
+    result = gradient_deviation(distorted, target)
+    assert 0 < result['gradient_rms_dev'] <= result['gradient_max_dev'] <= 10.0 + 1e-9
+    # A tilted gradient is a deviation too
+    tilted = target + np.array([[1.0], [0.0], [0.0]])
+    assert gradient_deviation(tilted, target)['gradient_max_dev'] > 20
+
+
+def maxwell_pair():
+    """Two opposed loops that generate a z-gradient, and their field points."""
+    separation = 0.1 * np.sqrt(3) / 2
+    upper = circle(0.1, 360, z=separation)
+    lower = circle(0.1, 360, z=-separation)[:, ::-1]  # Opposite current
+    points = np.random.default_rng(6).uniform(-0.01, 0.01, (3, 40))
+    return [upper, lower], points
+
+
+def test_a_field_offset_is_an_error_of_the_field_but_not_of_the_gradient():
+    wires, points = maxwell_pair()
+    unit_field = field_of_wire_paths(wires, points)
+    target = unit_field.copy()
+    target[2] += 0.5 * np.max(np.abs(unit_field[2]))  # A uniform offset of the field
+
+    result = verify_field(wires, points, target)
+    assert result['rms_rel_error'] > 10
+    assert result['gradient_max_dev'] < 2.0
+
+
+def test_verify_field_uses_the_given_target_gradient():
+    wires, points = maxwell_pair()
+    target = field_of_wire_paths(wires, points, 2.0)
+    exact = np.array([np.zeros(points.shape[1]), np.zeros(points.shape[1]), np.full(points.shape[1], 1.0)])
+    result = verify_field(wires, points, target, target_gradient=exact)
+    assert result['gradient_max_dev'] < 20  # The gradient is z-directed and nearly uniform, but not exactly 1 T/m
+    only_some = verify_field(wires, points, target, target_gradient=exact,
+                             gradient_mask=np.arange(points.shape[1]) < 5)
+    assert only_some['gradient_max_dev'] <= result['gradient_max_dev'] + 1e-12

@@ -139,8 +139,79 @@ def fit_linear_field(field_points: np.ndarray, field_component: np.ndarray) -> D
     return {'offset': float(solution[0]), 'gradient': solution[1:], 'residual': field_component - design @ solution}
 
 
+def field_gradient(wire_paths: List[np.ndarray], field_points: np.ndarray, current: float = 1.0, component: int = 2,
+                   method: str = 'numpy', step: Optional[float] = None) -> np.ndarray:
+    """
+    Calculate the spatial gradient of one field component of wire paths, by central differences of the field.
+
+    The field is evaluated with `field_of_wire_paths`, which is independent of the analytic gradient of the pipeline
+    (`calculate_gradient`). The default step is a thousandth of the extent of the field points, which is small enough
+    for the truncation error to be negligible, and large enough to stay far from rounding errors.
+
+    Args:
+        wire_paths (list of np.ndarray): The vertices of each wire path, shape (3,n) each.
+        field_points (np.ndarray): The points where the gradient is calculated, shape (3,m).
+        current (float): The current in each wire [A].
+        component (int): The field component, 0, 1 or 2. Default: 2 (the z-component).
+        method (str): `'numpy'` or `'magpylib'`, see `field_of_wire_paths`.
+        step (float, optional): The distance of the central differences [m].
+
+    Returns:
+        np.ndarray: The gradient of the field component, shape (3,m), in T/m.
+    """
+    field_points = np.asarray(field_points, dtype=float)
+    if step is None:
+        step = max(1e-3 * float(np.max(np.ptp(field_points, axis=1))), 1e-9)
+    gradient = np.zeros(field_points.shape)
+    for axis in range(3):
+        offset = np.zeros((3, 1))
+        offset[axis] = step
+        forward = field_of_wire_paths(wire_paths, field_points + offset, current, method)[component]
+        backward = field_of_wire_paths(wire_paths, field_points - offset, current, method)[component]
+        gradient[axis] = (forward - backward) / (2.0 * step)
+    return gradient
+
+
+def gradient_deviation(wire_gradient: np.ndarray, target_gradient: np.ndarray) -> Dict[str, float]:
+    """
+    Quantify how much the gradient of a layout deviates from the desired gradient, over space.
+
+    For imaging, the spatial deviation of the gradient is what distorts the image, not the deviation of the field: a
+    uniform offset of the field moves the image, but does not distort it. The layout gradient is scaled with the single
+    factor that fits the target gradient best (least squares over all points and all three directions), so that a
+    gradient that is a bit too weak, which can be corrected with the current, is not counted. What remains is the
+    non-uniformity in strength and direction. The deviation at each point is the norm of the difference between the
+    gradient vectors, relative to the mean norm of the target gradient.
+
+    Args:
+        wire_gradient (np.ndarray): The gradient of the layout, shape (3,m), for any current.
+        target_gradient (np.ndarray): The desired gradient, shape (3,m).
+
+    Returns:
+        dict: The following float values:
+            - `gradient_scale`: The factor that scales the layout gradient to the target gradient.
+            - `gradient_max_dev`, `gradient_rms_dev`: The maximum and RMS deviation over space [%].
+            - `gradient_strength`: The mean norm of the scaled layout gradient [T/m]; the target gradient strength
+              if the layout is perfect.
+    """
+    wire_gradient = np.asarray(wire_gradient, dtype=float)
+    target_gradient = np.asarray(target_gradient, dtype=float)
+    denominator = float(np.sum(wire_gradient * wire_gradient))
+    scale = float(np.sum(wire_gradient * target_gradient) / denominator) if denominator > 0 else float('nan')
+    nominal = float(np.mean(np.linalg.norm(target_gradient, axis=0)))
+    deviation = np.linalg.norm(scale * wire_gradient - target_gradient, axis=0) / nominal * 100
+    return {
+        'gradient_scale': scale,
+        'gradient_max_dev': float(np.max(deviation)),
+        'gradient_rms_dev': float(np.sqrt(np.mean(deviation ** 2))),
+        'gradient_strength': float(np.mean(np.linalg.norm(scale * wire_gradient, axis=0))),
+    }
+
+
 def verify_field(wire_paths: List[np.ndarray], field_points: np.ndarray, target_field: np.ndarray,
-                 design_current: Optional[float] = None, component: int = 2, method: str = 'numpy') -> Dict[str, float]:
+                 design_current: Optional[float] = None, component: int = 2, method: str = 'numpy',
+                 target_gradient: Optional[np.ndarray] = None,
+                 gradient_mask: Optional[np.ndarray] = None) -> Dict[str, float]:
     """
     Evaluate how well a wire layout generates a target field, independent of the coil generation pipeline.
 
@@ -157,6 +228,11 @@ def verify_field(wire_paths: List[np.ndarray], field_points: np.ndarray, target_
         component (int): The field component to evaluate, 0, 1 or 2. Default: 2 (the z-component, as in the
             pipeline's field errors).
         method (str): `'numpy'` or `'magpylib'`, see `field_of_wire_paths`.
+        target_gradient (np.ndarray, optional): The desired gradient of the field component, shape (3,m), for the same
+            current as `target_field`. If None, the gradient of the linear fit of the target field is used, which is
+            right for a linear target.
+        gradient_mask (np.ndarray, optional): Boolean array, shape (m,): the points where the gradient is judged.
+            Default: all. Use it to leave out points where the field is suppressed.
 
     Returns:
         dict: The following float values:
@@ -169,6 +245,11 @@ def verify_field(wire_paths: List[np.ndarray], field_points: np.ndarray, target_
             - `linearity_error`: The RMS deviation of the wire field from its linear fit, relative to the largest
               absolute wire field value [%].
             - `field_per_ampere`: The RMS of the field component at the target points [T/A].
+            - `gradient_max_dev`, `gradient_rms_dev`: The deviation of the gradient over space [%], after scaling
+              the gradient to the target, see `gradient_deviation`. Insensitive to a uniform offset of the field.
+            - `gradient_strength`: The mean gradient after that scaling [T/m], per Ampere of the design current.
+            - `gradient_scale`: The factor of that scaling: the current that fits the target gradient best, like
+              `best_current`, but not influenced by the offset of the field.
     """
     field_points = np.asarray(field_points, dtype=float)
     target = np.asarray(target_field, dtype=float)[component]
@@ -183,7 +264,16 @@ def verify_field(wire_paths: List[np.ndarray], field_points: np.ndarray, target_
     error_at_design = design * unit_field - target
     wire_fit = fit_linear_field(field_points, unit_field)
     target_fit = fit_linear_field(field_points, target)
+
+    mask = np.ones(field_points.shape[1], dtype=bool) if gradient_mask is None else np.asarray(gradient_mask, dtype=bool)
+    wire_gradient = field_gradient(wire_paths, field_points[:, mask], 1.0, component, method)
+    if target_gradient is None:
+        reference_gradient = np.tile(target_fit['gradient'][:, np.newaxis], (1, int(mask.sum())))
+    else:
+        reference_gradient = np.asarray(target_gradient, dtype=float)[:, mask]
+    gradient = gradient_deviation(wire_gradient, reference_gradient)
     return {
+        **gradient,
         'best_current': best_current,
         'current_consistency': best_current / design,
         'rms_rel_error': float(np.sqrt(np.mean(error ** 2)) / scale * 100),
@@ -221,7 +311,20 @@ def verify_solution(solution, component: int = 2, method: str = 'numpy') -> Dict
     parts = [part for part in solution.coil_parts if part.wire_path is not None]
     if not parts:
         raise ValueError("The solution has no wire paths. Was skip_postprocessing set?")
+    contour_step = float(solution.coil_parts[0].contour_step)
+
+    # The desired gradient is known symbolically for the z-component. It is for the same current as the target field
+    # before the scaling by the contour step, so scale it like the target field. Points where the field is suppressed
+    # have no desired gradient.
+    target_gradient, gradient_mask = None, None
+    desired_gradient = solution.target_field.target_gradient_dbdxyz
+    if component == 2 and desired_gradient is not None:
+        target_gradient = np.asarray(desired_gradient, dtype=float) / contour_step
+        if solution.is_suppressed_point is not None:
+            gradient_mask = ~np.asarray(solution.is_suppressed_point, dtype=bool)
+
     result = verify_field([part.wire_path.v for part in parts], solution.target_field.coords,
-                          solution.target_field.b, design_current=None, component=component, method=method)
-    result['operating_current'] = result['best_current'] * float(solution.coil_parts[0].contour_step)
+                          solution.target_field.b, design_current=None, component=component, method=method,
+                          target_gradient=target_gradient, gradient_mask=gradient_mask)
+    result['operating_current'] = result['best_current'] * contour_step
     return result
