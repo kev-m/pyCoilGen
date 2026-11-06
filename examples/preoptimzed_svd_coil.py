@@ -35,7 +35,7 @@ if __name__ == '__main__':
         'field_shape_function': 'none',  # definition of the target field
         'coil_mesh_file': 'none',
         'use_only_target_mesh_verts': False,
-        'sf_source_file': 'source_data_SVD_coil.npy',
+        'sf_source_file': 'source_data_SVD_coil',  # The .npy extension is added when loading
         # the number of potential steps that determines the later number of windings (Stream function discretization)
         'levels': 30,
         'min_loop_significance': 5,

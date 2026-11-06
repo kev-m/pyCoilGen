@@ -40,7 +40,7 @@ if __name__ == '__main__':
         'coil_mesh_file': 'none',
         # 'min_loop_significance':1,
         'use_only_target_mesh_verts': False,
-        'sf_source_file': 'source_data_breast_coil.npy',
+        'sf_source_file': 'source_data_breast_coil',  # The .npy extension is added when loading
         # the number of potential steps that determines the later number of windings (Stream function discretization)
         'levels': 14,
         'pot_offset_factor': 0.25,  # a potential offset value for the minimal and maximal contour potential ; must be between 0 and 1
