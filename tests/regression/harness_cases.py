@@ -25,6 +25,12 @@ _COMMON = {
     'debug': 0,
 }
 
+# The manufacturing tolerance of the gradient, in percent: the maximum deviation of the gradient over the target region
+# (`gradient_max_dev`). Gradient coils are expected to match the theoretical gradient to about 5% (a main magnet: ppm),
+# which keeps image distortion acceptable. A case whose golden value is within it must stay within it; a case whose
+# golden value is outside it (the small, coarse designs here mostly are) is only judged relative to its golden value.
+GRADIENT_SPEC_PERCENT = 5.0
+
 # Cases whose exact fingerprint depends on the versions of numpy and scipy, not only on the code, with the reason.
 # Their exact fingerprint is only compared when numpy and scipy have the versions of the golden values. In other
 # environments, only their physical quality is judged (better, equal or worse than the golden values).

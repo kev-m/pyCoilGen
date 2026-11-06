@@ -175,12 +175,26 @@ def compare_fingerprints(expected: Any, actual: Any, rtol: float = 1e-6, atol: f
 # 'lower' and 'higher' metrics are better when smaller, or larger. 'unity' is better when closer to 1.
 # Other metrics (the current, the field per Ampere) are recorded, but not judged.
 PHYSICAL_RULES = {
+    'gradient_max_dev': 'lower',
+    'gradient_rms_dev': 'lower',
     'rms_rel_error': 'lower',
     'max_rel_error': 'lower',
     'rms_rel_error_at_design_current': 'lower',
     'linearity_error': 'lower',
     'current_consistency': 'unity',
     'efficiency': 'higher',
+}
+
+# The metrics that decide whether a run is worse. For imaging, the deviation of the gradient over space distorts the
+# image, so it is the quality measure; the efficiency is the field per Ampere. The errors of the field itself also
+# include a uniform offset of the field, which does not distort an image, so they only give a warning.
+PRIMARY_METRICS = ('gradient_max_dev', 'gradient_rms_dev', 'efficiency')
+
+# The absolute part of the tolerance, for metrics in percent, where one percentage point is a meaningful unit.
+# Metrics that are not listed use the `atol` argument of `compare_physical`.
+ABSOLUTE_TOLERANCE = {
+    'gradient_max_dev': 0.5,
+    'gradient_rms_dev': 0.5,
 }
 
 
@@ -190,7 +204,8 @@ def compare_physical(golden: dict, actual: dict, rtol: float = 0.05, atol: float
 
     A metric is 'equal' if it is within `rtol` (relative) plus `atol` (absolute) of the golden value; otherwise it
     is 'better' or 'worse', as defined by `PHYSICAL_RULES`. The absolute tolerance is in the unit of the metric
-    (percent for the errors), 0.01 times that for the current consistency, and not used for the efficiency.
+    (percent for the errors), set per metric for the gradient deviations (`ABSOLUTE_TOLERANCE`, in percentage points),
+    0.01 times that for the current consistency, and not used for the efficiency.
 
     Args:
         golden (dict): The golden metrics.
@@ -209,7 +224,8 @@ def compare_physical(golden: dict, actual: dict, rtol: float = 0.05, atol: float
         old, new = golden[name], actual[name]
         if rule == 'unity':
             old, new, rule = abs(old - 1.0), abs(new - 1.0), 'lower'
-        slack = rtol * abs(old) + {'current_consistency': 0.01 * atol, 'efficiency': 0.0}.get(name, atol)
+        slack = rtol * abs(old) + {'current_consistency': 0.01 * atol, 'efficiency': 0.0,
+                                   **ABSOLUTE_TOLERANCE}.get(name, atol)
         if abs(new - old) <= slack:
             verdict = 'equal'
         elif (new < old) == (rule == 'lower'):
@@ -218,3 +234,38 @@ def compare_physical(golden: dict, actual: dict, rtol: float = 0.05, atol: float
             verdict = 'worse'
         verdicts[name] = (verdict, golden[name], actual[name])
     return verdicts
+
+
+def worse_metrics(verdicts: dict) -> dict:
+    """
+    Select the verdicts that make a run worse than the golden values.
+
+    Args:
+        verdicts (dict): The result of `compare_physical`.
+
+    Returns:
+        dict: The entries of the primary metrics (`PRIMARY_METRICS`) that are 'worse'.
+    """
+    return {name: values for name, values in verdicts.items() if name in PRIMARY_METRICS and values[0] == 'worse'}
+
+
+def spec_margin(golden: dict, actual: dict, limit: float, metric: str = 'gradient_max_dev') -> Optional[float]:
+    """
+    Compute how far a run is within the manufacturing tolerance, and whether it left it.
+
+    A design that was already outside the tolerance in the golden values (for example a coarse test design) has no
+    tolerance to keep, so it is only judged relative to the golden values by `compare_physical`.
+
+    Args:
+        golden (dict): The golden metrics.
+        actual (dict): The metrics of the current run.
+        limit (float): The tolerance of the metric, in the unit of the metric (percent).
+        metric (str): The metric that the tolerance is about.
+
+    Returns:
+        float or None: The margin `limit - actual[metric]`; negative if the run is outside the tolerance. None if the
+            golden values were outside the tolerance, or if the metric is missing.
+    """
+    if metric not in golden or metric not in actual or golden[metric] > limit:
+        return None
+    return limit - actual[metric]
