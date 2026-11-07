@@ -153,19 +153,16 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             # planary_mesh_matlab_format = triangulation(parameterized_mesh.faces', parameterized_mesh.uv');
             wire_mesh2D = Mesh(vertices=coil_mesh.uv, faces=coil_mesh.get_faces())
 
-            for point_ind in range(wire_path.v.shape[1]):
-                point = wire_path.uv[:, point_ind]
-                node_ind_normals_target, barycentric = wire_mesh2D.get_face_index(point)
-
-                if node_ind_normals_target == -1:  # Handle exceptions for strange output of pointLocation
-                    if point_ind == 0:
-                        surface_normal_along_wire_path_v[:,
-                                                         point_ind] = surface_normal_along_wire_path_v[:, point_ind + 1]
-                    else:
-                        surface_normal_along_wire_path_v[:,
-                                                         point_ind] = surface_normal_along_wire_path_v[:, point_ind - 1]
+            # Locate all points at once
+            node_inds_normals_target, _ = wire_mesh2D.get_face_indices(wire_path.uv.T)
+            found = node_inds_normals_target != -1
+            surface_normal_along_wire_path_v[:, found] = coil_mesh.fn[node_inds_normals_target[found]].T
+            # Handle exceptions for strange output of pointLocation: take the normal of the previous point
+            for point_ind in np.nonzero(~found)[0]:
+                if point_ind == 0:
+                    surface_normal_along_wire_path_v[:, point_ind] = 0  # The next point is not available yet
                 else:
-                    surface_normal_along_wire_path_v[:, point_ind] = coil_mesh.fn[node_ind_normals_target]
+                    surface_normal_along_wire_path_v[:, point_ind] = surface_normal_along_wire_path_v[:, point_ind - 1]
 
             # Continue with Part 2
             """

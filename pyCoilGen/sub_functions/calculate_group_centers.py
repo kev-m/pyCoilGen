@@ -92,16 +92,14 @@ def calculate_group_centers(coil_parts: List[CoilPart]) -> List[CoilPart]:
         planar_mesh = Mesh(faces=part_mesh.get_faces(), vertices=part_mesh.uv)
         curved_mesh = part_mesh.trimesh_obj  # Trimesh(faces=part_mesh.get_faces(), vertices=part_mesh.get_vertices())
 
-        for rrrr in range(len(coil_part.groups)):
+        num_groups = len(coil_part.groups)
+        target_triangles, bary_centric_coords = planar_mesh.get_face_indices(group_centers_2d[:2, :num_groups].T)
+        for rrrr in range(num_groups):
             # Set centers outside the 2D mesh in the center of the 3D volume
-            point = [group_centers_2d[0, rrrr], group_centers_2d[1, rrrr]]
-            target_triangle, bary_centric_coord = planar_mesh.get_face_index(
-                point)  # get_target_triangle_def(point, planar_mesh)
-
-            # TypeError: ufunc 'isnan' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
+            target_triangle = target_triangles[rrrr]
             if target_triangle != -1:
                 vertices = curved_mesh.vertices[curved_mesh.faces[target_triangle]]
-                group_centers_3d[:, rrrr] = barycentric_to_cartesian(bary_centric_coord, vertices)
+                group_centers_3d[:, rrrr] = barycentric_to_cartesian(bary_centric_coords[rrrr], vertices)
             else:
                 group_centers_3d[:, rrrr] = total_group_center_v[:, rrrr]
 
