@@ -10,7 +10,7 @@ import logging
 
 # Local imports
 from .constants import *
-from .uv_to_xyz import pointLocation, barycentric_to_cartesian
+from .uv_to_xyz import pointLocation, barycentric_to_cartesian, locate_points_in_faces
 from pyCoilGen.helpers.common import find_file
 
 log = logging.getLogger(__name__)
@@ -282,40 +282,26 @@ class Mesh:
             index (int): The face index or -1 if the point is not within the mesh.
             barycentric (ndarray): The 3 barycentric co-ordinates if the point is within the mesh, else None
         """
-        faces = self.f
-        vertices = self.v
-        diffs = np.abs(vertices - vertex)
-        diffs_norm = np.linalg.norm(diffs, axis=1)
-        # Find the closest vertices
-        min_index = np.argmin(diffs_norm)
-
-        # For each possible vertex, find the faces that reference it.
-        possible_face_matches = np.any(faces == min_index, axis=1)
-
-        # Get the indices of the rows that contain the target_face_index
-        possible_face_indices = np.where(possible_face_matches)[0]
-
-        # Get the corresponding faces
-        faces_to_try = faces[possible_face_indices]
-
-        if try_harder:
-            # Add all 2nd degree faces (i.e. faces connected to every vertex)
-            more_face_indices = possible_face_indices.tolist()
-            for vertex_index in faces_to_try.flatten():
-                p2 = np.any(faces == vertex_index, axis=1)
-                p2_inds = np.where(p2)[0]
-                more_face_indices += p2_inds.tolist()
-
-            possible_face_indices = np.unique(more_face_indices)
-
-            # Get the faces that match these vertices
-            faces_to_try = faces[possible_face_indices]
-
-        face_index, barycentric = pointLocation(vertex, faces_to_try, vertices)
-        if face_index is not None:
-            return possible_face_indices[face_index], barycentric
-
+        face_indices, barycentric = self.get_face_indices(np.asarray(vertex).reshape(1, -1), try_harder)
+        if face_indices[0] >= 0:
+            return int(face_indices[0]), barycentric[0]
         return -1, None
+
+    def get_face_indices(self, vertices: np.ndarray, try_harder=True):
+        """
+        Retrieve the indices of the faces which contain the provided points. The vectorised form of `get_face_index`.
+
+        If a point is on multiple faces, e.g. is an edge, the highest face index is returned.
+
+        Args:
+            vertices (ndarray): The points to search for, shape (n,2).
+            try_harder (bool): Whether to also include 2nd order face vertices in the search.
+
+        Returns:
+            indices (ndarray): The face index of each point, or -1 if the point is not within the mesh, shape (n,).
+            barycentric (ndarray): The 3 barycentric co-ordinates of each point, shape (n,3). NaN if the point was not found.
+        """
+        return locate_points_in_faces(vertices, self.v, self.f, try_harder)
 
     def uv_to_xyz(self, points_in_2d_in: np.ndarray, planary_uv: np.ndarray, num_attempts=1000):
         """
@@ -343,38 +329,36 @@ class Mesh:
 
         points_out_3d = np.zeros((points_in_2d_in.shape[1], 3))  # Python shape
         points_out_2d = points_in_2d_in.T.copy()  # Python shape
-        num_deleted_points = 0
-        for point_ind in range(points_out_2d.shape[0]):  # MATLAB sgape
-            point = points_out_2d[point_ind - num_deleted_points]
-            # Find the target triangle and barycentric coordinates of the point on the planar mesh
-            # target_triangle, barycentric = get_target_triangle(point, planary_mesh, proximity)
-            target_triangle, barycentric = planary_mesh.get_face_index(point)
 
+        # Find the target triangles and barycentric coordinates of all points on the planar mesh at once
+        target_triangles, barycentrics = planary_mesh.get_face_indices(points_out_2d)
+
+        # The points that are not directly on a triangle are perturbed slightly, one point at a time, until they are
+        for point_ind in np.nonzero(target_triangles == -1)[0]:
+            point = points_out_2d[point_ind]
             attempts = 0
             np.random.seed(3)  # Setting the seed to improve testing robustness
+            target_triangle = -1
             while target_triangle == -1:
-                # If the point is not directly on a triangle, perturb the point slightly and try again
                 rand = (0.5 - np.random.rand(2))
                 perturbed_point = point + avg_mesh_diameter * np.array([rand[0], rand[1]]) / 1000
-                # target_triangle, barycentric = get_target_triangle(perturbed_point, planary_mesh, proximity)
                 target_triangle, barycentric = planary_mesh.get_face_index(perturbed_point)
                 attempts += 1
                 if attempts > num_attempts:
                     log.warning('point %s at index %d can not be assigned to any triangle.', point, point_ind)
                     break
-
             if target_triangle != -1:
-                if attempts > 0:
-                    point = perturbed_point
-                # Convert the 2D barycentric coordinates to 3D Cartesian coordinates
-                face_vertices_3d = curved_mesh_vertices[curved_mesh_faces[target_triangle]]
-                points_out_3d[point_ind - num_deleted_points,
-                              :] = barycentric_to_cartesian(barycentric, face_vertices_3d)
-            else:
-                # Remove the point if it cannot be assigned to a triangle
-                points_out_2d = np.delete(points_out_2d, point_ind - num_deleted_points, axis=0)  # Python shape
-                points_out_3d = np.delete(points_out_3d, point_ind - num_deleted_points, axis=0)  # Python shape
-                num_deleted_points += 1
+                target_triangles[point_ind] = target_triangle
+                barycentrics[point_ind] = barycentric
+
+        # Convert the 2D barycentric coordinates to 3D Cartesian coordinates
+        found = target_triangles != -1
+        face_vertices_3d = curved_mesh_vertices[curved_mesh_faces[target_triangles[found]]]  # (n,3,3)
+        points_out_3d[found] = np.einsum('nk,nkd->nd', barycentrics[found], face_vertices_3d)
+
+        # Remove the points that could not be assigned to a triangle
+        points_out_2d = points_out_2d[found]
+        points_out_3d = points_out_3d[found]
 
         return points_out_3d.T, points_out_2d.T  # Return as MATLAB shape
 

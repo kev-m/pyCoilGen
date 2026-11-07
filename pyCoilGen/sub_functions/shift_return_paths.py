@@ -110,19 +110,11 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
 
                 normal_vectors_wire_path = np.zeros((3, wire_path_out.uv.shape[1]))
 
-                for point_ind in range(wire_path_out.uv.shape[1]):
-                    point = wire_path_out.uv[:, point_ind]
-                    face_index, barycentric = mesh_2d.get_face_index(point)
-
-                    if face_index is not None:
-                        nodes_target_triangle = part_faces[face_index]
-                        node_normals_target_triangle = vertex_normal[nodes_target_triangle]
-                        normal_vectors_wire_path[:, point_ind] = np.mean(node_normals_target_triangle, axis=0)
-                    else:
-                        if point_ind == 0:
-                            normal_vectors_wire_path[:, point_ind] = normal_vectors_wire_path[:, point_ind + 1]
-                        else:
-                            normal_vectors_wire_path[:, point_ind] = normal_vectors_wire_path[:, point_ind - 1]
+                # Locate all points at once. NOTE: a point that is not on the mesh has face index -1, which selects the
+                # last face, as `get_face_index` has always done here.
+                face_indices, _ = mesh_2d.get_face_indices(wire_path_out.uv.T)
+                node_normals_target_triangles = vertex_normal[part_faces[face_indices]]  # (points, 3 nodes, xyz)
+                normal_vectors_wire_path = np.mean(node_normals_target_triangles, axis=1).T
 
                 arr1 = np.ones(smooth_factors[0]) * smooth_factors[1]
                 arr2 = np.arange(smooth_factors[1] - 1, 0, -1)

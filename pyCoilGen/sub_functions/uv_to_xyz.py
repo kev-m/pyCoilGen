@@ -1,5 +1,7 @@
 import numpy.linalg as la
 import numpy as np
+from scipy.sparse import csr_matrix
+from scipy.spatial import cKDTree
 
 from trimesh import Trimesh
 from trimesh.proximity import ProximityQuery
@@ -246,3 +248,91 @@ def barycentric_to_cartesian(bary_coords, triangle_vertices):
     # Calculate the Cartesian coordinates using the Barycentric coordinates
     cartesian_coords = np.dot(bary_coords, triangle_vertices)
     return cartesian_coords
+
+
+def locate_points_in_faces(points: np.ndarray, vertices: np.ndarray, faces: np.ndarray, try_harder: bool = True):
+    """
+    Find the faces of a planar mesh that contain the given points, and the barycentric coordinates of the points.
+
+    This is the vectorised form of `Mesh.get_face_index`, with the same rules: the candidate faces of a point are the
+    faces that use the vertex closest to the point and, if `try_harder`, also the faces that share a vertex with
+    those. If the point lies inside (or within 1e-10, in barycentric units, of) several candidate faces, the face with
+    the highest index is chosen.
+
+    Args:
+        points (ndarray): The points, shape (n, 2).
+        vertices (ndarray): The mesh vertices, shape (m, 2) (only the first two columns are used).
+        faces (ndarray): The mesh faces, vertex indices with shape (f, 3).
+        try_harder (bool): Whether to also include the 2nd order faces in the search.
+
+    Returns:
+        face_indices (ndarray): The face index of each point, or -1 if the point is not within a candidate face, shape (n,).
+        barycentric (ndarray): The 3 barycentric coordinates of each point, shape (n, 3). Rows of points that were
+            not found are NaN.
+    """
+    points = np.atleast_2d(np.asarray(points, dtype=float))[:, :2]
+    vertices = np.asarray(vertices, dtype=float)[:, :2]
+    faces = np.asarray(faces)
+    num_points = points.shape[0]
+    num_vertices = vertices.shape[0]
+    num_faces = faces.shape[0]
+    found_faces = np.full(num_points, -1, dtype=int)
+    barycentric = np.full((num_points, 3), np.nan)
+    if num_points == 0 or num_faces == 0:
+        return found_faces, barycentric
+
+    # The vertex closest to each point. The tree finds the nearest few, then the distances are measured exactly like
+    # `np.argmin` over all vertices would, i.e. ties go to the lowest vertex index.
+    num_nearest = min(8, num_vertices)
+    _, nearest = cKDTree(vertices).query(points, k=num_nearest)
+    nearest = nearest.reshape(num_points, num_nearest)
+    distance = np.linalg.norm(np.abs(vertices[nearest] - points[:, np.newaxis, :]), axis=2)
+    closest = np.where(distance == distance.min(axis=1, keepdims=True), nearest, num_vertices).min(axis=1)
+
+    # Candidate faces of each distinct closest vertex
+    unique_vertices, inverse = np.unique(closest, return_inverse=True)
+    face_ids = np.repeat(np.arange(num_faces), 3)
+    vertex_face = csr_matrix((np.ones(num_faces * 3), (faces.reshape(-1), face_ids)), shape=(num_vertices, num_faces))
+    candidates = vertex_face[unique_vertices]  # (unique vertices, faces)
+    if try_harder:
+        neighbour_vertices = (candidates @ vertex_face.T) > 0  # vertices of the faces that use the vertex
+        candidates = (neighbour_vertices.astype(float) @ vertex_face) > 0
+    candidates = csr_matrix(candidates)
+    candidates.sort_indices()  # The faces of each vertex in ascending order
+
+    # All (point, candidate face) pairs
+    counts = np.diff(candidates.indptr)[inverse]
+    point_of_pair = np.repeat(np.arange(num_points), counts)
+    pair_starts = np.cumsum(counts) - counts
+    offset_in_row = np.arange(counts.sum()) - np.repeat(pair_starts, counts)
+    face_of_pair = candidates.indices[np.repeat(candidates.indptr[inverse], counts) + offset_in_row]
+
+    # Barycentric coordinates of every pair, with the explicit inverse of the 2x2 matrix [v1 - v3, v2 - v3]
+    corners = vertices[faces[face_of_pair]]  # (pairs, 3, 2)
+    v3 = corners[:, 2, :]
+    a11, a21 = corners[:, 0, 0] - v3[:, 0], corners[:, 0, 1] - v3[:, 1]
+    a12, a22 = corners[:, 1, 0] - v3[:, 0], corners[:, 1, 1] - v3[:, 1]
+    px = points[point_of_pair, 0] - v3[:, 0]
+    py = points[point_of_pair, 1] - v3[:, 1]
+    with np.errstate(divide='ignore', invalid='ignore'):
+        det = a11 * a22 - a12 * a21
+        alpha = (a22 * px - a12 * py) / det
+        beta = (a11 * py - a21 * px) / det
+    gamma = 1 - alpha - beta
+
+    close_enough = 1e-10
+    lower, upper = 0.0 - close_enough, 1.0 + close_enough
+    inside = ((lower <= alpha) & (alpha <= upper) & (lower <= beta) & (beta <= upper) &
+              (lower <= gamma) & (gamma <= upper))
+
+    # The last (highest face index) match of each point
+    position = np.where(inside, np.arange(len(inside)), -1)
+    last = np.maximum.reduceat(position, pair_starts[counts > 0]) if len(position) else position
+    best = np.full(num_points, -1, dtype=int)
+    best[counts > 0] = last
+    has_match = best >= 0
+    found_faces[has_match] = face_of_pair[best[has_match]]
+    barycentric[has_match, 0] = alpha[best[has_match]]
+    barycentric[has_match, 1] = beta[best[has_match]]
+    barycentric[has_match, 2] = gamma[best[has_match]]
+    return found_faces, barycentric
