@@ -1,0 +1,126 @@
+{
+ "environment": {
+  "numpy": "2.5.4",
+  "python": "3.13.5",
+  "scipy": "1.18.1",
+  "trimesh": "5.2.0"
+ },
+ "fingerprint": {
+  "coil_parts": [
+   {
+    "mesh_faces": 288,
+    "mesh_vertices": {
+     "norm": 1.93489520244494,
+     "shape": [
+      169,
+      3
+     ],
+     "sum": -16.900000000000002
+    },
+    "num_contours": 17,
+    "ohmian_resistance": 0.0019357953420112836,
+    "stream_function": {
+     "norm": 210450.2851150917,
+     "shape": [
+      169
+     ],
+     "sum": 5028.486480754218
+    },
+    "sweep": {
+     "faces": 13968,
+     "vertices": 6984,
+     "volume": 0.0005031215614156,
+     "watertight": true
+    },
+    "wire_path": {
+     "length": 7.599796112610563,
+     "norm": 4.105536040008163,
+     "shape": [
+      3,
+      776
+     ],
+     "sum": -78.43516549629928
+    }
+   },
+   {
+    "mesh_faces": 288,
+    "mesh_vertices": {
+     "norm": 1.93489520244494,
+     "shape": [
+      169,
+      3
+     ],
+     "sum": 16.900000000000002
+    },
+    "num_contours": 16,
+    "ohmian_resistance": 0.0019280941661838648,
+    "stream_function": {
+     "norm": 209219.6097542558,
+     "shape": [
+      169
+     ],
+     "sum": 18419.093559760135
+    },
+    "sweep": {
+     "faces": 13842,
+     "vertices": 6921,
+     "volume": 0.0004977280298962567,
+     "watertight": true
+    },
+    "wire_path": {
+     "length": 7.569561838952822,
+     "norm": 4.104945830883314,
+     "shape": [
+      3,
+      769
+     ],
+     "sum": 76.66316602696457
+    }
+   }
+  ],
+  "combined_field_layout": {
+   "norm": 0.00014721337976505834,
+   "shape": [
+    3,
+    503
+   ],
+   "sum": -0.00013579708957419005
+  },
+  "field_errors": {
+   "max_rel_error_layout_vs_stream_function_field": 1.6086490604695594,
+   "max_rel_error_layout_vs_target": 3.2664902313083743,
+   "max_rel_error_unconnected_contours_vs_stream_function_field": 0.8002539962148489,
+   "max_rel_error_unconnected_contours_vs_target": 2.2538572083038817,
+   "mean_rel_error_layout_vs_stream_function_field": 0.257066660564978,
+   "mean_rel_error_layout_vs_target": 0.44348957931917393,
+   "mean_rel_error_unconnected_contours_vs_stream_function_field": 0.13521591208280767,
+   "mean_rel_error_unconnected_contours_vs_target": 0.3552582362507476
+  },
+  "num_coil_parts": 2,
+  "opt_current_layout": 0.8533226338166735,
+  "target_field": {
+   "norm": 0.00010391330807698956,
+   "shape": [
+    3,
+    503
+   ],
+   "sum": -3.358985362137735e-05
+  }
+ },
+ "physical": {
+  "best_current": 1.002222069406067,
+  "current_consistency": 1.002222069406067,
+  "efficiency": 0.00020941639216961528,
+  "field_per_ampere": 4.622572491582965e-06,
+  "gradient_max_dev": 15.29638268447065,
+  "gradient_rms_dev": 4.549279445413301,
+  "gradient_scale": 0.9994805481717575,
+  "gradient_strength": 0.00020961619512867877,
+  "linearity_error": 0.5499827050567854,
+  "max_rel_error": 3.154273274552394,
+  "operating_current": 4773.927654239905,
+  "rms_rel_error": 0.5951862887440404,
+  "rms_rel_error_at_design_current": 0.6031768629417877,
+  "target_gradient": 0.0002099365851336175
+ }
+}
