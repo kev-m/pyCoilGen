@@ -1,6 +1,53 @@
 import numpy as np
 
 from .gauss_legendre_integration_points_triangle import gauss_legendre_integration_points_triangle
+from .sensitivity_kernels import stack_basis_elements, integrate_over_node_triangles
+
+
+def _gradient_kernel(rx, ry, rz, current, area, weight):
+    """
+    The contribution of every Gauss point of every triangle to the gradient of Bz: (dBz/dx, dBz/dy, dBz/dz), weighted
+    with the Gauss weight.
+
+    Args:
+        rx, ry, rz (ndarray): The components of the vector from the sample point to the target point, each (num
+            samples, num target points).
+        current (ndarray): The current density of the triangle of each sample, (num samples, 3).
+        area (ndarray): The area of the triangle of each sample, (num samples,). Not used.
+        weight (ndarray): The Gauss weight of each sample, (num samples,).
+
+    Returns:
+        tuple: The dBz/dx, dBz/dy and dBz/dz contributions, each (num samples, num target points).
+    """
+    C = 10 ** (-7)
+    # With E = |r|^3: -C * dE/dx / E^2 = -3 * C * rx / |r|^5 and C / E = C / |r|^3
+    inv_dist = rx * rx
+    inv_dist += ry * ry
+    inv_dist += rz * rz
+    np.sqrt(inv_dist, out=inv_dist)
+    np.reciprocal(inv_dist, out=inv_dist)
+    inv_dist2 = inv_dist * inv_dist
+    inv_E = inv_dist2 * inv_dist            # 1 / |r|^3
+    inv_dist2 *= inv_dist2
+    inv_dist2 *= inv_dist                   # 1 / |r|^5
+    theta_factor = inv_dist2
+    w = weight[:, np.newaxis]
+    d_l_x, d_l_y = current[:, 0:1], current[:, 1:2]
+    theta_phi = d_l_x * ry
+    theta_phi -= d_l_y * rx                 # phi_z
+    theta_phi *= theta_factor
+    theta_phi *= -3 * C
+    inv_E *= C
+    dx = theta_phi * rx
+    dx -= inv_E * d_l_y
+    dx *= w
+    dy = theta_phi * ry
+    dy += inv_E * d_l_x
+    dy *= w
+    dz = theta_phi
+    dz *= rz
+    dz *= w
+    return dx, dy, dz
 
 
 def calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args):
@@ -32,64 +79,13 @@ def calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args):
     gauss_order = input_args.gauss_order
     u_coord, v_coord, gauss_weight = gauss_legendre_integration_points_triangle(gauss_order)
 
+    biot_savart_coeff = 10 ** (-7)
+    plate_thickness = 0.001
+
     # Calculate the sensitivity matrix for each coil part
-    for part_ind in range(len(coil_parts)):
-        biot_savart_coeff = 10 ** (-7)
-        plate_thickness = 0.001
-        num_nodes = len(coil_parts[part_ind].basis_elements)
-        num_target_points = target_points.shape[1]  # TODO: Check 1 or 0?
-        gradient_sensitivity_matrix = np.zeros((3, num_target_points, num_nodes))  # TODO: Check shape for Python
-
-        x = target_points[0, :]
-        y = target_points[1, :]
-        z = target_points[2, :]
-
-        for node_ind in range(num_nodes):
-            DBzdx = np.zeros(num_target_points)
-            DBzdy = np.zeros(num_target_points)
-            DBzdz = np.zeros(num_target_points)
-
-            for tri_ind in range(coil_parts[part_ind].basis_elements[node_ind].triangle_points_ABC.shape[0]):
-                node_point = coil_parts[part_ind].basis_elements[node_ind].triangle_points_ABC[tri_ind, :, 0]
-                point_b = coil_parts[part_ind].basis_elements[node_ind].triangle_points_ABC[tri_ind, :, 1]
-                point_c = coil_parts[part_ind].basis_elements[node_ind].triangle_points_ABC[tri_ind, :, 2]
-
-                x1, y1, z1 = node_point
-                x2, y2, z2 = point_b
-                x3, y3, z3 = point_c
-
-                d_l_x = coil_parts[part_ind].basis_elements[node_ind].current[tri_ind, 0]
-                d_l_y = coil_parts[part_ind].basis_elements[node_ind].current[tri_ind, 1]
-                d_l_z = coil_parts[part_ind].basis_elements[node_ind].current[tri_ind, 2]
-
-                for gauss_ind in range(len(gauss_weight)):
-                    l_x = x1 * u_coord[gauss_ind] + x2 * v_coord[gauss_ind] + \
-                        x3 * (1 - u_coord[gauss_ind] - v_coord[gauss_ind])
-                    l_y = y1 * u_coord[gauss_ind] + y2 * v_coord[gauss_ind] + \
-                        y3 * (1 - u_coord[gauss_ind] - v_coord[gauss_ind])
-                    l_z = z1 * u_coord[gauss_ind] + z2 * v_coord[gauss_ind] + \
-                        z3 * (1 - u_coord[gauss_ind] - v_coord[gauss_ind])
-
-                    E = ((x - l_x) ** 2 + (y - l_y) ** 2 + (z - l_z) ** 2) ** (3 / 2)
-                    dEdx = 3 * (x - l_x) * ((x - l_x) ** 2 + (y - l_y) ** 2 + (z - l_z) ** 2) ** (1 / 2)
-                    dEdy = 3 * (y - l_y) * ((x - l_x) ** 2 + (y - l_y) ** 2 + (z - l_z) ** 2) ** (1 / 2)
-                    dEdz = 3 * (z - l_z) * ((x - l_x) ** 2 + (y - l_y) ** 2 + (z - l_z) ** 2) ** (1 / 2)
-                    C = 10 ** (-7)
-                    phi_x = (d_l_y * (z - l_z) - d_l_z * (y - l_y))
-                    phi_y = (d_l_z * (x - l_x) - d_l_x * (z - l_z))
-                    phi_z = (d_l_x * (y - l_y) - d_l_y * (x - l_x))
-                    theta_factor = ((E * E) ** (-1)) * (-1) * C
-                    dBz_dx = theta_factor * dEdx * phi_z + (E ** (-1)) * C * (-1) * d_l_y
-                    dBz_dy = theta_factor * dEdy * phi_z + (E ** (-1)) * C * d_l_x
-                    dBz_dz = theta_factor * dEdz * phi_z
-
-                    DBzdx += dBz_dx * gauss_weight[gauss_ind]
-                    DBzdy += dBz_dy * gauss_weight[gauss_ind]
-                    DBzdz += dBz_dz * gauss_weight[gauss_ind]
-
-            gradient_sensitivity_matrix[:, :, node_ind] = np.vstack(
-                (DBzdx, DBzdy, DBzdz)) * biot_savart_coeff * plate_thickness
-
-        coil_parts[part_ind].gradient_sensitivity_matrix = gradient_sensitivity_matrix
+    for coil_part in coil_parts:
+        triangle_points, current, area, counts = stack_basis_elements(coil_part)
+        coil_part.gradient_sensitivity_matrix = biot_savart_coeff * plate_thickness * integrate_over_node_triangles(
+            triangle_points, current, area, counts, target_points, u_coord, v_coord, gauss_weight, _gradient_kernel)
 
     return coil_parts
