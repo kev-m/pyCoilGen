@@ -1,6 +1,9 @@
 import numpy as np
 from typing import List
 
+# The approximate number of (test vertex, polygon edge) pairs that are evaluated at once
+_PAIRS_PER_BLOCK = 100_000
+
 
 def check_mutual_loop_inclusion(test_poly: np.ndarray, target_poly: np.ndarray) -> bool:
     """
@@ -20,18 +23,24 @@ def check_mutual_loop_inclusion(test_poly: np.ndarray, target_poly: np.ndarray) 
         test_poly = test_poly.reshape((2, 1))
     num_entries = test_poly.shape[1]
     winding_numbers = np.zeros(num_entries)
-    for point_ind in range(num_entries):
-        A = np.tile(test_poly[:, point_ind, np.newaxis], (1, target_poly.shape[1] - 1))
-        B = target_poly[:, 1:]
-        C = target_poly[:, :-1]
 
-        vec1 = C - A
-        vec2 = B - A
+    # The edges of the target polygon: from C to B
+    edge_start = target_poly[:, :-1]
+    edge_end = target_poly[:, 1:]
+    num_edges = edge_start.shape[1]
 
-        angle = np.arctan2(vec1[0, :] * vec2[1, :] - vec1[1, :] * vec2[0, :],
-                           vec1[0, :] * vec2[0, :] + vec1[1, :] * vec2[1, :])
+    # Evaluate many test vertices at once, in blocks that keep the temporary arrays small
+    points_per_block = max(1, _PAIRS_PER_BLOCK // max(1, num_edges))
+    for first in range(0, num_entries, points_per_block):
+        points = test_poly[:, first:first + points_per_block]
+        vec1_x = edge_start[0][np.newaxis, :] - points[0][:, np.newaxis]  # (points, edges)
+        vec1_y = edge_start[1][np.newaxis, :] - points[1][:, np.newaxis]
+        vec2_x = edge_end[0][np.newaxis, :] - points[0][:, np.newaxis]
+        vec2_y = edge_end[1][np.newaxis, :] - points[1][:, np.newaxis]
 
-        winding_numbers[point_ind] = round(abs(np.sum(angle) / (2 * np.pi)))
+        angle = np.arctan2(vec1_x * vec2_y - vec1_y * vec2_x, vec1_x * vec2_x + vec1_y * vec2_y)
+
+        winding_numbers[first:first + points_per_block] = np.round(np.abs(np.sum(angle, axis=1) / (2 * np.pi)))
 
     inside_flag = np.all(winding_numbers == 1)
 
