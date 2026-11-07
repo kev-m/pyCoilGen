@@ -39,9 +39,21 @@ to the commits, to match the semantic versioning and the generated CHANGELOG.md 
 
 **pyCoilGen** uses semantic versioning. Update the version number in [pyCoilGen/__init__.py](pyCoilGen/__init__.py) according to changes since the previous tag.
 
-Create a tag with only the current number, e.g. `0.0.9`.
+Create a tag with only the current number, e.g. `0.0.9`. Read the number from `pyCoilGen/__init__.py`, so that the tag
+always matches the version in the package.
+
+Run it from the project top level directory, with the virtual environment active, so that the source is imported.
+
+PowerShell:
+```powershell
+$version = python -c "import pyCoilGen; print(pyCoilGen.__version__)"
+git tag $version
+```
+
+Linux (bash, sh, etc.):
 ```bash
-git tag 0.0.9
+version=$(python -c 'import pyCoilGen; print(pyCoilGen.__version__)')
+git tag "$version"
 ```
 
 ## Update the ChangeLog
