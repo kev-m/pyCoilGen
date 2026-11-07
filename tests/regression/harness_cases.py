@@ -60,6 +60,22 @@ CASES: Dict[str, dict] = {
         'tikhonov_reg_factor': 10,
     },
 
+    # The same plates with twice the levels: 33 loops, of which 9 were left open by an exact-equality closing test.
+    # Chosen as a quick check that is stable: its result does not change with rounding-level noise in the matrices.
+    'biplanar_x_tikhonov_16levels': {
+        **_COMMON,
+        'coil_mesh': 'create bi-planar mesh',
+        'biplanar_mesh_parameter_list': [0.25, 0.25, 12, 12, 1, 0, 0, 0, 0, 0, 0.2],
+        'surface_is_cylinder_flag': False,
+        'field_shape_function': 'x',
+        'levels': 16,
+        'pot_offset_factor': 0.25,
+        'interconnection_cut_width': 0.01,
+        'normal_shift_length': 0.005,
+        'sf_opt_method': 'tikhonov',
+        'tikhonov_reg_factor': 10,
+    },
+
     # The same design with the iterative (constrained minimisation) solver
     'biplanar_x_iterative': {
         **_COMMON,
