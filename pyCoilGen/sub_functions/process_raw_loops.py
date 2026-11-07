@@ -67,8 +67,7 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
     # Close the loops
     for coil_part in coil_parts:
         for p_contour in coil_part.contour_lines:
-            # if loop.uv(1, end) ~= loop.uv(1, 1) & loop.uv(2, end) ~= loop.uv(2, 1)
-            if p_contour.uv[0, -1] != p_contour.uv[0, 0] and p_contour.uv[1, -1] != p_contour.uv[1, 0]:
+            if not is_loop_closed(p_contour.uv):
                 p_contour.add_uv(p_contour.uv[:, 0][:, None])  # Close the loops
                 p_contour.add_v(p_contour.v[:, 0][:, None])  # Close the loops
 
@@ -80,6 +79,26 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
         coil_part.combined_loop_length = combined_loop_length
 
     return coil_parts
+
+
+def is_loop_closed(uv: np.ndarray, rtol: float = 1e-9) -> bool:
+    """
+    Check whether a loop ends where it starts, within a tolerance relative to the size of the loop.
+
+    The MATLAB original compares the coordinates of the end and start points for exact (in)equality, and only closes
+    a loop if both coordinates differ. A loop whose end point shares one coordinate with its start point (as happens on
+    the mesh grid lines) was then left open, depending on the last bit of the contour, i.e. on rounding.
+
+    Args:
+        uv (ndarray): The 2D points of the loop, (2, n).
+        rtol (float): The tolerance for the distance between the end and the start point, relative to the extent of the loop.
+
+    Returns:
+        bool: True if the end point coincides with the start point.
+    """
+    gap = np.linalg.norm(uv[:, -1] - uv[:, 0])
+    extent = np.max(np.ptp(uv, axis=1))
+    return bool(gap <= rtol * extent)
 
 
 def evaluate_loop_significance(coil_parts: List[CoilPart], target_field: TargetField):
