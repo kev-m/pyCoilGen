@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.4.1 (2026-11-07)
+
+#### New Features
+
+* (regression): judge the gradient deviation, and keep within-tolerance designs within 5%
+* (field_verification): measure the deviation of the gradient over space
+#### Fixes
+
+* (process_raw_loops): remove loops smaller than the interconnection cut
+* (process_raw_loops): close contour loops with a tolerance, not by exact comparison
+* (examples): repair the pre-optimised and quick_check examples, and the cylinder flag of the bi-planar one
+* (mesh_parameterization_iterative): assign the opposite vertex as a scalar, for numpy 2.5
+* (define_target_field): evaluate the symbolic target gradient at the target points and scale it
+#### Performance improvements
+
+* (biot_savart): blocked Biot-Savart field and gradient kernels, vectorised loop inclusion test
+* (uv_to_xyz): locate points in the planar mesh faces in one vectorised batch
+* (sensitivity): vectorise the sensitivity and gradient sensitivity matrices
+#### Others
+
+* (release): Adding a version helper to the release procedure.
+* (release): Update the version comment.
+* bump the version to 0.4.1
+* re-save the pickled test data without the deprecated scipy mat_struct path
+* (regression): add a stable, quick bi-planar case with 16 levels
+* (regression): update the golden values of biplanar_x_tikhonov for the closed contour loops
+
+Full set of changes: [`0.4.0...0.4.1`](https://github.com/kev-m/CoilGen-Python/compare/0.4.0...0.4.1)
+
 ## 0.4.0 (2026-11-05)
 
 #### Fixes
