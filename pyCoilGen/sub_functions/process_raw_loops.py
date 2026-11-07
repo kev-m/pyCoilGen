@@ -64,6 +64,15 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
         if np.any(loops_to_delete):
             coil_part.contour_lines = [loop for i, loop in enumerate(coil_part.contour_lines) if not loops_to_delete[i]]
 
+    # Remove loops that are smaller than the interconnection cut: they cannot be opened by it (the cut sphere would
+    # cover the whole loop), and a wire loop of this size cannot be manufactured anyway
+    for coil_part in coil_parts:
+        tiny = [is_loop_smaller_than(loop.v, input_args.interconnection_cut_width) for loop in coil_part.contour_lines]
+        if any(tiny):
+            log.warning("Removing %d loop(s) smaller than the interconnection cut width of %g m",
+                        sum(tiny), input_args.interconnection_cut_width)
+            coil_part.contour_lines = [loop for loop, small in zip(coil_part.contour_lines, tiny) if not small]
+
     # Close the loops
     for coil_part in coil_parts:
         for p_contour in coil_part.contour_lines:
@@ -79,6 +88,20 @@ def process_raw_loops(coil_parts: List[CoilPart], input_args, target_field: Targ
         coil_part.combined_loop_length = combined_loop_length
 
     return coil_parts
+
+
+def is_loop_smaller_than(v: np.ndarray, size: float) -> bool:
+    """
+    Check whether a loop fits into a box whose diagonal is smaller than a given size.
+
+    Args:
+        v (ndarray): The 3D points of the loop, (3, n).
+        size (float): The size to compare with, e.g. the interconnection cut width.
+
+    Returns:
+        bool: True if the diagonal of the bounding box of the loop is smaller than `size`.
+    """
+    return bool(np.linalg.norm(np.ptp(v, axis=1)) < size)
 
 
 def is_loop_closed(uv: np.ndarray, rtol: float = 1e-9) -> bool:
