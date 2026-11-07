@@ -97,4 +97,6 @@ Update the `release` branch:
 git checkout release
 git rebase master
 git push
+# Return to master
+git checkout master
 ```
