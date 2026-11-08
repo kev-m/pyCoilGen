@@ -6,7 +6,6 @@ import logging
 
 # Local imports
 from .data_structures import CoilSolution, BasisElement, CoilPart
-from .constants import get_level, DEBUG_VERBOSE
 
 log = logging.getLogger(__name__)
 
@@ -48,77 +47,70 @@ def calculate_basis_functions(coil_parts: List[CoilPart]) -> List[CoilPart]:
 
         num_vertices = part_vertices.shape[0]
         num_faces = part_faces.shape[0]
+
+        # The triangles of all nodes, flattened: triangle k belongs to node `node_of_triangle[k]`, and is the
+        # `position_in_node[k]`-th triangle of that node. The one ring of a node gives the other two corners (b, c).
+        one_ring_list = coil_part.one_ring_list
+        num_triangles_per_node = np.array([len(one_ring_list[vertex_index]) for vertex_index in range(num_vertices)],
+                                          dtype=int)
+        num_triangles = int(num_triangles_per_node.sum())
+        node_starts = np.cumsum(num_triangles_per_node) - num_triangles_per_node
+        node_of_triangle = np.repeat(np.arange(num_vertices), num_triangles_per_node)
+        position_in_node = np.arange(num_triangles) - node_starts[node_of_triangle]
+        if num_triangles:
+            corner_indices = np.concatenate([np.reshape(one_ring_list[vertex_index], (-1, 2))
+                                             for vertex_index in range(num_vertices)
+                                             if num_triangles_per_node[vertex_index]]).astype(int)
+            face_of_triangle = np.concatenate([np.asarray(coil_part.node_triangles[vertex_index])[
+                :num_triangles_per_node[vertex_index]] for vertex_index in range(num_vertices)
+                if num_triangles_per_node[vertex_index]]).astype(int)
+        else:
+            corner_indices = np.zeros((0, 2), dtype=int)
+            face_of_triangle = np.zeros(0, dtype=int)
+
+        # The geometry of every triangle
+        point_a = part_vertices[node_of_triangle]
+        point_b = part_vertices[corner_indices[:, 0]]
+        point_c = part_vertices[corner_indices[:, 1]]
+        area_all = np.linalg.norm(np.cross(point_c - point_a, point_b - point_a), axis=1) / 2
+        normal_direction = np.cross(point_c - point_a, point_c - point_b)
+        face_normal_all = normal_direction / np.linalg.norm(normal_direction, axis=1, keepdims=True)
+        # [triangle, xyz, corner], the MATLAB shape of triangle_points_ABC
+        triangle_points_all = np.stack((point_a, point_b, point_c), axis=2)
+        current_all = (point_c - point_b) / (2 * area_all)[:, np.newaxis]
+
         current_density_mat = np.zeros((num_vertices, num_faces, 3))
+        current_density_mat[node_of_triangle, face_of_triangle] = current_all
 
         # Create the container for the basis function
         coil_part.basis_elements = [BasisElement() for _ in range(num_vertices)]
-        num_triangles_per_node = [len(coil_part.one_ring_list[vertex_index])
-                                  for vertex_index in range(num_vertices)]
-
-        max_triangle_count_per_node = 0
+        max_triangle_count_per_node = int(num_triangles_per_node.max()) if num_vertices else 0
 
         for vertex_index in range(num_vertices):
-            node_point = part_vertices[vertex_index]
             node_basis_element = coil_part.basis_elements[vertex_index]
-            # Assign the triangle indices of the mesh faces
+            first = node_starts[vertex_index]
+            last = first + num_triangles_per_node[vertex_index]
             node_basis_element.triangles = coil_part.node_triangles[vertex_index]
             # Assign stream function potential to this basis element
             node_basis_element.stream_function_potential = 0
+            node_basis_element.one_ring = one_ring_list[vertex_index]
+            node_basis_element.area = area_all[first:last].copy()
+            node_basis_element.face_normal = face_normal_all[first:last].copy()
+            node_basis_element.triangle_points_ABC = triangle_points_all[first:last].copy()
+            node_basis_element.current = current_all[first:last].copy()
 
-            # Create basis structures
-            node_triangles = num_triangles_per_node[vertex_index]
-            node_basis_element.area = np.zeros((node_triangles))
-            node_basis_element.face_normal = np.zeros((node_triangles, 3))
-            node_basis_element.triangle_points_ABC = np.zeros((node_triangles, 3, 3))
-            node_basis_element.current = np.zeros((node_triangles, 3))
-
-            max_triangle_count_per_node = max(max_triangle_count_per_node, node_triangles)
-
-            for tri_ind in range(node_triangles):
-                point_b = part_vertices[coil_part.one_ring_list[vertex_index][tri_ind][0]]
-                point_c = part_vertices[coil_part.one_ring_list[vertex_index][tri_ind][1]]
-                node_basis_element.one_ring = coil_part.one_ring_list[vertex_index]
-                # Calculate the area of the triangle
-                node_basis_element.area[tri_ind] = np.linalg.norm(
-                    np.cross(point_c - node_point, point_b - node_point)) / 2
-                # Calculate the face normal of the triangle
-                node_basis_element.face_normal[tri_ind] = np.cross(
-                    point_c - node_point, point_c - point_b) / np.linalg.norm(np.cross(point_c - node_point, point_c - point_b))
-                # Assign corner points ABC of the triangle
-                node_basis_element.triangle_points_ABC[tri_ind] = np.asarray(
-                    [node_point, point_b, point_c]).T  # Transposed to match MATLAB shape
-                # Calculate the tangential current density of the triangle
-                node_basis_element.current[tri_ind] = (point_c - point_b) / (2 * node_basis_element.area[tri_ind])
-                # Calculate the current density matrix
-                x = node_basis_element.triangles[tri_ind]
-                current_density_mat[vertex_index, x] = node_basis_element.current[tri_ind]  # ??.T
-
-                # DEBUG
-                if get_level() > DEBUG_VERBOSE:
-                    log.debug(" -- node_basis_element.current shape: %s", node_basis_element.current.shape)  # n x 3
-                    log.debug(" -- node_basis_element.area shape: %s", node_basis_element.area.shape)  # n x 1
-                    log.debug(" -- ")
-
-        # Create outputs in matrix form
+        # Create outputs in matrix form, padded to the maximum number of triangles per node
         is_real_triangle_mat = np.zeros((num_vertices, max_triangle_count_per_node), dtype=int)
         triangle_corner_coord_mat = np.zeros((num_vertices, max_triangle_count_per_node, 3, 3))
         face_normal_mat = np.zeros((num_vertices, max_triangle_count_per_node, 3))
         current_mat = np.zeros((num_vertices, max_triangle_count_per_node, 3))
         area_mat = np.zeros((num_vertices, max_triangle_count_per_node))
 
-        for vertex_index in range(num_vertices):
-            node_basis_element = coil_part.basis_elements[vertex_index]
-            node_triangles = num_triangles_per_node[vertex_index]
-
-            is_real_triangle_mat[vertex_index, :node_triangles] = True
-            triangle_corner_coord_mat[vertex_index, is_real_triangle_mat[vertex_index]
-                                      == 1] = node_basis_element.triangle_points_ABC
-
-            current_mat[vertex_index, is_real_triangle_mat[vertex_index] == 1] = node_basis_element.current
-            area_mat[vertex_index, is_real_triangle_mat[vertex_index] == 1] = node_basis_element.area
-
-            face_normal_mat[vertex_index, is_real_triangle_mat[vertex_index] == 1
-                            ] = node_basis_element.face_normal
+        is_real_triangle_mat[node_of_triangle, position_in_node] = 1
+        triangle_corner_coord_mat[node_of_triangle, position_in_node] = triangle_points_all
+        current_mat[node_of_triangle, position_in_node] = current_all
+        area_mat[node_of_triangle, position_in_node] = area_all
+        face_normal_mat[node_of_triangle, position_in_node] = face_normal_all
 
         coil_part.is_real_triangle_mat = is_real_triangle_mat
         coil_part.triangle_corner_coord_mat = triangle_corner_coord_mat
