@@ -111,6 +111,10 @@ python examples/ygradient_coil.py             # run an example
 - **Tests**: add or update a unit test in `tests/` for a behaviour change. Test files are named `test_<topic>.py`.
 - **Docs**: Markdown in `docs/source/`. A new page must be added by hand to `docs/source/index.rst`. Build with
   `cd docs && make clean html`. Update the docs when you change a parameter or its behaviour.
+- **Bug fixes**: a fix that changes *results* of earlier releases must also be documented in
+  [docs/source/bug_fixes.md](docs/source/bug_fixes.md), in the existing format: affected releases and results, the
+  problem, the correction, and what users need to do. Fixes that do not change results only need a good commit message
+  for the CHANGELOG.
 - **Version**: single source of truth is `__version__` in `pyCoilGen/__init__.py`. Only change it as part of a release.
 - **Release**: follow [RELEASE.md](RELEASE.md) (tests, docs, version, tag, changelog, `flit build` and `flit publish`).
 
