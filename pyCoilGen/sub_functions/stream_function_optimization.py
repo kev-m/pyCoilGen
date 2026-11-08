@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import minimize
+import scipy.linalg
 import ast  # For minimization function parameter parsing
 
 from typing import List
@@ -131,22 +132,12 @@ def stream_function_optimization(coil_parts: List[CoilPart], target_field, input
         tik_reg_mat = tikhonov_reg_factor * reduced_res_matrix
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- tik_reg_mat shape: %s", tik_reg_mat.shape)
-        reduced_sf = np.linalg.pinv(
-            reduced_sensitivity_matrix.T
-            @ reduced_sensitivity_matrix
-            + tik_reg_mat.T
-            @ tik_reg_mat
-        ) @ reduced_sensitivity_matrix.T @ target_field_single
+        reduced_sf = _solve_normal_equations(reduced_sensitivity_matrix, tik_reg_mat, target_field_single)
     else:
         # For initialization, calculate the Tikhonov solution; then do an iterative optimization
         log.info("Optimising with %s function.", input_args.sf_opt_method)
         tik_reg_mat = tikhonov_reg_factor * reduced_res_matrix
-        reduced_sf = np.linalg.pinv(
-            reduced_sensitivity_matrix.T
-            @ reduced_sensitivity_matrix
-            + tik_reg_mat.T
-            @ tik_reg_mat
-        ) @ reduced_sensitivity_matrix.T @ target_field_single
+        reduced_sf = _solve_normal_equations(reduced_sensitivity_matrix, tik_reg_mat, target_field_single)
 
         # Find the constrained solution
         stream_func_max = np.max(reduced_sf) * 2
@@ -363,3 +354,13 @@ def generate_combined_mesh(coil_parts: List[CoilPart]):
     combined_mesh.mesh_part_vertex_ind = combined_mesh_part_vertex_ind
 
     return combined_mesh
+
+
+def _solve_normal_equations(sensitivity, tik_reg_mat, target):
+    """Solve (A^T A + R^T R) x = A^T b. Cholesky first; the pseudo-inverse if the system is singular."""
+    lhs = sensitivity.T @ sensitivity + tik_reg_mat.T @ tik_reg_mat
+    rhs = sensitivity.T @ target
+    try:
+        return scipy.linalg.solve(lhs, rhs, assume_a='pos')
+    except (np.linalg.LinAlgError, scipy.linalg.LinAlgError):
+        return np.linalg.pinv(lhs) @ rhs
