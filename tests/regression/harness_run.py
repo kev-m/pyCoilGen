@@ -11,7 +11,7 @@ from typing import Optional
 # Local imports
 from pyCoilGen.pyCoilGen_release import pyCoilGen
 from harness_cases import CASES, LIBRARY_SENSITIVE, FINGERPRINT_RTOL
-from harness_fingerprint import fingerprint_solution, environment_info, compare_fingerprints
+from harness_fingerprint import fingerprint_solution, environment_info, compare_fingerprints, PRIMARY_METRICS
 from pyCoilGen.helpers.field_verification import verify_solution
 
 GOLDEN_DIR = Path(__file__).resolve().parent / 'golden'
@@ -41,6 +41,42 @@ def run_case(name: str, work_dir) -> tuple:
     return fingerprint_solution(solution), verify_solution(solution)
 
 
+def is_library_sensitive_here(name: str, golden: dict) -> bool:
+    """
+    Whether a case in `LIBRARY_SENSITIVE` is run with other numpy or scipy versions than its golden values.
+
+    Args:
+        name (str): The name of the case.
+        golden (dict): The golden record, as returned by `load_golden`.
+
+    Returns:
+        bool: True if the result of the case is expected to vary in this environment.
+    """
+    environment, golden_environment = environment_info(), golden['environment']
+    return name in LIBRARY_SENSITIVE and any(environment[key] != golden_environment[key] for key in ('numpy', 'scipy'))
+
+
+def judged_verdicts(name: str, golden: dict, verdicts: dict) -> dict:
+    """
+    Select the physical verdicts that are meaningful to report for a case in this environment.
+
+    A case in `LIBRARY_SENSITIVE` does not converge, so in an environment with other numpy or scipy versions than its
+    golden values, only its primary metrics are judged. The others (for example the current consistency) vary from run
+    to run and would only be reported as noise.
+
+    Args:
+        name (str): The name of the case.
+        golden (dict): The golden record, as returned by `load_golden`.
+        verdicts (dict): The verdicts of `compare_physical`.
+
+    Returns:
+        dict: The verdicts to report.
+    """
+    if is_library_sensitive_here(name, golden):
+        return {metric: values for metric, values in verdicts.items() if metric in PRIMARY_METRICS}
+    return verdicts
+
+
 def compare_case(name: str, golden: dict, fingerprint: dict, rtol: float = 1e-6) -> tuple:
     """
     Compare the fingerprint of a run with the golden one, applying the rules of the case.
@@ -58,8 +94,8 @@ def compare_case(name: str, golden: dict, fingerprint: dict, rtol: float = 1e-6)
         tuple: The list of differences (list of str), and a note (str) that explains why the comparison was skipped,
             or an empty string.
     """
-    environment, golden_environment = environment_info(), golden['environment']
-    if name in LIBRARY_SENSITIVE and any(environment[key] != golden_environment[key] for key in ('numpy', 'scipy')):
+    golden_environment = golden['environment']
+    if is_library_sensitive_here(name, golden):
         return [], (f"exact comparison skipped, numpy/scipy differ from the golden {golden_environment['numpy']}/"
                     f"{golden_environment['scipy']}: {LIBRARY_SENSITIVE[name]}")
     return compare_fingerprints(golden['fingerprint'], fingerprint, rtol=max(rtol, FINGERPRINT_RTOL.get(name, 0))), ''
@@ -79,8 +115,7 @@ def physical_rtol(name: str, golden: dict) -> float:
     Returns:
         float: The relative tolerance.
     """
-    environment, golden_environment = environment_info(), golden['environment']
-    if name in LIBRARY_SENSITIVE and any(environment[key] != golden_environment[key] for key in ('numpy', 'scipy')):
+    if is_library_sensitive_here(name, golden):
         return 0.25
     return 0.05
 

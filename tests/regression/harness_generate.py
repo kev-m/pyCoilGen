@@ -8,7 +8,8 @@ Usage, from the project root:
 
 With --check, the exact fingerprint is compared, and the physical quality of the final wire path (an independent
 Biot-Savart evaluation: field error, gradient efficiency, linearity, current) is judged as better, equal or worse.
-A 'worse' physical metric counts as a failure.
+A 'worse' physical metric counts as a failure. A case that depends on the numerical libraries (`LIBRARY_SENSITIVE`) is
+only judged by its primary metrics when the libraries differ from those of its golden values.
 
 Only regenerate the golden values when a change of the results is intended, for example after a deliberate
 improvement of an algorithm. Review the difference in the golden files, as part of the commit.
@@ -26,7 +27,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from harness_cases import CASES, GRADIENT_SPEC_PERCENT  # noqa: E402
-from harness_run import run_case, load_golden, save_golden, compare_case, physical_rtol  # noqa: E402
+from harness_run import (run_case, load_golden, save_golden, compare_case, physical_rtol,  # noqa: E402
+                         judged_verdicts, is_library_sensitive_here)
 from harness_fingerprint import (compare_fingerprints, compare_physical, environment_info, worse_metrics,  # noqa: E402
                                  spec_margin)
 
@@ -73,6 +75,9 @@ def main(argv=None) -> int:
             for difference in differences[:20]:
                 print(f"    {difference}")
             verdicts = compare_physical(golden.get('physical', {}), physical, rtol=physical_rtol(name, golden))
+            if is_library_sensitive_here(name, golden):
+                print("    only the primary metrics are judged: the other metrics of this case vary with the libraries")
+            verdicts = judged_verdicts(name, golden, verdicts)
             for metric, (verdict, old, new) in verdicts.items():
                 print(f"    physical {metric}: {verdict} ({old:.4g} -> {new:.4g})")
             margin = spec_margin(golden.get('physical', {}), physical, GRADIENT_SPEC_PERCENT)

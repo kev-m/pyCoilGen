@@ -9,8 +9,8 @@ If a test fails, the message lists every value that changed. If the change is in
 
 import pytest
 
-from harness_cases import CASES, GRADIENT_SPEC_PERCENT
-from harness_run import run_case, load_golden, compare_case, physical_rtol
+from harness_cases import CASES, GRADIENT_SPEC_PERCENT, LIBRARY_SENSITIVE
+from harness_run import run_case, load_golden, compare_case, physical_rtol, judged_verdicts
 from harness_fingerprint import (compare_fingerprints, compare_physical, environment_info, summarise_array,
                                  worse_metrics, spec_margin, PRIMARY_METRICS)
 import warnings
@@ -47,7 +47,7 @@ def test_case_physical_quality_is_not_worse(name, tmp_path):
 
     _, physical = run_case(name, tmp_path)
 
-    verdicts = compare_physical(golden['physical'], physical, rtol=physical_rtol(name, golden))
+    verdicts = judged_verdicts(name, golden, compare_physical(golden['physical'], physical, rtol=physical_rtol(name, golden)))
     for metric, values in verdicts.items():
         if metric not in PRIMARY_METRICS and values[0] == 'worse':
             warnings.warn(f"'{name}': {metric} is worse, {values[1]:.4g} -> {values[2]:.4g} (not a primary metric)")
@@ -131,3 +131,16 @@ def test_summarise_array():
     summary = summarise_array(np.array([[3.0, 4.0], [0.0, 0.0]]))
     assert summary == {'shape': [2, 2], 'norm': 5.0, 'sum': 7.0}
     assert summarise_array(None) is None
+
+
+def test_library_sensitive_cases_are_only_judged_by_their_primary_metrics_in_other_environments():
+    verdicts = {'efficiency': ('equal', 1.0, 1.0), 'current_consistency': ('worse', 1.29, 1.6),
+                'rms_rel_error': ('worse', 7.7, 9.0)}
+    sensitive = next(iter(LIBRARY_SENSITIVE))
+    other = {'environment': {**environment_info(), 'numpy': 'other'}}
+    same = {'environment': environment_info()}
+
+    assert judged_verdicts(sensitive, other, verdicts) == {'efficiency': verdicts['efficiency']}
+    assert judged_verdicts(sensitive, same, verdicts) == verdicts                                  # The golden libraries
+    insensitive = next(name for name in CASES if name not in LIBRARY_SENSITIVE)
+    assert judged_verdicts(insensitive, other, verdicts) == verdicts                              # Other cases: always
