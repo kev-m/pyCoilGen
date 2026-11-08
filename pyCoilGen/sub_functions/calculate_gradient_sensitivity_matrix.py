@@ -86,6 +86,7 @@ def calculate_gradient_sensitivity_matrix(coil_parts, target_field, input_args):
     for coil_part in coil_parts:
         triangle_points, current, area, counts = stack_basis_elements(coil_part)
         coil_part.gradient_sensitivity_matrix = biot_savart_coeff * plate_thickness * integrate_over_node_triangles(
-            triangle_points, current, area, counts, target_points, u_coord, v_coord, gauss_weight, _gradient_kernel)
+            triangle_points, current, area, counts, target_points, u_coord, v_coord, gauss_weight, _gradient_kernel,
+            num_threads=getattr(input_args, "num_threads", 0))
 
     return coil_parts

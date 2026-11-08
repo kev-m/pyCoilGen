@@ -76,6 +76,7 @@ def calculate_sensitivity_matrix(coil_parts: List[CoilPart], target_field, input
     for coil_part in coil_parts:
         triangle_points, current, area, counts = stack_basis_elements(coil_part)
         coil_part.sensitivity_matrix = biot_savart_coeff * integrate_over_node_triangles(
-            triangle_points, current, area, counts, target_points, u_coord, v_coord, gauss_weight, _biot_savart_kernel)
+            triangle_points, current, area, counts, target_points, u_coord, v_coord, gauss_weight, _biot_savart_kernel,
+            num_threads=getattr(input_args, "num_threads", 0))
 
     return coil_parts
