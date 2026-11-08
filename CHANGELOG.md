@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0 (2026-11-08)
+
+#### Performance improvements
+
+* Calculate the sensitivity matrices on several threads, with a num_threads parameter
+* Solve the Tikhonov normal equations with Cholesky instead of the pseudo-inverse
+#### Others
+
+* bump the version to 0.5.0
+
+Full set of changes: [`0.4.1...0.5.0`](https://github.com/kev-m/CoilGen-Python/compare/0.4.1...0.5.0)
+
 ## 0.4.1 (2026-11-07)
 
 #### New Features
