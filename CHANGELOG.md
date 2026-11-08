@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.1 (2026-11-08)
+
+#### Performance improvements
+
+* (interconnect_among_groups): find the nearest points between groups in blocks
+* (check_mutual_loop_inclusion): stop at the first vertex that is not enclosed
+* (shift_return_paths): find the wire path self-intersections in blocks
+#### Others
+
+* (release): bump the version to 0.5.1
+* (regression): judge only the primary metrics of library-sensitive cases in other environments
+
+Full set of changes: [`0.5.0...0.5.1`](https://github.com/kev-m/CoilGen-Python/compare/0.5.0...0.5.1)
+
 ## 0.5.0 (2026-11-08)
 
 #### Performance improvements
