@@ -148,6 +148,10 @@ def shift_return_paths(coil_parts: List[CoilPart], input_args):
     return coil_parts
 
 
+# The approximate number of (segment, segment) pairs of InterX that are evaluated at once
+_PAIRS_PER_BLOCK = 200_000
+
+
 def InterX(L1, *varargin, m_debug=None):
     if len(varargin) == 0:
         L2 = L1
@@ -170,25 +174,31 @@ def InterX(L1, *varargin, m_debug=None):
     S1 = dx1 * y1[:-1] - dy1 * x1[:-1]
     S2 = dx2 * y2[:-1] - dy2 * x2[:-1]
 
-    P10 = np.multiply.outer(dx1, y2)
-    P11 = np.multiply.outer(dy1, x2)
-    if m_debug is not None:
-        P12 = Diff(P10 - P11, S1, [m_debug.diff_x1, m_debug.diff_y1])
-    else:
-        P12 = Diff(P10 - P11, S1)
-
-    P20 = np.multiply.outer(y1, dx2)
-    P21 = np.multiply.outer(x1, dy2)
-    if m_debug is not None:
-        P22 = Diff((P20 - P21).T, S2.T, [m_debug.diff_x2, m_debug.diff_y2])
-    else:
-        P22 = Diff((P20 - P21).T, S2.T)
-
-    C1 = hF(P12, 0).astype(int)
-    C2 = hF(P22, 0).T.astype(int)
-
-    # Obtain segments where an intersection is expected
-    j, i = np.where(C1 & C2)
+    # Obtain segments where an intersection is expected: the end points of each segment lie on opposite sides of the
+    # line through the other segment (C1: for the segments of L1, C2: for the segments of L2).
+    # The (segments x segments) matrices are evaluated in blocks of rows, which gives the same values as the full
+    # matrices, but needs much less memory, and the temporary arrays stay in the cache.
+    num_rows = dx1.shape[0]
+    rows_per_block = max(1, _PAIRS_PER_BLOCK // max(1, x2.shape[0]))
+    found_j, found_i = [], []
+    for first in range(0, num_rows, rows_per_block):
+        rows = slice(first, min(first + rows_per_block, num_rows))
+        # C1: P12[a, b] = (X[a, b] - S1[a]) * (X[a, b + 1] - S1[a]), X = dx1 y2 - dy1 x2
+        side = np.multiply.outer(dx1[rows], y2) - np.multiply.outer(dy1[rows], x2)
+        side -= S1[rows, np.newaxis]
+        c1 = hF(side[:, :-1] * side[:, 1:], 0)
+        # C2: P22[b, a] = (Y[b, a] - S2[b]) * (Y[b, a + 1] - S2[b]), Y = y1 dx2 - x1 dy2. Only the few pairs where C1 holds
+        # need to be tested, with the same arithmetic as for the full matrix. They stay in the order of `np.where`.
+        block_j, block_i = np.nonzero(c1)
+        row = block_j + first
+        side_start = y1[row] * dx2[block_i] - x1[row] * dy2[block_i] - S2[block_i]
+        side_end = y1[row + 1] * dx2[block_i] - x1[row + 1] * dy2[block_i] - S2[block_i]
+        keep = hF(side_start * side_end, 0)
+        block_j, block_i = block_j[keep], block_i[keep]
+        found_j.append(block_j + first)
+        found_i.append(block_i)
+    j = np.concatenate(found_j) if found_j else np.zeros(0, dtype=int)
+    i = np.concatenate(found_i) if found_i else np.zeros(0, dtype=int)
 
     if len(i) == 0:
         P = np.zeros((2, 0))
@@ -234,10 +244,4 @@ def Diff(x, y):
     Returns:
     ndarray: Array with shape (N, M-1) containing element-wise differences and products.
     """
-    u = np.empty((x.shape[0], y.shape[0]))
-    for i in range(u.shape[0]):
-        diff_x = x[i, :-1] - y[i]
-        diff_y = x[i, 1:] - y[i]
-
-        u[i] = diff_x * diff_y
-    return u
+    return (x[:, :-1] - y[:, np.newaxis]) * (x[:, 1:] - y[:, np.newaxis])
