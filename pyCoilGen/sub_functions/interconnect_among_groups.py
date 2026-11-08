@@ -9,6 +9,7 @@ import logging
 from .data_structures import CoilPart, Shape3D, Cuts, DataStructure
 from .open_loop_with_3d_sphere import open_loop_with_3d_sphere
 from .remove_points_from_loop import remove_points_from_loop
+from . import accel
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +30,16 @@ def nearest_point_distances(points_a: np.ndarray, points_b: np.ndarray):
         tuple: The distance of each point of `points_a` to the nearest point of `points_b`, (num a,), and the distance of
             each point of `points_b` to the nearest point of `points_a`, (num b,).
     """
+    kernels = accel.kernels_for(points_a.shape[1] * points_b.shape[1])
+    if kernels is not None:
+        accel.set_threads()
+        return kernels.nearest_distances(np.ascontiguousarray(points_a.T, dtype=np.float64),
+                                         np.ascontiguousarray(points_b.T, dtype=np.float64))
+    return nearest_point_distances_numpy(points_a, points_b)
+
+
+def nearest_point_distances_numpy(points_a: np.ndarray, points_b: np.ndarray):
+    """The numpy implementation of `nearest_point_distances`, in blocks of points. See there."""
     near_a = np.empty(points_a.shape[1])
     near_b = np.full(points_b.shape[1], np.inf)
     points_per_block = max(1, _PAIRS_PER_BLOCK // max(1, points_b.shape[1]))

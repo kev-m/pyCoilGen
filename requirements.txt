@@ -20,3 +20,8 @@ sympy==1.*
 # Pillow older than 10 has no packages for Python 3.13. Tested with 9.5.0 and 13.0.0.
 pillow>=9.5,<14
 matplotlib==3.*
+
+# Optional: compiled kernels for the largest calculations, which make designs 2 to 5 times faster (and the Biot-Savart
+# sums 10 to 30 times). Without it, numpy is used and the results are the same. Install with: pip install numba
+# or, from a clone of the repository: pip install -e .[fast]
+# numba>=0.60

@@ -20,6 +20,7 @@ import numpy as np
 
 # Local imports
 from .data_structures import CoilPart
+from . import accel
 
 log = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ def integrate_over_node_triangles(triangle_points: np.ndarray, current: np.ndarr
                                   target_points: np.ndarray, u_coord: np.ndarray, v_coord: np.ndarray,
                                   gauss_weight: np.ndarray,
                                   kernel: Callable[..., Tuple[np.ndarray, np.ndarray, np.ndarray]],
-                                  num_threads: int = 0) -> np.ndarray:
+                                  num_threads: int = 0, fast_mode: int = -1) -> np.ndarray:
     """
     Sum a kernel over the Gauss points of all triangles of each node, for all target points.
 
@@ -103,6 +104,9 @@ def integrate_over_node_triangles(triangle_points: np.ndarray, current: np.ndarr
             sample = triangle * num_gauss + gauss.
 
         num_threads (int): The number of threads, see `resolve_num_threads`. 0 selects the default.
+        fast_mode (int): The compiled equivalent of `kernel`, for `numba_kernels.node_integral`: 0 for the Biot-Savart
+            kernel and 1 for the Bz gradient kernel. -1 (default) has none. It is used if Numba is installed and the
+            problem is large (see `accel`), and then `kernel` is not called.
 
     Returns:
         ndarray: The sum over each node's samples, shape (3, num target points, num nodes). Nodes without triangles are zero.
@@ -119,6 +123,19 @@ def integrate_over_node_triangles(triangle_points: np.ndarray, current: np.ndarr
 
     # Barycentric weights of the Gauss points on (A, B, C)
     bary = np.stack([u, v, 1 - u - v])  # (3, num_gauss)
+
+    if fast_mode >= 0:
+        kernels = accel.kernels_for(len(area) * num_gauss * num_targets)
+        if kernels is not None:
+            node_ends = np.cumsum(counts)
+            accel.set_threads(num_threads)
+            out = kernels.node_integral(
+                np.ascontiguousarray(triangle_points, dtype=np.float64), np.ascontiguousarray(current, dtype=np.float64),
+                np.ascontiguousarray(area, dtype=np.float64), (node_ends - counts).astype(np.int64),
+                node_ends.astype(np.int64), np.ascontiguousarray(target_points.T, dtype=np.float64),
+                np.ascontiguousarray(bary, dtype=np.float64), np.ascontiguousarray(weights, dtype=np.float64), fast_mode)
+            # (nodes, 3, targets) -> (3, targets, nodes)
+            return np.ascontiguousarray(out.transpose(1, 2, 0))
 
     node_ends = np.cumsum(counts)
     node_starts = node_ends - counts
