@@ -182,29 +182,21 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
                 2  # average the vector between its predecessor and successor
             path_directions = path_directions / np.linalg.norm(path_directions, axis=0)  # normalize again
 
-            # Sweep the surface along the path
-            face_points = np.zeros((wire_path.v.shape[1], wire_path.v.shape[0],
-                                   cross_section_points.shape[1]))  # initialize the face points
-            all_node_points = np.zeros((wire_path.v.shape[1] * cross_section_points.shape[1], 3))
+            # Sweep the surface along the path: at every path point, the cross section is rotated into the frame (e2, e3, e1)
+            # that is spanned by the path direction e1 and the surface normal, and shifted to the point.
+            e1 = path_directions.T                                  # (points, 3)
+            e2 = surface_normal_along_wire_path_v.T
+            e3 = np.cross(e1, e2)
+            e3 = e3 / np.linalg.norm(e3, axis=1, keepdims=True)
+            e2 = np.cross(e1, e3)
+            e2 = e2 / np.linalg.norm(e2, axis=1, keepdims=True)
 
-            run_ind = 0
-            for point_ind in range(wire_path.v.shape[1]):
-                e1 = path_directions[:, point_ind]
-                e2 = surface_normal_along_wire_path_v[:, point_ind]
-                e3 = np.cross(e1, e2) / np.linalg.norm(np.cross(e1, e2))
-                e2 = np.cross(e1, e3) / np.linalg.norm(np.cross(e1, e3))
-
-                # Rotate the face points to have the right orientation
-                for aaaa in range(cross_section_points.shape[1]):
-                    arr1 = np.column_stack((e2, e3, e1))
-                    arr2 = np.hstack((cross_section_points[:, aaaa], 0))
-                    face_points[point_ind, :, aaaa] = np.dot(arr1, arr2)
-
-                # Shift the oriented corner points to the position in the wire path
-                for aaaa in range(cross_section_points.shape[1]):
-                    face_points[point_ind, :, aaaa] += wire_path.v[:, point_ind]
-                    all_node_points[run_ind, :] = face_points[point_ind, :, aaaa]
-                    run_ind += 1
+            # face_points[point, xyz, corner]
+            face_points = (e2[:, :, np.newaxis] * cross_section_points[0][np.newaxis, np.newaxis, :]
+                           + e3[:, :, np.newaxis] * cross_section_points[1][np.newaxis, np.newaxis, :]
+                           + wire_path.v.T[:, :, np.newaxis])
+            # The nodes, point by point, with the corners of a point together
+            all_node_points = np.ascontiguousarray(face_points.transpose(0, 2, 1)).reshape(-1, 3)
 
             # Continue with Part 3
             """
@@ -217,25 +209,22 @@ def create_sweep_along_surface(coil_parts: List[CoilPart], input_args) -> List[C
             # Build the 3D mesh by sweeping the surface using only the outer edges
 
             # Building the shell triangles that form the surface of the swept body
-            swept_surface_triangles = np.zeros(((face_points.shape[0] - 1) * face_points.shape[2] * 2, 3), dtype=int)
             swept_surface_vertices = all_node_points
-            full_edge_inds = np.arange(0, face_points.shape[2])
-            full_track_inds = np.arange(1, face_points.shape[0])
             num_corners = face_points.shape[2]
+            num_steps = face_points.shape[0] - 1
 
-            run_ind = 1
-
-            for track_ind in range(face_points.shape[0] - 1):
-                for edge_ind in range(face_points.shape[2]):
-                    node_a = track_ind * num_corners + full_edge_inds[edge_ind]
-                    node_b = track_ind * num_corners + full_edge_inds[(edge_ind + 1) % num_corners]
-                    node_c = full_track_inds[track_ind] * num_corners + full_edge_inds[edge_ind]
-                    node_d = full_track_inds[track_ind] * num_corners + full_edge_inds[(edge_ind + 1) % num_corners]
-                    tri_1 = [node_a, node_b, node_d]
-                    tri_2 = [node_d, node_c, node_a]
-                    swept_surface_triangles[run_ind - 1, :] = tri_1
-                    swept_surface_triangles[run_ind, :] = tri_2
-                    run_ind += 2
+            # Two triangles for each edge of each step between two successive cross sections, in the order
+            # (a, b, d), (d, c, a), with a, b the corners of the edge at one cross section and c, d at the next.
+            track = np.repeat(np.arange(num_steps), num_corners)
+            edge = np.tile(np.arange(num_corners), num_steps)
+            next_edge = (edge + 1) % num_corners
+            node_a = track * num_corners + edge
+            node_b = track * num_corners + next_edge
+            node_c = (track + 1) * num_corners + edge
+            node_d = (track + 1) * num_corners + next_edge
+            swept_surface_triangles = np.zeros((num_steps * num_corners * 2, 3), dtype=int)
+            swept_surface_triangles[0::2] = np.column_stack((node_a, node_b, node_d))
+            swept_surface_triangles[1::2] = np.column_stack((node_d, node_c, node_a))
 
             # Part 4, final part
             """
