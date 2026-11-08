@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.6.0 (2026-11-08)
+
+#### New Features
+
+* optional compiled kernels for the largest calculations (pip install pycoilgen[fast])
+#### Performance improvements
+
+* (calculate_one_ring_by_mesh): orient the one rings of all nodes at once
+* (mesh_parameterization_iterative): build the edge tables and the cotangent weights without element-wise sparse access
+* (calc_contours_by_triangular_potential_cuts): find the neighbouring cut edges with a lookup
+* (calculate_resistance_matrix): add the triangle contributions of all node pairs at once
+* (calculate_basis_functions): calculate the basis functions of all nodes at once
+* (create_sweep_along_surface): sweep the cross section along the wire path in one vectorised step
+#### Docs
+
+* update the compatibility tables and the README for 0.6.0
+* (release): test both code paths, with and without Numba
+* document the fast extra and the compiled kernels
+#### Others
+
+* (release): bump the version to 0.6.0
+* compare the vectorised steps with the original loops
+
+Full set of changes: [`0.5.1...0.6.0`](https://github.com/kev-m/CoilGen-Python/compare/0.5.1...0.6.0)
+
 ## 0.5.1 (2026-11-08)
 
 #### Performance improvements
