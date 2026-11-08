@@ -22,17 +22,20 @@ def check_mutual_loop_inclusion(test_poly: np.ndarray, target_poly: np.ndarray) 
     if len(test_poly.shape) == 1:
         test_poly = test_poly.reshape((2, 1))
     num_entries = test_poly.shape[1]
-    winding_numbers = np.zeros(num_entries)
 
     # The edges of the target polygon: from C to B
     edge_start = target_poly[:, :-1]
     edge_end = target_poly[:, 1:]
     num_edges = edge_start.shape[1]
 
-    # Evaluate many test vertices at once, in blocks that keep the temporary arrays small
+    # Evaluate many test vertices at once, in blocks that keep the temporary arrays small. The winding number of each
+    # vertex is independent of the others, so the first vertex that is not enclosed ends the test: the first block is
+    # a single vertex, as most loops that are compared are not nested.
     points_per_block = max(1, _PAIRS_PER_BLOCK // max(1, num_edges))
-    for first in range(0, num_entries, points_per_block):
-        points = test_poly[:, first:first + points_per_block]
+    first = 0
+    block_size = 1
+    while first < num_entries:
+        points = test_poly[:, first:first + block_size]
         vec1_x = edge_start[0][np.newaxis, :] - points[0][:, np.newaxis]  # (points, edges)
         vec1_y = edge_start[1][np.newaxis, :] - points[1][:, np.newaxis]
         vec2_x = edge_end[0][np.newaxis, :] - points[0][:, np.newaxis]
@@ -40,9 +43,12 @@ def check_mutual_loop_inclusion(test_poly: np.ndarray, target_poly: np.ndarray) 
 
         angle = np.arctan2(vec1_x * vec2_y - vec1_y * vec2_x, vec1_x * vec2_x + vec1_y * vec2_y)
 
-        winding_numbers[first:first + points_per_block] = np.round(np.abs(np.sum(angle, axis=1) / (2 * np.pi)))
+        if not np.all(np.round(np.abs(np.sum(angle, axis=1) / (2 * np.pi))) == 1):
+            return False
+        first += block_size
+        block_size = points_per_block
 
-    inside_flag = np.all(winding_numbers == 1)
+    inside_flag = True
 
     return inside_flag
 
