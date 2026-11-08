@@ -7,6 +7,7 @@ import logging
 # Local imports
 from .data_structures import CoilPart, Mesh
 from .smooth_track_by_folding import smooth_track_by_folding
+from . import accel
 
 log = logging.getLogger(__name__)
 
@@ -178,6 +179,26 @@ def InterX(L1, *varargin, m_debug=None):
     # line through the other segment (C1: for the segments of L1, C2: for the segments of L2).
     # The (segments x segments) matrices are evaluated in blocks of rows, which gives the same values as the full
     # matrices, but needs much less memory, and the temporary arrays stay in the cache.
+    kernels = accel.kernels_for(dx1.shape[0] * dx2.shape[0]) if dx1.shape[0] and dx2.shape[0] else None
+    if kernels is not None:
+        accel.set_threads()
+        c = np.ascontiguousarray
+        j, i = kernels.crossing_segment_pairs(c(x1, dtype=float), c(y1, dtype=float), c(x2, dtype=float),
+                                              c(y2, dtype=float), c(dx1, dtype=float), c(dy1, dtype=float),
+                                              c(dx2, dtype=float), c(dy2, dtype=float), c(S1, dtype=float),
+                                              c(S2, dtype=float), hF is np.less)
+    else:
+        j, i = _crossing_segment_pairs_numpy(x1, y1, x2, y2, dx1, dy1, dx2, dy2, S1, S2, hF)
+
+    if len(i) == 0:
+        P = np.zeros((2, 0))
+        intersect_edge_inds = []
+        return P, intersect_edge_inds
+    return _intersection_points(i, j, dx1, dy1, dx2, dy2, S1, S2)
+
+
+def _crossing_segment_pairs_numpy(x1, y1, x2, y2, dx1, dy1, dx2, dy2, S1, S2, hF):
+    """The candidate segment pairs of `InterX`, evaluated in blocks of rows of the (segments x segments) matrices."""
     num_rows = dx1.shape[0]
     rows_per_block = max(1, _PAIRS_PER_BLOCK // max(1, x2.shape[0]))
     found_j, found_i = [], []
@@ -199,12 +220,11 @@ def InterX(L1, *varargin, m_debug=None):
         found_i.append(block_i)
     j = np.concatenate(found_j) if found_j else np.zeros(0, dtype=int)
     i = np.concatenate(found_i) if found_i else np.zeros(0, dtype=int)
+    return j, i
 
-    if len(i) == 0:
-        P = np.zeros((2, 0))
-        intersect_edge_inds = []
-        return P, intersect_edge_inds
 
+def _intersection_points(i, j, dx1, dy1, dx2, dy2, S1, S2):
+    """The intersection points and the sorted pairs of intersecting edge indices, for the candidate pairs (j, i)."""
     # Transpose and prepare for output
     # i = i.reshape(-1, 1)
     # dx2 = dx2.reshape(-1, 1); dy2 = dy2.reshape(-1, 1); S2 = S2.reshape(-1, 1)

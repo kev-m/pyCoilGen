@@ -5,10 +5,16 @@ For every target point, the field (or its gradient) is the sum of the contributi
 in blocks of (target points x segments) that are small enough for the temporary arrays to stay in the processor
 cache, with contiguous per-component arrays and in-place operations. That is several times faster than building the
 full (segments x targets x 3) arrays, as the memory traffic of those dominates the arithmetic.
+
+For large problems, the compiled kernels of `numba_kernels` are used when Numba is installed (see `accel`). The numpy
+kernels here (`biot_savart_field_numpy` and `biot_savart_gradient_numpy`) are the reference that they are tested against.
 """
 
 # Libraries
 import numpy as np
+
+# Local imports
+from . import accel
 
 # The approximate number of (segment, target) pairs that are evaluated at once.
 _PAIRS_PER_BLOCK = 32_768
@@ -33,7 +39,7 @@ def _relative_vectors(seg_coords: np.ndarray, targets: np.ndarray):
     return rx, ry, rz
 
 
-def biot_savart_field(seg_coords: np.ndarray, currents: np.ndarray, targets: np.ndarray) -> np.ndarray:
+def biot_savart_field_numpy(seg_coords: np.ndarray, currents: np.ndarray, targets: np.ndarray) -> np.ndarray:
     """
     The magnetic field of wire segments, by the Biot-Savart law, for unit current: 1e-7 * sum (I x r) / |r|^3.
 
@@ -70,7 +76,7 @@ def biot_savart_field(seg_coords: np.ndarray, currents: np.ndarray, targets: np.
     return 1e-7 * field
 
 
-def biot_savart_gradient(seg_coords: np.ndarray, currents: np.ndarray, targets: np.ndarray):
+def biot_savart_gradient_numpy(seg_coords: np.ndarray, currents: np.ndarray, targets: np.ndarray):
     """
     The gradient of the magnetic field of wire segments, by the Biot-Savart law, for unit current.
 
@@ -120,4 +126,52 @@ def biot_savart_gradient(seg_coords: np.ndarray, currents: np.ndarray, targets: 
         grad[1, 2, target_slice] -= sum_ie[0]
         grad[2, 0, target_slice] -= sum_ie[1]
         grad[2, 1, target_slice] += sum_ie[0]
+    return grad[0].T.copy(), grad[1].T.copy(), grad[2].T.copy()
+
+
+def _as_contiguous(*arrays):
+    """The arrays as contiguous float64, so that the compiled kernels are compiled once, for one layout."""
+    return tuple(np.ascontiguousarray(a, dtype=np.float64) for a in arrays)
+
+
+def biot_savart_field(seg_coords: np.ndarray, currents: np.ndarray, targets: np.ndarray) -> np.ndarray:
+    """
+    The magnetic field of wire segments, by the Biot-Savart law, for unit current: 1e-7 * sum (I x r) / |r|^3.
+
+    Uses the compiled kernel if Numba is installed and the problem is large, otherwise the numpy kernel.
+
+    Args:
+        seg_coords (ndarray): The centre of each wire segment, (num segments, 3).
+        currents (ndarray): The vector of each wire segment (the current direction times its length), (num segments, 3).
+        targets (ndarray): The target points, (num targets, 3).
+
+    Returns:
+        ndarray: The field at the target points, (num targets, 3).
+    """
+    kernels = accel.kernels_for(len(seg_coords) * len(targets))
+    if kernels is None:
+        return biot_savart_field_numpy(seg_coords, currents, targets)
+    accel.set_threads()
+    return kernels.wire_field(*_as_contiguous(seg_coords, currents, targets))
+
+
+def biot_savart_gradient(seg_coords: np.ndarray, currents: np.ndarray, targets: np.ndarray):
+    """
+    The gradient of the magnetic field of wire segments, by the Biot-Savart law, for unit current.
+
+    Uses the compiled kernel if Numba is installed and the problem is large, otherwise the numpy kernel.
+
+    Args:
+        seg_coords (ndarray): The centre of each wire segment, (num segments, 3).
+        currents (ndarray): The vector of each wire segment (the current direction times its length), (num segments, 3).
+        targets (ndarray): The target points, (num targets, 3).
+
+    Returns:
+        tuple: dBx/dxyz, dBy/dxyz and dBz/dxyz, each (num targets, 3): the derivatives of the field component with respect to x, y and z.
+    """
+    kernels = accel.kernels_for(len(seg_coords) * len(targets))
+    if kernels is None:
+        return biot_savart_gradient_numpy(seg_coords, currents, targets)
+    accel.set_threads()
+    grad = kernels.wire_gradient(*_as_contiguous(seg_coords, currents, targets))
     return grad[0].T.copy(), grad[1].T.copy(), grad[2].T.copy()

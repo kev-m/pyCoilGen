@@ -15,3 +15,6 @@ auto-changelog
 
 # For the groove plate exporter (optional; its tests are skipped without it)
 manifold3d>=3.0
+
+# For the compiled kernels (optional; its tests are skipped without it)
+numba>=0.60

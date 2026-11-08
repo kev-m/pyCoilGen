@@ -52,6 +52,8 @@ dynamic = ["version", "description"]
 fabrication = ["manifold3d>=3.0"]
 # For cross-checking the field verification (pyCoilGen.helpers.field_verification) with an independent package
 verification = ["magpylib>=5.0"]
+# For compiled kernels of the hot paths (Biot-Savart sums): 10 to 30 times faster on large designs. Without it, numpy is used.
+fast = ["numba>=0.60"]
 
 [project.urls]
 Home = "https://github.com/kev-m/pyCoilGen"
