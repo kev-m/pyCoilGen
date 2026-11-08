@@ -17,26 +17,29 @@ $ pip install pycoilgen==0.2.4
 | 0.0.8 to 0.1.1 | 2023-09 to 2023-10 | >= 3.6 | ==1.21.6 | ==1.7.3 | ==3.21.7 | The exact numpy and scipy versions limit these releases to the Python versions that they were built for, in practice 3.7 to 3.10. |
 | 0.1.2 and 0.1.3 | 2023-10 | >= 3.6 | 1.* | 1.* | 3.* | |
 | 0.2.0 to 0.2.4 | 2023-11 to 2026-02 | >= 3.6 | 1.* | 1.* | 3.* | numpy 1.x has no packages for Python 3.13 and later, so these releases cannot be installed there. In practice, Python 3.6 to 3.12. |
-| 0.3.0 to 0.4.0 | 2026-11 | >= 3.11 | >= 1.26, < 3 | >= 1.11, < 2 | >= 4.4, < 6 | Tested, see below. |
+| 0.3.0 to 0.6.0 | 2026-11 | >= 3.11 | >= 1.26, < 3 | >= 1.11, < 2 | >= 4.4, < 6 | Tested, see below. From 0.6.0, the optional `fast` extra (numba >= 0.60) speeds up large designs, see [Optional Packages](#optional-packages). |
 
 Notes:
 
 * Releases before 0.3.0 declare `>= 3.6` but were not tested against current Python versions. The Python versions given under "Remarks" follow from the numpy and scipy versions that they require.
 * 0.0.8 is the oldest release that is tagged in the repository.
 
-## Tested Environments (0.3.0 series)
+## Tested Environments (0.6.0)
 
 The regression harness compares the complete output of five reference designs with stored values, and judges the physical quality of each design with an independent Biot-Savart calculation of the wire path (see [Independent Field Verification](./results.md#independent-field-verification)).
 
 | Python | numpy | scipy | trimesh | Result |
 |--------|-------|-------|---------|--------|
-| 3.11 | 1.26.4 | 1.11.4 | 4.4.0 | The full test suite passes. Identical to the stored values. |
-| 3.11 | 2.0.2 | 1.13.1 | 4.4.0 | The full test suite passes. All Tikhonov designs identical. The iterative design differs slightly, see below. |
-| 3.13 | 2.5.4 | 1.18.1 | 5.2.0 | The full test suite passes. As above. |
+| 3.11 | 1.26.4 | 1.11.4 | 4.4.0 | The full test suite passes. All Tikhonov designs match the stored values. The iterative design is judged on its physical quality, see below. |
+| 3.11 | 2.0.2 | 1.13.1 | 4.4.0 | As above. |
+| 3.11 | 2.4.6 | 1.17.1 | 5.2.0 | As above. |
+| 3.13 | 2.5.4 | 1.18.1 | 5.2.0 | As above. |
+
+Each environment was tested with and without the optional compiled kernels, see [Numba](#numba-the-optional-fast-extra).
 
 The oldest allowed trimesh is 4.4, the first version that works with numpy 2: with older versions, loading an `.stl` file and the groove plate exporter fail with numpy 2.0 or later (`ndarray.ptp` was removed from numpy). The stored values were produced with trimesh 3.23.5, and trimesh 4.4.0 and 5.2.0 give identical results.
 
-Python 3.12 was not tested separately; it lies between the tested versions. Pillow was tested with 9.5.0 (Python 3.11) and 13.0.0 (Python 3.13); versions older than 10 have no packages for Python 3.13. The versions of matplotlib and trimesh (4.4.0 and 5.2.0) that were tried made no difference to the results. networkx is not needed: the full test suite and the regression harness pass without it, with trimesh 4.4.0 and 5.2.0.
+Python 3.12 was not tested separately; it lies between the tested versions. The 0.6.0 environments used Pillow 13.0.0 and matplotlib 3.11.2. Pillow was tested earlier with 9.5.0 (Python 3.11) and 13.0.0 (Python 3.13); versions older than 10 have no packages for Python 3.13. The versions of matplotlib and trimesh (4.4.0 and 5.2.0) that were tried made no difference to the results. networkx is not needed: the full test suite and the regression harness pass without it, with trimesh 4.4.0 and 5.2.0.
 
 ### Results that depend on the library versions
 

@@ -28,9 +28,11 @@ Release 0.3.0 and later require Python >= 3.11. If you are bound to an older Pyt
 |---------|--------|-------|-------|
 | 0.0.8 to 0.1.1 | 3.7 to 3.10 (declared >= 3.6) | ==1.21.6 | ==1.7.3 |
 | 0.1.2 to 0.2.4 | 3.6 to 3.12 (declared >= 3.6) | 1.* | 1.* |
-| 0.3.0 to 0.4.0 | >= 3.11, tested on 3.11 and 3.13 | >= 1.26, < 3 | >= 1.11, < 2 |
+| 0.3.0 to 0.6.0 | >= 3.11, tested on 3.11 and 3.13 | >= 1.26, < 3 | >= 1.11, < 2 |
 
 See [Compatibility](https://pycoilgen.readthedocs.io/en/latest/compatibility.html) for details, including the tested environments.
+
+From release 0.6.0, the optional `fast` extra (`pip install pycoilgen[fast]`) compiles the largest calculations with Numba and uses all CPU cores, which makes designs up to 90 times faster than release 0.4.0 (6 to 28 times with numpy alone, from the vectorised steps), with identical results. See [Install Fast Extras](https://pycoilgen.readthedocs.io/en/latest/installation.html#install-fast-extras).
 
 ## Known Issues and Bug Fixes
 
@@ -45,6 +47,8 @@ The [`examples`](https://github.com/kev-m/pyCoilGen/blob/master/examples) direct
 The porting of the code from MATLAB to Python was facilitated by [ChatGPT, May 24 through August 3 Version](https://chat.openai.com) with manual corrections. 
 
 Additional cross-checking was done using [MATLAB Online](https://www.mathworks.com/products/matlab-online.html) provided by MathWorks.
+
+The performance improvements of release 0.6.0 (the vectorised pipeline steps and the optional Numba kernels) were developed with [Claude Sonnet](https://www.anthropic.com/claude) from Anthropic, using Claude Code. The results were checked against the previous implementations and the regression harness.
 
 The circular bi-planar mesh builder, the Gerber and groove plate exporters and the independent field verification (release 0.3.0) are based on ideas from pull request [#82](https://github.com/kev-m/pyCoilGen/pull/82) by [Sairam Geethanath](https://github.com/sairamgeethanath), re-implemented to fit the existing pipeline.
 
