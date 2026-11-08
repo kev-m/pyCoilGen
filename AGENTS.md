@@ -161,6 +161,7 @@ solvers) and compares compact fingerprints and physical metrics to the golden va
 | Known bugs and corrections | [bug_fixes.md](docs/source/bug_fixes.md) |
 | Contributing, commits | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Releasing | [RELEASE.md](RELEASE.md) |
+| Ideas that were investigated but not done (for example GPU acceleration) | [FUTURE_IDEAS.md](FUTURE_IDEAS.md) |
 | Docs build | [docs/README.md](docs/README.md) |
 | Utilities package | [utilities/README.md](utilities/README.md) |
 
