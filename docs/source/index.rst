@@ -30,6 +30,8 @@ pyCoilGen User Guide
    :numbered: 4
 
    overview.md
+   how_it_works_beginners.md
+   how_it_works_experts.md
    installation.md
    compatibility.md
    quick_start.md

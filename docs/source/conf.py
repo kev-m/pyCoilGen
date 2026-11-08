@@ -35,6 +35,8 @@ source_suffix = {
 # Myst Extensions
 myst_enable_extensions = [
     'deflist',
+    'dollarmath',
+    'amsmath',
     ]
 myst_heading_anchors = 3
 

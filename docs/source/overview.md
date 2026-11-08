@@ -37,7 +37,7 @@ With **pyCoilGen**, you can:
 - [Verify](./results.md#independent-field-verification) the final wire path with an independent Biot-Savart
   calculation: target field error, gradient efficiency and linearity.
 
-For a detailed description of the algorithm, refer to the research paper [CoilGen: Open-source MR coil layout generator](https://onlinelibrary.wiley.com/doi/10.1002/mrm.29294).
+For a plain-language introduction, see [How It Works: An Introduction](./how_it_works_beginners.md), and for the steps in detail, [How It Works: The Algorithm in Detail](./how_it_works_experts.md). For the original description of the algorithm, refer to the research paper [CoilGen: Open-source MR coil layout generator](https://onlinelibrary.wiley.com/doi/10.1002/mrm.29294).
 
 ## Examples
 
