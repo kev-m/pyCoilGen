@@ -45,11 +45,29 @@ Python 3.12 was not tested separately; it lies between the tested versions. Pill
 
 Earlier results of the Tikhonov designs also differed between numpy 1 and numpy 2. That was not caused by numpy: a choice of the open end of the wire path was decided by rounding errors of about 1e-12 when several points had the same height. This is corrected in 0.3.0, which can change the start of the wire path, and with it the field error, of symmetric designs compared with 0.2.x.
 
+### Numba (the optional `fast` extra)
+
+The compiled kernels (`pip install pycoilgen[fast]`) were tested in the environments above, with the full test suite and the
+regression harness, both with the compiled kernels forced on (`PYCOILGEN_NUMBA=force`) and with them off. All designs are
+identical to the stored values in both modes.
+
+| Python | numpy | numba | Result |
+|--------|-------|-------|--------|
+| 3.11 | 1.26.4 | 0.60.0 (the oldest allowed) and 0.68.1 | Passes. |
+| 3.11 | 2.0.2 | 0.68.1 | Passes. |
+| 3.11 | 2.4.6 | 0.68.1 | Passes. |
+| 3.13 | 2.5.4 | 0.68.1 | Passes. |
+
+Without Numba installed the numpy kernels are used, and the same tests pass. The compiled and the numpy kernels agree to
+rounding error (about 1e-14), and some steps (the nearest points between groups and the self-intersections of the wire path)
+give exactly the same values.
+
 ## Optional Packages
 
 | Extra | Package | Used for |
 |-------|---------|----------|
 | `fabrication` | manifold3d >= 3.0 | The [`export groove plate`](./configuration.md#data-exporters) exporter |
 | `verification` | magpylib >= 5.0 | Cross-checking the [field verification](./results.md#independent-field-verification) |
+| `fast` | numba >= 0.60 | [Compiled kernels](./installation.md#install-fast-extras) for the largest calculations: 2 to 5 times faster designs |
 
 Releases 0.3.0 and earlier of the 0.3 series also install `networkx`, which trimesh uses only for a few functions that **pyCoilGen** does not call (for example `fix_winding` and `fill_holes`). If your own code calls those, install it with `pip install networkx`.

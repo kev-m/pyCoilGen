@@ -422,6 +422,11 @@ The magnetic field contribution and the target field sensitivity is calculated a
   CPU, 2 to 4 threads were fastest while 16 threads were about 20% slower. Set a lower value to leave CPUs free for
   other work. The result does not depend on the number of threads.
 
+  If the optional `numba` package is installed (`pip install pycoilgen[fast]`, see
+  [Install Fast Extras](./installation.md#install-fast-extras)), the large calculations use compiled kernels instead.
+  These are limited by arithmetic, not memory bandwidth, so the default, `0`, then uses all CPU threads
+  (`PYCOILGEN_THREADS` still overrides it), and a positive value is limited to the number of threads that Numba started with.
+
 
 ### Winding Coil Resistance
 

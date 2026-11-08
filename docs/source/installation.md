@@ -13,6 +13,7 @@ Optionally, you can install:
 * the [**pyCoilGen** data package](#install-pycoilgen-data-package)
 * the [fabrication extras](#install-fabrication-extras)
 * the [verification extras](#install-verification-extras)
+* the [fast extras](#install-fast-extras)
 * [FastHenry2](#fasthenry2)
 
 
@@ -71,6 +72,19 @@ $ pip install pycoilgen[verification]
 ```
 
 Without it, only the `method='magpylib'` option is unavailable.
+
+
+### Install Fast Extras
+
+The largest costs of a design are sums over wire segments and mesh triangles (the sensitivity matrices, the field and the gradient of the wire path, the nearest points between groups, and the self-intersections of the return paths). The optional `numba` package compiles these loops, which makes large designs 2 to 5 times faster, and the sums themselves 10 to 30 times faster. It uses all CPU cores and needs no GPU.
+
+```bash
+$ pip install pycoilgen[fast]
+```
+
+Without it, the same calculations run with numpy, and give the same results (to rounding error, about 1e-14). The compiled code is used for problems that are large enough to pay for loading it. The first time on a machine, compiling takes a few seconds; the result is cached.
+
+The environment variable `PYCOILGEN_NUMBA` selects the behaviour: `off` (or `0`) never uses Numba, `force` (or `1`) uses it for every problem size, and the default, `auto`, uses it for large problems. The number of threads is set with the `num_threads` [parameter](./configuration.md#winding-coil-contribution-and-target-field-sensitivity) or the environment variable `PYCOILGEN_THREADS`.
 
 
 ### FastHenry2
