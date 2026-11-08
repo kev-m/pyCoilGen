@@ -16,6 +16,60 @@ from .data_structures import ContourLine, UnarrangedLoop, UnarrangedLoopContaine
 log = logging.getLogger(__name__)
 
 
+def _opposed_nodes(attached_triangles: np.ndarray, edge_nodes: np.ndarray) -> np.ndarray:
+    """
+    The node of each attached triangle that is not on the edge.
+
+    Args:
+        attached_triangles (ndarray): The two triangles (three node indices each) attached to each edge, (m, 2, 3).
+        edge_nodes (ndarray): The two nodes of each edge, (m, 2).
+
+    Returns:
+        ndarray: The opposed node of each of the two triangles of each edge, (m, 2).
+    """
+    on_edge = ((attached_triangles == edge_nodes[:, np.newaxis, 0:1]) |
+               (attached_triangles == edge_nodes[:, np.newaxis, 1:2]))
+    opposed = np.zeros(edge_nodes.shape, dtype=edge_nodes.dtype)
+    if not np.all(on_edge.sum(axis=2) == 2):
+        # A triangle that does not contain both nodes of the edge, or with a repeated node: use the general set difference
+        for x_ind in range(edge_nodes.shape[0]):
+            for side in range(2):
+                opposed[x_ind, side] = np.squeeze(np.setdiff1d(attached_triangles[x_ind, side], edge_nodes[x_ind]))
+        return opposed
+    return np.take_along_axis(attached_triangles, np.argmin(on_edge, axis=2)[:, :, np.newaxis], axis=2)[:, :, 0]
+
+
+def _neighbour_search(edges: np.ndarray, opposed_nodes: np.ndarray):
+    """
+    A function that finds, for an edge of one potential level, the other edges of the level that continue the contour.
+
+    An edge continues the contour of edge e if it contains one of the nodes opposed to e (in its two triangles), and one of
+    the nodes of e. The edges are found with a lookup of the edges at each node, instead of a search through all edges.
+
+    Args:
+        edges (ndarray): The two nodes of each edge of the potential level, (m, 2).
+        opposed_nodes (ndarray): The two nodes opposed to each edge, (m, 2).
+
+    Returns:
+        callable: neighbouring_edges(e) -> sorted list of the indices of the neighbouring edges.
+    """
+    edge_list = edges.tolist()
+    opposed_list = opposed_nodes.tolist()
+    edges_at_node = {}
+    for edge_ind, (node_a, node_b) in enumerate(edge_list):
+        edges_at_node.setdefault(node_a, []).append(edge_ind)
+        edges_at_node.setdefault(node_b, []).append(edge_ind)
+
+    def neighbouring_edges(edge_ind: int):
+        node_a, node_b = edge_list[edge_ind]
+        opposed_a, opposed_b = opposed_list[edge_ind]
+        at_opposed = set(edges_at_node.get(opposed_a, ())) | set(edges_at_node.get(opposed_b, ()))
+        at_edge = set(edges_at_node.get(node_a, ())) | set(edges_at_node.get(node_b, ()))
+        return sorted(at_opposed & at_edge)
+
+    return neighbouring_edges
+
+
 def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
     """
     Center the stream function potential around zero and add zeros around the periphery.
@@ -65,17 +119,11 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             log.debug(" -- edge_nodes shape: %s, max(%d)", edge_nodes.shape, np.max(edge_nodes))  # 696,2: Max: 263
 
         # NOTE: Vertex arrays order is reversed compared to MATLAB: [0,1,2] [0,7,1]	vs [1,8,2]	[1,2,3]
-        edge_attached_triangles = np.empty((num_edges, 2, 3), dtype=int)
-        for index, edges in enumerate(edge_faces):
-            # Must swap node indices, to correct index order
-            # edge_attached_triangles[index] = np.array((part_faces[edges[0]], part_faces[edges[1]]))
-            edge_attached_triangles[index] = np.array((part_faces[edges[1]], part_faces[edges[0]]))
+        # Must swap the order of the triangles, to correct index order
+        edge_attached_triangles = np.stack((part_faces[edge_faces[:, 1]], part_faces[edge_faces[:, 0]]), axis=1)  # (m, 2, 3)
 
-        # Take only the edge opposing nodes of these triangles
-        edge_opposed_nodes = np.zeros_like(edge_nodes)
-        for x_ind in range(edge_nodes.shape[0]):
-            edge_opposed_nodes[x_ind, 0] = np.squeeze(np.setdiff1d(edge_attached_triangles[x_ind, 0], edge_nodes[x_ind]))
-            edge_opposed_nodes[x_ind, 1] = np.squeeze(np.setdiff1d(edge_attached_triangles[x_ind, 1], edge_nodes[x_ind]))
+        # Take only the edge opposing nodes of these triangles: the one node of each triangle that is not on the edge
+        edge_opposed_nodes = _opposed_nodes(edge_attached_triangles, edge_nodes)
 
         if get_level() >= DEBUG_VERBOSE:
             log.debug(" -- edge_opposed_nodes shape: %s, max(%d)", edge_opposed_nodes.shape, np.max(edge_opposed_nodes))
@@ -159,6 +207,8 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
             all_current_opposed_nodes = edge_opposed_nodes[part.raw.unsorted_points[potential_group].edge_ind]
             all_current_uv_coords = part.raw.unsorted_points[potential_group].uv
 
+            neighbouring_edges = _neighbour_search(all_current_edges, all_current_opposed_nodes)
+
             set_new_start = True
             num_build_loops = 0
             edge_already_used = np.zeros(all_current_edges.shape[0], dtype=int)
@@ -177,15 +227,7 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
                     edge_already_used[starting_edge] = 1
                     current_edge = starting_edge
 
-                    current_edge_nodes = all_current_edges[current_edge]
-                    neighbouring_free_next_edges = np.where(
-                        np.any(
-                            np.logical_or(all_current_edges == all_current_opposed_nodes[current_edge, 0],
-                                          all_current_edges == all_current_opposed_nodes[current_edge, 1]), axis=1) &
-                        np.any(
-                            np.logical_or(all_current_edges == current_edge_nodes[0],
-                                          all_current_edges == current_edge_nodes[1]), axis=1)
-                    )[0]
+                    neighbouring_free_next_edges = neighbouring_edges(current_edge)
 
                     if len(neighbouring_free_next_edges) == 0:
                         break
@@ -207,16 +249,8 @@ def calc_contours_by_triangular_potential_cuts(coil_parts: List[CoilPart]):
 
                     current_edge = next_edge
 
-                    current_edge_nodes = all_current_edges[current_edge]
-                    possible_next_edges = np.where(
-                        np.any(
-                            np.logical_or(all_current_edges == all_current_opposed_nodes[current_edge, 0],
-                                          all_current_edges == all_current_opposed_nodes[current_edge, 1]), axis=1) &
-                        np.any(
-                            np.logical_or(all_current_edges == current_edge_nodes[0],
-                                          all_current_edges == current_edge_nodes[1]), axis=1)
-                    )[0]
-                    possible_next_edges = np.setdiff1d(possible_next_edges, np.where(edge_already_used == 1)[0])
+                    possible_next_edges = [edge for edge in neighbouring_edges(current_edge)
+                                           if not edge_already_used[edge]]
 
                     if len(possible_next_edges) == 0:
                         break
