@@ -412,6 +412,16 @@ The magnetic field contribution and the target field sensitivity is calculated a
 
   This parameter determines the number of Gauss integration points used in the winding magnetic field calculations.
 
+- `num_threads` (Type: `int`, Default: `0`)
+
+  The number of threads used to calculate the sensitivity matrices (the main cost of a design that starts from a mesh).
+  The default, `0`, uses the environment variable `PYCOILGEN_THREADS` if it is set, otherwise the smaller of 4 and the
+  number of CPUs. A positive value is used as given, and may exceed the number of CPUs.
+
+  More threads are not necessarily faster: the calculation is limited by memory bandwidth, and on an 8 core, 16 thread
+  CPU, 2 to 4 threads were fastest while 16 threads were about 20% slower. Set a lower value to leave CPUs free for
+  other work. The result does not depend on the number of threads.
+
 
 ### Winding Coil Resistance
 

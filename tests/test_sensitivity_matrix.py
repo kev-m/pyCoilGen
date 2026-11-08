@@ -247,3 +247,40 @@ def test_sensitivity_matrices_do_not_depend_on_the_block_size(solution, monkeypa
     actual = calculate_sensitivity_matrix(_fresh_parts(solution), solution.target_field, solution.input_args)
     for e, a in zip(expected, actual):
         np.testing.assert_allclose(a.sensitivity_matrix, e.sensitivity_matrix, rtol=1e-12)
+
+
+@pytest.mark.parametrize('num_threads', [1, 2, 7])
+def test_sensitivity_matrices_do_not_depend_on_the_number_of_threads(solution, monkeypatch, num_threads):
+    """The blocks write to separate columns, so the threads must not change the result (even with many blocks)."""
+    from pyCoilGen.sub_functions import sensitivity_kernels
+    monkeypatch.setattr(sensitivity_kernels, '_MAX_PAIRS_PER_BLOCK', 1)  # One triangle per block: many blocks
+    serial = copy.copy(solution.input_args)
+    serial.num_threads = 1
+    threaded = copy.copy(solution.input_args)
+    threaded.num_threads = num_threads
+    expected = calculate_sensitivity_matrix(_fresh_parts(solution), solution.target_field, serial)
+    actual = calculate_sensitivity_matrix(_fresh_parts(solution), solution.target_field, threaded)
+    for e, a in zip(expected, actual):
+        np.testing.assert_array_equal(a.sensitivity_matrix, e.sensitivity_matrix)
+    expected = calculate_gradient_sensitivity_matrix(_fresh_parts(solution), solution.target_field, serial)
+    actual = calculate_gradient_sensitivity_matrix(_fresh_parts(solution), solution.target_field, threaded)
+    for e, a in zip(expected, actual):
+        np.testing.assert_array_equal(a.gradient_sensitivity_matrix, e.gradient_sensitivity_matrix)
+
+
+def test_resolve_num_threads(monkeypatch):
+    from pyCoilGen.sub_functions.sensitivity_kernels import resolve_num_threads
+    monkeypatch.delenv('PYCOILGEN_THREADS', raising=False)
+    monkeypatch.setattr('os.cpu_count', lambda: 16)
+    assert resolve_num_threads(0) == 4          # The default is capped at 4
+    assert resolve_num_threads(12) == 12        # An explicit request may exceed the default
+    assert resolve_num_threads(-3) == 4         # Invalid requests fall back to the default
+    monkeypatch.setattr('os.cpu_count', lambda: 2)
+    assert resolve_num_threads(0) == 2          # Never more than the CPUs by default
+    monkeypatch.setattr('os.cpu_count', lambda: None)
+    assert resolve_num_threads(0) == 1
+    monkeypatch.setenv('PYCOILGEN_THREADS', '3')
+    assert resolve_num_threads(0) == 3          # The environment variable sets the default...
+    assert resolve_num_threads(6) == 6          # ...but the parameter takes precedence
+    monkeypatch.setenv('PYCOILGEN_THREADS', 'many')
+    assert resolve_num_threads(0) == 1          # An invalid value is ignored (cpu_count is None here)

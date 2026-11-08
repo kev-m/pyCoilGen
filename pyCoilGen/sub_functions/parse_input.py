@@ -257,6 +257,12 @@ def parse_input(parse_cli=True):
     parser.add_argument('--gauss_order', type=int, default=2,
                         help="Gauss integration order")
 
+    # Add the number of threads for the sensitivity matrices
+    parser.add_argument('--num_threads', type=int, default=0,
+                        help="Number of threads for the sensitivity matrix calculation. 0 (default) uses the environment "
+                             "variable PYCOILGEN_THREADS if set, otherwise min(4, number of CPUs). More than 4 threads "
+                             "were not faster in tests: the calculation is limited by memory bandwidth.")
+
     # Add flag to set the roi into the geometric center of the mesh
     parser.add_argument('--set_roi_into_mesh_center', type=bool, default=False,
                         help="Flag to set the ROI into the geometric center of the mesh")
