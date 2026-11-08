@@ -33,18 +33,16 @@ def mesh_parameterization_iterative(mesh: Mesh):
     mesh.vidx = np.arange(0, mesh_vertices.shape[0])
     mesh.fidx = np.arange(0, mesh_faces.shape[0])
 
-    num_faces = mesh.f.shape[0]
-    e = np.zeros((num_faces * 3 * 2, 3), dtype=int)
+    # The directed edges of all faces, both directions of every side. An edge that two faces share in opposite directions
+    # (as for a consistently oriented mesh) is counted twice in the same direction, a boundary edge once.
+    corner_a = np.concatenate([mesh.f[:, j] for j in range(3)])
+    corner_b = np.concatenate([mesh.f[:, (j + 1) % 3] for j in range(3)])
+    rows = np.concatenate((corner_a, corner_b))
+    cols = np.concatenate((corner_b, corner_a))
 
-    for iii in range(num_faces):
-        for jjj in range(3):
-            t1 = [mesh.f[iii, jjj], mesh.f[iii, (jjj + 1) % 3], 1]
-            t2 = [mesh.f[iii, (jjj + 1) % 3], mesh.f[iii, jjj], 1]
-            e[((iii - 1) * 6) + (jjj * 2) + 1, :] = t1
-            e[((iii - 1) * 6) + (jjj * 2) + 2, :] = t2
-
-    # Create a sparse matrix from the 'e' array using numpy's coo_matrix
-    mesh.e = coo_matrix((e[:, 2], (e[:, 0], e[:, 1])), shape=(mesh.v.shape[0], mesh.v.shape[0]), dtype=int).tolil()
+    # Create a sparse matrix from the edges; the duplicate entries are added
+    mesh.e = coo_matrix((np.ones(len(rows), dtype=int), (rows, cols)),
+                        shape=(mesh.v.shape[0], mesh.v.shape[0]), dtype=int).tolil()
 
     # Find boundary vertices
 
@@ -123,23 +121,22 @@ def mesh_parameterization_iterative(mesh: Mesh):
     else:
         mesh.loops = []
 
-    mesh.te = mesh.e.copy()
-    mesh.te[mesh.e != 0] = 0
-    for ti in range(len(mesh.f)):
+    # For each directed edge, the (one based) index of the face that has it. A face claims the direction of each of its sides
+    # if no earlier face has claimed it, otherwise the opposite direction.
+    face_of_directed_edge = {}
+    for ti, face in enumerate(mesh.f.tolist()):
         for kkkk in range(3):
-            vv1 = mesh.f[ti, kkkk]
-            vv2 = mesh.f[ti, (kkkk + 1) % 3]
-
-            if mesh.te[vv1, vv2] != 0:
+            vv1 = face[kkkk]
+            vv2 = face[(kkkk + 1) % 3]
+            if (vv1, vv2) in face_of_directed_edge:
                 vv1, vv2 = vv2, vv1
+            face_of_directed_edge[(vv1, vv2)] = ti + 1  # NB: Subtract 1 when using values from mesh.te!!
+    te_rows, te_cols = zip(*face_of_directed_edge.keys()) if face_of_directed_edge else ((), ())
+    mesh.te = coo_matrix((list(face_of_directed_edge.values()), (te_rows, te_cols)), shape=mesh.e.shape,
+                         dtype=mesh.e.dtype).tolil()
 
-            mesh.te[vv1, vv2] = ti + 1  # NB: Subtract 1 when using values from mesh.te!!
-
-    mesh.valence = np.zeros(len(mesh.v))
-
-    for vi in range(len(mesh.v)):
-        _, jj = mesh.e.getrow(vi).nonzero()
-        mesh.valence[vi] = len(jj)
+    # The valence is the number of neighbours of each vertex
+    mesh.valence = np.asarray((mesh.e != 0).sum(axis=1), dtype=float).ravel()
 
     mesh.unique_vert_inds = mesh.unique_vert_inds.copy()
     iboundary = mesh.vidx[mesh.isboundaryv != 0]
@@ -156,18 +153,19 @@ def mesh_parameterization_iterative(mesh: Mesh):
     W[np.arange(N), np.arange(N)] = -np.sum(W, axis=1)
     Ld = coo_matrix(vstack([hstack([W, coo_matrix((N, N))]), hstack([coo_matrix((N, N)), W])])).tolil()  # Hypothesis...
     rhs = np.zeros(2 * N)
-    A = coo_matrix((2 * N, 2 * N), dtype=int).tolil()
-
-    for li in range(len(mesh.loops)):
-        loop = mesh.loops[li]
-
-        for ii in range(len(loop)):
-            jx = loop[ii]
-            jy = jx + N
-            kx = loop[(ii + 1) % len(loop)]
-            ky = kx + N
-            A[jx, ky] += 1
-            A[kx, jy] -= 1
+    # The boundary terms: for every edge of a boundary loop, A[jx, ky] += 1 and A[kx, jy] -= 1 (duplicates are added)
+    a_rows, a_cols, a_data = [], [], []
+    for loop in mesh.loops:
+        jx = np.asarray(loop, dtype=int)
+        kx = np.roll(jx, -1)
+        a_rows += [jx, kx]
+        a_cols += [kx + N, jx + N]
+        a_data += [np.ones(len(jx), dtype=int), -np.ones(len(jx), dtype=int)]
+    if a_rows:
+        A = coo_matrix((np.concatenate(a_data), (np.concatenate(a_rows), np.concatenate(a_cols))),
+                       shape=(2 * N, 2 * N), dtype=int).tolil()
+    else:
+        A = coo_matrix((2 * N, 2 * N), dtype=int).tolil()
 
     A = A + A.T
     Lc = Ld - A
@@ -300,6 +298,70 @@ def triarea(p1, p2, p3):
 
 def cotanWeights(mesh, vertices=None, authalic=False, areaWeighted=False):
     """
+    Compute the cotangent weights for the given vertices in the mesh.
+
+    All vertices (the default) are evaluated for all edges at once. Other cases use `_cotanWeights_loop`.
+
+    Args:
+        mesh (Mesh): Mesh object.
+        vertices (ndarray, optional): Indices of the vertices. If not provided, all vertices are used.
+        authalic (bool, optional): Flag indicating whether to use authalic weighting. Default is False.
+        areaWeighted (bool, optional): Flag indicating whether to use area-weighted weighting. Default is False.
+
+    Returns:
+        ndarray: Cotangent weights for the vertices.
+    """
+    if (vertices is None or len(vertices) == 0) and not authalic:
+        weights = _cotanWeights_vectorised(mesh, areaWeighted)
+        if weights is not None:
+            return weights
+    return _cotanWeights_loop(mesh, vertices, authalic, areaWeighted)
+
+
+def _cotanWeights_vectorised(mesh, areaWeighted=False):
+    """
+    The cotangent weights of all edges, for all vertices: the sum over the (up to two) faces on the edge of the
+    cotangent of the angle at the opposite corner, divided by the face area (if the areas are used).
+
+    Returns:
+        sparse matrix, or None if a face on an edge does not have exactly one corner opposite to it (the caller then uses the loop).
+    """
+    faceAreas = faceArea(mesh) if areaWeighted else np.ones(len(mesh.fidx))
+    edges = mesh.e.tocoo()
+    edge_present = edges.data != 0
+    qi = edges.row[edge_present]
+    qj = edges.col[edge_present]
+    te = mesh.te.tocsr()
+
+    def cotangent_terms(first, second):
+        """For each edge (first -> second): the cot of the angle opposite to it in the face te[first, second], or 0."""
+        face = np.asarray(te[first, second]).ravel()
+        term = np.zeros(len(face))
+        has_face = face != 0
+        face_ind = face[has_face] - 1
+        corners = mesh.f[face_ind]
+        opposite_corner = ~((corners == first[has_face][:, np.newaxis]) | (corners == second[has_face][:, np.newaxis]))
+        if not np.all(opposite_corner.sum(axis=1) == 1):
+            return None
+        opposite = corners[opposite_corner]
+        v1 = mesh.v[first[has_face]] - mesh.v[opposite]
+        v2 = mesh.v[second[has_face]] - mesh.v[opposite]
+        dot = np.sum(v1 * v2, axis=1)
+        term[has_face] = dot / np.sqrt(np.sum(v1 * v1, axis=1) * np.sum(v2 * v2, axis=1) - dot * dot) / faceAreas[face_ind]
+        return term
+
+    term_a = cotangent_terms(qi, qj)
+    term_b = cotangent_terms(qj, qi)
+    if term_a is None or term_b is None:
+        return None
+    return coo_matrix(((0.0 + term_a) + term_b, (qi, qj)), shape=mesh.e.shape).tolil()
+
+
+def _cotanWeights_loop(mesh, vertices=None, authalic=False, areaWeighted=False):
+    """
+    The original implementation of `cotanWeights`, edge by edge. It is used for the cases that the vectorised version
+    does not handle.
+
     Compute the cotangent weights for the given vertices in the mesh.
 
     Args:
