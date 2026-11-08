@@ -70,3 +70,30 @@ def test_check_mutual_loop_inclusion_single_point_and_blocks(monkeypatch):
     monkeypatch.setattr(module, '_PAIRS_PER_BLOCK', 1)
     inner = _circle(0.5, (0.1, 0.0), 30)
     assert check_mutual_loop_inclusion(inner, outer) is np.True_ or check_mutual_loop_inclusion(inner, outer)
+
+
+@pytest.mark.parametrize('pairs_per_block', [1, 3, 100_000])
+def test_check_mutual_loop_inclusion_when_only_a_late_vertex_is_outside(monkeypatch, pairs_per_block):
+    """The first vertex is inside, so the early exit must not stop there: a later vertex is outside."""
+    monkeypatch.setattr(module, '_PAIRS_PER_BLOCK', pairs_per_block)
+    outer = _circle(1.0, (0, 0), 60)
+    for outside_position in (1, 7, 29):
+        test_poly = _circle(0.2, (0.1, 0.0), 30)
+        test_poly[:, outside_position] = (2.0, 2.0)
+        assert not check_mutual_loop_inclusion(test_poly, outer)
+        assert not reference_check_mutual_loop_inclusion(test_poly, outer)
+
+
+def test_check_mutual_loop_inclusion_with_no_test_vertices():
+    outer = _circle(1.0, (0, 0), 20)
+    empty = np.zeros((2, 0))
+    assert bool(check_mutual_loop_inclusion(empty, outer)) == bool(reference_check_mutual_loop_inclusion(empty, outer))
+
+
+@pytest.mark.parametrize('seed', range(20))
+def test_check_mutual_loop_inclusion_random_pairs(seed, monkeypatch):
+    rng = np.random.default_rng(seed)
+    monkeypatch.setattr(module, '_PAIRS_PER_BLOCK', int(rng.integers(1, 400)))
+    target = _circle(rng.uniform(0.5, 1.5), rng.normal(size=2) * 0.2, int(rng.integers(8, 60)))
+    test_poly = _circle(rng.uniform(0.05, 1.2), rng.normal(size=2) * 0.4, int(rng.integers(3, 40)))
+    assert bool(check_mutual_loop_inclusion(test_poly, target)) == bool(reference_check_mutual_loop_inclusion(test_poly, target))
