@@ -13,9 +13,19 @@ Run the unit tests from the project top level directory. A plain `pytest` skips 
 pytest -m "regression or not regression"
 ```
 
+The compiled kernels (the optional `fast` extra, `numba`) are a second code path, so run the tests and the harness
+both with and without them in each environment. Without Numba installed, or with `PYCOILGEN_NUMBA=off`, the numpy
+kernels run; with Numba installed (`pip install numba`), the tests of the compiled kernels also run, and
+`PYCOILGEN_NUMBA=force` makes even the small regression designs use them:
+```bash
+PYCOILGEN_NUMBA=off pytest -m "regression or not regression"
+PYCOILGEN_NUMBA=force pytest -m "regression or not regression"
+```
+(PowerShell: `$env:PYCOILGEN_NUMBA = "off"`, then run `pytest`, and remove the variable afterwards.)
+
 Also run the regression harness in each environment that is listed in the tested environments table of
-[docs/source/compatibility.md](docs/source/compatibility.md), and update that table and the release table
-(also in the [README](README.md)) for the new version:
+[docs/source/compatibility.md](docs/source/compatibility.md), and update that table (including the
+Numba version) and the release table (also in the [README](README.md)) for the new version:
 ```bash
 python tests/regression/harness_generate.py --check
 ```
@@ -70,7 +80,9 @@ git push --tags
 
 ## Building the Package
 
-The sources are published as two packages using `flit` to build and publish the artifacts.
+The sources are published as two packages using `flit` to build and publish the artifacts. The optional extras
+(`fabrication`, `verification` and `fast`) are read from `pyproject.toml`, so `pip install pycoilgen[fast]` needs no
+extra step. If you change the minimum version of an extra, check that it installs in the oldest tested environment.
 
 The project details are defined in the `pyproject.toml` files. The version and description are defined in the top-level `__init__.py` file for each package.
 
