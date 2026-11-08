@@ -13,6 +13,35 @@ from .remove_points_from_loop import remove_points_from_loop
 log = logging.getLogger(__name__)
 
 
+# The approximate number of (point, point) pairs of the distance matrix that are evaluated at once
+_PAIRS_PER_BLOCK = 200_000
+
+
+def nearest_point_distances(points_a: np.ndarray, points_b: np.ndarray):
+    """
+    For each point of two point sets, the distance to the nearest point of the other set.
+
+    Args:
+        points_a (ndarray): The points of the first set, (3, num a).
+        points_b (ndarray): The points of the second set, (3, num b).
+
+    Returns:
+        tuple: The distance of each point of `points_a` to the nearest point of `points_b`, (num a,), and the distance of
+            each point of `points_b` to the nearest point of `points_a`, (num b,).
+    """
+    near_a = np.empty(points_a.shape[1])
+    near_b = np.full(points_b.shape[1], np.inf)
+    points_per_block = max(1, _PAIRS_PER_BLOCK // max(1, points_b.shape[1]))
+    for first in range(0, points_a.shape[1], points_per_block):
+        block = points_a[:, first:first + points_per_block]
+        distances = np.sqrt((points_b[0, np.newaxis, :] - block[0, :, np.newaxis])**2 +
+                            (points_b[1, np.newaxis, :] - block[1, :, np.newaxis])**2 +
+                            (points_b[2, np.newaxis, :] - block[2, :, np.newaxis])**2)  # (block, num b)
+        near_a[first:first + block.shape[1]] = np.min(distances, axis=1)
+        np.minimum(near_b, np.min(distances, axis=0), out=near_b)
+    return near_a, near_b
+
+
 def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=None):
     """
     Interconnects groups to generate a single wire track.
@@ -102,29 +131,21 @@ def interconnect_among_groups(coil_parts: List[CoilPart], input_args, m_c_part=N
 
                         # Find the minimal distance positions between the groups and the points with minimal distance
                         for ind1 in range(group_len):
-                            for ind2 in range(group_len):
-                                if ind2 != ind1:
-                                    group_a = grouptracks_to_connect_without_returns[ind1]
-                                    group_b = grouptracks_to_connect_without_returns[ind2]
-                                    near_ind = np.zeros(group_a.v.shape[1], dtype=int)
-                                    near_dist = np.zeros(group_a.v.shape[1])
+                            for ind2 in range(ind1 + 1, group_len):
+                                group_a = grouptracks_to_connect_without_returns[ind1]
+                                group_b = grouptracks_to_connect_without_returns[ind2]
+                                # The distances from each point of a group to the other group, in both directions
+                                near_dist_ab, near_dist_ba = nearest_point_distances(group_a.v, group_b.v)
 
-                                    for point_ind in range(group_a.v.shape[1]):
-                                        # Calculate the distances between group_b.v and each point in group_a.v
-                                        distances = np.sqrt((group_b.v[0, :] - group_a.v[0, point_ind])**2 +
-                                                            (group_b.v[1, :] - group_a.v[1, point_ind])**2 +
-                                                            (group_b.v[2, :] - group_a.v[2, point_ind])**2)
-                                        # Find the minimum distance and its index
-                                        near_dist[point_ind] = np.min(distances)
-                                        near_ind[point_ind] = np.argmin(distances)
-
+                                for first, second, near_dist in ((ind1, ind2, near_dist_ab), (ind2, ind1, near_dist_ba)):
                                     total_min_dist, total_min_ind = np.min(near_dist), np.argmin(near_dist)
-                                    min_group_inds[ind1, ind2] = total_min_ind
-
-                                    min_pos_group.uv[ind1][ind2] = grouptracks_to_connect_without_returns[ind1].uv[:, total_min_ind]
-                                    min_pos_group.v[ind1][ind2] = grouptracks_to_connect_without_returns[ind1].v[:, total_min_ind]
-                                    min_group_dists[ind1, ind2] = total_min_dist
-                                    min_group_dists[min_group_dists == 0] = np.inf
+                                    min_group_inds[first, second] = total_min_ind
+                                    track = grouptracks_to_connect_without_returns[first]
+                                    min_pos_group.uv[first][second] = track.uv[:, total_min_ind]
+                                    min_pos_group.v[first][second] = track.v[:, total_min_ind]
+                                    min_group_dists[first, second] = total_min_dist
+                        # Coincident groups and the diagonal are not candidates
+                        min_group_dists[min_group_dists == 0] = np.inf
 
                         # Select the pair of groups with the shortest respective distance
                         min_dist_couple1 = min_group_dists == np.min(min_group_dists)
